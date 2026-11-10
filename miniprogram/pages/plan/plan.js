@@ -1,0 +1,202 @@
+const cat = require('../../utils/catalog');
+const api = require('../../utils/api');
+const store = require('../../utils/store');
+
+// 订阅消息模板（日程提醒）。后台改模板时要同步这里
+const TMPL_ID = 'VbGee94SWDa5DUBkHx2Kii8Dp0OobE1PneOJg9Id_ao';
+
+Page({
+  data: {
+    years: [],
+    next: null,
+    has: false,
+    source: '',
+    reminded: {},        // { planKey: '11月17日 09:00' }
+    loggedIn: false,
+    totalCoins: 0,
+  },
+
+  onLoad() {
+    this.build();
+  },
+
+  onShow() {
+    this.build();
+    this.loadReminders();
+  },
+
+  /** 把 plan.json 转成渲染结构：算倒计时、把待发行排前面 */
+  build() {
+    const plan = (cat.plan && cat.plan.years) ? cat.plan : { years: [] };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let next = null;
+    let source = '';
+
+    const years = (plan.years || []).map((y) => {
+      if (y.sourceUrl && !source) source = '中国人民银行 ' + (y.publishedAt || '') + ' 公布';
+      const items = (y.items || []).map((it) => {
+        const d = it.date ? new Date(it.date + 'T00:00:00') : null;
+        const days = d ? Math.round((d - today) / 86400000) : null;
+        const isUp = it.status === 'upcoming';
+        let cdText = '';
+        if (isUp && days !== null) {
+          cdText = days > 0 ? ('还有 ' + days + ' 天') : (days === 0 ? '今天发行' : '已过发行日');
+        }
+        const row = {
+          key: it.key,
+          name: it.name,
+          short: it.short || it.name,
+          kindText: it.kind === 'note' ? '纪念钞' : '纪念币',
+          face: it.face,
+          unit: it.kind === 'note' ? '张' : '枚',
+          mintageText: it.mintage ? cat.money(it.mintage) + ' 万' : '',
+          note: it.note || '',
+          dateText: it.date ? it.date.slice(5).replace(/-/g, '/') : '待定',
+          dateFull: it.date || '',
+          reserveText: it.reserve ? it.reserve.replace(/-/g, '/') : '',
+          exchangeText: it.exchange ? it.exchange.replace(/-/g, '/') : '',
+          limitText: it.limit ? ('每人限 ' + it.limit + (it.kind === 'note' ? ' 张' : ' 枚')) : '',
+          // 详情弹层用
+          schedule: it.schedule || [],
+          verifyText: it.verify ? it.verify.replace(/-/g, '/') : '',
+          banks: it.banks || '',
+          proxy: it.proxy || 0,
+          ob: (it.design && it.design.obverse) || '',
+          rev: (it.design && it.design.reverse) || '',
+          sourceText: it.sourceText || '',
+          sourceUrl: it.sourceUrl || '',
+          specText: [
+            it.face ? it.face + ' 元' : '',
+            it.material || '',
+            it.dia || '',
+            it.mintage ? cat.money(it.mintage) + ' 万' + (it.kind === 'note' ? '张' : '枚') : '',
+          ].filter(Boolean).join(' · '),
+          extra: !!it.extra,
+          isUp,
+          days,
+          cdText,
+          coinId: it.coinNo || 0,
+        };
+        if (isUp && days !== null && days >= 0) {
+          if (!next || days < next.days) next = row;
+        }
+        return row;
+      });
+      // 一律按发行日倒序：最新（含最近的待发行）永远在最前
+      items.sort((a, b) => String(b.dateFull || '').localeCompare(String(a.dateFull || '')));
+      return {
+        year: y.year,
+        publishedAt: y.publishedAt || '',
+        total: items.length,
+        planCount: items.filter((i) => !i.extra).length,
+        extraCount: items.filter((i) => i.extra).length,
+        doneCount: items.filter((i) => !i.isUp).length,
+        items,
+      };
+    });
+
+    years.sort((a, b) => b.year - a.year);
+    this.setData({ years, next, has: years.length > 0, source, totalCoins: cat.total });
+  },
+
+  /** 拉一次我的提醒，标在对应项目上 */
+  loadReminders() {
+    const state = store.getState();
+    this.setData({ loggedIn: !!state.user });
+    if (!state.user) return;
+    api.get('/api/reminders').then((res) => {
+      const map = {};
+      (res.items || []).forEach((it) => {
+        if (it.status !== 'pending') return;
+        const d = new Date(it.remindAt);
+        map[it.key] = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+          String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      });
+      this.setData({ reminded: map });
+    }).catch(() => { /* 未登录或网络问题，忽略 */ });
+  },
+
+  /**
+   * 点「提醒我」：
+   * 一次性订阅必须由点击直接触发，所以先 requestSubscribeMessage，拿到 accept 再报给服务端。
+   */
+  remind(e) {
+    const ds = e.currentTarget.dataset;
+    const key = ds.key;
+    const name = ds.name || '纪念币';
+    if (!key) return;
+
+    const state = store.getState();
+    if (!state.user) {
+      wx.showModal({
+        title: '需要先登录',
+        content: '订阅提醒要用微信登录，这样到点才能把通知发给你。',
+        confirmText: '去登录',
+        success: (r) => { if (r.confirm) wx.navigateTo({ url: '/pages/account/account' }); },
+      });
+      return;
+    }
+
+    wx.requestSubscribeMessage({
+      tmplIds: [TMPL_ID],
+      success: (res) => {
+        const st = res && res[TMPL_ID];
+        if (st !== 'accept') {
+          const tip = st === 'reject' ? '你拒绝了通知授权' : '没有开启通知';
+          wx.showToast({ title: tip + '，可以再点一次', icon: 'none' });
+          return;
+        }
+        api.post('/api/reminders', { key }).then((r) => {
+          wx.showToast({ title: '预约日 ' + r.remindText + ' 提醒你', icon: 'none' });
+          this.loadReminders();
+        }).catch((err) => {
+          wx.showToast({ title: (err && err.message) || '设置失败，请重试', icon: 'none' });
+        });
+      },
+      fail: () => {
+        wx.showToast({ title: '没能开启通知，请检查微信设置', icon: 'none' });
+      },
+    });
+  },
+
+  /** 点计划项：已发行的进品种详情；未发行的展开公告详情 */
+  onItemTap(e) {
+    const id = Number(e.currentTarget.dataset.id) || 0;
+    if (id) { this.goCoin(e); return; }
+    const key = e.currentTarget.dataset.key;
+    const all = this.data.years.reduce((a, y) => a.concat(y.items), []);
+    const row = all.filter((x) => x.key === key)[0];
+    if (!row) return;
+    this.setData({ detail: row });
+  },
+
+  closeDetail() {
+    this.setData({ detail: null });
+  },
+
+  copySource() {
+    const url = this.data.detail && this.data.detail.sourceUrl;
+    if (!url) return;
+    wx.setClipboardData({ data: url });
+  },
+
+  noop() {},
+
+  goCoin(e) {
+    const id = Number(e.currentTarget.dataset.id) || 0;
+    if (!id) return;
+    wx.navigateTo({ url: '/pages/detail/detail?id=' + id });
+  },
+
+  goList() {
+    wx.switchTab({ url: '/pages/list/list' });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '纪念币发行计划：下一枚什么时候发',
+      path: '/pages/plan/plan',
+    };
+  },
+});

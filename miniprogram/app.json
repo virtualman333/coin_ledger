@@ -1,0 +1,60 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/list/list",
+    "pages/plan/plan",
+    "pages/mine/mine",
+    "pages/detail/detail",
+    "pages/account/account",
+    "pages/about/about",
+    "pages/holdings/holdings",
+    "pages/feedback/feedback",
+    "pages/series/series",
+    "pages/admin/admin",
+    "pages/admin-user/admin-user",
+    "pages/more/more",
+    "pages/privacy/privacy"
+  ],
+  "window": {
+    "navigationBarTitleText": "藏币录",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f4ef",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8a8378",
+    "selectedColor": "#9a6b1f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-on.png"
+      },
+      {
+        "pagePath": "pages/plan/plan",
+        "text": "发行计划",
+        "iconPath": "images/tab-plan.png",
+        "selectedIconPath": "images/tab-plan-on.png"
+      },
+      {
+        "pagePath": "pages/list/list",
+        "text": "全套清单",
+        "iconPath": "images/tab-list.png",
+        "selectedIconPath": "images/tab-list-on.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "images/tab-mine.png",
+        "selectedIconPath": "images/tab-mine-on.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

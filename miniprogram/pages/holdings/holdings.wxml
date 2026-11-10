@@ -1,0 +1,163 @@
+<view class="page">
+  <block wx:if="{{loggedIn}}">
+    <!-- 汇总 -->
+    <view class="hero" wx:if="{{!empty}}">
+      <view class="hero-top">
+        <view class="hero-left">
+          <text class="hero-k">参考市值</text>
+          <view class="hero-val"><text class="hv-cur">¥</text><text class="hv-num">{{stats.marketText}}</text></view>
+        </view>
+        <view class="hero-right">
+          <text class="hero-item">{{summary.kinds}} 个品种</text>
+          <text class="hero-item">{{summary.rolls}} 套</text>
+        </view>
+      </view>
+      <view class="hero-bottom">
+        <view class="hero-cell">
+          <text class="hc-k">面值</text>
+          <text class="hc-v">¥{{stats.faceText}}</text>
+        </view>
+        <view class="hero-cell">
+          <text class="hc-k">成本</text>
+          <text class="hc-v">¥{{stats.costText}}</text>
+        </view>
+        <view class="hero-cell">
+          <text class="hc-k">盈亏</text>
+          <text class="hc-v {{stats.up ? 'up' : 'down'}}">{{stats.pnlText}}<text class="hc-pct" wx:if="{{stats.pnlPct}}"> {{stats.pnlPct}}%</text></text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-card" wx:if="{{empty}}">
+      <text class="empty-title">还没有藏品</text>
+      <text class="empty-sub">去清单里挑几枚加进来，账本会自动算成本和盈亏</text>
+      <view class="empty-btn" hover-class="tap-hover" bindtap="goList">去挑藏品</view>
+    </view>
+
+    <block wx:if="{{!empty}}">
+      <view class="tools">
+        <text class="tools-text">{{groups.length}} 个分组 · 长按卡片可改数量与成本</text>
+        <text class="tools-btn" hover-class="tap-hover" bindtap="toggleAll">{{allOpen ? '收起' : '展开'}}</text>
+      </view>
+
+      <block wx:for="{{groups}}" wx:key="name" wx:for-item="group" wx:for-index="gi">
+        <view class="ghead" hover-class="tap-hover" data-gi="{{gi}}" bindtap="toggleGroup">
+          <view class="ghead-left">
+            <text class="gname">{{group.name}}</text>
+            <text class="gprog">{{group.progLabel}}</text>
+          </view>
+          <view class="ghead-right">
+            <text class="gsum">¥{{group.sumLabel}}</text>
+            <text class="gchev">{{group.open ? '▾' : '▸'}}</text>
+          </view>
+        </view>
+
+        <view class="gwrap" wx:if="{{group.open}}">
+          <view class="gbar"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
+
+          <view
+            class="hcard"
+            wx:for="{{group.items}}"
+            wx:key="id"
+            wx:for-index="ii"
+            data-g="{{gi}}"
+            data-i="{{ii}}"
+            data-id="{{item.coinId}}"
+            bindtap="goDetail"
+            bindlongpress="openSheet"
+            hover-class="tap-hover"
+          >
+            <view class="hc-fig">
+              <image
+                wx:if="{{!item.imgFail}}"
+                class="hc-img"
+                src="{{item.imgUrl}}"
+                mode="aspectFit"
+                data-g="{{gi}}"
+                data-i="{{ii}}"
+                binderror="imgErr"
+              ></image>
+              <view wx:else class="hc-img hc-ph">无图</view>
+              <text class="hc-badge" wx:if="{{item.badgeLabel}}">{{item.badgeLabel}}</text>
+            </view>
+
+            <view class="hc-main">
+              <text class="hc-name">{{item.name}}</text>
+              <text class="hc-sub">{{item.qtyLabel}} · 面值 {{item.faceText}} 元</text>
+              <view class="hc-meta">
+                <text>成本 ¥{{item.costText}}</text>
+                <text class="hc-dot">·</text>
+                <text>均价 ¥{{item.unitCostText}}</text>
+              </view>
+              <view class="hc-ai" wx:if="{{item.aiText}}">
+                <text class="hc-ai-badge">AI</text>
+                <text class="hc-ai-val">¥{{item.aiText}}</text>
+                <text class="hc-ai-d">{{item.aiDiffText}}</text>
+              </view>
+            </view>
+
+            <view class="hc-right">
+              <text class="hc-val">¥{{item.marketText}}</text>
+              <text class="hc-pnl {{item.pnlCls}}">{{item.pnlText}}<text wx:if="{{item.pnlPct !== null}}"> {{item.pnlPct > 0 ? '+' : ''}}{{item.pnlPct}}%</text></text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="foot-hint">长按任意一枚，可以改数量、改成本和移出</view>
+    </block>
+
+    <view class="foot-note" wx:if="{{syncTip}}">{{syncTip}}</view>
+  </block>
+
+  <view class="guest-card" wx:else>
+    <text class="guest-title">登录后才有账本</text>
+    <text class="guest-sub">登录后你的藏品会存在云端，换设备也能接着记</text>
+    <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
+  </view>
+</view>
+
+<!-- 长按：改数量 / 改成本 / 移出 -->
+<view class="sheet-mask" wx:if="{{sheet}}" bindtap="closeSheet" catchtouchmove="noop">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <image class="sheet-img" src="{{sheet.imgUrl}}" mode="aspectFit" wx:if="{{sheet.imgUrl}}"></image>
+      <view class="sheet-info">
+        <text class="sheet-name">{{sheet.name}}</text>
+        <text class="sheet-sub">{{sheet.qtyLabel}} · 市值 ¥{{sheet.marketText}}</text>
+      </view>
+      <text class="sheet-x" bindtap="closeSheet">✕</text>
+    </view>
+
+    <view class="sheet-row">
+      <text class="sr-k">数量</text>
+      <view class="stepper">
+        <view class="step" hover-class="tap-hover" data-delta="-1" bindtap="sheetStep">−</view>
+        <text class="step-num">{{sheet.rolls}} {{sheet.unitWord}}</text>
+        <view class="step" hover-class="tap-hover" data-delta="1" bindtap="sheetStep">+</view>
+      </view>
+    </view>
+
+    <view class="sheet-row">
+      <text class="sr-k">每套成本</text>
+      <view class="sr-input">
+        <text class="sr-cur">¥</text>
+        <input
+          class="sr-field"
+          type="digit"
+          value="{{sheet.unitCost}}"
+          bindinput="onSheetCost"
+          placeholder="0"
+          placeholder-class="ph"
+        />
+      </view>
+    </view>
+
+    <text class="sheet-tip">改成本只影响你的账本，不会改全站参考价</text>
+
+    <view class="sheet-acts">
+      <button class="act ghost" bindtap="sheetRemove">移出藏品</button>
+      <button class="act primary" bindtap="saveSheet">保存</button>
+    </view>
+  </view>
+</view>

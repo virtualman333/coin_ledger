@@ -1,0 +1,168 @@
+<view class="page" wx:if="{{coin}}">
+  <view class="hero-card">
+    <swiper
+      wx:if="{{mainUrl && !imgFail}}"
+      class="hero-swiper"
+      current="{{mainIdx}}"
+      circular="{{gal.length > 1}}"
+      bindchange="onSwiper"
+    >
+      <swiper-item wx:for="{{gal}}" wx:key="url">
+        <image
+          class="hero-img"
+          src="{{item.url}}"
+          mode="aspectFit"
+          show-menu-by-longpress
+          data-i="{{index}}"
+          bindtap="previewImg"
+          binderror="imgErr"
+        ></image>
+      </swiper-item>
+    </swiper>
+    <view wx:else class="hero-img placeholder">暂无实拍图</view>
+
+    <view class="fig-hint" wx:if="{{mainUrl && !imgFail}}">
+      {{gal.length > 1 ? (mainIdx + 1) + ' / ' + gal.length + ' · 左右滑动切换' : '点图看大图'}}
+    </view>
+  </view>
+
+  <view class="thumbs" wx:if="{{gal.length > 1}}">
+    <view
+      class="thumb-item {{mainIdx === index ? 'on' : ''}}"
+      wx:for="{{gal}}"
+      wx:key="url"
+      hover-class="tap-hover"
+      data-i="{{index}}"
+      bindtap="pickImg"
+    >
+      <image class="thumb-img" src="{{item.small || item.url}}" mode="aspectFill" lazy-load></image>
+    </view>
+  </view>
+
+  <view class="title-block">
+    <view class="title-row">
+      <view class="title-left">
+        <text class="name">{{coin.name}}</text>
+        <view class="title-meta">
+      <text class="title-year">{{coin.year}} 年</text>
+      <text class="title-sep">/</text>
+      <text class="title-series">{{coin.seriesName}}</text>
+          <text class="tag title-own" wx:if="{{owned}}">已收</text>
+        </view>
+      </view>
+      <view class="price-badge" wx:if="{{unitPrice}}">
+        <view class="pb-main">
+          <text class="pb-cur">¥</text><text class="pb-num">{{unitPrice}}</text>
+          <text class="pb-unit">/{{unitLabel}}</text>
+        </view>
+        <text class="pb-set" wx:if="{{setPrice}}">一套{{setSizeText}} ≈ ¥{{setPrice}}</text>
+        <text class="pb-tip">参考价</text>
+      </view>
+    </view>
+    <view class="set-line" wx:if="{{setInfo}}">
+      <text class="set-name">{{setInfo.name}}</text>
+      <text class="set-prog">本套已收 {{setInfo.owned}} / {{setInfo.total}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="facts">
+      <view class="fact {{item.wide ? 'fact-wide' : ''}}" wx:for="{{facts}}" wx:key="k">
+        <text class="fact-k">{{item.k}}</text>
+        <text class="fact-v">{{item.v}}</text>
+      </view>
+    </view>
+    <view class="ai-row" wx:if="{{aiPrice}}">
+      <view class="ai-main">
+        <text class="ai-badge">AI</text>
+        <text class="ai-label">推理价</text>
+        <text class="ai-value">¥{{aiPrice}}</text>
+        <text class="ai-diff">{{aiDiffText}}</text>
+      </view>
+      <text class="ai-tip">按发行量 · 材质 · 年代推算，面值已按年化 2.5% 通胀折算</text>
+    </view>
+    <text class="fact-note" wx:if="{{specNote}}">{{specNote}}</text>
+  </view>
+
+  <view class="actions">
+    <button class="btn-primary" wx:if="{{!owned}}" bindtap="addCoin" loading="{{busy}}">
+      {{loggedIn ? '加入我的藏品' : '登录后加入'}}
+    </button>
+
+    <view class="act-row">
+      <button class="act-btn" open-type="share" hover-class="tap-hover">分享给朋友</button>
+      <button class="act-btn" hover-class="tap-hover" bindtap="goFeedback">纠错反馈</button>
+    </view>
+
+    <view class="act-remove" wx:if="{{owned}}" hover-class="tap-hover" bindtap="removeCoin">从我的藏品移出</view>
+  </view>
+
+  <block wx:if="{{coin.desc}}">
+    <view class="section-head">
+      <text class="section-title">发行信息</text>
+      <text class="section-more">{{descSrc}}</text>
+    </view>
+    <view class="card">
+      <rich-text nodes="{{descNodes}}" wx:if="{{descNodes.length}}"></rich-text>
+      <text class="desc" wx:else>{{coin.desc}}</text>
+    </view>
+  </block>
+
+  <block wx:if="{{obverse || reverse}}">
+    <view class="section-head">
+      <text class="section-title">币面图案</text>
+    </view>
+    <view class="card">
+      <view class="pat" wx:if="{{obverse}}">
+        <text class="pat-k">正面图案</text>
+        <text class="pat-v">{{obverse}}</text>
+      </view>
+      <view class="pat" wx:if="{{reverse}}">
+        <text class="pat-k">背面图案</text>
+        <text class="pat-v">{{reverse}}</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{same.length > 0}}">
+    <view class="section-head">
+      <text class="section-title">同系列</text>
+    </view>
+    <view class="chips">
+      <view
+        class="chip"
+        wx:for="{{same}}"
+        wx:key="id"
+        hover-class="tap-hover"
+        data-id="{{item.id}}"
+        bindtap="peekCoin"
+      >{{item.name}}</view>
+    </view>
+  </block>
+</view>
+
+<view class="empty" wx:elif="{{notFound}}">没找到这个品种</view>
+
+<!-- 同系列：先看简介，再决定进不进详情 -->
+<view class="peek-mask" wx:if="{{peek}}" bindtap="closePeek" catchtouchmove="noop">
+  <view class="peek-sheet" catchtap="noop">
+    <view class="peek-head">
+      <text class="peek-title">{{peek.name}}</text>
+      <text class="peek-x" bindtap="closePeek">✕</text>
+    </view>
+    <view class="peek-body">
+      <image class="peek-img" src="{{peek.imgUrl}}" mode="aspectFit" wx:if="{{peek.imgUrl}}"></image>
+      <view class="peek-meta">
+        <text>{{peek.year}} 年</text>
+        <text wx:if="{{peek.face}}">面额 {{peek.face}} 元</text>
+        <text wx:if="{{peek.mintageText}}">{{peek.mintageText}}{{peek.unit}}</text>
+      </view>
+      <text class="peek-desc" wx:if="{{peek.desc}}">{{peek.desc}}</text>
+      <text class="peek-desc peek-empty" wx:else>这枚还没有收录详细介绍，可以进去看面额、发行量与套系进度。</text>
+    </view>
+    <view class="peek-foot">
+      <button class="peek-btn ghost" bindtap="closePeek">再看看</button>
+      <button class="peek-btn primary" bindtap="goPeek">查看详情</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,104 @@
+<view class="page home">
+  <!-- 顶部：品牌 + 装饰方孔钱 -->
+  <view class="hero">
+    <view class="hero-top">
+      <view class="hero-brand">
+        <view class="hero-title">
+          <text class="hero-mark">藏币录</text>
+          <text class="hero-tag">中国纪念币图鉴</text>
+        </view>
+        <text class="hero-sub">1984—2026 · {{totalCoins}} 个品种</text>
+        <button class="hero-share" open-type="share" hover-class="tap-hover">分享给朋友</button>
+      </view>
+    </view>
+    <image class="hero-img" wx:if="{{heroImg}}" src="{{heroImg}}" mode="aspectFit"></image>
+    <view class="hero-coin" wx:else><view class="coin-hole"></view></view>
+    <view class="hero-line"></view>
+  </view>
+
+  <!-- 账本（浮在 hero 下沿） -->
+  <view class="ledger" wx:if="{{loggedIn}}" hover-class="tap-hover" bindtap="goHoldings">
+    <view class="ledger-head">
+      <text class="ledger-title">我的收藏</text>
+      <text class="ledger-count"><text class="lc-num">{{progress.owned}}</text> / {{progress.total}}</text>
+    </view>
+    <view class="bar"><view class="bar-fill" style="width:{{progress.pct}}%;min-width:{{progress.pct > 0 ? 8 : 0}}rpx"></view></view>
+    <view class="ledger-sub">{{stats.kinds}} 个品种 · {{stats.rolls}} 套 · 已收 {{progress.pct}}%</view>
+    <view class="nums">
+      <view class="num">
+        <text class="num-k">面值</text>
+        <text class="num-v">¥{{stats.faceText}}</text>
+      </view>
+      <view class="num">
+        <text class="num-k">投入</text>
+        <text class="num-v">¥{{stats.costText}}</text>
+      </view>
+      <view class="num">
+        <text class="num-k">市值</text>
+        <text class="num-v">¥{{stats.marketText}}</text>
+      </view>
+      <view class="num">
+        <text class="num-k">浮动</text>
+        <text class="num-v {{stats.up ? 'up' : 'down'}}">¥{{stats.profitText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="ledger guest" wx:else>
+    <text class="guest-title">登录后开始记你的藏品</text>
+    <text class="guest-sub">与网页版同一账号</text>
+    <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
+  </view>
+
+  <!-- 最新发行：横滑 -->
+  <view class="sec">
+    <text class="sec-title">最新发行</text>
+    <text class="sec-more" hover-class="tap-hover" bindtap="goPlanTab">全部 ›</text>
+  </view>
+  <view class="latest">
+    <view class="latest-inner">
+      <view
+        class="lcard"
+        wx:for="{{latest}}"
+        wx:key="id"
+        hover-class="tap-hover"
+        data-id="{{item.id}}"
+        bindtap="goDetail"
+      >
+        <view class="lcard-fig">
+          <image class="lcard-img" src="{{item.imgUrl}}" mode="aspectFill" lazy-load></image>
+          <text class="lcard-year">{{item.year}}</text>
+        </view>
+        <text class="lcard-name">{{item.name}}</text>
+        <text class="lcard-face">{{item.faceText}}</text>
+        <text class="lcard-sub">{{item.priceText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 系列 -->
+  <view class="sec">
+    <text class="sec-title">按系列</text>
+    <text class="sec-more" hover-class="tap-hover" bindtap="goSeriesPage">全部 {{seriesCount}} 个 ›</text>
+  </view>
+  <view class="series-grid">
+    <view
+      class="series-item"
+      wx:for="{{seriesTop}}"
+      wx:key="code"
+      hover-class="tap-hover"
+      data-code="{{item.code}}"
+      bindtap="goSeries"
+    >
+      <text class="series-name">{{item.name}}</text>
+      <text class="series-count {{item.own ? 'series-own' : ''}}">{{item.label}}</text>
+      <view class="series-bar"><view class="series-fill" style="width:{{item.pct}}%"></view></view>
+    </view>
+  </view>
+
+  <view class="foot-note">
+    <text class="foot-warn-note">价格均为参考估算，不构成投资建议</text>
+    <text class="foot-contact" hover-class="tap-hover" bindtap="copyContact">微信 virtualman2001</text>
+    <text wx:if="{{syncTip}}" class="foot-warn">{{syncTip}}</text>
+  </view>
+</view>

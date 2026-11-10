@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!-- 真实路径路由（/coin/12）下相对路径会被解析成 /coin/app.js，用 base 统一回站点根 -->
+<base href="/">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>藏币录 · 1984—2026 纪念币收藏管理与发行清单</title>
+<meta name="description" content="藏币录收录 1984 年至今的中国普通纪念币与纪念钞，提供面额、发行量、材质、市场参考价与套系完整度统计，支持多用户记账与成本核算。">
+<meta name="keywords" content="纪念币,纪念钞,普通纪念币,发行清单,纪念币收藏,币面图案,国家公园纪念币,生肖纪念币,纪念币价格">
+<meta name="author" content="藏币录">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://coin.virtualman.top/">
+<meta name="theme-color" content="#0a0c10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f4ed" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="藏币录">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="藏币录">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="藏币录 · 1984—2026 纪念币收藏管理与发行清单">
+<meta property="og:description" content="历年普通纪念币与纪念钞的面额、发行量、材质与市场参考价，按套系核算完整度，支持多用户记账。">
+<meta property="og:url" content="https://coin.virtualman.top/">
+<meta property="og:image" content="https://coin.virtualman.top/icons/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="藏币录 · 1984—2026 纪念币收藏管理与发行清单">
+<meta name="twitter:description" content="136 个品种的面额、发行量、材质与市场参考价，按套系核算完整度。">
+<meta name="twitter:image" content="https://coin.virtualman.top/icons/og-cover.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "藏币录",
+  "alternateName": "Coin Ledger",
+  "url": "https://coin.virtualman.top/",
+  "description": "1984—2026 年中国普通纪念币与纪念钞的发行清单与收藏管理工具",
+  "inLanguage": "zh-CN"
+}
+</script>
+<link rel="stylesheet" href="/app.css?v=3.0.36">
+<script>
+/* 在首帧前定好主题，避免深色闪一下再变白 */
+(function(){
+  try{
+    var saved = localStorage.getItem('coin-theme');
+    var sys = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', saved || sys);
+  }catch(e){ document.documentElement.setAttribute('data-theme','dark'); }
+})();
+</script>
+<style>.thsub{font-size:10px;color:var(--dim);font-weight:400;letter-spacing:0}</style>
+<!-- 禁用 JS 时不显示首屏遮罩：品种页由服务端铺了一份静态正文，遮罩会把它整块盖住，
+     访客与抓取端就只能看到「正在载入」 -->
+<noscript><style>.boot-mask{display:none!important}</style></noscript>
+</head>
+<body class="anon booting">
+
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<!-- 首屏加载态：数据装配完成前给一个明确的等待反馈，避免整页空白 -->
+<div class="boot-mask" id="bootMask" role="status" aria-live="polite">
+  <div class="boot-inner">
+    <img src="logo.svg" alt="" width="44" height="44">
+    <span class="boot-title">藏币录</span>
+    <span class="boot-sub" id="bootSub">正在载入藏品档案…</span>
+    <span class="boot-bar"><i></i></span>
+  </div>
+</div>
+
+<div class="sysbar">
+  <div class="wrap">
+    <a class="sysbar-brand" href="#" aria-label="藏币录">
+      <img src="logo.svg" width="20" height="20" alt="">
+      <span>藏币录</span>
+    </a>
+    <span class="sync" id="syncState" role="status" aria-live="polite">连接中…</span>
+    <span class="spacer"></span>
+    <span class="userchip" id="userChip" hidden></span>
+    <button class="btn ghost xs sys-btn" id="accountBtn" hidden>账户</button>
+    <button class="btn ghost xs sys-btn" id="adminBtn" hidden>管理端</button>
+    <button class="btn ghost xs" id="authBtn">登录 / 注册</button>
+    <button class="theme-btn" id="themeBtn" title="切换深色 / 浅色" aria-label="切换深色或浅色主题">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"></circle>
+        <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div>
+        <div class="brand-row">
+          <img class="logo-mark" src="logo.svg" alt="藏币录" width="30" height="30">
+          <span class="brand">Coin Ledger · 藏币录</span>
+        </div>
+        <h1>我的纪念币收藏</h1>
+        <p class="sub"><span data-copy="range">1984—2026</span><button class="why" type="button" aria-label="为什么从 1984 年起算" data-tip="1984 年 10 月 1 日发行「中华人民共和国成立三十五周年」纪念币——这是新中国第一套普通纪念币，此后历年发行不断，所以档案从 1984 年起算。">?</button> 年普通纪念币与纪念钞全景档案　·　<b id="coinTotalA">136</b> 个品种逐一核对面值、成本与盈亏　·　支持多用户各自记账</p>
+      </div>
+      <div class="medal"><img src="logo.svg" alt="" width="96" height="96"></div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabbar" aria-label="主导航">
+  <div class="wrap">
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="tab on" data-tab="home" data-short="首页" role="tab" aria-selected="true" aria-controls="pane-home">首页</button>
+      <button class="tab" data-tab="plan" data-short="计划" role="tab" aria-selected="false" aria-controls="pane-plan">发行计划</button>
+      <button class="tab" data-tab="all" data-short="清单" role="tab" aria-selected="false" aria-controls="pane-all">全套清单</button>
+      <button class="tab" data-tab="series" data-short="系列" role="tab" aria-selected="false" aria-controls="pane-series">全部系列</button>
+      <button class="tab" data-tab="holdings" data-short="藏品" role="tab" aria-selected="false" aria-controls="pane-holdings">我的藏品</button>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap" id="main" tabindex="-1">
+
+  <!-- 手机端：小程序引导（正文内，可关闭） -->
+  <div class="mp-inline" id="mpInline" hidden>
+    <div class="mpi-head">
+      <img src="logo.svg" alt="" width="26" height="26">
+      <div class="mpi-text">
+        <b>手机上用小程序更顺手</b>
+        <span>账本随身带，随时记一枚</span>
+      </div>
+      <button class="mpi-more" type="button" id="mpiMore">收起</button>
+      <button class="mpi-x" type="button" id="mpiClose" aria-label="关闭提示">✕</button>
+    </div>
+    <div class="mpi-body" id="mpiBody">
+      <img class="mpi-qr" src="img/miniprogram-qr.png" alt="藏币录微信小程序码" width="132" height="132">
+      <div class="mpi-tip">
+        <p>在微信里长按二维码识别</p>
+        <p>或搜索小程序「<b>藏币录</b>」</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 首页 ============ -->
+  <section class="pane on" role="tabpanel" id="pane-home">
+    <div class="home-hero">
+      <div class="hh-text">
+        <div class="hh-kicker"><img src="logo.svg" width="22" height="22" alt="">Coin Ledger · 藏币录<span class="hh-kicker-tag">中国纪念币图鉴</span></div>
+        <h1 class="hh-title">把每一枚纪念币<br>都记清楚</h1>
+        <p class="hh-sub"><span data-copy="range">1984—2026</span><button class="why" type="button" aria-label="为什么从 1984 年起算" data-tip="1984 年 10 月 1 日发行「中华人民共和国成立三十五周年」纪念币——这是新中国第一套普通纪念币，此后历年发行不断，所以档案从 1984 年起算。">?</button> 年中国普通纪念币与纪念钞全景档案：<b id="coinTotalB">136</b> 个品种的发行信息、币面实物图、套系进度，以及属于你自己的收藏账本。多用户、双主题、手机可用。</p>
+        <div class="hh-cta">
+          <button class="btn primary" data-goto="all">浏览全套发行清单</button>
+          <button class="btn ghost" data-goto="account" id="homeJoin">免费注册，开始记录</button>
+        </div>
+        <div class="hh-note" id="homeNote">已登录会显示你的专属入口</div>
+      </div>
+      <div class="hh-fig">
+        <button class="hh-card" id="homeHeroCard" type="button" aria-label="看这一枚的详情">
+          <img id="homeHeroImg" src="img/108.jpg" alt="纪念币实物图" width="320" height="320" decoding="async" fetchpriority="high">
+        </button>
+        <div class="hh-dots" id="homeHeroDots" role="tablist" aria-label="首页轮播品种"></div>
+        <span class="hh-tag" id="homeHeroTag"></span>
+      </div>
+    </div>
+
+    <a class="plan-banner" id="planBanner" href="/plan" hidden>
+      <span class="pb-tag">即将发行</span>
+      <b class="pb-name" id="pbName"></b>
+      <span class="pb-meta" id="pbMeta"></span>
+      <span class="pb-more">看发行计划 ›</span>
+    </a>
+
+    <div class="home-stats" id="homeStats"></div>
+
+    <div class="home-sec">
+      <div class="sec-head">
+        <h2>能用来做什么</h2>
+        <span class="muted">四个最常用的场景</span>
+      </div>
+      <div class="feature-grid">
+        <button class="feature" data-goto="all">
+          <div class="f-ico">录</div>
+          <h4>查发行信息</h4>
+          <p><b data-copy="total">136</b> 个品种的面额、发行量、材质、直径与官方公告摘录，可按年份排序、按系列筛选，点开看详情。</p>
+          <span class="f-go">去清单 →</span>
+        </button>
+        <button class="feature" data-goto="series" data-gated="1">
+          <div class="f-ico">系</div>
+          <h4>看系列进度</h4>
+          <p>按官方发行口径把品种划成 21 个系列，自动算你集齐了几个、还缺哪几枚。</p>
+          <span class="f-go">全部系列 →</span>
+        </button>
+        <button class="feature" data-goto="cost">
+          <div class="f-ico">算</div>
+          <h4>算收齐成本</h4>
+          <p>按单枚与整套（20 枚/张）两种口径，估算把全套收齐要花多少钱、你的缺口还差多少。</p>
+          <span class="f-go">成本估算 →</span>
+        </button>
+        <button class="feature" data-goto="holdings" data-gated="1">
+          <div class="f-ico">账</div>
+          <h4>记我的账本</h4>
+          <p>按卷/张记录数量、成本与市价，自动算浮动盈亏。数据存在你的账号里，换设备登录也在。</p>
+          <span class="f-go">我的藏品 →</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-sec">
+      <div class="sec-head">
+        <h2>最近发行</h2>
+        <span class="muted">按年份倒序，点开看详情</span>
+        <span class="spacer"></span>
+        <button class="btn ghost xs" data-goto="plan">查看全部 →</button>
+      </div>
+      <div class="latest-grid" id="homeLatest"></div>
+    </div>
+
+    <div class="home-sec">
+      <div class="sec-head">
+        <h2>热门系列</h2>
+        <span class="muted">按系列看还差哪些</span>
+        <span class="spacer"></span>
+        <button class="btn ghost xs" data-goto="series">全部系列 →</button>
+      </div>
+      <div class="home-sets" id="homeSets"></div>
+    </div>
+  </section>
+
+  <!-- ============ 概览 ============ -->
+
+  <!-- ============ 我的藏品 ============ -->
+  <section class="pane" role="tabpanel" id="pane-holdings">
+    <div class="anon-gate">
+      <div class="gate-ico">藏</div>
+      <h3>这里是你自己的藏品账本</h3>
+      <p>按卷记录每个品种的数量、成本与市价，改动自动保存到服务器，换设备登录也能接着记。</p>
+      <div class="gate-actions">
+        <button class="btn primary" data-goto="account">登录 / 注册</button>
+      </div>
+    </div>
+
+    <div class="need-auth">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="k">总面值</div>
+          <div class="v gold" id="kFace">¥0</div>
+          <div class="n" id="kFaceNote">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k">实际投入</div>
+          <div class="v" id="kCost">¥0</div>
+          <div class="n" id="kCostNote">含买入溢价</div>
+        </div>
+        <div class="kpi">
+          <div class="k">当前市价</div>
+          <div class="v" id="kMarket">¥0</div>
+          <div class="n">按各系列卷价估算</div>
+        </div>
+        <div class="kpi up">
+          <div class="k">浮动盈亏</div>
+          <div class="v" id="kPnl">¥0</div>
+          <div class="n" id="kPnlNote">—</div>
+        </div>
+      </div>
+
+      <div class="note-line">
+        <span class="pill">独立藏品</span>
+        <span id="cashNote">—</span>
+      </div>
+
+      <div class="sec-head" style="margin-top:26px">
+        <h2>系列概览</h2>
+        <span class="muted">按品种计，重复卷数不计入</span>
+        <span class="spacer"></span>
+        <button class="btn ghost xs" data-goto="series">查看全部系列 →</button>
+      </div>
+      <div class="series-summary" id="setsBox"></div>
+    
+      <div class="sec-head">
+        <h2>我的藏品</h2>
+        <span class="muted">按账本记 · 整卷 20 枚、独立钞按张 · 数字可直接修改</span>
+        <span class="spacer"></span>
+      </div>
+      <div id="holdingsBox"></div>
+
+      <div class="sec-head" style="margin-top:30px">
+        <h2>全部收齐，要花多少钱</h2>
+        <span class="muted">按 2026 年 11 月二级市场参考价 · 全新原光品相估算</span>
+      </div>
+      <div class="cost-grid" id="costBox"></div>
+      <div class="concl" id="conclBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ 收齐成本 ============ -->
+
+  <!-- ============ 品种详情 ============ -->
+  <section class="pane" role="tabpanel" id="pane-coin">
+    <div id="coinBox"></div>
+  </section>
+
+  <!-- ============ 全部系列 ============ -->
+  <section class="pane" role="tabpanel" id="pane-series">
+    <div class="sec-head">
+      <h2>全部系列</h2>
+      <span class="muted">点任意系列可跳到清单并按该系列筛选</span>
+      <span class="spacer"></span>
+      <span class="muted" id="seriesHint"></span>
+    </div>
+    <div class="series-grid" id="seriesBox"></div>
+  </section>
+
+  <!-- ============ 全套清单 ============ -->
+  <section class="pane" role="tabpanel" id="pane-plan">
+    <div class="sec-head">
+      <h2>发行计划</h2>
+      <span class="muted" id="planMeta"></span>
+      <span class="spacer"></span>
+      <span class="muted" id="planSource"></span>
+    </div>
+    <div id="planBody"></div>
+  </section>
+
+  <section class="pane" role="tabpanel" id="pane-sitemap">
+    <div class="sec-head">
+      <h2>站点地图</h2>
+      <span class="muted" id="sitemapMeta"></span>
+      <span class="spacer"></span>
+      <a class="muted" href="/sitemap.xml" target="_blank" rel="noopener">sitemap.xml</a>
+    </div>
+    <div id="sitemapBody"></div>
+  </section>
+
+  <section class="pane" role="tabpanel" id="pane-all">
+    <div class="sec-head">
+      <h2>1984—2026 全套发行清单</h2>
+      <span class="muted" id="listCount"></span>
+      <span class="spacer"></span>
+      <span class="muted" id="listHint">点名称看详情</span>
+    </div>
+
+    <div class="liststats" id="listStats"></div>
+
+    <div class="toolbar">
+      <div class="qwrap">
+        <input type="text" id="q" placeholder="搜索名称，如：泰山、贺岁、国家公园" aria-label="搜索品种名称、年份或材质" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+        <button type="button" class="qclear" id="qClear" aria-label="清空搜索" hidden>×</button>
+      </div>
+      <button type="button" class="btn ghost xs ftoggle" id="filterToggle" aria-expanded="false" aria-controls="filterPanel">筛选</button>
+      <div class="fpanel" id="filterPanel">
+        <select id="fSeries" aria-label="按系列筛选"><option value="">全部系列</option></select>
+        <select id="fYear" aria-label="按年份筛选"><option value="">全部年份</option></select>
+        <label class="check"><input type="checkbox" id="fMine">只看已收藏</label>
+      </div>
+      <button type="button" class="btn ghost xs fadv-toggle" id="fAdvToggle" aria-expanded="false" aria-controls="fAdv">高级筛选</button>
+      <div class="fadv" id="fAdv" hidden>
+          <div class="fadv-grp" id="fadvFace"  data-dim="face"></div>
+          <div class="fadv-grp" id="fadvMat"   data-dim="material"></div>
+          <div class="fadv-grp" id="fadvCaster" data-dim="caster"></div>
+        <div class="fadv-grp" id="fadvMint"  data-dim="mintage"></div>
+      </div>
+      <span class="setfilter" id="setFilter" hidden></span>
+      <span class="count">筛出 <b id="filterCount">136</b> / <span id="cntAll">136</span> 个品种 · 已收藏 <b id="cnt">0</b></span>
+      <button type="button" class="btn ghost xs" id="clearFilters" hidden>清除筛选</button>
+    </div>
+
+    <div class="tablebox">
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:74px" class="sortable on" id="sortYear" tabindex="0" aria-sort="descending" aria-label="按年份排序，当前降序，按回车切换" title="点击按年份排序">年份<b class="arw" aria-hidden="true">▼</b></th>
+              <th>名称</th>
+              <th style="width:132px">系列</th>
+              <th style="width:86px">面额<br><span class="thsub">发行价</span></th>
+              <th style="width:88px">市场价<br><span class="thsub">单枚</span></th>
+              <th style="width:158px">一套<br><span class="thsub">20 枚 / 20 张 · 发行·市价</span></th>
+              <th style="width:96px">发行量</th>
+              <th style="width:88px">收藏</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="empty" id="emptyTip" style="display:none">
+      <p>没有匹配的品种，换个关键词试试</p>
+      <button type="button" class="btn ghost xs" id="emptyClear">清除全部筛选</button>
+    </div>
+  </section>
+
+  <!-- ============ 账户 ============ -->
+  <section class="pane" id="pane-account">
+    <div class="sec-head">
+      <h2>账户</h2>
+      <span class="muted">一个账号一套账本，多端同步</span>
+    </div>
+
+    <div class="authwrap" id="authForms">
+      <div class="authcard">
+        <div class="authtabs">
+          <button class="au on" data-mode="login">登录</button>
+          <button class="au" data-mode="register">注册</button>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+          <label for="loginName">用户名</label>
+          <input id="loginName" placeholder="你的用户名"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                 data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
+          <label for="loginPwd">密码</label>
+          <input id="loginPwd" type="password" placeholder="登录密码"
+                 autocomplete="off" data-nofill="1"
+                 data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
+          <div class="authmsg" id="loginMsg"></div>
+          <button class="btn primary block" type="submit" id="loginBtn">登录</button>
+        </form>
+
+        <form id="regForm" hidden autocomplete="off">
+          <label for="regName">用户名</label>
+          <input id="regName" placeholder="2–20 位：中文、字母、数字、下划线"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                 data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
+          <label for="regPwd">密码</label>
+          <input id="regPwd" type="password" placeholder="至少 8 位，不能是纯数字"
+                 autocomplete="off" data-nofill="1"
+                 data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
+          <label for="regPwd2">确认密码</label>
+          <input id="regPwd2" type="password" placeholder="再输一次"
+                 autocomplete="off" data-nofill="1"
+                 data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
+          <div class="authmsg" id="regMsg"></div>
+          <button class="btn primary block" type="submit" id="regBtn">注册并登录</button>
+          <p class="authnote">注册后你的账本从空白开始，可以随时在「我的藏品」里记录。</p>
+        </form>
+      </div>
+
+      <div class="authside">
+        <h4>关于账号</h4>
+        <ul>
+          <li>持仓、成本、市价按账号隔离，行情与发行清单全站共享。</li>
+          <li>登录后，改动会自动保存到服务器（顶栏状态灯变绿）。</li>
+          <li>未登录也能浏览全套发行清单与币面实物图。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="profile need-auth" id="profileBox"></div>
+  </section>
+
+  <!-- ============ 用户管理（仅超管） ============ -->
+  <section class="pane" id="pane-admin">
+    <div class="sec-head">
+      <h2>管理端</h2>
+      <span class="spacer"></span>
+      <span class="astat" id="adminStat"></span>
+      <button class="btn ghost" id="reloadUsers">刷新</button>
+    </div>
+
+    <div class="atabs" id="adminTabs">
+      <div class="anav-title">管理端</div>
+      <div class="agroup">内容</div>
+      <button class="atab" type="button" data-atab="params">参数</button>
+      <button class="atab" type="button" data-atab="images">图片</button>
+      <button class="atab" type="button" data-atab="series">系列</button>
+      <div class="agroup">运营</div>
+      <button class="atab on" type="button" data-atab="users">用户</button>
+      <button class="atab" type="button" data-atab="feedback">反馈<i class="adot" id="fbDot" hidden></i></button>
+      <button class="atab" type="button" data-atab="visitors">访客</button>
+      <div class="anav-foot">只会看到你有权限的内容</div>
+    </div>
+
+    <!-- 系列 -->
+    <div class="apanel" id="apanel-series" data-title="系列 · 归类与卡图" hidden>
+      <div class="qintro">
+        <b>系列</b>
+        <p>一个品种可以属于多个系列（比如龙钞同时在「纪念钞」和「生肖纪念钞」里）。这里管系列本身：名称、简介、卡图、排序。</p>
+        <p>成员在「参数」里点某个品种，填「所属系列」即可（逗号分隔，如 <code>CN,SXC</code>）。</p>
+      </div>
+      <div class="qbar">
+        <button class="btn primary" id="sNew" type="button">＋ 新建系列</button>
+        <span class="qmuted" id="sResult"></span>
+      </div>
+      <div class="tablebox" style="margin-top:12px">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:72px">卡图</th>
+                <th style="width:110px">标识</th>
+                <th>系列名</th>
+                <th style="width:90px">品种数</th>
+                <th style="width:90px">排序</th>
+                <th style="width:190px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="seriesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <input type="file" id="seriesFile" accept="image/*" hidden>
+    </div>
+
+
+    <!-- 用户 -->
+    <div class="apanel" id="apanel-users" data-title="用户 · 账号与权限">
+      <div class="tablebox">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:56px">ID</th>
+                <th>用户名</th>
+                <th style="width:88px">角色</th>
+                <th style="width:96px">藏品数量</th>
+                <th style="width:170px">注册时间</th>
+                <th style="width:170px">最近登录</th>
+                <th style="width:88px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="empty" id="usersEmpty" style="display:none">还没有其他注册用户</div>
+    </div>
+
+    <!-- 参数 -->
+    <div class="apanel" id="apanel-params" data-title="参数 · 品种基础数据" hidden>
+      <div class="afilter">
+        <input class="ainput" id="apSearch" placeholder="搜索名称 / 年份" autocomplete="off" data-form-type="other">
+        <select class="ainput aselect" id="apFilter">
+          <option value="all">全部品种</option>
+          <option value="noimg">缺主图</option>
+          <option value="noset">缺正反面图</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted" id="apCount"></span>
+        <button class="btn primary xs" id="apSave" type="button" disabled>保存全部修改</button>
+      </div>
+      <div class="tablebox">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:54px"></th>
+                <th style="width:52px">#</th>
+                <th style="width:76px">年份</th>
+                <th>名称</th>
+                <th style="width:84px">面额<br><span class="thsub">元</span></th>
+                <th style="width:88px">市价<br><span class="thsub">元</span></th>
+                <th style="width:94px">发行量<br><span class="thsub">万枚 / 万张</span></th>
+                <th style="width:66px">一套<br><span class="thsub">枚 / 张</span></th>
+                <th style="width:144px">系列</th>
+                <th style="width:150px">套系</th>
+                <th style="width:86px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="apBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="apager">
+        <button class="btn ghost xs" id="apPrev" type="button">上一页</button>
+        <span class="muted" id="apPage"></span>
+        <button class="btn ghost xs" id="apNext" type="button">下一页</button>
+      </div>
+    </div>
+
+    <!-- 访客记录 -->
+    <div class="apanel" id="apanel-visitors" data-title="访客 · 访问统计" hidden>
+      <div class="afilter">
+        <span class="muted">按会话统计 · 同一页面 30 秒内只记一次 · 关闭标签页算新访客</span>
+        <span class="spacer"></span>
+        <button class="btn ghost xs" id="vsReload" type="button">刷新</button>
+      </div>
+      <div class="vs-stats" id="vsStats"></div>
+      <div class="vs-trend" id="vsTrend"></div>
+      <div class="vlist" id="vsBox"></div>
+    </div>
+
+    <!-- 反馈 -->
+    <div class="apanel" id="apanel-feedback" data-title="反馈 · 用户纠错与建议" hidden>
+      <div class="afilter">
+        <select class="ainput aselect" id="fbFilter">
+          <option value="open">待处理</option>
+          <option value="done">已处理</option>
+          <option value="all">全部</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted" id="fbCount"></span>
+        <button class="btn ghost xs" id="fbReload" type="button">刷新</button>
+      </div>
+      <div class="fblist" id="fbList"></div>
+    </div>
+
+    <!-- 图片 -->
+    <div class="apanel" id="apanel-images" data-title="图片 · 实物图与图集" hidden>
+      <div class="asplit">
+        <aside class="alist">
+          <input class="ainput alist-search" id="aiSearch" placeholder="搜索品种名称" autocomplete="off" data-form-type="other">
+          <div class="alist-body" id="aiList"></div>
+        </aside>
+        <div class="amain">
+          <div class="amain-head">
+            <button class="btn ghost xs" id="aiPrev" type="button">← 上一个</button>
+            <strong class="amain-title" id="aiTitle">从左选一个品种</strong>
+            <button class="btn ghost xs" id="aiNext" type="button">下一个 →</button>
+          </div>
+          <div class="agrid" id="aiGrid"></div>
+          <div class="aupload">
+            <label class="albl">类型
+              <select id="aiKind">
+                <option value="main">主图</option>
+                <option value="obverse">正面</option>
+                <option value="reverse">背面</option>
+                <option value="set">正反面 / 整套</option>
+              </select>
+            </label>
+            <label class="afile" for="aiFile">选择图片<input type="file" id="aiFile" accept="image/*"></label>
+            <button class="btn primary xs" id="aiUpload" type="button" disabled>上传替换</button>
+            <span class="muted" id="aiTip">自动压到 900px 内并转 JPEG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="fmt">
+      <div>
+        <b>数据说明</b>　资料整理自中国人民银行公告、中国金币网及各地人民银行分支机构发行公示，最新收录至 2026 年 11 月 8 日。<br>
+        发行量单位为「万枚 / 万张」；1 卷按 20 枚计。市价为参考估算，随行情波动，不作为交易依据。<br>
+        <b>图片来源</b>　<span id="imgNote">币面图取自中国人民银行发行公告及公开图源，逐张人工核验后收录。</span>如权利人认为使用不当，请联系删除。
+      </div>
+      <div class="foot-contact">
+        <b>联系我</b><br>
+        微信 <span class="wxid" id="wxId" role="button" tabindex="0" title="点击复制微信号">virtualman2001</span><br>
+        <span class="wxhint">点微信号可复制</span>
+      </div>
+    </div>
+    <div class="foot-links">
+      <a href="/sitemap">站点地图</a>
+      <span class="dot">·</span>
+      <a href="legal.html#terms">服务条款</a>
+      <span class="dot">·</span>
+      <a href="legal.html#privacy">隐私政策</a>
+      <span class="dot">·</span>
+      <a href="legal.html#disclaimer">免责声明</a>
+      <span class="dot">·</span>
+      <button class="linkbtn" id="shareBtn" type="button">分享本站</button>
+      <span class="spacer"></span>
+      <span class="visit" id="visitCount"></span>
+      <span class="beian">© 2026 藏币录</span>
+    </div>
+  </footer>
+</main>
+
+<div class="ctip" id="ctip"></div>
+
+<!-- 触屏设备看图：桌面端用悬停卡片，手机端用这个弹层 -->
+<div class="peek-layer" id="peekLayer" aria-hidden="true">
+  <div class="peek-backdrop" data-peek-close></div>
+  <div class="peek-card" role="dialog" aria-modal="true" aria-label="币面与发行信息">
+    <button type="button" class="peek-close" data-peek-close aria-label="关闭">×</button>
+    <div class="peek-body" id="peekBody"></div>
+    <button type="button" class="btn ghost peek-done" data-peek-close>关闭</button>
+  </div>
+</div>
+
+<a class="trap" href="/api/__trap" aria-hidden="true" tabindex="-1" rel="nofollow">数据接口</a>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/app.js?v=3.0.36"></script>
+  <button type="button" class="to-top" id="toTop" aria-label="回到顶部" tabindex="-1">↑</button>
+
+<!-- 小程序引导：桌面端悬浮，点开看码 -->
+<div class="mp-fab" id="mpFab">
+  <div class="mp-panel" id="mpPanel" hidden>
+    <button class="mp-close" type="button" id="mpClose" aria-label="关闭">✕</button>
+    <img class="mp-qr" src="img/miniprogram-qr.png" alt="藏币录微信小程序码" width="164" height="164">
+    <div class="mp-title">微信扫一扫</div>
+    <div class="mp-sub">小程序里记藏品，手机随手看</div>
+  </div>
+  <button class="mp-btn" type="button" id="mpBtn" aria-expanded="false" aria-controls="mpPanel">
+    <img src="logo.svg" alt="" width="22" height="22">
+    <span>小程序</span>
+  </button>
+</div>
+
+</body>
+</html>

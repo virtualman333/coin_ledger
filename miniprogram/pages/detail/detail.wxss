@@ -1,0 +1,500 @@
+/* ---------- 主图 ---------- */
+.hero-card {
+  position: relative;
+  display: flex;
+  height: 620rpx;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: radial-gradient(circle at 50% 45%, #ffffff 0%, #fbf9f3 100%);
+  box-shadow: 0 2rpx 12rpx rgba(60, 48, 26, 0.06);
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 14rpx;
+}
+
+.fig-hint {
+  position: absolute;
+  right: 28rpx;
+  bottom: 28rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(29, 29, 31, 0.55);
+  color: #f6efdf;
+  font-size: 21rpx;
+}
+
+/* ---------- 标题 ---------- */
+/* ---------- 多图缩略图 ---------- */
+.thumbs {
+  display: flex;
+  margin-top: 16rpx;
+  flex-wrap: wrap;
+}
+
+.thumb-item {
+  position: relative;
+  width: 132rpx;
+  height: 132rpx;
+  margin: 0 12rpx 12rpx 0;
+  border: 2rpx solid #e8e2d5;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.thumb-item.on {
+  border-color: #9a6b1f;
+  box-shadow: 0 0 0 3rpx rgba(154, 107, 31, 0.18);
+}
+
+.thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+}
+
+
+.title-block {
+  padding: 30rpx 28rpx 6rpx;
+}
+
+.name {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+  line-height: 1.3;
+}
+
+.title-meta {
+  display: flex;
+  margin-top: 14rpx;
+  align-items: center;
+}
+
+.title-year,
+.title-series {
+  color: #8a8378;
+  font-size: 24rpx;
+}
+
+.title-sep {
+  margin: 0 10rpx;
+  color: #cfc7b8;
+  font-size: 22rpx;
+}
+
+.title-own {
+  margin-left: 16rpx;
+}
+
+.set-line {
+  display: flex;
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  align-items: center;
+  border-radius: 12rpx;
+  background: #f6f1e4;
+  justify-content: space-between;
+}
+
+.set-name {
+  flex: 1;
+  overflow: hidden;
+  color: #6b5320;
+  font-size: 23rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.set-prog {
+  margin-left: 12rpx;
+  color: #9a6b1f;
+  font-size: 22rpx;
+  flex-shrink: 0;
+}
+
+/* ---------- 参数 ---------- */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.fact {
+  display: flex;
+  width: 33.33%;
+  padding: 14rpx 0;
+  flex-direction: column;
+}
+
+.fact-wide {
+  width: 100%;
+}
+
+.fact-k {
+  color: #8a8378;
+  font-size: 22rpx;
+}
+
+.fact-v {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  line-height: 1.4;
+}
+
+/* ---------- 价格 ---------- */
+.price-card {
+  padding: 6rpx 28rpx;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f2efe7;
+}
+
+.price-row:last-child {
+  border-bottom: none;
+}
+
+.price-k {
+  color: #6b6559;
+  font-size: 26rpx;
+}
+
+.price-v {
+  color: #9a6b1f;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+}
+
+/* ---------- 操作 ---------- */
+.actions {
+  margin-top: 30rpx;
+}
+
+/* 次要操作：分享 / 纠错，两个等宽描边按钮 */
+.act-row {
+  display: flex;
+  margin-top: 16rpx;
+}
+
+.act-btn {
+  flex: 1;
+  height: 76rpx;
+  margin: 0;
+  padding: 0;
+  line-height: 76rpx;
+  border: 1rpx solid #e2d8c4;
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #7a541a;
+  font-size: 27rpx;
+  text-align: center;
+}
+
+.act-btn + .act-btn {
+  margin-left: 16rpx;
+}
+
+.act-btn::after {
+  border: none;
+}
+
+/* 破坏性操作弱化：小字 + 暗红，点之前还会二次确认 */
+.act-remove {
+  margin-top: 22rpx;
+  padding: 10rpx 0;
+  color: #b5665c;
+  font-size: 23rpx;
+  text-align: center;
+}
+
+.btn-share::after {
+  border: none;
+}
+
+/* ---------- 介绍 ---------- */
+.desc {
+  display: block;
+  color: #3a352c;
+  font-size: 27rpx;
+  line-height: 1.9;
+  text-align: justify;
+}
+
+/* ---------- 同系列 ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.chip {
+  margin: 0 14rpx 14rpx 0;
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4438;
+  font-size: 24rpx;
+}
+
+.fig-note {
+  display: block;
+  margin: 18rpx 4rpx 0;
+  color: #a39c8e;
+  font-size: 20rpx;
+  line-height: 1.7;
+}
+
+.fb-row {
+  margin-top: 26rpx;
+  padding: 14rpx 0;
+  color: #b3aa9b;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+/* 规格区脚注（推定值说明）与币面图案 */
+.fact-note{
+  display:block;margin-top:18rpx;padding-top:14rpx;
+  border-top:1rpx solid #eee;font-size:22rpx;line-height:1.6;color:#9a9a9a
+}
+.pat{padding:16rpx 0;border-bottom:1rpx solid #f2f2f2}
+.pat:last-child{border-bottom:0;padding-bottom:0}
+.pat:first-child{padding-top:0}
+.pat-k{display:block;font-size:24rpx;color:#b8934a;margin-bottom:8rpx}
+.pat-v{display:block;font-size:27rpx;line-height:1.75;color:#5a5a5a}
+
+/* 同系列预览弹窗 */
+.peek-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(24, 20, 14, 0.45);
+}
+
+.peek-sheet {
+  width: 100%;
+  max-height: 86vh;
+  padding: 0 30rpx calc(26rpx + env(safe-area-inset-bottom));
+  border-radius: 28rpx 28rpx 0 0;
+  background: #ffffff;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.peek-head {
+  display: flex;
+  padding: 28rpx 0 12rpx;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.peek-title {
+  flex: 1;
+  padding-right: 20rpx;
+  color: #2b2926;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.peek-x {
+  padding: 0 8rpx;
+  color: #b3aa9b;
+  font-size: 28rpx;
+}
+
+.peek-body {
+  padding-bottom: 6rpx;
+}
+
+.peek-img {
+  display: block;
+  width: 100%;
+  height: 300rpx;
+  margin-bottom: 16rpx;
+  border-radius: 12rpx;
+  background: #f8f6f1;
+}
+
+.peek-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+  color: #8a8378;
+  font-size: 22rpx;
+}
+
+.peek-desc {
+  display: block;
+  color: #4a4438;
+  font-size: 25rpx;
+  line-height: 1.8;
+}
+
+.peek-empty {
+  color: #b3aa9b;
+}
+
+.peek-foot {
+  display: flex;
+  margin-top: 26rpx;
+  gap: 18rpx;
+}
+
+.peek-btn {
+  flex: 1;
+  height: 86rpx;
+  margin: 0;
+  line-height: 86rpx;
+  border-radius: 14rpx;
+  font-size: 27rpx;
+}
+
+.peek-btn.ghost {
+  border: 1rpx solid #e6dfd0;
+  background: #ffffff;
+  color: #8a8378;
+}
+
+.peek-btn.primary {
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.peek-btn::after {
+  border: none;
+}
+
+/* 主图轮播 */
+.hero-swiper {
+  width: 100%;
+  height: 640rpx;
+}
+
+.hero-swiper .hero-img {
+  width: 100%;
+  height: 640rpx;
+}
+
+/* 标题 + 右侧价格 */
+.title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.title-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.price-badge {
+  flex: 0 0 auto;
+  padding: 12rpx 18rpx;
+  border-radius: 14rpx;
+  background: #fdf7ea;
+  text-align: right;
+}
+
+.pb-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  color: #9a6b1f;
+}
+
+.pb-cur {
+  font-size: 22rpx;
+}
+
+.pb-num {
+  font-size: 38rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pb-unit {
+  margin-left: 2rpx;
+  color: #b98f43;
+  font-size: 20rpx;
+}
+
+.pb-set {
+  display: block;
+  margin-top: 6rpx;
+  color: #8a8378;
+  font-size: 19rpx;
+}
+
+.pb-tip {
+  display: block;
+  margin-top: 2rpx;
+  color: #c3bbad;
+  font-size: 18rpx;
+}
+
+/* AI 推理价：只在详情页出现 */
+.ai-row {
+  margin-top: 18rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 12rpx;
+  background: #faf8f3;
+}
+
+.ai-main {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.ai-tip {
+  display: block;
+  margin-top: 8rpx;
+  color: #c3bbad;
+  font-size: 19rpx;
+  line-height: 1.5;
+}
+
+.ai-badge {
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  background: #2b2926;
+  color: #f6e7c6;
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.ai-label {
+  color: #8a8378;
+  font-size: 22rpx;
+}
+
+.ai-value {
+  color: #9a6b1f;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.ai-diff {
+  margin-left: auto;
+  color: #b3aa9b;
+  font-size: 20rpx;
+}

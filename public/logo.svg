@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="51 51 922 922" width="922" height="922" role="img" aria-label="藏币录">
+  <title>藏币录</title>
+  <!-- 印章底 -->
+  <rect x="51" y="51" width="922" height="922" rx="120" fill="#B23A2C"/>
+  <!-- 外圈：钱币边郭 -->
+  <circle cx="512" cy="512" r="290.5" fill="none" stroke="#F6E7C6" stroke-width="58"/>
+  <!-- 内方：孔方兄 -->
+  <rect x="401" y="401" width="222" height="222" rx="30" fill="none" stroke="#F6E7C6" stroke-width="58"/>
+</svg>

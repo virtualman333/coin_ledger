@@ -1,0 +1,111 @@
+<view class="head">
+  <view class="search-row">
+    <view class="search">
+      <!-- 未激活时放一个「假框」：不渲染 input，机型再想自动聚焦也没有对象 -->
+      <view
+        wx:if="{{!searchActive}}"
+        class="search-fake"
+        hover-class="tap-hover"
+        bindtap="activateSearch"
+      >
+        <text class="search-icon">⌕</text>
+        <text class="search-ph">{{keyword || '搜品种 / 年份'}}</text>
+      </view>
+      <input
+        wx:else
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜品种 / 年份"
+        placeholder-class="search-ph"
+        confirm-type="search"
+        focus="{{searchFocus}}"
+        bindinput="onSearch"
+        bindtap="focusSearch"
+        bindblur="onSearchBlur"
+        bindconfirm="onSearchBlur"
+      />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</view>
+    </view>
+    <view class="filter-toggle {{filterOpen || extraCount ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleFilter">
+      <text>筛选</text>
+      <text class="filter-badge" wx:if="{{extraCount}}">{{extraCount}}</text>
+    </view>
+  </view>
+
+  <scroll-view class="tabs" scroll-x enable-flex>
+    <view
+      class="tab {{code === item.code ? 'tab-on' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="code"
+      hover-class="tab-hover"
+      data-code="{{item.code}}"
+      bindtap="pickTab"
+    >
+      <text>{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="bar">
+    <text class="bar-text">{{count}} 个品种 · 已收 {{ownedCount}}</text>
+    <view class="bar-actions">
+      <view class="bar-btn {{desc ? '' : 'asc'}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
+    </view>
+  </view>
+
+  <view class="fpanel" wx:if="{{filterOpen}}">
+    <view class="frow">
+      <picker range="{{yearOpts}}" value="{{yearIdx}}" bindchange="pickYear">
+        <view class="fbtn {{yearFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{yearFilter || '年份'}} ▾</view>
+      </picker>
+      <picker range="{{faceOpts}}" value="{{faceIdx}}" bindchange="pickFace">
+        <view class="fbtn {{faceFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{faceFilter ? faceFilter + ' 元' : '面额'}} ▾</view>
+      </picker>
+      <picker range="{{matOpts}}" value="{{matIdx}}" bindchange="pickMat">
+        <view class="fbtn {{matFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{matFilter || '材质'}} ▾</view>
+      </picker>
+      <view class="fbtn {{onlyOwn ? 'fbtn-on' : ''}}" hover-class="tap-hover" bindtap="toggleOwn">只看已收</view>
+      <view class="fbtn fbtn-clear" wx:if="{{hasExtra}}" hover-class="tap-hover" bindtap="clearExtra">清除</view>
+    </view>
+  </view>
+</view>
+
+<view class="list">
+  <view
+    class="row"
+    wx:for="{{rows}}"
+    wx:key="id"
+    hover-class="row-hover"
+    data-id="{{item.id}}"
+    bindtap="goDetail"
+  >
+    <image
+      wx:if="{{!item.imgFail}}"
+      class="thumb"
+      src="{{item.imgUrl}}"
+      mode="aspectFit"
+      lazy-load
+      data-id="{{item.id}}"
+      binderror="imgErr"
+    ></image>
+    <view wx:else class="thumb placeholder">无图</view>
+    <view class="row-main">
+      <view class="row-top">
+        <text class="row-name">{{item.name}}</text>
+        <text class="tag" wx:if="{{item.owned}}">已收</text>
+      </view>
+      <text class="row-meta">{{item.metaText}}</text>
+      <view class="row-sub">
+        <text class="row-mint" wx:if="{{item.mintageLabel}}">{{item.mintageLabel}}</text>
+        <text class="row-dot" wx:if="{{item.mintageLabel}}">·</text>
+        <text class="row-set">{{item.setLabel}}</text>
+      </view>
+    </view>
+    <view class="row-right">
+      <text class="row-year">{{item.year}}</text>
+      <text class="row-price">{{item.priceText}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{count === 0}}">
+    {{onlyOwn ? '还没有收藏到符合条件的东西，先取消「只看已收」试试' : '没有匹配的品种，换个关键词试试'}}
+  </view>
+</view>

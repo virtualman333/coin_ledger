@@ -1,0 +1,274 @@
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 16rpx 24rpx 8rpx;
+  background: #f6f4ef;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+}
+
+.search {
+  display: flex;
+  flex: 1;
+  height: 68rpx;
+  align-items: center;
+  padding: 0 22rpx;
+  border-radius: 34rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 10rpx rgba(60, 48, 26, 0.05);
+  min-width: 0;
+}
+
+.search-icon {
+  margin-right: 10rpx;
+  color: #c0b9ab;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.filter-toggle {
+  display: flex;
+  height: 68rpx;
+  margin-left: 14rpx;
+  padding: 0 24rpx;
+  align-items: center;
+  border: 1rpx solid #e6dfd0;
+  border-radius: 34rpx;
+  background: #ffffff;
+  color: #6b6559;
+  font-size: 25rpx;
+  flex-shrink: 0;
+}
+
+.filter-toggle.on {
+  border-color: #d8b978;
+  background: #fdf7ea;
+  color: #9a6b1f;
+  font-weight: 600;
+}
+
+.filter-badge {
+  margin-left: 8rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: #9a6b1f;
+  color: #fff;
+  font-size: 19rpx;
+  line-height: 28rpx;
+}
+
+.fpanel {
+  margin-top: 14rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  background: #ffffff;
+  box-shadow: 0 4rpx 14rpx rgba(60, 48, 26, 0.05);
+}
+
+.frow {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.search-fake {
+  display: flex;
+  flex: 1;
+  height: 68rpx;
+  align-items: center;
+  min-width: 0;
+}
+
+.search-input {
+  flex: 1;
+  height: 68rpx;
+  min-width: 0;
+  font-size: 27rpx;
+}
+
+.search-ph {
+  color: #b9b2a4;
+}
+
+.search-clear {
+  display: flex;
+  width: 40rpx;
+  height: 40rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f2efe7;
+  color: #a39c8e;
+  font-size: 22rpx;
+}
+
+.tabs {
+  margin-top: 16rpx;
+  padding-right: 24rpx;
+  white-space: nowrap;
+}
+
+.tab {
+  display: inline-flex;
+  height: 60rpx;
+  margin-right: 14rpx;
+  padding: 0 26rpx;
+  align-items: center;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #6b6559;
+  font-size: 24rpx;
+}
+
+.tab-on {
+  background: #9a6b1f;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.tab-hover {
+  opacity: 0.7;
+}
+
+.bar {
+  display: flex;
+  padding: 16rpx 4rpx 6rpx;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bar-text {
+  color: #8a8378;
+  font-size: 22rpx;
+}
+
+.bar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.bar-btn {
+  margin-left: 12rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #6b6559;
+  font-size: 22rpx;
+}
+
+.bar-btn.on {
+  background: #f4efe4;
+  color: #9a6b1f;
+  font-weight: 600;
+}
+
+.list {
+  padding: 0 24rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 10rpx rgba(60, 48, 26, 0.04);
+}
+
+.row-hover {
+  background: #fbf8f1;
+}
+
+.row-main {
+  display: flex;
+  flex: 1;
+  margin-left: 18rpx;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.row-top {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.row-name {
+  flex: 1;
+  overflow: hidden;
+  font-size: 28rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-top .tag {
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+
+.row-meta {
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #8a8378;
+  font-size: 22rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-right {
+  display: flex;
+  margin-left: 16rpx;
+  align-items: flex-end;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.row-year {
+  color: #a39c8e;
+  font-size: 21rpx;
+}
+
+.row-price {
+  margin-top: 8rpx;
+  color: #9a6b1f;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+/* 年份 / 面额 / 材质 筛选条（可横滑） */
+.filters{
+  display:flex;align-items:center;white-space:nowrap;
+  padding:0 24rpx 18rpx;
+}
+.fbtn{
+  display:inline-flex;align-items:center;
+  margin-right:14rpx;padding:10rpx 22rpx;border-radius:999rpx;
+  font-size:24rpx;color:#7a7a7a;background:#f5f3ee;border:1rpx solid #ece7dc;
+}
+.fbtn-on{color:#8a6a1f;background:#faf3dd;border-color:#e2cf9a;font-weight:600}
+.fbtn-clear{color:#b04a3a;background:#fdf1ef;border-color:#f0d6d1}
+
+/* 第二行：发行量 · 套系 */
+.row-sub {
+  display: flex;
+  margin-top: 6rpx;
+  align-items: center;
+  overflow: hidden;
+  color: #b3aa9b;
+  font-size: 20rpx;
+  white-space: nowrap;
+}
+
+.row-mint {
+  color: #9a6b1f;
+  font-weight: 500;
+}
+
+.row-dot {
+  margin: 0 8rpx;
+  color: #d6cebe;
+}

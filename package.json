@@ -1,0 +1,32 @@
+{
+  "name": "coin-ledger",
+  "version": "3.0.36",
+  "private": true,
+  "description": "藏币录 · 1984—2026 纪念币收藏管理（多用户，Node + MySQL 后端 + 静态前端）",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "check": "node --check server/index.js && node --check server/store.js && node --check server/store-json.js && node --check server/store-mysql.js && node --check server/auth.js && node --check server/guard.js && node --check public/app.js",
+    "migrate": "node tools/migrate-to-mysql.js",
+    "smoke": "node tools/smoke.js",
+    "seo:push": "node tools/baidu_push.js",
+    "mp:upload": "node tools/mp_upload.js",
+    "mp:preview": "node tools/mp_preview.js",
+    "mp:smoke": "node tools/mp_smoke.js"
+  },
+  "dependencies": {
+    "miniprogram-ci": "^2.1.31",
+    "mysql2": "^3.24.6"
+  },
+  "keywords": [
+    "纪念币",
+    "collection",
+    "ledger",
+    "mysql"
+  ],
+  "license": "MIT"
+}

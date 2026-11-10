@@ -1,0 +1,36 @@
+# ---- 密钥与凭据（绝不入库）----
+.secrets/
+*.key
+*.pem
+*.p12
+.env
+.env.*
+!.env.example
+
+# ---- 依赖 ----
+node_modules/
+
+# ---- 运行时数据：含用户、IP、反馈、头像 ----
+/data/
+public/feedback/
+public/avatar/
+public/data/visits.json
+
+# ---- 本地工作区 / 抓取 / 预览 / 备份 ----
+.workbuddy/
+_scrape/
+_assets/
+.preview/
+*.tar.gz
+*.bak
+*.log
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.testdata/
+tools/_data/
+.wbapp_*.genie
+*.genie

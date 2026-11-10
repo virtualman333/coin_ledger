@@ -1,0 +1,33 @@
+<view class="page">
+  <view class="head">
+    <text class="h1">按系列</text>
+    <text class="h-sub">{{total}} 个品种，分成 {{count}} 个系列</text>
+  </view>
+
+  <view class="all-card" hover-class="tap-hover" bindtap="goAll">
+    <view class="all-main">
+      <text class="all-title">全部品种</text>
+      <text class="all-sub">{{total}} 个 · 按年份倒序</text>
+    </view>
+    <text class="all-more">›</text>
+  </view>
+
+  <view class="cards">
+    <view
+      class="scard"
+      wx:for="{{items}}"
+      wx:key="code"
+      data-code="{{item.code}}"
+      bindtap="goSeries"
+      hover-class="tap-hover"
+    >
+      <image class="scard-img" src="{{item.imgUrl}}" mode="aspectFit" lazy-load wx:if="{{item.imgUrl}}"></image>
+      <view class="scard-ph" wx:else><text>{{item.name}}</text></view>
+      <view class="scard-body">
+        <text class="scard-name">{{item.name}}</text>
+        <text class="scard-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+        <view class="scard-bar"><view class="scard-fill" style="width:{{item.pct}}%"></view></view>
+      </view>
+    </view>
+  </view>
+</view>

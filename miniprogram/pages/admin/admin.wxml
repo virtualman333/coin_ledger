@@ -1,0 +1,226 @@
+<view class="page">
+  <!-- 概览 -->
+  <view class="stats">
+    <view class="stat">
+      <text class="s-num">{{userCount}}</text>
+      <text class="s-k">用户</text>
+    </view>
+    <view class="stat">
+      <text class="s-num">{{coinCount}}</text>
+      <text class="s-k">品种</text>
+    </view>
+    <view class="stat">
+      <text class="s-num {{openCount ? 'warn' : ''}}">{{openCount}}</text>
+      <text class="s-k">待处理反馈</text>
+    </view>
+  </view>
+
+  <!-- 页签 -->
+  <view class="tabs">
+    <view
+      class="tab {{tab === item.k ? 'on' : ''}}"
+      wx:for="{{tabList}}"
+      wx:key="k"
+      data-k="{{item.k}}"
+      bindtap="switchTab"
+    >{{item.t}}</view>
+  </view>
+
+  <!-- 用户 -->
+  <block wx:if="{{tab === 'users'}}">
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{users}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="userActions"
+        hover-class="tap-hover"
+      >
+        <view class="r-main">
+          <view class="r-title">
+            <text>{{item.name}}</text>
+            <text class="badge {{item.role === 'admin' ? 'admin' : ''}}">{{item.role === 'admin' ? '管理员' : '用户'}}</text>
+            <text class="badge test" wx:if="{{item.isTest}}">测试</text>
+          </view>
+          <text class="r-sub">藏品 {{item.holdings}} 条 · 注册 {{item.createdAtText}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 参数 -->
+  <block wx:if="{{tab === 'params'}}">
+    <view class="search">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜品种名 / 年份"
+        placeholder-class="ph"
+        confirm-type="search"
+        bindinput="onKeyword"
+      />
+      <text class="search-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</text>
+    </view>
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{coins}}"
+        wx:key="i"
+        data-i="{{item.i}}"
+        bindtap="editCoin"
+        hover-class="tap-hover"
+      >
+        <image class="r-thumb" src="{{item.smallUrl}}" mode="aspectFill" lazy-load></image>
+        <view class="r-main">
+          <text class="r-title-text">{{item.name}}</text>
+          <text class="r-sub">{{item.year}} · 面额 {{item.face}} 元 · 发行 {{item.mintage}} 万 · 参考价 ¥{{item.est}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 图片 -->
+  <block wx:if="{{tab === 'images'}}">
+    <view class="tip">点图片看大图；长按图片可替换主图</view>
+    <view class="grid">
+      <view class="gitem" wx:for="{{coins}}" wx:key="i" data-i="{{item.i}}" data-url="{{item.imgUrl}}" bindtap="previewImage" bindlongpress="replaceImage">
+        <image class="gimg" src="{{item.thumbUrl}}" mode="aspectFill" lazy-load></image>
+        <text class="gname">{{item.name}}</text>
+        <text class="gno">#{{item.i}}</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 系列 -->
+  <block wx:if="{{tab === 'series'}}">
+    <view class="tip">一个品种可属于多个系列；卡图可单独替换</view>
+    <button class="btn-primary new-btn" bindtap="newSeries">＋ 新建系列</button>
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{series}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="seriesActions"
+        hover-class="tap-hover"
+      >
+        <image class="r-thumb" src="{{item.imgUrl}}" mode="aspectFill" wx:if="{{item.imgUrl}}"></image>
+        <view class="r-thumb ph2" wx:else></view>
+        <view class="r-main">
+          <text class="r-title-text">{{item.name}}</text>
+          <text class="r-sub">{{item.count}} 个品种 · 排序 {{item.sort}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 反馈 -->
+  <block wx:if="{{tab === 'feedback'}}">
+    <view class="filters">
+      <text class="fchip {{fbStatus === 'open' ? 'on' : ''}}" data-s="open" bindtap="setFbStatus">待处理</text>
+      <text class="fchip {{fbStatus === 'done' ? 'on' : ''}}" data-s="done" bindtap="setFbStatus">已处理</text>
+      <text class="fchip {{fbStatus === 'all' ? 'on' : ''}}" data-s="all" bindtap="setFbStatus">全部</text>
+    </view>
+    <view class="card list">
+      <view
+        class="row fb"
+        wx:for="{{feedbacks}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="fbActions"
+        hover-class="tap-hover"
+      >
+        <view class="r-main">
+          <view class="r-title">
+            <text>{{item.coinName || '通用反馈'}}</text>
+            <text class="badge {{item.status === 'open' ? 'warn' : ''}}">{{item.status === 'open' ? '待处理' : '已处理'}}</text>
+          </view>
+          <text class="r-text">{{item.text}}</text>
+          <text class="r-sub">{{item.createdAtText}} · {{item.userName}}</text>
+        </view>
+      </view>
+      <view class="empty" wx:if="{{!feedbacks.length}}">这里还没有反馈</view>
+    </view>
+  </block>
+
+  <view class="foot-tip">与网页版管理端共用同一套数据</view>
+</view>
+
+<!-- 编辑品种 -->
+<view class="mask" wx:if="{{editing}}" bindtap="closeEdit">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{editName}}</text>
+      <text class="sheet-x" bindtap="closeEdit">✕</text>
+    </view>
+    <view class="field" wx:for="{{editFields}}" wx:key="k">
+      <text class="f-label">{{item.label}}</text>
+      <input
+        class="f-input"
+        type="{{item.type}}"
+        value="{{item.value}}"
+        data-k="{{item.k}}"
+        bindinput="onEditInput"
+        placeholder="{{item.ph}}"
+        placeholder-class="ph"
+      />
+    </view>
+    <button class="btn-primary" bindtap="saveEdit" loading="{{saving}}">保存</button>
+  </view>
+</view>
+
+<!-- 系列编辑 -->
+<view class="mask" wx:if="{{editingSeries}}" bindtap="closeSeries">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{seriesForm.isNew ? '新建系列' : '编辑系列'}}</text>
+      <text class="sheet-x" bindtap="closeSeries">✕</text>
+    </view>
+    <view class="field" wx:for="{{seriesFields}}" wx:key="k">
+      <text class="f-label">{{item.label}}</text>
+      <input
+        class="f-input"
+        type="{{item.type}}"
+        value="{{item.value}}"
+        data-k="{{item.k}}"
+        bindinput="onSeriesInput"
+        placeholder="{{item.ph}}"
+        placeholder-class="ph"
+      />
+    </view>
+    <view class="series-ops">
+      <button class="btn-ghost half" bindtap="uploadSeriesImg" wx:if="{{!seriesForm.isNew}}">换卡图</button>
+      <button class="btn-danger half" bindtap="deleteSeries" wx:if="{{!seriesForm.isNew}}">删除系列</button>
+    </view>
+    <button class="btn-primary" bindtap="saveSeries" loading="{{saving}}">保存</button>
+  </view>
+</view>
+
+<!-- 反馈详情 -->
+<view class="mask" wx:if="{{fbDetail}}" bindtap="closeFb">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{fbDetail.coinName || '反馈'}}</text>
+      <text class="sheet-x" bindtap="closeFb">✕</text>
+    </view>
+    <text class="fb-text">{{fbDetail.text}}</text>
+    <image
+      class="fb-img"
+      wx:for="{{fbDetail.images}}"
+      wx:key="*this"
+      src="{{item}}"
+      mode="widthFix"
+      data-src="{{item}}"
+      bindtap="previewFbImage"
+    ></image>
+    <text class="fb-meta">{{fbDetail.userName}} · {{fbDetail.createdAtText}}</text>
+    <view class="fb-actions">
+      <button class="btn-ghost half" bindtap="toggleFb">{{fbDetail.status === 'open' ? '标记已处理' : '改回待处理'}}</button>
+      <button class="btn-danger half" bindtap="deleteFb">删除</button>
+    </view>
+  </view>
+</view>

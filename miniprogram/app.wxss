@@ -1,0 +1,160 @@
+/* 藏币录 · 全局样式
+   色板：暖白底 + 金棕主色，与网页版浅色主题一致 */
+page {
+  min-height: 100%;
+  background: #f6f4ef;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+view,
+text,
+button,
+input {
+  box-sizing: border-box;
+}
+
+.page {
+  padding: 24rpx 24rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  padding: 28rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 12rpx rgba(60, 48, 26, 0.06);
+}
+
+.card + .card {
+  margin-top: 20rpx;
+}
+
+/* ---------- 分区标题 ---------- */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 36rpx 4rpx 16rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.section-more {
+  padding: 8rpx 0 8rpx 24rpx;
+  color: #9a6b1f;
+  font-size: 24rpx;
+}
+
+/* ---------- 文本工具类 ---------- */
+.muted {
+  color: #8a8378;
+}
+
+.small {
+  font-size: 24rpx;
+}
+
+.up {
+  color: #c0392b;
+}
+
+.down {
+  color: #1e8e5a;
+}
+
+.gold {
+  color: #9a6b1f;
+}
+
+.divider {
+  height: 1rpx;
+  background: #efece4;
+}
+
+/* ---------- 按钮 ----------
+   微信 button 默认带 line-height: 2.55555556 和左右 14px 内边距，
+   靠行高撑出来的居中在固定高度里会偏上/偏下。统一用 flex 居中，行高归零。 */
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border-radius: 14rpx;
+  font-family: inherit;
+  line-height: 1;
+}
+
+button::after {
+  border: none;
+}
+
+.btn-primary {
+  height: 88rpx;
+  border: none;
+  background: #9a6b1f;
+  color: #ffffff;
+  font-size: 30rpx;
+}
+
+.btn-ghost {
+  height: 80rpx;
+  border: none;
+  background: #f4efe4;
+  color: #7a541a;
+  font-size: 28rpx;
+}
+
+/* ---------- 空态 ---------- */
+.empty {
+  padding: 80rpx 24rpx;
+  color: #8a8378;
+  font-size: 26rpx;
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* ---------- 标签 / 缩略图 ---------- */
+.tag {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  background: #f4efe4;
+  color: #7a541a;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.thumb {
+  display: block;
+  width: 124rpx;
+  height: 124rpx;
+  flex-shrink: 0;
+  border-radius: 14rpx;
+  background: #f4f1e9;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b9b2a4;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+/* ---------- 点击反馈 ---------- */
+.tap-hover {
+  opacity: 0.7;
+}
+
+.row-hover {
+  background: #fbf8f1;
+}

@@ -1,0 +1,210 @@
+/* 用户信息与汇总 */
+.uhead {
+  margin-bottom: 18rpx;
+  padding: 28rpx 26rpx 22rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(135deg, #b98f43 0%, #d9b364 58%, #e3c489 100%);
+  box-shadow: 0 12rpx 30rpx rgba(185, 143, 67, 0.24);
+}
+
+.uinfo {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.uavatar {
+  display: flex;
+  width: 88rpx;
+  height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #9a6b1f;
+  font-size: 34rpx;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.umain {
+  flex: 1;
+  min-width: 0;
+}
+
+.uname {
+  display: block;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.usub {
+  display: block;
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 21rpx;
+}
+
+.usum {
+  display: flex;
+  margin-top: 22rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.24);
+}
+
+.ucell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.uk {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 20rpx;
+}
+
+.uv {
+  color: #ffffff;
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.uv.up {
+  color: #fff6d8;
+}
+
+.uv.down {
+  color: #e9f7e9;
+}
+
+.tip {
+  margin: 0 4rpx 14rpx;
+  color: #b3aa9b;
+  font-size: 21rpx;
+}
+
+/* 持仓卡片 */
+.list {
+  padding: 0 22rpx;
+}
+
+.hrow {
+  display: flex;
+  padding: 22rpx 0;
+  align-items: center;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.hrow:last-child {
+  border-bottom: none;
+}
+
+.hfig {
+  width: 112rpx;
+  height: 112rpx;
+  margin-right: 18rpx;
+  flex: 0 0 auto;
+}
+
+.himg {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 12rpx;
+  background: #f8f6f1;
+}
+
+.hph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c3bbad;
+  font-size: 20rpx;
+}
+
+.hmain {
+  flex: 1;
+  min-width: 0;
+}
+
+.hname {
+  display: block;
+  color: #2b2926;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hsub {
+  display: block;
+  margin-top: 8rpx;
+  color: #b3aa9b;
+  font-size: 21rpx;
+}
+
+.hmeta {
+  display: block;
+  margin-top: 6rpx;
+  color: #8a8378;
+  font-size: 20rpx;
+}
+
+.hright {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+  margin-left: 12rpx;
+  flex: 0 0 auto;
+}
+
+.hval {
+  color: #2b2926;
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.hpnl {
+  font-size: 20rpx;
+}
+
+.hpnl.up {
+  color: #b5766c;
+}
+
+.hpnl.down {
+  color: #4f8a5f;
+}
+
+/* 空态 */
+.empty {
+  padding: 70rpx 40rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  text-align: center;
+}
+
+.e-title {
+  display: block;
+  color: #2b2926;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.e-sub {
+  display: block;
+  margin-top: 12rpx;
+  color: #b3aa9b;
+  font-size: 22rpx;
+}
+
+.loading {
+  padding: 60rpx 0;
+  color: #b3aa9b;
+  font-size: 24rpx;
+  text-align: center;
+}

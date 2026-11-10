@@ -1,0 +1,614 @@
+/* ---------- 已登录：名片 ---------- */
+.me {
+  display: flex;
+  margin-top: 8rpx;
+  padding: 40rpx 28rpx 28rpx;
+  align-items: center;
+  flex-direction: column;
+}
+
+.avatar {
+  display: flex;
+  width: 132rpx;
+  height: 132rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  overflow: hidden;
+  background: linear-gradient(135deg, #4a3a24, #9a6b1f);
+  color: #f6e9ca;
+  font-size: 52rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.me-name {
+  margin-top: 20rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.me-role {
+  margin-top: 8rpx;
+  padding: 4rpx 18rpx;
+  border-radius: 999rpx;
+  background: #f4efe4;
+  color: #9a6b1f;
+  font-size: 21rpx;
+}
+
+.me-grid {
+  display: flex;
+  width: 100%;
+  margin-top: 32rpx;
+  padding-top: 26rpx;
+  border-top: 1rpx solid #f2efe7;
+}
+
+.me-cell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  text-align: center;
+}
+
+.me-cell + .me-cell {
+  border-left: 1rpx solid #f2efe7;
+}
+
+.me-k {
+  color: #8a8378;
+  font-size: 22rpx;
+}
+
+.me-v {
+  margin-top: 8rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.logout {
+  margin-top: 28rpx;
+  border: 1rpx solid #f0d9d5;
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #c0392b;
+  height: 88rpx;
+  font-size: 28rpx;
+}
+
+/* ---------- 未登录：表单 ---------- */
+.tabs {
+  display: flex;
+  padding: 6rpx;
+  border-radius: 14rpx;
+  background: #f4f1e9;
+}
+
+.tab {
+  flex: 1;
+  padding: 16rpx 0;
+  border-radius: 10rpx;
+  color: #6b6559;
+  font-size: 27rpx;
+  text-align: center;
+}
+
+.tab-on {
+  background: #ffffff;
+  color: #9a6b1f;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(60, 48, 26, 0.08);
+}
+
+.field {
+  margin-top: 32rpx;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #6b6559;
+  font-size: 24rpx;
+}
+
+.field-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid #e8e2d5;
+  border-radius: 14rpx;
+  background: #fbfaf7;
+  font-size: 28rpx;
+}
+
+.ph {
+  color: #b9b2a4;
+}
+
+.submit {
+  margin-top: 40rpx;
+}
+
+.hint {
+  display: block;
+  margin-top: 24rpx;
+  color: #8a8378;
+  font-size: 23rpx;
+  line-height: 1.7;
+}
+
+/* ---------- 关于 ---------- */
+.about {
+  margin-top: 20rpx;
+}
+
+.about-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.about-text {
+  display: block;
+  margin-top: 14rpx;
+  color: #6b6559;
+  font-size: 24rpx;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+/* ---------- 微信登录 ---------- */
+.btn-wx {
+  height: 88rpx;
+  border: 1rpx solid #07c160;
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #07c160;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.btn-wx::after {
+  border: none;
+}
+
+/* 微信登录：页面主入口，用主色实心按钮 */
+.btn-wx-main {
+  height: 96rpx;
+  border: none;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  box-shadow: 0 8rpx 22rpx rgba(185, 143, 67, 0.26);
+  color: #ffffff;
+  font-size: 31rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.btn-wx-main::after {
+  border: none;
+}
+
+.btn-wx.mini {
+  width: auto;
+  height: 60rpx;
+  padding: 0 28rpx;
+  font-size: 24rpx;
+}
+
+.wx-tip {
+  margin-top: 14rpx;
+  color: #8a8378;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.or-line {
+  display: flex;
+  margin: 30rpx 0 6rpx;
+  align-items: center;
+  color: #b3aa9b;
+  font-size: 22rpx;
+}
+
+.or-line::before,
+.or-line::after {
+  height: 1rpx;
+  flex: 1;
+  background: #efece4;
+  content: "";
+}
+
+.or-line text {
+  padding: 0 20rpx;
+}
+
+.wx-row {
+  display: flex;
+  margin-top: 20rpx;
+  padding: 24rpx 28rpx;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 18rpx;
+  background: #ffffff;
+}
+
+.wx-row.done {
+  border: 1rpx solid #d8efe1;
+  background: #f5fbf7;
+}
+
+.wx-row-text {
+  flex: 1;
+  color: #6b6559;
+  font-size: 24rpx;
+}
+
+.wx-check {
+  color: #07c160;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* ---------- 设置密码（微信注册账号） ---------- */
+.pwd-card {
+  margin-top: 20rpx;
+}
+
+.pwd-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.pwd-sub {
+  display: block;
+  margin-top: 10rpx;
+  color: #8a8378;
+  font-size: 23rpx;
+  line-height: 1.7;
+}
+
+.pwd-btn {
+  margin-top: 28rpx;
+}
+
+/* ---------- 联系方式 ---------- */
+.about-contact {
+  display: flex;
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  align-items: center;
+  border: 1rpx dashed #e2d8c4;
+  border-radius: 12rpx;
+  background: #fbf8f1;
+}
+
+.ac-label {
+  color: #8a8378;
+  font-size: 23rpx;
+}
+
+.ac-id {
+  margin-left: 12rpx;
+  color: #9a6b1f;
+  font-size: 25rpx;
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+}
+
+.ac-tip {
+  margin-left: auto;
+  color: #b3aa9b;
+  font-size: 21rpx;
+}
+
+/* 隐私同意 */
+.consent {
+  display: flex;
+  margin-top: 24rpx;
+  align-items: flex-start;
+}
+
+.ck {
+  display: flex;
+  width: 34rpx;
+  height: 34rpx;
+  margin: 2rpx 12rpx 0 0;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid #d6cebe;
+  border-radius: 8rpx;
+  color: #ffffff;
+  font-size: 22rpx;
+  flex-shrink: 0;
+}
+
+.ck-on {
+  border-color: #b98f43;
+  background: #b98f43;
+}
+
+.ck-text {
+  flex: 1;
+  color: #8a8378;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.ck-link {
+  color: #9a6b1f;
+}
+
+/* 隐私政策弹层 */
+.policy-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(24, 20, 14, 0.45);
+}
+
+.policy-sheet {
+  display: flex;
+  width: 100%;
+  max-height: 86vh;
+  border-radius: 28rpx 28rpx 0 0;
+  background: #ffffff;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.policy-head {
+  display: flex;
+  padding: 30rpx 30rpx 16rpx;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.policy-title {
+  color: #2b2926;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.policy-close {
+  padding: 8rpx 12rpx;
+  color: #b3aa9b;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.policy-body {
+  height: 56vh;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.policy-meta {
+  display: block;
+  color: #b3aa9b;
+  font-size: 20rpx;
+}
+
+.policy-h {
+  display: block;
+  margin: 26rpx 0 6rpx;
+  color: #2b2926;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.policy-p {
+  display: block;
+  margin-top: 8rpx;
+  color: #4a4438;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
+.policy-note {
+  display: block;
+  margin: 26rpx 0 20rpx;
+  color: #a39c8e;
+  font-size: 21rpx;
+  line-height: 1.7;
+}
+
+.policy-foot {
+  display: flex;
+  padding: 18rpx 30rpx calc(20rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f2efe7;
+  box-sizing: border-box;
+}
+
+.policy-btn {
+  flex: 1;
+  min-width: 0;
+  height: 84rpx;
+  margin: 0;
+  padding: 0;
+  line-height: 84rpx;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.policy-btn + .policy-btn {
+  margin-left: 20rpx;
+}
+
+.policy-btn.ghost {
+  border: 1rpx solid #e6dfd0;
+  background: #ffffff;
+  color: #8a8378;
+}
+
+.policy-btn.primary {
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.policy-btn::after {
+  border: none;
+}
+
+/* 微信登录引导 */
+.wx-hint {
+  display: block;
+  margin: 14rpx 0 6rpx;
+  color: #b3aa9b;
+  font-size: 21rpx;
+  text-align: center;
+}
+
+/* 完善资料面板 */
+.pf-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 130;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(24, 20, 14, 0.45);
+}
+
+.pf-sheet {
+  width: 100%;
+  padding: 34rpx 40rpx calc(30rpx + env(safe-area-inset-bottom));
+  border-radius: 28rpx 28rpx 0 0;
+  background: #ffffff;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.pf-title {
+  display: block;
+  color: #2b2926;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.pf-sub {
+  display: block;
+  margin-top: 10rpx;
+  color: #b3aa9b;
+  font-size: 22rpx;
+}
+
+.pf-avatar-btn {
+  width: 160rpx;
+  height: 160rpx;
+  margin: 26rpx auto 6rpx;
+  padding: 0;
+  border: none;
+  border-radius: 999rpx;
+  background: #f7f4ed;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.pf-avatar-btn::after {
+  border: none;
+}
+
+.pf-avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 999rpx;
+}
+
+.pf-avatar-ph {
+  display: flex;
+  width: 160rpx;
+  height: 160rpx;
+  align-items: center;
+  justify-content: center;
+  color: #b98f43;
+  font-size: 24rpx;
+}
+
+.pf-field {
+  display: flex;
+  margin-top: 24rpx;
+  padding: 0 24rpx;
+  height: 92rpx;
+  align-items: center;
+  border-radius: 14rpx;
+  background: #faf8f3;
+}
+
+.pf-k {
+  width: 90rpx;
+  color: #8a8378;
+  font-size: 25rpx;
+  text-align: left;
+}
+
+.pf-input {
+  flex: 1;
+  color: #2b2926;
+  font-size: 27rpx;
+  text-align: left;
+}
+
+.pf-save {
+  margin-top: 30rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  color: #ffffff;
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.pf-save::after {
+  border: none;
+}
+
+.pf-skip {
+  display: block;
+  margin-top: 22rpx;
+  color: #b3aa9b;
+  font-size: 23rpx;
+}
+
+/* 密码可见性切换 */
+.pwd-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pwd-input {
+  padding-right: 110rpx;
+}
+
+.pwd-eye {
+  position: absolute;
+  right: 8rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10rpx 16rpx;
+  border-radius: 10rpx;
+  color: #9a6b1f;
+  font-size: 22rpx;
+}
+
+.pwd-eye:active {
+  background: rgba(185, 143, 67, 0.12);
+}
+
+/* 圆形头像（图片版） */
+.avatar-img {
+  background: #f6efe0;
+}

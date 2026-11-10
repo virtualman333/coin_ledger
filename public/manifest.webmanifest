@@ -1,0 +1,25 @@
+{
+ "name": "藏币录 · 纪念币收藏",
+ "short_name": "藏币录",
+ "description": "2000—2026 年中国普通纪念币与纪念钞的发行清单与收藏管理",
+ "start_url": "/",
+ "scope": "/",
+ "display": "standalone",
+ "background_color": "#0a0c10",
+ "theme_color": "#e8c877",
+ "lang": "zh-CN",
+ "icons": [
+  {
+   "src": "/icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  }
+ ]
+}

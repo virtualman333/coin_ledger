@@ -1,0 +1,85 @@
+<view class="page">
+  <block wx:if="{{loggedIn}}">
+    <!-- 空账本：不展示一堆 0，直接给引导 -->
+    <view class="stat-empty" wx:if="{{!stats.kinds}}">
+      <text class="se-title">还没有藏品</text>
+      <text class="se-sub">挑第一枚，开始记录你的收藏</text>
+      <view class="se-btn" hover-class="tap-hover" bindtap="goList">去全套清单</view>
+    </view>
+
+    <!-- 账本总览 -->
+    <view class="stat" wx:if="{{stats.kinds}}">
+      <view class="stat-top">
+        <view class="stat-who" hover-class="tap-hover" bindtap="goAccount">
+          <image class="stat-avatar" src="{{userAvatar}}" mode="aspectFill" wx:if="{{userAvatar}}"></image>
+          <view class="stat-avatar ph" wx:else>{{displayName ? displayName[0] : '藏'}}</view>
+          <text class="stat-user">{{displayName}}</text>
+          <text class="stat-more">›</text>
+        </view>
+        <text class="stat-count">{{stats.kinds}} 个品种 · {{stats.rolls}} 套</text>
+      </view>
+
+      <view class="stat-main">
+        <view class="sm-left">
+          <text class="sm-k">参考市值</text>
+          <text class="sm-big">¥{{stats.marketText}}</text>
+          <text class="sm-sub">投入 ¥{{stats.costText}} · 面值 ¥{{stats.faceText}}</text>
+        </view>
+        <view class="sm-pnl {{stats.up ? 'up' : 'down'}}">
+          <text class="pnl-v">{{stats.pnlText}}</text>
+          <text class="pnl-p">{{stats.pnlPct}}%</text>
+        </view>
+      </view>
+
+      <view class="stat-prog">
+        <view class="sp-bar"><view class="sp-fill" style="width:{{progPct}}%;min-width:{{stats.kinds ? 8 : 0}}rpx"></view></view>
+        <text class="sp-t">已收 {{stats.kinds}} / {{totalCoins}}</text>
+      </view>
+    </view>
+
+    <view class="menu">
+      <view class="menu-item" hover-class="tap-hover" bindtap="goHoldings">
+        <text class="menu-k">我的藏品</text>
+        <text class="menu-v">{{stats.kinds}} 个品种 · {{stats.rolls}} 套</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" hover-class="tap-hover" bindtap="goAccount">
+        <text class="menu-k">账户与安全</text>
+        <text class="menu-v">{{displayName}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" hover-class="tap-hover" bindtap="goAbout">
+        <text class="menu-k">关于藏币录</text>
+        <text class="menu-v">v{{appVersion}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="menu admin-menu" wx:if="{{isAdmin}}">
+      <view class="menu-item" hover-class="tap-hover" bindtap="goAdmin">
+        <text class="menu-k">管理端</text>
+        <text class="menu-v">用户 · 参数 · 图片 · 反馈</text>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="foot-note" wx:if="{{syncTip}}">{{syncTip}}</view>
+    <view class="foot-note foot-disc">价格数据为参考估算，不构成投资建议</view>
+  </block>
+
+  <block wx:else>
+    <view class="card guest">
+      <text class="guest-title">登录后才有账本</text>
+      <text class="guest-sub">登录后你的藏品会存在云端</text>
+      <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
+    </view>
+
+    <view class="menu">
+      <view class="menu-item" hover-class="tap-hover" bindtap="goAbout">
+        <text class="menu-k">关于藏币录</text>
+        <text class="menu-v">v{{appVersion}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+  </block>
+</view>

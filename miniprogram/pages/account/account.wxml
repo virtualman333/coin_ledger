@@ -1,0 +1,205 @@
+<view class="page">
+  <block wx:if="{{loggedIn}}">
+    <view class="card me">
+      <image class="avatar avatar-img" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}"></image>
+      <view class="avatar" wx:else>{{avatarText}}</view>
+      <text class="me-name">{{displayName}}</text>
+      <text class="me-role">{{isAdmin ? '超级管理员' : '普通用户'}}</text>
+      <view class="me-grid">
+        <view class="me-cell">
+          <text class="me-k">我的品种</text>
+          <text class="me-v">{{holdingsCount}}</text>
+        </view>
+        <view class="me-cell">
+          <text class="me-k">全站品种</text>
+          <text class="me-v">{{totalCoins}}</text>
+        </view>
+        <view class="me-cell">
+          <text class="me-k">注册用户</text>
+          <text class="me-v">{{userCount}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="wx-row" wx:if="{{!user.wx}}">
+      <text class="wx-row-text">还没绑定微信，绑定后可一键登录</text>
+      <button class="btn-wx mini" bindtap="bindWx" loading="{{wxBusy}}" hover-class="tap-hover">绑定</button>
+    </view>
+    <view class="wx-row done" wx:else>
+      <text class="wx-row-text">已绑定微信，下次可一键登录</text>
+      <text class="wx-check">✓</text>
+    </view>
+
+    <view class="card pwd-card" wx:if="{{!user.hasPassword}}">
+      <text class="pwd-title">设置密码</text>
+      <text class="pwd-sub">设置后可在网页版登录</text>
+      <view class="field">
+        <text class="field-label">新密码</text>
+        <input
+          class="field-input"
+          value="{{password}}"
+          password="{{true}}"
+          maxlength="64"
+          placeholder="至少 8 位，不能是纯数字"
+          placeholder-class="ph"
+          bindinput="onPassword"
+        />
+      </view>
+      <button class="btn-primary pwd-btn" bindtap="setPassword" loading="{{busy}}">保存密码</button>
+    </view>
+
+    <button class="btn-ghost logout" bindtap="logout">退出登录</button>
+  </block>
+
+  <block wx:else>
+    <view class="card">
+      <button class="btn-wx-main" bindtap="wxLogin" loading="{{wxBusy}}" hover-class="tap-hover">
+        微信一键登录
+      </button>
+      <view class="or-line"><text>或用账号密码</text></view>
+
+      <view class="tabs">
+        <text
+          class="tab {{mode === 'login' ? 'tab-on' : ''}}"
+          data-mode="login"
+          bindtap="switchMode"
+        >登录</text>
+        <text
+          class="tab {{mode === 'register' ? 'tab-on' : ''}}"
+          data-mode="register"
+          bindtap="switchMode"
+        >注册</text>
+      </view>
+
+      <view class="field">
+        <text class="field-label">用户名</text>
+        <input
+          class="field-input"
+          value="{{name}}"
+          maxlength="20"
+          placeholder="2–20 位中文、字母、数字或下划线"
+          placeholder-class="ph"
+          confirm-type="next"
+          cursor-spacing="24"
+          bindinput="onName"
+        />
+      </view>
+      <view class="field">
+        <text class="field-label">密码</text>
+        <view class="pwd-wrap">
+          <input
+            class="field-input pwd-input"
+            value="{{password}}"
+            password="{{!pwdVisible}}"
+            maxlength="64"
+            placeholder="至少 8 位，不能是纯数字"
+            placeholder-class="ph"
+            confirm-type="{{mode === 'register' ? 'next' : 'done'}}"
+            cursor-spacing="24"
+            bindinput="onPassword"
+            bindconfirm="submit"
+          />
+          <view class="pwd-eye" hover-class="tap-hover" catchtap="togglePwd">
+            <text>{{pwdVisible ? '隐藏' : '显示'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="field" wx:if="{{mode === 'register'}}">
+        <text class="field-label">确认密码</text>
+        <view class="pwd-wrap">
+          <input
+            class="field-input pwd-input"
+            value="{{password2}}"
+            password="{{!pwd2Visible}}"
+            maxlength="64"
+            placeholder="再输入一次"
+            placeholder-class="ph"
+            confirm-type="done"
+            cursor-spacing="24"
+            bindinput="onPassword2"
+            bindconfirm="submit"
+          />
+          <view class="pwd-eye" hover-class="tap-hover" catchtap="togglePwd2">
+            <text>{{pwd2Visible ? '隐藏' : '显示'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <button class="btn-primary submit" bindtap="submit" loading="{{busy}}">
+        {{mode === 'login' ? '登录' : '注册并登录'}}
+      </button>
+
+      <view class="consent">
+        <view class="ck {{agree ? 'ck-on' : ''}}" bindtap="toggleAgree">
+          <text wx:if="{{agree}}">✓</text>
+        </view>
+        <view class="ck-text" bindtap="toggleAgree">
+          <text>我已阅读并同意</text>
+          <text class="ck-link" catchtap="goPrivacy">《隐私政策》</text>
+        </view>
+      </view>
+
+    </view>
+
+    <view class="card about">
+      <text class="about-title">关于藏币录</text>
+      <text class="about-text">{{totalCoins}} 个品种 · {{seriesCount}} 个系列</text>
+      <view class="about-contact" hover-class="tap-hover" bindtap="copyContact">
+        <text class="ac-label">微信</text>
+        <text class="ac-id">virtualman2001</text>
+        <text class="ac-tip">点一下复制</text>
+      </view>
+    </view>
+  </block>
+</view>
+
+<!-- 隐私政策弹层：登录被拦时直接在这里读 + 同意 -->
+<view class="policy-mask" wx:if="{{showPolicy}}" bindtap="closePolicy" catchtouchmove="noop">
+  <view class="policy-sheet" catchtap="noop">
+    <view class="policy-head">
+      <text class="policy-title">{{policy.title}}</text>
+      <text class="policy-close" bindtap="closePolicy">✕</text>
+    </view>
+    <scroll-view class="policy-body" scroll-y>
+      <text class="policy-meta">{{policy.updated}}</text>
+      <text class="policy-p">{{policy.intro}}</text>
+      <block wx:for="{{policy.sections}}" wx:key="h" wx:for-item="sec">
+        <text class="policy-h">{{sec.h}}</text>
+        <text class="policy-p" wx:for="{{sec.paras}}" wx:key="*this" wx:for-item="p">{{p}}</text>
+      </block>
+      <text class="policy-note">{{policy.note}}</text>
+    </scroll-view>
+    <view class="policy-foot">
+      <button class="policy-btn ghost" bindtap="closePolicy">不同意</button>
+      <button class="policy-btn primary" bindtap="agreeFromPolicy">同意并继续</button>
+    </view>
+  </view>
+</view>
+
+<!-- 微信登录后：设置头像与昵称（可跳过） -->
+<view class="pf-mask" wx:if="{{profileSheet}}" catchtouchmove="noop">
+  <view class="pf-sheet">
+    <text class="pf-title">设置头像和昵称</text>
+    <text class="pf-sub">只在你自己的账本里显示，随时能改</text>
+
+    <button class="pf-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="pf-avatar" src="{{profileAvatar}}" mode="aspectFill" wx:if="{{profileAvatar}}"></image>
+      <view class="pf-avatar-ph" wx:else><text>选择头像</text></view>
+    </button>
+
+    <view class="pf-field">
+      <text class="pf-k">昵称</text>
+      <input
+        class="pf-input"
+        type="nickname"
+        value="{{profileNick}}"
+        bindinput="onProfileNick"
+        placeholder="点这里可以用微信昵称"
+        placeholder-class="ph"
+      />
+    </view>
+
+    <button class="pf-save" bindtap="saveProfile" loading="{{profileSaving}}">保存</button>
+    <text class="pf-skip" bindtap="skipProfile">跳过，先用默认昵称</text>
+  </view>
+</view>

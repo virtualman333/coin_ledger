@@ -1,0 +1,124 @@
+.head {
+  padding: 6rpx 4rpx 22rpx;
+}
+
+.h1 {
+  color: #2b2926;
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.h-sub {
+  display: block;
+  margin-top: 8rpx;
+  color: #b3aa9b;
+  font-size: 22rpx;
+}
+
+/* 全部品种 */
+.all-card {
+  display: flex;
+  margin-bottom: 20rpx;
+  padding: 26rpx 28rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  box-shadow: 0 8rpx 22rpx rgba(185, 143, 67, 0.22);
+}
+
+.all-main {
+  flex: 1;
+}
+
+.all-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.all-sub {
+  display: block;
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 21rpx;
+}
+
+.all-more {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 34rpx;
+}
+
+/* 系列卡 */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.scard {
+  width: 48.6%;
+  margin-bottom: 18rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(74, 55, 20, 0.06);
+}
+
+.scard-img {
+  display: block;
+  width: 100%;
+  height: 176rpx;
+  /* 系列封面是官方「正反面」图（约 2:1），用 aspectFit 保证两枚都完整 */
+  background: #ffffff;
+}
+
+.scard-ph {
+  display: flex;
+  width: 100%;
+  height: 200rpx;
+  align-items: center;
+  justify-content: center;
+  background: #f6efe0;
+}
+
+.scard-ph text {
+  padding: 0 20rpx;
+  color: #b98f43;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.scard-body {
+  padding: 16rpx 18rpx 18rpx;
+}
+
+.scard-name {
+  display: block;
+  color: #2b2926;
+  font-size: 25rpx;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.scard-meta {
+  display: block;
+  margin-top: 6rpx;
+  color: #b3aa9b;
+  font-size: 20rpx;
+}
+
+.scard-bar {
+  margin-top: 12rpx;
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: #f2efe7;
+  overflow: hidden;
+}
+
+.scard-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #b98f43, #d9b364);
+}

@@ -1,0 +1,158 @@
+{
+ "updated": "2026-11-09",
+ "note": "系列主数据：name/desc/img/sort 可在管理端修改；品种通过 seriesKeys 关联，可属于多个系列。",
+ "items": [
+  {
+   "key": "SX",
+   "name": "生肖贺岁",
+   "desc": "",
+   "img": "img/series/sx-v3.jpg",
+   "sort": 10,
+   "imgFrom": "set"
+  },
+  {
+   "key": "SXC",
+   "name": "生肖纪念钞",
+   "desc": "生肖贺岁系列纪念钞：龙、蛇、马…",
+   "img": "img/series/sxc-v3.jpg",
+   "sort": 15,
+   "imgFrom": "combo"
+  },
+  {
+   "key": "WC",
+   "name": "世界文化遗产",
+   "desc": "",
+   "img": "img/series/wc-v3.jpg",
+   "sort": 20,
+   "imgFrom": "set"
+  },
+  {
+   "key": "WH",
+   "name": "世界文化与自然双重遗产",
+   "desc": "",
+   "img": "img/series/wh-v3.jpg",
+   "sort": 30,
+   "imgFrom": "set"
+  },
+  {
+   "key": "NP",
+   "name": "国家公园",
+   "desc": "",
+   "img": "img/series/np-v3.jpg",
+   "sort": 40,
+   "imgFrom": "set"
+  },
+  {
+   "key": "TW",
+   "name": "宝岛台湾",
+   "desc": "",
+   "img": "img/series/tw-v3.jpg",
+   "sort": 50,
+   "imgFrom": "set"
+  },
+  {
+   "key": "AY",
+   "name": "奥运",
+   "desc": "",
+   "img": "img/series/ay-v3.jpg",
+   "sort": 60,
+   "imgFrom": "coin"
+  },
+  {
+   "key": "TY",
+   "name": "体育赛事",
+   "desc": "",
+   "img": "img/series/ty-v3.jpg",
+   "sort": 70,
+   "imgFrom": "set"
+  },
+  {
+   "key": "HZ",
+   "name": "和字书法",
+   "desc": "",
+   "img": "img/series/hz-v3.jpg",
+   "sort": 80,
+   "imgFrom": "set"
+  },
+  {
+   "key": "JJ",
+   "name": "京剧艺术",
+   "desc": "",
+   "img": "img/series/jj-v3.jpg",
+   "sort": 90,
+   "imgFrom": "set"
+  },
+  {
+   "key": "PP",
+   "name": "人物诞辰",
+   "desc": "",
+   "img": "img/series/pp-v3.jpg",
+   "sort": 100,
+   "imgFrom": "set"
+  },
+  {
+   "key": "EV",
+   "name": "周年庆典",
+   "desc": "",
+   "img": "img/series/ev-v3.jpg",
+   "sort": 110,
+   "imgFrom": "set"
+  },
+  {
+   "key": "EX",
+   "name": "盛会·博览",
+   "desc": "",
+   "img": "img/series/ex-v3.jpg",
+   "sort": 120,
+   "imgFrom": "set"
+  },
+  {
+   "key": "CN",
+   "name": "纪念钞",
+   "desc": "",
+   "img": "img/series/cn-v3.jpg",
+   "sort": 130,
+   "imgFrom": "set"
+  },
+  {
+   "key": "ZZ",
+   "name": "自治区成立",
+   "desc": "",
+   "img": "img/series/zz-v3.jpg",
+   "sort": 140,
+   "imgFrom": "set"
+  },
+  {
+   "key": "HG",
+   "name": "港澳回归",
+   "desc": "",
+   "img": "img/series/hg-v3.jpg",
+   "sort": 150,
+   "imgFrom": "set"
+  },
+  {
+   "key": "DW",
+   "name": "珍稀野生动物",
+   "desc": "",
+   "img": "img/series/dw-v3.jpg",
+   "sort": 160,
+   "imgFrom": "set"
+  },
+  {
+   "key": "TC",
+   "name": "科技成就",
+   "desc": "",
+   "img": "img/series/tc-v3.jpg",
+   "sort": 170,
+   "imgFrom": "set"
+  },
+  {
+   "key": "ZT",
+   "name": "社会公益·文化",
+   "desc": "",
+   "img": "img/series/zt-v3.jpg",
+   "sort": 180,
+   "imgFrom": "set"
+  }
+ ]
+}

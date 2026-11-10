@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /data/
+Crawl-delay: 3
+
+# 站点数据以页面形式开放浏览，接口与原始 JSON 不对外开放抓取
+Sitemap: https://coin.virtualman.top/sitemap.xml

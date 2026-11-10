@@ -1,0 +1,35 @@
+; 藏币录后端 systemd 单元
+; 安装位置：/etc/systemd/system/coin-ledger.service
+; Node 路径由 deploy/install.sh 自动探测后写入（宝塔自带 node 常不在 /usr/bin）
+
+[Unit]
+Description=Coin Ledger API (藏币录后端)
+Documentation=https://github.com/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/www/wwwroot/coin-ledger
+EnvironmentFile=/etc/coin-ledger.env
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+; 收紧权限：只允许写自己的 data 目录
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/www/wwwroot/coin-ledger/data
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=coin-ledger
+
+[Install]
+WantedBy=multi-user.target

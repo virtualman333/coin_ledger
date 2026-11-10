@@ -1,0 +1,126 @@
+<view class="page">
+  <view class="head">
+    <view class="head-title">
+      <text class="h1">发行计划</text>
+      <text class="h-sub" wx:if="{{source}}">{{source}}</text>
+      <text class="h-tip">点「提醒我」，预约当天 09:00 微信通知你（每次授权只发一条）</text>
+    </view>
+    <view class="next-bar" wx:if="{{next}}">
+      <text class="nb-tag">下一枚</text>
+      <text class="nb-name">{{next.short}}</text>
+      <text class="nb-meta">{{next.dateText}} 发行 · {{next.cdText}}</text>
+    </view>
+  </view>
+
+  <block wx:if="{{has}}">
+    <view class="year" wx:for="{{years}}" wx:key="year" wx:for-item="y">
+      <view class="year-head">
+        <text class="y-num">{{y.year}} 年</text>
+        <text class="y-meta">计划 {{y.planCount}} 项<block wx:if="{{y.extraCount}}"> · 增发 {{y.extraCount}} 项</block> · 已发 {{y.doneCount}} 项</text>
+      </view>
+
+      <view
+        class="item {{it.isUp ? 'up' : ''}}"
+        wx:for="{{y.items}}"
+        wx:key="key"
+        wx:for-item="it"
+        data-id="{{it.coinId}}"
+        data-key="{{it.key}}"
+        bindtap="onItemTap"
+        hover-class="tap-hover"
+      >
+        <view class="it-main">
+          <text class="it-name">{{it.name}}</text>
+          <view class="it-sub">
+            <text class="it-tag">{{it.kindText}}</text>
+            <text class="it-extra" wx:if="{{it.extra}}">增发</text>
+            <text>{{it.face}} 元</text>
+            <text wx:if="{{it.mintageText}}">{{it.mintageText}}{{it.unit}}</text>
+            <text class="it-note" wx:if="{{it.note}}">{{it.note}}</text>
+          </view>
+        </view>
+        <view class="it-right">
+          <text class="badge {{it.isUp ? '' : 'done'}}">{{it.isUp ? '待发行' : '已发行'}}</text>
+          <text class="it-date">{{it.dateText}} 发行</text>
+          <text class="it-reserve" wx:if="{{it.reserveText}}">{{it.reserveText}} 预约</text>
+          <text class="it-exchange" wx:if="{{it.exchangeText}}">{{it.exchangeText}} 兑换</text>
+          <text class="cd" wx:if="{{it.cdText}}">{{it.cdText}}</text>
+          <text class="it-limit" wx:if="{{it.limitText}}">{{it.limitText}}</text>
+          <view
+            class="remind {{reminded[it.key] ? 'on' : ''}}"
+            wx:if="{{it.isUp}}"
+            catchtap="remind"
+            data-key="{{it.key}}"
+            data-name="{{it.short}}"
+            hover-class="tap-hover"
+          >
+            <text>{{reminded[it.key] ? '已设提醒' : '提醒我'}}</text>
+          </view>
+          <text class="remind-at" wx:if="{{reminded[it.key]}}">{{reminded[it.key]}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="foot">
+      <text>计划来源：中国人民银行年度公告，具体发行信息以发行前公告为准。</text>
+      <text class="foot-next">2027 年普通纪念币发行计划一般在当年 12 月公布，届时这里会自动更新</text>
+      <view class="foot-btn" hover-class="tap-hover" bindtap="goList">去全套清单看看已发的 {{totalCoins}} 个品种 ›</view>
+    </view>
+  </block>
+
+  <view class="empty" wx:else>
+    <text>暂无可用的发行计划数据</text>
+  </view>
+</view>
+
+<!-- 计划项详情 -->
+<view class="pd-mask" wx:if="{{detail}}" bindtap="closeDetail" catchtouchmove="noop">
+  <view class="pd-sheet" catchtap="noop">
+    <view class="pd-head">
+      <text class="pd-title">{{detail.name}}</text>
+      <text class="pd-x" bindtap="closeDetail">✕</text>
+    </view>
+
+    <view class="pd-state {{detail.isUp ? 'up' : ''}}">
+      {{detail.isUp ? ('待发行 · ' + (detail.cdText || detail.dateFull)) : '已发行'}}
+    </view>
+
+    <view class="pd-sched" wx:if="{{detail.schedule.length}}">
+      <view class="pd-row" wx:for="{{detail.schedule}}" wx:key="k">
+        <text class="pd-k">{{item.k}}</text>
+        <text class="pd-v">{{item.v}}</text>
+      </view>
+    </view>
+    <view class="pd-sched" wx:else>
+      <view class="pd-row"><text class="pd-k">发行日</text><text class="pd-v">{{detail.dateFull || '待定'}}</text></view>
+      <view class="pd-row" wx:if="{{detail.reserveText}}"><text class="pd-k">预约</text><text class="pd-v">{{detail.reserveText}}</text></view>
+      <view class="pd-row" wx:if="{{detail.verifyText}}"><text class="pd-k">核实</text><text class="pd-v">{{detail.verifyText}}</text></view>
+      <view class="pd-row" wx:if="{{detail.exchangeText}}"><text class="pd-k">兑换</text><text class="pd-v">{{detail.exchangeText}}</text></view>
+    </view>
+
+    <text class="pd-spec" wx:if="{{detail.specText}}">{{detail.specText}}</text>
+
+    <view class="pd-block" wx:if="{{detail.banks}}">
+      <text class="pd-h">承办银行</text>
+      <text class="pd-p">{{detail.banks}}</text>
+    </view>
+
+    <view class="pd-block" wx:if="{{detail.limitText}}">
+      <text class="pd-h">限额</text>
+      <text class="pd-p">{{detail.limitText}}{{detail.proxy ? ('，最多代 ' + detail.proxy + ' 人办理') : ''}}</text>
+    </view>
+
+    <view class="pd-block" wx:if="{{detail.ob}}">
+      <text class="pd-h">正面图案</text>
+      <text class="pd-p">{{detail.ob}}</text>
+    </view>
+    <view class="pd-block" wx:if="{{detail.rev}}">
+      <text class="pd-h">背面图案</text>
+      <text class="pd-p">{{detail.rev}}</text>
+    </view>
+
+    <text class="pd-src" wx:if="{{detail.sourceText}}">{{detail.sourceText}}</text>
+
+    <button class="pd-btn" bindtap="copySource" wx:if="{{detail.sourceUrl}}">复制公告链接</button>
+  </view>
+</view>

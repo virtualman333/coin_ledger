@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "用户藏品",
+  "navigationBarBackgroundColor": "#f6f4ef",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f4ef",
+  "enablePullDownRefresh": true
+}

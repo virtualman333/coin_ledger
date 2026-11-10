@@ -1,0 +1,82 @@
+.brand {
+  display: flex;
+  padding: 48rpx 8rpx 40rpx;
+  align-items: center;
+  flex-direction: column;
+}
+
+.brand-logo {
+  width: 132rpx;
+  height: 132rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 6rpx 20rpx rgba(178, 58, 44, 0.18);
+}
+
+.brand-mark {
+  color: #2b2926;
+  font-size: 52rpx;
+  font-weight: 600;
+  letter-spacing: 8rpx;
+  font-family: "Songti SC", "Noto Serif SC", serif;
+}
+
+.brand-sub {
+  margin-top: 14rpx;
+  color: #a39c8e;
+  font-size: 23rpx;
+  letter-spacing: 2rpx;
+}
+
+.brand-ver {
+  margin-top: 16rpx;
+  padding: 4rpx 18rpx;
+  border: 1rpx solid #e6dfd0;
+  border-radius: 999rpx;
+  color: #9a6b1f;
+  font-size: 20rpx;
+}
+
+.info {
+  margin-bottom: 20rpx;
+  padding: 8rpx 28rpx;
+}
+
+.info-row {
+  display: flex;
+  padding: 24rpx 0;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #f4f1ea;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-k {
+  color: #8a8378;
+  font-size: 24rpx;
+}
+
+.info-v {
+  color: #2b2926;
+  font-size: 24rpx;
+}
+
+.info-v.link {
+  color: #9a6b1f;
+}
+
+.note {
+  padding: 20rpx 12rpx 40rpx;
+  color: #b3aa9b;
+  font-size: 21rpx;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.note-warn {
+  display: block;
+  margin-top: 12rpx;
+  color: #b5766c;
+}

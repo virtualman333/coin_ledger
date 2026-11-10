@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="doc">
+    <text class="doc-h1">{{policy.title}}</text>
+    <text class="doc-meta">{{policy.updated}}　生效日期：2026-11-09</text>
+    <text class="doc-p">{{policy.intro}}</text>
+
+    <block wx:for="{{policy.sections}}" wx:key="h" wx:for-item="sec">
+      <text class="doc-h2">{{sec.h}}</text>
+      <text class="doc-p" wx:for="{{sec.paras}}" wx:key="*this" wx:for-item="p">{{p}}</text>
+    </block>
+
+    <text class="doc-note">{{policy.note}}</text>
+  </view>
+</view>

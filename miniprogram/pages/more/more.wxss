@@ -1,0 +1,159 @@
+.head {
+  padding: 6rpx 4rpx 22rpx;
+}
+
+.h1 {
+  color: #2b2926;
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.h-sub {
+  display: block;
+  margin-top: 10rpx;
+  color: #b3aa9b;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.sec {
+  margin-bottom: 20rpx;
+  padding: 26rpx 24rpx;
+}
+
+.sec-title {
+  display: block;
+  color: #2b2926;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.sec-sub {
+  display: block;
+  margin-top: 10rpx;
+  color: #b3aa9b;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+/* 功能清单 */
+.feat {
+  display: flex;
+  padding: 20rpx 0;
+  align-items: center;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.feat:last-child {
+  border-bottom: none;
+}
+
+.feat-ico {
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: 16rpx;
+  border-radius: 16rpx;
+  background: #fbf6ea;
+  font-size: 30rpx;
+  line-height: 64rpx;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.feat-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.feat-name {
+  display: block;
+  color: #2b2926;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.feat-desc {
+  display: block;
+  margin-top: 6rpx;
+  color: #b3aa9b;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.feat-tag {
+  margin-left: 12rpx;
+  padding: 3rpx 12rpx;
+  border-radius: 8rpx;
+  background: #f2efe7;
+  color: #a39c8e;
+  font-size: 19rpx;
+  flex: 0 0 auto;
+}
+
+.feat-tag.on {
+  background: #eaf6ee;
+  color: #4f7a55;
+}
+
+/* 输入 */
+.ta-wrap {
+  position: relative;
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx 34rpx;
+  border-radius: 16rpx;
+  background: #faf8f3;
+}
+
+.ta {
+  width: 100%;
+  min-height: 160rpx;
+  color: #2b2926;
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+
+.ph {
+  color: #c3bbad;
+}
+
+.ta-count {
+  position: absolute;
+  right: 20rpx;
+  bottom: 12rpx;
+  color: #c3bbad;
+  font-size: 19rpx;
+}
+
+.submit {
+  margin-top: 22rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.submit[disabled] {
+  opacity: 0.5;
+}
+
+.submit::after {
+  border: none;
+}
+
+.tip {
+  display: block;
+  margin-top: 16rpx;
+  color: #b3aa9b;
+  font-size: 20rpx;
+  line-height: 1.6;
+}
+
+.foot {
+  margin-top: 8rpx;
+  color: #c3bbad;
+  font-size: 20rpx;
+  text-align: center;
+}

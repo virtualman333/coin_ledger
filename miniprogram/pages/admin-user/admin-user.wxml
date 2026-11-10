@@ -1,0 +1,57 @@
+<view class="page">
+  <!-- 用户与汇总 -->
+  <view class="uhead">
+    <view class="uinfo">
+      <view class="uavatar">{{avatarText}}</view>
+      <view class="umain">
+        <text class="uname">{{userName}}</text>
+        <text class="usub">{{roleText}} · 注册 {{createdText}}</text>
+      </view>
+    </view>
+    <view class="usum">
+      <view class="ucell">
+        <text class="uk">品种</text>
+        <text class="uv">{{summary.kinds}}</text>
+      </view>
+      <view class="ucell">
+        <text class="uk">成本</text>
+        <text class="uv">¥{{summary.costText}}</text>
+      </view>
+      <view class="ucell">
+        <text class="uk">市值</text>
+        <text class="uv">¥{{summary.marketText}}</text>
+      </view>
+      <view class="ucell">
+        <text class="uk">盈亏</text>
+        <text class="uv {{summary.up ? 'up' : 'down'}}">{{summary.pnlText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tip" wx:if="{{!loading}}">共 {{items.length}} 条持仓 · 仅管理员可见</view>
+
+  <view class="card list" wx:if="{{items.length}}">
+    <view class="hrow" wx:for="{{items}}" wx:key="id">
+      <view class="hfig">
+        <image class="himg" src="{{item.imgUrl}}" mode="aspectFit" wx:if="{{item.imgUrl}}"></image>
+        <view class="himg hph" wx:else>无图</view>
+      </view>
+      <view class="hmain">
+        <text class="hname">{{item.name}}</text>
+        <text class="hsub">{{item.qtyLabel}} · 面值 ¥{{item.faceText}}</text>
+        <text class="hmeta">成本 ¥{{item.costText}} · 均价 ¥{{item.unitCostText}}</text>
+      </view>
+      <view class="hright">
+        <text class="hval">¥{{item.marketText}}</text>
+        <text class="hpnl {{item.pnlCls}}">{{item.pnlText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && !items.length}}">
+    <text class="e-title">这个账号还没有藏品</text>
+    <text class="e-sub">等他自己记录，或者从网页端看更详细的数据</text>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+</view>

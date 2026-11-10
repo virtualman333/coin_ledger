@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 120" width="440" height="120" role="img" aria-label="藏币录 Coin Ledger">
+  <defs>
+    <linearGradient id="lk-g" x1="0.15" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#fbeec4"/><stop offset="0.38" stop-color="#e6c87e"/>
+      <stop offset="0.72" stop-color="#c39c47"/><stop offset="1" stop-color="#8f6a1e"/>
+    </linearGradient>
+    <mask id="lk-h">
+      <rect width="120" height="120" fill="#fff"/>
+      <rect x="41" y="41" width="38" height="38" rx="5" fill="#000"/>
+    </mask>
+  </defs>
+  <circle cx="60" cy="60" r="54" fill="url(#lk-g)" mask="url(#lk-h)"/>
+  <circle cx="60" cy="60" r="54" fill="none" stroke="#7d5f1d" stroke-opacity="0.5" stroke-width="2"/>
+  <rect x="41" y="41" width="38" height="38" rx="5" fill="none" stroke="#7d5f1d" stroke-opacity="0.45" stroke-width="2"/>
+  <text x="142" y="74" font-family="Songti SC, Noto Serif SC, Georgia, serif"
+        font-size="54" font-weight="600" fill="#e8c877" letter-spacing="8">藏币录</text>
+  <text x="145" y="100" font-family="system-ui, -apple-system, PingFang SC, sans-serif"
+        font-size="13.5" fill="#8b94a3" letter-spacing="7">COIN LEDGER</text>
+</svg>

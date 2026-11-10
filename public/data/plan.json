@@ -1,0 +1,224 @@
+{
+ "updated": "2026-11-10",
+ "note": "普通纪念币（钞）年度发行计划。年度清单以中国人民银行每年 12 月公布的次年计划为准；单项的发行日、预约期、兑换期取自各品种发行公告（央行公告 / 新华社 / 承办银行）。只收普通纪念币与纪念钞，不含金银贵金属纪念币。计划外增发的项目标 extra。",
+ "years": [
+  {
+   "year": 2025,
+   "publishedAt": "2024-12-12",
+   "publishedBy": "中国人民银行",
+   "sourceUrl": "https://www.pbc.gov.cn/huobijinyinju/147948/147964/2025111717104867434/index.html",
+   "sourceText": "2025 年将发行 2025 年贺岁普通纪念币 1 枚、2025 年贺岁纪念钞 1 张、海南热带雨林国家公园普通纪念币 1 枚、中国京剧艺术普通纪念币 1 枚",
+   "items": [
+    {
+     "key": "hexia-2025-coin",
+     "name": "2025 年贺岁普通纪念币",
+     "short": "蛇年贺岁币",
+     "kind": "coin",
+     "face": 10,
+     "mintage": 10000,
+     "status": "issued",
+     "date": "2024-12-16",
+     "reserve": "2024-12-23 至 12-24",
+     "exchange": "2025-01-03 至 01-09",
+     "limit": 20,
+     "coinNo": 127,
+     "note": "二轮生肖（乙巳蛇），双色铜合金，直径 27 毫米",
+     "seriesKey": "sx2",
+     "sourceUrl": "https://www.chngc.net/special/1194025/souvenir/single-article/ZT304?id=218083"
+    },
+    {
+     "key": "hexia-2025-note",
+     "name": "2025 年贺岁纪念钞",
+     "short": "蛇钞",
+     "kind": "note",
+     "face": 20,
+     "mintage": 10000,
+     "status": "issued",
+     "date": "2024-12-16",
+     "reserve": "2024-12-23 至 12-24",
+     "exchange": "2025-01-03 至 01-09",
+     "limit": 20,
+     "coinNo": 131,
+     "note": "塑料钞，生肖贺岁钞第 2 张",
+     "seriesKey": "",
+     "sourceUrl": "https://www.chngc.net/special/1194025/souvenir/single-article/ZT304?id=218083"
+    },
+    {
+     "key": "hainan-2025",
+     "name": "海南热带雨林国家公园普通纪念币",
+     "short": "海南热带雨林",
+     "kind": "coin",
+     "face": 10,
+     "mintage": 5000,
+     "status": "issued",
+     "date": "2025-06-17",
+     "reserve": "2025-06-10 至 06-11",
+     "exchange": "2025-06-17 至 06-23",
+     "limit": 20,
+     "coinNo": 128,
+     "note": "国家公园系列第 5 枚，双色铜合金",
+     "seriesKey": "np",
+     "sourceUrl": "http://linzhi.gov.cn/linzhi/zwgk/202506/b5320747e9df4354971f296a147ad2a7.shtml"
+    },
+    {
+     "key": "kangzhan-2025",
+     "name": "抗战胜利 80 周年普通纪念币",
+     "short": "抗战 80 周年",
+     "kind": "coin",
+     "face": 10,
+     "mintage": 8000,
+     "status": "issued",
+     "date": "2025-09-03",
+     "reserve": "2025-09-16 至 09-17",
+     "exchange": "2025-10-30 至 11-05",
+     "limit": 20,
+     "coinNo": 129,
+     "note": "计划外增发；背面为胜利 80 周年纪念活动标识",
+     "seriesKey": "",
+     "extra": true,
+     "sourceUrl": "https://finance.people.com.cn/BIG5/n1/2025/0828/c1004-40552093.html"
+    },
+    {
+     "key": "jingju-2025",
+     "name": "中国京剧艺术普通纪念币（净角）",
+     "short": "京剧·净角",
+     "kind": "coin",
+     "face": 5,
+     "mintage": 6000,
+     "status": "issued",
+     "date": "2025-11-25",
+     "reserve": "",
+     "exchange": "",
+     "limit": 20,
+     "coinNo": 130,
+     "note": "京剧艺术系列第 3 枚，黄铜合金，直径 30 毫米",
+     "seriesKey": "jj",
+     "sourceUrl": "https://www.pbc.gov.cn/chubanwu/114566/114579/2025nwg/2026041018263945003/2026041018262590343.pdf"
+    }
+   ]
+  },
+  {
+   "year": 2026,
+   "publishedAt": "2025-12-08",
+   "publishedBy": "中国人民银行",
+   "sourceUrl": "https://www.pbc.gov.cn/huobijinyinju/147948/147964/2025120810135824050/index.html",
+   "sourceText": "2026 年将发行 2026 年贺岁普通纪念币 1 枚、2026 年贺岁纪念钞 1 张、武夷山国家公园普通纪念币 1 枚、中国京剧艺术普通纪念币 1 枚",
+   "items": [
+    {
+     "key": "hexia-2026-coin",
+     "name": "2026 年贺岁普通纪念币",
+     "short": "马年贺岁币",
+     "kind": "coin",
+     "face": 10,
+     "mintage": 10000,
+     "status": "issued",
+     "date": "2025-12-22",
+     "reserve": "2026-01-13 至 01-14",
+     "exchange": "2026-01-20 至 01-26",
+     "limit": 20,
+     "coinNo": 132,
+     "note": "二轮生肖收官（丙午马），双色铜合金，直径 27 毫米",
+     "seriesKey": "sx2",
+     "sourceUrl": "https://www.chngc.net/common/news-detail?id=258102"
+    },
+    {
+     "key": "hexia-2026-note",
+     "name": "2026 年贺岁纪念钞",
+     "short": "马钞",
+     "kind": "note",
+     "face": 20,
+     "mintage": 10000,
+     "status": "issued",
+     "date": "2025-12-22",
+     "reserve": "2026-01-13 至 01-14",
+     "exchange": "2026-01-20 至 01-26",
+     "limit": 20,
+     "coinNo": 135,
+     "note": "塑料钞，生肖贺岁钞第 3 张",
+     "seriesKey": "",
+     "sourceUrl": "https://www.chngc.net/common/news-detail?id=258102"
+    },
+    {
+     "key": "wuyishan-2026",
+     "name": "武夷山国家公园普通纪念币",
+     "short": "武夷山国家公园",
+     "kind": "coin",
+     "face": 10,
+     "mintage": 5000,
+     "status": "issued",
+     "date": "2026-04-03",
+     "reserve": "2026-06-02 至 06-03",
+     "exchange": "2026-06-09 至 06-15",
+     "limit": 20,
+     "coinNo": 133,
+     "note": "国家公园系列第 6 枚，双色铜合金",
+     "seriesKey": "np",
+     "sourceUrl": "https://www.xinhuanet.com/culture/20260403/0886c2a9960d451589d87ba3fd521dc6/c.html"
+    },
+    {
+     "key": "jiangzemin-2026",
+     "name": "江泽民诞辰 100 周年普通纪念币",
+     "short": "江泽民诞辰 100 周年",
+     "kind": "coin",
+     "face": 1,
+     "mintage": 1000,
+     "status": "issued",
+     "date": "2026-08-17",
+     "reserve": "2026-08-31 至 09-01",
+     "exchange": "2026-10-13 至 10-19",
+     "limit": 20,
+     "coinNo": 134,
+     "note": "计划外增发，钢芯镀镍，直径 25 毫米",
+     "seriesKey": "",
+     "extra": true,
+     "sourceUrl": "https://cpc.people.com.cn/n1/2026/0815/c64387-40780080.html"
+    },
+    {
+     "key": "jingju-2026",
+     "name": "中国京剧艺术普通纪念币（丑角）",
+     "short": "京剧·丑角",
+     "kind": "coin",
+     "face": 5,
+     "mintage": 6000,
+     "status": "upcoming",
+     "date": "2026-11-24",
+     "reserve": "2026-11-17 22:00 至 11-18 24:00",
+     "exchange": "2026-11-24 至 11-30",
+     "limit": 20,
+     "coinNo": 0,
+     "note": "京剧艺术系列第 4 枚，黄铜合金，直径 30 毫米",
+     "seriesKey": "jj",
+     "sourceUrl": "https://www.shannan.gov.cn/xwzx/tggs/202611/t20261109_179298.html",
+     "verify": "2026-11-21 至 11-23",
+     "proxy": 5,
+     "banks": "工商银行、农业银行、中国银行、建设银行、交通银行、邮储银行",
+     "design": {
+      "obverse": "中华人民共和国国徽，上方刊「中华人民共和国」国名，下方刊年号「2026」，辅以中国戏曲乐器图案",
+      "reverse": "中国京剧艺术中丑角形象，局部为彩色图案，辅以装饰化图形，并刊「中国京剧艺术」及面额「5元」"
+     },
+     "schedule": [
+      {
+       "k": "发行日",
+       "v": "2026-11-24"
+      },
+      {
+       "k": "预约",
+       "v": "11-17 22:00 至 11-18 24:00"
+      },
+      {
+       "k": "预约核实",
+       "v": "11-21 至 11-23"
+      },
+      {
+       "k": "兑换",
+       "v": "11-24 至 11-30"
+      }
+     ],
+     "sourceText": "中国人民银行 2026 年 10 月公告：11 月 24 日发行，面额 5 元、直径 30 毫米、黄铜合金、6000 万枚；六家银行承办",
+     "material": "黄铜合金",
+     "dia": "φ30mm"
+    }
+   ]
+  }
+ ]
+}
