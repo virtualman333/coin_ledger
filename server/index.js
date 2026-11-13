@@ -1103,6 +1103,22 @@ async function handleApi(req, res, pathname) {
   }
 
   /* ---------------- 管理端 ---------------- */
+  /* 反爬封禁：误伤时可自查、可解封，不必等封禁过期或重启服务 */
+  if (pathname === '/api/admin/guard/bans' && method === 'GET') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    return sendJSON(res, 200, { ok: true, bans: guard.listBans(), stats: guard.stats() });
+  }
+
+  if (pathname === '/api/admin/guard/unban' && method === 'POST') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const body = await readBody(req);
+    const ip = String(body.ip || '').trim();
+    if (!ip) throw badRequest('缺少 ip');
+    return sendJSON(res, 200, { ok: true, removed: guard.unban(ip) });
+  }
+
   if (pathname === '/api/admin/users' && method === 'GET') {
     const me = requireAdmin(req, res, d);
     if (!me) return;
@@ -1506,10 +1522,13 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, { ok: true, images: rest });
   }
 
-  // 蜜罐：正常用户不会访问这里（页面上是个视觉隐藏的诱饵链接）
+  // 蜜罐：仅作诱饵。一次误点只记录，反复命中才短封（见 server/guard.js）
   if (pathname === '/api/__trap') {
-    guard.trap(ip);
-    console.log(`[guard] 蜜罐命中，已封禁 ${ip}`);
+    const t = guard.trap(ip, req);
+    const detail = t.ignored ? '可信来源，忽略'
+      : t.banned ? `第 ${t.hits} 次，已封禁 ${t.banMs}ms`
+        : `第 ${t.hits} 次，未达阈值 ${t.threshold}`;
+    console.log(`[guard] 蜜罐命中 ${ip}：${detail}`);
     return sendJSON(res, 404, { ok: false, error: '接口不存在' });
   }
 

@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /data/
+# 蜜罐诱饵：守规矩的爬虫不会碰 Disallow 路径，扫到这里的多半是恶意爬虫。
+# 真人不看 robots.txt；万一误点也只记一次，不会封（见 server/guard.js）。
+Disallow: /api/__trap
 Crawl-delay: 3
 
 # 站点数据以页面形式开放浏览，接口与原始 JSON 不对外开放抓取

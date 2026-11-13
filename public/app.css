@@ -1314,13 +1314,6 @@ body.tab-home .tabbar{border-top:1px solid var(--line2)}
 }
 
 
-/* ---------- 反爬蜜罐（正常用户不可见、不可聚焦） ---------- */
-.trap{
-  position:absolute;left:-9999px;top:-9999px;
-  width:1px;height:1px;overflow:hidden;
-  opacity:0;pointer-events:none
-}
-
 /* =========================================================
    体验优化：隐藏态 / 加载态 / 键盘可达 / 触屏看图
    ========================================================= */
