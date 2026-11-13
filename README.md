@@ -217,6 +217,13 @@ APP_PASSWORD='你的口令' MYSQL_ROOT_PASSWORD='…' bash deploy/install.sh
 STORAGE=json bash deploy/install.sh
 ```
 
+> **生产托管方式（2026-11-13 起）**：线上后端已改用宝塔面板「Supervisor 进程管理器」托管，
+> `coin-ledger.service` 单元停用并禁用（文件保留，可随时回滚）。进程配置在
+> `/www/server/panel/plugin/supervisor/profile/coin-ledger.ini`，运行日志为
+> `/www/wwwlogs/coin-ledger-supervisor.log`，面板里可直接启停 / 重启 / 看日志。
+> `deploy/install.sh` 仍用于首次部署与回滚，但**升级时不要再执行**，否则会重新启用 systemd
+> 单元，与 Supervisor 同时抢 3100 端口。回滚脚本见服务器 `/root/coin-ledger-rollback-systemd.sh`。
+
 脚本做的事：探测/安装 Node → 同步代码到 `/www/wwwroot/coin-ledger`（保留 `data/` 与 `node_modules/`）→ 生成 `/etc/coin-ledger.env`（600）→ **建库建账号**（`coin_ledger`）→ `npm install`（mysql2）→ **首次把 `data/db.json` 导入 MySQL** → 装 systemd 单元并启动 → 写 Nginx 站点配置并 reload → 配置日志轮转（保留 14 天）→ 添加每日 03:20 备份的 cron → 自检 `/api/health`。
 
 几个关键点：
