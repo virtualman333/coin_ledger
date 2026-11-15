@@ -857,12 +857,14 @@ async function handleApi(req, res, pathname) {
     try { vbody = await readBody(req, 4096); } catch (e) { vbody = {}; }
     const sid = String(vbody.sid || '').slice(0, 40);
     const vtab = String(vbody.tab || 'home').slice(0, 24);
-    if (/^[A-Za-z0-9_-]{8,40}$/.test(sid) && !visitors.recentlySeen(sid, vtab, 30)) {
+    const vclient = vbody.client === 'mp' ? 'mp' : 'web';
+    if (/^[A-Za-z0-9_-]{8,40}$/.test(sid) && !visitors.recentlySeen(sid, vtab, 30, vclient)) {
       const vme = auth.currentUser(req, d);
       const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
       visitors.add({
         sid,
         tab: vtab,
+        client: vclient,
         path: String(vbody.path || '').slice(0, 160),
         ip: String(req.headers['x-real-ip'] || xff || req.socket.remoteAddress || '').slice(0, 64),
         ua: String(req.headers['user-agent'] || '').slice(0, 240),
@@ -1231,8 +1233,10 @@ async function handleApi(req, res, pathname) {
   if (pathname === '/api/admin/visitors' && method === 'GET') {
     const me = requireAdmin(req, res, d);
     if (!me) return;
+    const vq = url.parse(req.url, true).query;
+    const client = ['web', 'mp'].indexOf(String(vq.client || '')) >= 0 ? String(vq.client) : 'all';
     const items = visitors.load().items;
-    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.stats(items)));
+    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.stats(items, { client })));
   }
 
   /* ---------------- 功能建议（更多功能页） ---------------- */

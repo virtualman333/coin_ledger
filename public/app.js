@@ -2691,22 +2691,39 @@ function showPlanDetail(it){
   });
 }
 
-/* 管理端：访客记录 */
+/* 管理端：访客记录（网页 / 小程序来源 + 页面留存） */
+var VS_CLIENT = 'all';
+var VS_TAB_NAME = {
+  home: '首页', all: '全套清单', plan: '发行计划', series: '系列',
+  holdings: '我的藏品', mine: '我的', detail: '品种详情', account: '账户',
+  about: '关于', more: '更多', feedback: '反馈', privacy: '隐私',
+  sitemap: '站点地图', admin: '管理端', overview: '总览', cost: '成本'
+};
+function vsTabName(k){ return VS_TAB_NAME[k] || k; }
+
 function renderAdminVisitors(){
   var box = document.getElementById('vsBox');
   if (!box) return;
   box.innerHTML = '<div class="muted">加载中…</div>';
-  fetch('/api/admin/visitors', { credentials: 'same-origin' })
+  fetch('/api/admin/visitors?client=' + encodeURIComponent(VS_CLIENT), { credentials: 'same-origin' })
     .then(function(r){ return r.json(); })
     .then(function(res){
       if (!res || res.ok === false) throw new Error((res && res.error) || '加载失败');
+      var bc = res.byClient || { web: { pv: 0, uv: 0 }, mp: { pv: 0, uv: 0 } };
       var head = document.getElementById('vsStats');
       if (head) {
         head.innerHTML =
           '<div class="vcard"><span>今日 PV</span><b>' + res.todayPv + '</b></div>' +
           '<div class="vcard"><span>今日独立 IP</span><b>' + res.todayUv + '</b></div>' +
           '<div class="vcard"><span>累计 PV</span><b>' + res.totalPv + '</b></div>' +
-          '<div class="vcard"><span>累计独立 IP</span><b>' + res.totalUv + '</b></div>';
+          '<div class="vcard"><span>累计独立 IP</span><b>' + res.totalUv + '</b></div>' +
+          '<div class="vcard mp"><span>小程序 PV / IP</span><b>' + bc.mp.pv + ' <em>/ ' + bc.mp.uv + '</em></b></div>' +
+          '<div class="vcard"><span>平均每会话</span><b>' + res.avgPages + ' <em>页</em></b></div>';
+      }
+      var summary = document.getElementById('vsSummary');
+      if (summary) {
+        summary.textContent = '网页 ' + bc.web.pv + ' 次 / ' + bc.web.uv + ' IP · 小程序 ' +
+          bc.mp.pv + ' 次 / ' + bc.mp.uv + ' IP';
       }
       var trend = document.getElementById('vsTrend');
       if (trend) {
@@ -2715,21 +2732,57 @@ function renderAdminVisitors(){
                  '<em>' + d.uv + ' IP</em></div>';
         }).join('') || '<span class="muted">暂无数据</span>';
       }
+
+      // 小程序页面留存
+      var wrap = document.getElementById('vsRetentionWrap');
+      if (wrap) wrap.hidden = (VS_CLIENT === 'web');
+      var ret = document.getElementById('vsRetention');
+      if (ret) {
+        var rr = res.retention || [];
+        ret.innerHTML = rr.length
+          ? '<div class="vret-row vret-head"><span>页面</span><span>访问</span><span>会话</span>' +
+              '<span>继续浏览</span><span></span><span>次日回访</span><span></span></div>' +
+            rr.map(function(x){
+              return '<div class="vret-row">' +
+                '<span class="vr-name">' + esc(vsTabName(x.tab)) + '</span>' +
+                '<span class="vr-num">' + x.pv + ' 次</span>' +
+                '<span class="vr-num">' + x.sessions + ' 会话</span>' +
+                '<span class="vr-bar"><i style="width:' + x.keepRate + '%"></i></span>' +
+                '<span class="vr-pct">' + x.keepRate + '%</span>' +
+                '<span class="vr-bar"><i style="width:' + x.nextRate + '%"></i></span>' +
+                '<span class="vr-pct">' + x.nextRate + '%</span>' +
+              '</div>';
+            }).join('')
+          : '<div class="muted">还没有小程序访问数据。小程序上报页面浏览后这里会有留存。</div>';
+      }
+
       var rows = res.sessions || [];
       box.innerHTML = rows.length ? rows.map(function(x){
         var ua = String(x.ua || '');
         var device = /iPhone|Android|Mobile/i.test(ua) ? '手机' : (/iPad|Tablet/i.test(ua) ? '平板' : '电脑');
         var who = x.name ? esc(x.name) : '<span class="muted">未登录</span>';
+        var isMp = x.client === 'mp';
         return '<div class="vrow">' +
           '<div class="vtime">' + esc(String(x.last).slice(0, 16).replace('T', ' ')) + '</div>' +
-          '<div class="vwho">' + who + '<span class="vdevice">' + device + '</span></div>' +
+          '<div class="vwho">' + who +
+            '<span class="vsrc ' + (isMp ? 'mp' : 'web') + '">' + (isMp ? '小程序' : '网页') + '</span>' +
+            '<span class="vdevice">' + device + '</span></div>' +
           '<div class="vpages"><b>' + x.pageCount + '</b> 个页面 · ' +
-            (x.pages || []).map(function(p){ return esc(p); }).join(' / ') + '</div>' +
+            (x.pages || []).map(function(p){ return esc(vsTabName(p)); }).join(' / ') + '</div>' +
           '<div class="vip" title="' + esc(x.ip || '') + '">' + esc(x.ip || '—') + '</div>' +
         '</div>';
       }).join('') : '<div class="muted">还没有访客记录。有人打开页面后这里会有数据。</div>';
     })
     .catch(function(e){ box.innerHTML = '<div class="muted">' + esc(e.message) + '</div>'; });
+}
+
+function setVsClient(c){
+  VS_CLIENT = c;
+  var tabs = document.querySelectorAll('#vsClient .vstab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('on', tabs[i].getAttribute('data-client') === c);
+  }
+  renderAdminVisitors();
 }
 
 function renderPlan(){
@@ -3988,6 +4041,11 @@ function adminFeedbackAction(id, action) {
 function initAdmin() {
   var vsReload = document.getElementById('vsReload');
   if (vsReload) vsReload.addEventListener('click', renderAdminVisitors);
+  var vsClient = document.getElementById('vsClient');
+  if (vsClient) vsClient.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.vstab');
+    if (b) setVsClient(b.getAttribute('data-client'));
+  });
 
   var tabs = document.getElementById('adminTabs');
   if (tabs) {
