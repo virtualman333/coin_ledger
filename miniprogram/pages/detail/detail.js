@@ -174,24 +174,43 @@ Page({
       });
       return;
     }
-    // 多枚一套的品种：先问按套还是按单枚记
     const size = cat.setSizeOf(coin);
+    const u = coin.kind === 'note' ? '张' : '枚';
+
+    // 第二步：问数量（默认 1，可直接改成任意 1–9999）
+    const askQty = (unit) => {
+      if (typeof wx.showModal !== 'function') { this.doAdd(coin, unit, 1); return; }
+      wx.showModal({
+        title: '加入几' + (unit === 'piece' ? u : (size > 1 ? '套' : u)) + '？',
+        content: '1',
+        editable: true,
+        placeholderText: '数量（1–9999）',
+        confirmText: '加入',
+        success: (r) => {
+          if (!r.confirm) return;
+          let n = Math.floor(Number(String((r.content || '')).trim()) || 1);
+          n = Math.max(1, Math.min(9999, n));
+          this.doAdd(coin, unit, n);
+        },
+      });
+    };
+
+    // 第一步：多枚一套的品种先选记法
     if (size > 1 && typeof wx.showActionSheet === 'function') {
-      const u = coin.kind === 'note' ? '张' : '枚';
       wx.showActionSheet({
         itemList: ['按套记（1 套 = ' + size + ' ' + u + '）', '按单' + u + '记'],
-        success: (r) => this.doAdd(coin, r.tapIndex === 0 ? 'set' : 'piece'),
+        success: (r) => askQty(r.tapIndex === 0 ? 'set' : 'piece'),
       });
       return;
     }
-    this.doAdd(coin, 'set');
+    askQty('set');
   },
 
-  doAdd(coin, unit) {
+  doAdd(coin, unit, qty) {
     this.setData({ busy: true });
     let task;
     try {
-      task = store.addCoin(coin, unit);
+      task = store.addCoin(coin, unit, qty || 1);
     } catch (err) {
       this.setData({ busy: false });
       wx.showToast({ title: err.message, icon: 'none' });

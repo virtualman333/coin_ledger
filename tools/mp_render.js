@@ -427,6 +427,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   ok(cat.coins.every((c) => c.imgs.every((g) => g.url.indexOf('https://') === 0 && g.url.indexOf('/img/') > 0)), '图片地址都是绝对 URL');
 
+  console.log('[6.95] 加入藏品时指定数量');
+  await sleep(1500);   // 等上一段的 changeRolls 写完，避免两个 persist 竞态
+  const qtyCoin = cat.coins.filter((c) => c.id !== 2)[0];
+  await store.addCoin(qtyCoin, 'set', 3);
+  await sleep(1200);
+  const qtyRows = store.getState().holdings;
+  const qtyRow = qtyRows.filter((x) => x.name === qtyCoin.name)[0] || qtyRows[qtyRows.length - 1];
+  ok(qtyRow && qtyRow.rolls === 3, '加入时数量生效：3 份');
+  ok(qtyRow && Math.abs(qtyRow.cost - qtyCoin.setFace * 3) < 0.01, '成本按数量累加：' + (qtyRow && qtyRow.cost));
+  if (qtyRow) await store.removeHolding(qtyRow.id);
+
   console.log('\n[7] 转发分享');
   ['pages/index/index', 'pages/list/list', 'pages/mine/mine', 'pages/detail/detail'].forEach((route) => {
     const pg = loadPage(route);

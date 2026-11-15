@@ -3,7 +3,7 @@ const store = require('./utils/store');
 App({
   globalData: {
     appName: '藏币录',
-    version: '2.8.3',
+    version: '2.8.4',
   },
 
   onLaunch() {

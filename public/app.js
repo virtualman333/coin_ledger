@@ -2155,19 +2155,21 @@ document.getElementById('holdingsBox').addEventListener('input', function(e){
  * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
  * 按枚时成本与市价都按单枚面额起算，rolls 表示件数。
  */
-function addHolding(name, unit){
+function addHolding(name, unit, qty){
   var d = findDB(name);
   if (!d || isOwned(name)) return false;
   var up = unitPrice(d);
   var size = holdingUnitSize(d);
   var isPiece = unit === 'piece' && size > 1;
-  var base = up.face * size;
+  var n = Math.floor(Number(qty) || 1);
+  n = Math.max(1, Math.min(9999, n));
+  var unitPriceOne = isPiece ? up.face : up.face * size;
   coll.push({
     name: name,
-    rolls: 1,
+    rolls: n,
     unit: isPiece ? 'piece' : 'set',
-    cost: isPiece ? up.face : base,
-    market: isPiece ? up.face : base,
+    cost: unitPriceOne * n,
+    market: unitPriceOne * n,
     group: groupOf(d)
   });
   rebuildGroupOrder();
@@ -2180,13 +2182,12 @@ function requestAddHolding(name, after){
   var d = findDB(name);
   if (!d || isOwned(name)) return;
   var size = holdingUnitSize(d);
-  function done(unit){
-    if (addHolding(name, unit)) {
-      toast('已加入「' + name + '」' + (unit === 'piece' ? '（按单枚）' : ''));
+  function done(unit, qty){
+    if (addHolding(name, unit, qty)) {
+      toast('已加入「' + name + '」× ' + qty + (unit === 'piece' ? ' 枚' : ''));
       if (after) after();
     }
   }
-  if (size <= 1) { done('set'); return; }
   showAddUnitChooser(d, size, done);
 }
 
@@ -2201,15 +2202,47 @@ function showAddUnitChooser(d, size, cb){
     '<div class="au-sheet" role="dialog" aria-modal="true">' +
       '<b>怎么记这一笔？</b>' +
       '<p>' + esc(d.name) + '</p>' +
-      '<button type="button" data-u="set">按套记 <i>1 套 = ' + size + ' ' + u + '</i></button>' +
-      '<button type="button" data-u="piece">按单' + u + '记 <i>只记 1 ' + u + '</i></button>' +
+      '<div class="au-qty"><span>数量</span>' +
+        '<button type="button" data-step="-1" aria-label="减少">−</button>' +
+        '<input id="auQty" type="number" min="1" max="9999" step="1" value="1" inputmode="numeric">' +
+        '<button type="button" data-step="1" aria-label="增加">＋</button>' +
+      '</div>' +
+      '<div class="au-hint" id="auHint"></div>' +
+      (size > 1
+        ? '<button type="button" data-u="set">按套记 <i>每套 ' + size + ' ' + u + '</i></button>' +
+          '<button type="button" data-u="piece">按单' + u + '记 <i>1 个就是 1 ' + u + '</i></button>'
+        : '<button type="button" data-u="set">加入 <i>每份 1 ' + u + '</i></button>') +
       '<button type="button" class="au-x">取消</button>' +
     '</div>';
   document.body.appendChild(mask);
+
+  var qtyEl = mask.querySelector('#auQty');
+  var hint = mask.querySelector('#auHint');
+  function qty(){
+    var n = Math.floor(Number(qtyEl.value) || 1);
+    return Math.max(1, Math.min(9999, n));
+  }
+  function syncHint(){
+    var n = qty();
+    hint.textContent = size > 1
+      ? n + ' 份 · 按套 = ' + (n * size) + ' ' + u + '，按单' + u + ' = ' + n + ' ' + u
+      : n + ' ' + u;
+  }
+  syncHint();
+  qtyEl.addEventListener('input', syncHint);
+  qtyEl.focus();
+  qtyEl.select();
+
   function close(){ if (mask.parentNode) mask.parentNode.removeChild(mask); }
   mask.addEventListener('click', function(e){
+    var step = e.target.closest('[data-step]');
+    if (step) {
+      qtyEl.value = Math.max(1, Math.min(9999, qty() + Number(step.getAttribute('data-step'))));
+      syncHint();
+      return;
+    }
     var btn = e.target.closest('[data-u]');
-    if (btn) { close(); cb(btn.getAttribute('data-u')); return; }
+    if (btn) { var n = qty(); close(); cb(btn.getAttribute('data-u'), n); return; }
     if (e.target === mask || e.target.closest('.au-x')) close();
   });
   document.addEventListener('keydown', function escKey(e){

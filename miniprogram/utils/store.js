@@ -175,7 +175,7 @@ function newId() {
  * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
  * 单枚的成本与市价按「一套 ÷ 件数」折算，账本里仍然是纯数量。
  */
-function addCoin(coin, unit) {
+function addCoin(coin, unit, qty) {
   requireLogin();
   if (findHolding(coin.name)) {
     const err = new Error('这一枚已经在你的藏品里了');
@@ -184,15 +184,18 @@ function addCoin(coin, unit) {
   }
   const size = Math.max(1, Number(cat.setSizeOf(coin)) || 1);
   const isPiece = unit === 'piece' && size > 1;
+  const n = Math.max(1, Math.min(9999, Math.floor(Number(qty) || 1)));
   const setFace = coin.setFace;
   const setMarket = setPriceOf(coin);
+  const oneCost = isPiece ? setFace / size : setFace;
+  const oneMarket = isPiece ? setMarket / size : setMarket;
   state.holdings.push({
     id: newId(),
     name: coin.name,
     unit: isPiece ? 'piece' : 'set',
-    rolls: 1,
-    cost: isPiece ? Math.round((setFace / size) * 100) / 100 : setFace,
-    market: isPiece ? Math.round((setMarket / size) * 100) / 100 : setMarket,
+    rolls: n,
+    cost: Math.round(oneCost * n * 100) / 100,
+    market: Math.round(oneMarket * n * 100) / 100,
     group: coin.group,
   });
   return persist();
