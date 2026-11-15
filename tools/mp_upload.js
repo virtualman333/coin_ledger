@@ -24,13 +24,19 @@ function arg(name, def) {
 }
 
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-// 小程序版本号单独一条线，跟着 package.json 走会串味，这里用独立文件记录
-const VER_FILE = path.join(__dirname, '_data', 'mp-version.txt');
+// 版本以 miniprogram/app.js 为准（小程序「关于」里显示的也是它），
+// 避免再维护一份独立版本文件导致上传成 1.2.0 这种旧号
 let version = arg('-v', '');
 if (!version) {
+  const appJs = fs.readFileSync(path.join(MP, 'app.js'), 'utf8');
+  const hit = appJs.match(/version:\s*'([^']+)'/);
+  version = hit ? hit[1] : '';
+}
+if (!version) {
+  const VER_FILE = path.join(__dirname, '_data', 'mp-version.txt');
   try { version = fs.readFileSync(VER_FILE, 'utf8').trim(); } catch (e) { version = '1.2.0'; }
 }
-const desc = arg('-d', `同步网站端数据与交互（${new Date().toISOString().slice(0, 10)}）`);
+const desc = arg('-d', `加入藏品支持指定数量（WEB 与小程序同步）`);
 const robot = Number(arg('--robot', '1'));
 
 const keyPath = path.join(ROOT, '.secrets', `private.${APPID}.key`);
@@ -70,8 +76,6 @@ if (!fs.existsSync(keyPath)) {
 
   console.log('\n上传成功');
   console.log(JSON.stringify(uploadResult, null, 2));
-  fs.mkdirSync(path.dirname(VER_FILE), { recursive: true });
-  fs.writeFileSync(VER_FILE, version + '\n');
 })().catch((e) => {
   console.error('\n上传失败：', e && e.message ? e.message : e);
   if (e && e.errCode) console.error('errCode:', e.errCode);
