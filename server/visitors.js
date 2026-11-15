@@ -113,6 +113,65 @@ function pageRetention(items) {
   }).sort((a, b) => b.pv - a.pv).slice(0, 20);
 }
 
+/** 按 IP 聚合：同一 IP 的多次访问、多个会话、多个来源合并成一行 */
+function ipGroups(items) {
+  const map = {};
+  const ipKey = (x) => x.ip || ('sid:' + x.sid);
+  items.forEach((x) => {
+    const ip = ipKey(x);
+    if (!map[ip]) {
+      map[ip] = {
+        ip: x.ip || '—',
+        pv: 0, sessions: {}, pages: {}, clients: {}, days: {},
+        first: x.at, last: x.at, name: '', ua: x.ua || '',
+      };
+    }
+    const g = map[ip];
+    g.pv += 1;
+    g.sessions[x.sid] = 1;
+    g.pages[x.tab] = 1;
+    g.clients[x.client || 'web'] = 1;
+    g.days[dayKey(x.at)] = 1;
+    if (Date.parse(x.at) < Date.parse(g.first)) g.first = x.at;
+    if (Date.parse(x.at) > Date.parse(g.last)) g.last = x.at;
+    if (!g.name && x.userName) g.name = x.userName;
+    if (!g.ua && x.ua) g.ua = x.ua;
+  });
+  return Object.keys(map).map((k) => {
+    const g = map[k];
+    return {
+      ip: g.ip,
+      pv: g.pv,
+      sessionCount: Object.keys(g.sessions).length,
+      pageCount: Object.keys(g.pages).length,
+      pages: Object.keys(g.pages),
+      clients: Object.keys(g.clients),
+      days: Object.keys(g.days).length,
+      first: g.first,
+      last: g.last,
+      name: g.name,
+      ua: g.ua,
+    };
+  }).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 60);
+}
+
+/** 某个 IP 或会话的完整访问明细（管理端弹窗用） */
+function detail(items, query) {
+  const q = query || {};
+  const rows = items.filter((x) => {
+    if (q.sid) return x.sid === q.sid;
+    if (q.ip) return (x.ip || ('sid:' + x.sid)) === q.ip;
+    return false;
+  });
+  return {
+    rows: rows.slice(0, 200).map((x) => ({
+      at: x.at, tab: x.tab, client: x.client || 'web', sid: x.sid,
+      name: x.userName || '', ua: x.ua || '', path: x.path || '', ip: x.ip || '',
+    })).sort((a, b) => String(b.at).localeCompare(String(a.at))),
+    total: rows.length,
+  };
+}
+
 function stats(items, options) {
   const opts = options || {};
   const client = opts.client && opts.client !== 'all' ? opts.client : '';
@@ -190,7 +249,8 @@ function stats(items, options) {
       ? Math.round((sids.reduce((n, k) => n + Object.keys(sessions[k].pages).length, 0) / sids.length) * 10) / 10
       : 0,
     retention: pageRetention(items),
+    ipGroups: ipGroups(rows),
   };
 }
 
-module.exports = { load, add, recentlySeen, stats, pageRetention, dayKey };
+module.exports = { load, add, recentlySeen, stats, pageRetention, ipGroups, detail, dayKey };

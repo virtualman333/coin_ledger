@@ -1239,6 +1239,17 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, Object.assign({ ok: true }, visitors.stats(items, { client })));
   }
 
+  /* 管理员查看某个 IP / 会话的访问明细 */
+  if (pathname === '/api/admin/visitors/detail' && method === 'GET') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const dq = url.parse(req.url, true).query;
+    const ip = String(dq.ip || '').slice(0, 80);
+    const sid = String(dq.sid || '').slice(0, 40);
+    if (!ip && !sid) return sendJSON(res, 400, { ok: false, error: '缺少 ip 或 sid' });
+    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.detail(visitors.load().items, { ip, sid })));
+  }
+
   /* ---------------- 功能建议（更多功能页） ---------------- */
   if (pathname === '/api/feature-request' && method === 'POST') {
     const me = requireLogin(req, res, d);

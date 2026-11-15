@@ -2756,16 +2756,31 @@ function renderAdminVisitors(){
           : '<div class="muted">还没有小程序访问数据。小程序上报页面浏览后这里会有留存。</div>';
       }
 
-      var rows = res.sessions || [];
+      var byIp = VS_VIEW === 'ip';
+      var rows = byIp ? (res.ipGroups || []) : (res.sessions || []);
       box.innerHTML = rows.length ? rows.map(function(x){
         var ua = String(x.ua || '');
         var device = /iPhone|Android|Mobile/i.test(ua) ? '手机' : (/iPad|Tablet/i.test(ua) ? '平板' : '电脑');
+        if (byIp) {
+          var both = x.clients && x.clients.indexOf('mp') >= 0 && x.clients.indexOf('web') >= 0;
+          var isMp = !!(x.clients && x.clients.indexOf('mp') >= 0);
+          var srcText = both ? '混合' : (isMp ? '小程序' : '网页');
+          return '<div class="vrow clickable" data-ip="' + esc(x.ip) + '" role="button" tabindex="0">' +
+            '<div class="vtime">' + esc(String(x.last).slice(0, 16).replace('T', ' ')) + '</div>' +
+            '<div class="vwho">' + (x.name ? esc(x.name) : '<span class="muted">访客</span>') +
+              '<span class="vsrc ' + (isMp ? 'mp' : 'web') + '">' + srcText + '</span>' +
+              '<span class="vdevice">' + device + '</span></div>' +
+            '<div class="vpages"><b>' + x.pv + '</b> 次 · ' + x.sessionCount + ' 会话 · ' +
+              x.pageCount + ' 页 · ' + x.days + ' 天</div>' +
+            '<div class="vip" title="' + esc(x.ip) + '">' + esc(x.ip) + '</div>' +
+          '</div>';
+        }
         var who = x.name ? esc(x.name) : '<span class="muted">未登录</span>';
-        var isMp = x.client === 'mp';
-        return '<div class="vrow">' +
+        var mp = x.client === 'mp';
+        return '<div class="vrow clickable" data-sid="' + esc(x.sid) + '" role="button" tabindex="0">' +
           '<div class="vtime">' + esc(String(x.last).slice(0, 16).replace('T', ' ')) + '</div>' +
           '<div class="vwho">' + who +
-            '<span class="vsrc ' + (isMp ? 'mp' : 'web') + '">' + (isMp ? '小程序' : '网页') + '</span>' +
+            '<span class="vsrc ' + (mp ? 'mp' : 'web') + '">' + (mp ? '小程序' : '网页') + '</span>' +
             '<span class="vdevice">' + device + '</span></div>' +
           '<div class="vpages"><b>' + x.pageCount + '</b> 个页面 · ' +
             (x.pages || []).map(function(p){ return esc(vsTabName(p)); }).join(' / ') + '</div>' +
@@ -2783,6 +2798,78 @@ function setVsClient(c){
     tabs[i].classList.toggle('on', tabs[i].getAttribute('data-client') === c);
   }
   renderAdminVisitors();
+}
+
+var VS_VIEW = 'ip';
+function setVsView(v){
+  VS_VIEW = v;
+  var tabs = document.querySelectorAll('#vsView .vstab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('on', tabs[i].getAttribute('data-view') === v);
+  }
+  renderAdminVisitors();
+}
+
+/** 点列表行：拉该 IP / 会话的完整访问明细 */
+function openVisitDetail(kind, key){
+  var old = document.getElementById('vdMask');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  var label = kind === 'ip' ? ('IP ' + key) : ('会话 ' + key.slice(0, 8));
+  var mask = document.createElement('div');
+  mask.id = 'vdMask';
+  mask.className = 'vd-mask';
+  mask.innerHTML =
+    '<div class="vd-sheet" role="dialog" aria-modal="true">' +
+      '<div class="vd-head"><b>' + esc(label) + '</b><button class="vd-x" type="button" aria-label="关闭">✕</button></div>' +
+      '<div class="vd-sum" id="vdSum">加载中…</div>' +
+      '<div class="vd-list" id="vdList"></div>' +
+    '</div>';
+  document.body.appendChild(mask);
+  function close(){ if (mask.parentNode) mask.parentNode.removeChild(mask); }
+  mask.addEventListener('click', function(e){
+    if (e.target === mask || e.target.closest('.vd-x')) close();
+  });
+  document.addEventListener('keydown', function onKey(e){
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); }
+  });
+
+  var url = '/api/admin/visitors/detail?' + (kind === 'ip' ? 'ip=' : 'sid=') + encodeURIComponent(key);
+  fetch(url, { credentials: 'same-origin' })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || res.ok === false) throw new Error((res && res.error) || '加载失败');
+      var rows = res.rows || [];
+      var ips = {}, sids = {}, clients = {}, pages = {};
+      rows.forEach(function(x){
+        ips[x.ip || '—'] = 1;
+        sids[x.sid] = 1;
+        clients[x.client] = 1;
+        pages[x.tab] = 1;
+      });
+      var sum = document.getElementById('vdSum');
+      if (sum) {
+        sum.innerHTML =
+          '<span>访问 <b>' + res.total + '</b> 次</span>' +
+          '<span>会话 <b>' + Object.keys(sids).length + '</b></span>' +
+          '<span>页面 <b>' + Object.keys(pages).length + '</b></span>' +
+          '<span>来源 <b>' + Object.keys(clients).map(function(c){ return c === 'mp' ? '小程序' : '网页'; }).join(' / ') + '</b></span>';
+      }
+      var list = document.getElementById('vdList');
+      if (list) {
+        list.innerHTML = rows.length ? rows.map(function(x){
+          return '<div class="vd-row">' +
+            '<span class="vd-time">' + esc(String(x.at).slice(0, 16).replace('T', ' ')) + '</span>' +
+            '<span class="vd-tab">' + esc(vsTabName(x.tab)) + '</span>' +
+            '<span class="vd-from ' + (x.client === 'mp' ? 'mp' : 'web') + '">' + (x.client === 'mp' ? '小程序' : '网页') + '</span>' +
+            '<span class="vd-user">' + esc(x.name || '未登录') + '</span>' +
+          '</div>';
+        }).join('') : '<div class="muted">没有明细</div>';
+      }
+    })
+    .catch(function(e){
+      var sum = document.getElementById('vdSum');
+      if (sum) sum.textContent = e.message;
+    });
 }
 
 function renderPlan(){
@@ -4045,6 +4132,20 @@ function initAdmin() {
   if (vsClient) vsClient.addEventListener('click', function(e){
     var b = e.target.closest && e.target.closest('.vstab');
     if (b) setVsClient(b.getAttribute('data-client'));
+  });
+  var vsView = document.getElementById('vsView');
+  if (vsView) vsView.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.vstab');
+    if (b) setVsView(b.getAttribute('data-view'));
+  });
+  var vsBox = document.getElementById('vsBox');
+  if (vsBox) vsBox.addEventListener('click', function(e){
+    var row = e.target.closest && e.target.closest('.vrow.clickable');
+    if (!row) return;
+    var ip = row.getAttribute('data-ip');
+    if (ip) { openVisitDetail('ip', ip); return; }
+    var sid = row.getAttribute('data-sid');
+    if (sid) openVisitDetail('sid', sid);
   });
 
   var tabs = document.getElementById('adminTabs');

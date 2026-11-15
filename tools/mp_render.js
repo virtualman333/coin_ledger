@@ -363,11 +363,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   console.log('\n[6.81] 小程序管理端');
   const adminPage = loadPage('pages/admin/admin');
-  const tabs = adminPage.data.tabList || [];
-  ok(tabs.length === 5 && tabs.some((t) => t.k === 'series'),
-    '管理端五个页签（含系列）：' + tabs.map((t) => t.t).join('/'));
-  ok(typeof adminPage.switchTab === 'function' && typeof adminPage.saveEdit === 'function',
-    '管理端可切页签、可编辑品种');
+  const mods = (adminPage.data.modules || []).reduce((a, g) => a.concat(g.items || []), []);
+  ok(mods.length === 6 && mods.some((m) => m.k === 'series') && mods.some((m) => m.k === 'visitors'),
+    '管理端六个入口（含系列与访客）：' + mods.map((m) => m.t).join('/'));
+  ok(adminPage.data.viewMode === 'home' && typeof adminPage.openModule === 'function'
+    && typeof adminPage.backHome === 'function' && typeof adminPage.saveEdit === 'function',
+    '管理端首页卡片可进模块、可返回、可编辑品种');
   ok(typeof adminPage.pickAndUpload === 'function', '管理端可上传图片');
   const minePage = loadPage('pages/mine/mine');
   ok(typeof minePage.goAdmin === 'function', '我的页有管理端入口方法');

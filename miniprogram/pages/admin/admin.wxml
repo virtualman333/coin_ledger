@@ -15,15 +15,34 @@
     </view>
   </view>
 
-  <!-- 页签 -->
-  <view class="tabs">
-    <view
-      class="tab {{tab === item.k ? 'on' : ''}}"
-      wx:for="{{tabList}}"
-      wx:key="k"
-      data-k="{{item.k}}"
-      bindtap="switchTab"
-    >{{item.t}}</view>
+  <!-- 管理首页：功能入口 -->
+  <block wx:if="{{viewMode === 'home'}}">
+    <view class="mgroup" wx:for="{{modules}}" wx:key="group" wx:for-item="grp">
+      <view class="mgroup-t">{{grp.group}}</view>
+      <view class="mrow">
+        <view
+          class="mcard"
+          wx:for="{{grp.items}}"
+          wx:key="k"
+          data-k="{{item.k}}"
+          bindtap="openModule"
+          hover-class="tap-hover"
+        >
+          <text class="mi">{{item.i}}</text>
+          <view class="mtext">
+            <text class="mt">{{item.t}}</text>
+            <text class="md">{{item.d}}</text>
+          </view>
+          <text class="mgo">›</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 模块页顶部 -->
+  <view class="mod-head" wx:else>
+    <text class="mod-back" bindtap="backHome">‹ 管理首页</text>
+    <text class="mod-name">{{tab === 'visitors' ? '访客统计' : (tab === 'users' ? '用户管理' : (tab === 'params' ? '参数管理' : (tab === 'images' ? '图片管理' : (tab === 'series' ? '系列管理' : '反馈处理'))))}}</text>
   </view>
 
   <!-- 用户 -->
@@ -221,6 +240,84 @@
     <view class="fb-actions">
       <button class="btn-ghost half" bindtap="toggleFb">{{fbDetail.status === 'open' ? '标记已处理' : '改回待处理'}}</button>
       <button class="btn-danger half" bindtap="deleteFb">删除</button>
+    </view>
+  </view>
+
+  <!-- 访客统计 -->
+  <block wx:if="{{vsShowVisitors}}">
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsClient === item.v ? 'on' : ''}}"
+        wx:for="{{vsClients}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsClient"
+      >{{item.t}}</text>
+    </view>
+
+    <view class="vs-cards">
+      <view class="vsc"><text class="vsn">{{visitors.todayPv}}</text><text class="vsk">今日 PV</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.todayUv}}</text><text class="vsk">今日 IP</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.pv}}</text><text class="vsk">小程序 PV</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.uv}}</text><text class="vsk">小程序 IP</text></view>
+    </view>
+
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsView === item.v ? 'on' : ''}}"
+        wx:for="{{vsViews}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsView"
+      >{{item.t}}</text>
+      <text class="vs-hint">点一行看明细</text>
+    </view>
+
+    <view class="loading" wx:if="{{vsLoading}}">加载中…</view>
+    <view class="card list" wx:elif="{{visRows.length}}">
+      <view
+        class="vr"
+        wx:for="{{visRows}}"
+        wx:key="key"
+        data-kind="{{item.kind}}"
+        data-key="{{item.key}}"
+        bindtap="openVsDetail"
+        hover-class="tap-hover"
+      >
+        <view class="vr-main">
+          <view class="vr-title">
+            <text>{{item.main}}</text>
+            <text class="vsrc {{item.srcCls}}">{{item.src}}</text>
+            <text class="vdev">{{item.device}}</text>
+          </view>
+          <text class="vr-meta">{{item.meta}}</text>
+        </view>
+        <view class="vr-right">
+          <text class="vr-time">{{item.sub}}</text>
+          <text class="vr-ip">{{item.ip}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty" wx:else>还没有访客记录</view>
+  </block>
+
+  <!-- 访客明细弹层 -->
+  <view class="vdd-mask" wx:if="{{vsDetail}}" catchtouchmove="noop">
+    <view class="vdd-sheet" catchtap="noop">
+      <view class="vdd-head">
+        <text class="vdd-title">{{vsDetail.title}}</text>
+        <text class="vdd-x" bindtap="closeVsDetail">✕</text>
+      </view>
+      <text class="vdd-sub">共 {{vsDetail.total}} 条访问明细</text>
+      <scroll-view scroll-y class="vdd-list">
+        <view class="vdd-row" wx:for="{{vsDetail.rows}}" wx:key="index">
+          <text class="vdd-time">{{item.at}}</text>
+          <text class="vdd-tab">{{item.tab}}</text>
+          <text class="vdd-src {{item.srcCls}}">{{item.src}}</text>
+          <text class="vdd-user">{{item.user}}</text>
+        </view>
+      </scroll-view>
+      <view class="vdd-foot" bindtap="closeVsDetail">关闭</view>
     </view>
   </view>
 </view>

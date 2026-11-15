@@ -12,14 +12,39 @@ function dayText(iso) {
 
 Page({
   data: {
-    tabList: [
-      { k: 'users', t: '用户' },
-      { k: 'params', t: '参数' },
-      { k: 'images', t: '图片' },
-      { k: 'series', t: '系列' },
-      { k: 'feedback', t: '反馈' },
+    // 管理首页改成功能入口卡片，比一上来横排五个 tab 清楚
+    modules: [
+      { group: '内容', items: [
+        { k: 'params', t: '参数', d: '品种基础数据', i: '⚙' },
+        { k: 'images', t: '图片', d: '实物图与图集', i: '▣' },
+        { k: 'series', t: '系列', d: '归类与卡图', i: '❖' },
+      ] },
+      { group: '运营', items: [
+        { k: 'users', t: '用户', d: '账号与权限', i: '♙' },
+        { k: 'feedback', t: '反馈', d: '纠错与建议', i: '✎' },
+      ] },
+      { group: '数据', items: [
+        { k: 'visitors', t: '访客', d: '访问与留存', i: '◷' },
+      ] },
     ],
-    tab: 'users',
+    viewMode: 'home',
+    tab: '',   // 首页为空，只有进模块才指向具体功能
+    vsShowVisitors: false,
+    vsClient: 'all',
+    vsView: 'ip',
+    vsClients: [
+      { v: 'all', t: '全部' },
+      { v: 'web', t: '网页' },
+      { v: 'mp', t: '小程序' },
+    ],
+    vsViews: [
+      { v: 'ip', t: '按 IP' },
+      { v: 'sid', t: '按会话' },
+    ],
+    visitors: null,
+    visRows: [],
+    vsDetail: null,
+    vsLoading: false,
     userCount: 0,
     coinCount: 0,
     openCount: 0,
@@ -52,12 +77,14 @@ Page({
       return;
     }
     this.setData({ coinCount: cat.total });
-    this.loadUsers();
-    this.loadFeedback();
+    this.loadFeedback();      // 首页只取角标数，进模块再加载明细
   },
 
   onPullDownRefresh() {
-    this.loadTab(this.data.tab).then(() => wx.stopPullDownRefresh());
+    const task = this.data.viewMode === 'module'
+      ? this.loadTab(this.data.tab)
+      : this.loadFeedback();
+    Promise.resolve(task).then(() => wx.stopPullDownRefresh()).catch(() => wx.stopPullDownRefresh());
   },
 
   switchTab(e) {
@@ -67,12 +94,121 @@ Page({
     this.loadTab(k);
   },
 
+  openModule(e) {
+    const k = e.currentTarget.dataset.k;
+    this.setData({ viewMode: 'module', tab: k, vsDetail: null, vsShowVisitors: k === 'visitors' });
+    this.loadTab(k);
+  },
+
+  backHome() {
+    this.setData({ viewMode: 'home', tab: '', vsDetail: null, vsShowVisitors: false });
+  },
+
   loadTab(k) {
     if (k === 'users') return this.loadUsers();
     if (k === 'params' || k === 'images') return this.loadCoins();
     if (k === 'series') return this.loadSeries();
     if (k === 'feedback') return this.loadFeedback();
+    if (k === 'visitors') return this.loadVisitors();
     return Promise.resolve();
+  },
+
+  /* ---------------- 访客统计 ---------------- */
+  loadVisitors() {
+    this.setData({ vsLoading: true });
+    return api.get('/api/admin/visitors?client=' + this.data.vsClient)
+      .then((res) => {
+        this.setData({
+          vsLoading: false,
+          visitors: res,
+          visRows: this.mapVisRows(res),
+        });
+      })
+      .catch((e) => {
+        this.setData({ vsLoading: false });
+        wx.showToast({ title: e.message || '加载失败', icon: 'none' });
+      });
+  },
+
+  mapVisRows(res) {
+    if (!res) return [];
+    const name = (k) => ({
+      home: '首页', all: '全套清单', plan: '发行计划', series: '系列',
+      holdings: '我的藏品', mine: '我的', detail: '品种详情', account: '账户',
+      about: '关于', more: '更多', feedback: '反馈', privacy: '隐私',
+    }[k] || k);
+    const time = (s) => String(s || '').slice(0, 16).replace('T', ' ');
+    if (this.data.vsView === 'ip') {
+      return (res.ipGroups || []).map((x) => {
+        const both = x.clients.indexOf('mp') >= 0 && x.clients.indexOf('web') >= 0;
+        const mp = x.clients.indexOf('mp') >= 0;
+        const ua = String(x.ua || '');
+        return {
+          key: x.ip,
+          kind: 'ip',
+          main: x.name || '访客',
+          src: both ? '混合' : (mp ? '小程序' : '网页'),
+          srcCls: mp ? 'mp' : 'web',
+          device: /iPhone|Android|Mobile/i.test(ua) ? '手机' : (/iPad|Tablet/i.test(ua) ? '平板' : '电脑'),
+          meta: x.pv + ' 次 · ' + x.sessionCount + ' 会话 · ' + x.pageCount + ' 页 · ' + x.days + ' 天',
+          sub: time(x.last),
+          ip: x.ip,
+        };
+      });
+    }
+    return (res.sessions || []).map((x) => {
+      const mp = x.client === 'mp';
+      return {
+        key: x.sid,
+        kind: 'sid',
+        main: x.name || '未登录',
+        src: mp ? '小程序' : '网页',
+        srcCls: mp ? 'mp' : 'web',
+        device: '—',
+        meta: x.pageCount + ' 页 · ' + (x.pages || []).map(name).join(' / '),
+        sub: time(x.last),
+        ip: x.ip || '—',
+      };
+    });
+  },
+
+  setVsClient(e) {
+    this.setData({ vsClient: e.currentTarget.dataset.v });
+    this.loadVisitors();
+  },
+
+  setVsView(e) {
+    const view = e.currentTarget.dataset.v;
+    this.setData({ vsView: view, visRows: this.mapVisRows(this.data.visitors) });
+  },
+
+  openVsDetail(e) {
+    const kind = e.currentTarget.dataset.kind;
+    const key = e.currentTarget.dataset.key;
+    const q = kind === 'ip' ? ('ip=' + encodeURIComponent(key)) : ('sid=' + encodeURIComponent(key));
+    api.get('/api/admin/visitors/detail?' + q).then((res) => {
+      const name = (k) => ({
+        home: '首页', all: '全套清单', plan: '发行计划', series: '系列',
+        holdings: '我的藏品', mine: '我的', detail: '品种详情', account: '账户',
+      }[k] || k);
+      this.setData({
+        vsDetail: {
+          title: kind === 'ip' ? key : key.slice(0, 8),
+          total: res.total,
+          rows: (res.rows || []).map((x) => ({
+            at: String(x.at || '').slice(5, 16).replace('T', ' '),
+            tab: name(x.tab),
+            src: x.client === 'mp' ? '小程序' : '网页',
+            srcCls: x.client === 'mp' ? 'mp' : 'web',
+            user: x.name || '未登录',
+          })),
+        },
+      });
+    }).catch((e) => wx.showToast({ title: e.message || '加载失败', icon: 'none' }));
+  },
+
+  closeVsDetail() {
+    this.setData({ vsDetail: null });
   },
 
   /* ---------------- 系列 ---------------- */

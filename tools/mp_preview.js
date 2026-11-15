@@ -172,6 +172,45 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ap.setData({ profileSheet: true, profileNick: '', loggedIn: false });
   files.push(build({ name: 'account-profile', wxml: 'pages/account/account.wxml', wxss: 'pages/account/account.wxss', data: ap.data }));
 
+  /* 小程序管理端：首页卡片 + 访客统计 */
+  const adm = loadPage('pages/admin/admin');
+  adm.setData({
+    viewMode: 'home', userCount: 19, coinCount: 136, openCount: 3,
+  });
+  files.push(build({ name: 'admin', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: adm.data }));
+
+  const admv = loadPage('pages/admin/admin');
+  admv.setData({
+    viewMode: 'module',
+    tab: 'visitors',
+    vsShowVisitors: true,
+    visitors: {
+      todayPv: 86, todayUv: 21, totalPv: 255, totalUv: 56,
+      byClient: { web: { pv: 237, uv: 49 }, mp: { pv: 18, uv: 7 } },
+    },
+    visRows: [
+      { key: '223.74.122.90', kind: 'ip', main: '藏友', src: '小程序', srcCls: 'mp', device: '手机', meta: '12 次 · 3 会话 · 4 页 · 2 天', sub: '2026/11/15 21:04', ip: '223.74.122.90' },
+      { key: '116.24.8.31', kind: 'ip', main: '访客', src: '网页', srcCls: 'web', device: '电脑', meta: '5 次 · 1 会话 · 2 页 · 1 天', sub: '2026/11/15 18:22', ip: '116.24.8.31' },
+    ],
+  });
+  files.push(build({ name: 'admin-visitors-mp', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: admv.data }));
+
+  const admDetail = loadPage('pages/admin/admin');
+  admDetail.setData({
+    viewMode: 'module',
+    tab: 'visitors',
+    vsDetail: {
+      title: '223.74.122.90',
+      total: 12,
+      rows: [
+        { at: '11-15 21:04', tab: '品种详情', src: '小程序', srcCls: 'mp', user: '藏友' },
+        { at: '11-15 21:02', tab: '全套清单', src: '小程序', srcCls: 'mp', user: '藏友' },
+        { at: '11-15 21:00', tab: '首页', src: '小程序', srcCls: 'mp', user: '藏友' },
+      ],
+    },
+  });
+  files.push(build({ name: 'admin-vdetail', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: admDetail.data }));
+
   /* 管理端：某用户的藏品 */
   const au = loadPage('pages/admin-user/admin-user');
   const ca = cat.coins.filter((c) => c.name.indexOf('蛇钞') >= 0)[0] || cat.coins[0];
