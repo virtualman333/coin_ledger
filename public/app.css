@@ -2425,3 +2425,24 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   #adminTabs .atab{width:auto;padding:7px 12px;border:1px solid var(--line2);font-size:12px}
   #adminTabs .atab.on{color:#fff}
 }
+
+/* 加入藏品：按套 / 按单枚 选择 */
+.au-mask{
+  position:fixed;inset:0;z-index:220;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(12,10,8,.5);backdrop-filter:blur(3px);
+}
+.au-sheet{
+  width:min(340px,100%);padding:20px;border:1px solid var(--line2);border-radius:16px;
+  background:var(--panel);box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center;
+}
+.au-sheet b{display:block;color:var(--text);font-size:15px}
+.au-sheet p{margin:6px 0 16px;color:var(--dim);font-size:12px;line-height:1.5}
+.au-sheet button{
+  display:block;width:100%;margin-top:9px;padding:11px 14px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--input-bg);color:var(--text);
+  font-size:13px;cursor:pointer;text-align:left;
+}
+.au-sheet button:hover{border-color:var(--gold);color:var(--gold)}
+.au-sheet button[data-u="set"]{border-color:var(--gold);background:rgba(212,175,55,.1)}
+.au-sheet button i{float:right;color:var(--dim);font-size:11px;font-style:normal;font-weight:400}
+.au-sheet .au-x{text-align:center;border:none;background:transparent;color:var(--dim);font-size:12px}

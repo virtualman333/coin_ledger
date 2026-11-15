@@ -1437,7 +1437,7 @@ function renderCoin(i){
 
   var addBtn = document.getElementById('coinAdd');
   if (addBtn) addBtn.addEventListener('click', function(){
-    if (addHolding(d.name)) { renderCoin(i); toast('已加入我的藏品'); }
+    requestAddHolding(d.name, function(){ renderCoin(i); });
   });
 
   box.onclick = function(e){
@@ -2150,16 +2150,71 @@ document.getElementById('holdingsBox').addEventListener('input', function(e){
   }
 });
 
-/** 把某个品种加入我的藏品（默认 1 份，成本按该单位一份的面额） */
-function addHolding(name){
+/**
+ * 把某个品种加入我的藏品。
+ * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
+ * 按枚时成本与市价都按单枚面额起算，rolls 表示件数。
+ */
+function addHolding(name, unit){
   var d = findDB(name);
   if (!d || isOwned(name)) return false;
   var up = unitPrice(d);
-  var base = up.face * holdingUnitSize(d);
-  coll.push({ name: name, rolls: 1, cost: base, market: base, group: groupOf(d) });
+  var size = holdingUnitSize(d);
+  var isPiece = unit === 'piece' && size > 1;
+  var base = up.face * size;
+  coll.push({
+    name: name,
+    rolls: 1,
+    unit: isPiece ? 'piece' : 'set',
+    cost: isPiece ? up.face : base,
+    market: isPiece ? up.face : base,
+    group: groupOf(d)
+  });
   rebuildGroupOrder();
   reRenderAll();
   return true;
+}
+
+/** 多枚一套的品种：先让用户决定按套还是按单枚，避免自动塞进一整卷 */
+function requestAddHolding(name, after){
+  var d = findDB(name);
+  if (!d || isOwned(name)) return;
+  var size = holdingUnitSize(d);
+  function done(unit){
+    if (addHolding(name, unit)) {
+      toast('已加入「' + name + '」' + (unit === 'piece' ? '（按单枚）' : ''));
+      if (after) after();
+    }
+  }
+  if (size <= 1) { done('set'); return; }
+  showAddUnitChooser(d, size, done);
+}
+
+function showAddUnitChooser(d, size, cb){
+  var old = document.getElementById('addUnitMask');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  var u = d.kind === 'note' ? '张' : '枚';
+  var mask = document.createElement('div');
+  mask.id = 'addUnitMask';
+  mask.className = 'au-mask';
+  mask.innerHTML =
+    '<div class="au-sheet" role="dialog" aria-modal="true">' +
+      '<b>怎么记这一笔？</b>' +
+      '<p>' + esc(d.name) + '</p>' +
+      '<button type="button" data-u="set">按套记 <i>1 套 = ' + size + ' ' + u + '</i></button>' +
+      '<button type="button" data-u="piece">按单' + u + '记 <i>只记 1 ' + u + '</i></button>' +
+      '<button type="button" class="au-x">取消</button>' +
+    '</div>';
+  document.body.appendChild(mask);
+  function close(){ if (mask.parentNode) mask.parentNode.removeChild(mask); }
+  mask.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-u]');
+    if (btn) { close(); cb(btn.getAttribute('data-u')); return; }
+    if (e.target === mask || e.target.closest('.au-x')) close();
+  });
+  document.addEventListener('keydown', function escKey(e){
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escKey); }
+  });
 }
 
 document.getElementById('tbody').addEventListener('click', function(e){
@@ -2167,7 +2222,7 @@ document.getElementById('tbody').addEventListener('click', function(e){
   if (pb) { openPeek(Number(pb.getAttribute('data-peek'))); return; }
   if (e.target.closest('button[data-add]')) {
     var b = e.target.closest('button[data-add]');
-    addHolding(b.getAttribute('data-add'));
+    requestAddHolding(b.getAttribute('data-add'));
     return;
   }
   // 点名称进详情
@@ -2184,7 +2239,7 @@ document.getElementById('holdingsBox').addEventListener('click', function(e){
   var b = e.target.closest('button[data-empty-add]');
   if (!b) return;
   var name = b.getAttribute('data-empty-add');
-  if (addHolding(name)) toast('已加入「' + name + '」');
+  requestAddHolding(name);
 });
 
 /* ---------- 清单筛选：输入防抖 / 一键清空 / 结果反馈 ---------- */
