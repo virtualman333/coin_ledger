@@ -49,12 +49,21 @@ function request(method, url, body, withCookie = true) {
 
 before(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cl-admin-api-'));
+  // 发行计划写到临时文件，测试不会改动仓库里的 public/data/plan.json
+  const planFile = path.join(tmpDir, 'plan.json');
+  fs.writeFileSync(planFile, JSON.stringify({
+    updated: '2026-01-01', note: 'test fixture',
+    years: [{
+      year: 2026, publishedAt: '2025-12-01', publishedBy: '中国人民银行',
+      items: [{ key: 'test-coin', name: '测试纪念币', kind: 'coin', status: 'upcoming', date: '2026-12-01', face: 10, mintage: 1000 }]
+    }]
+  }), 'utf8');
   proc = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,
     env: {
       ...process.env,
       PORT: String(PORT), HOST: '127.0.0.1', STORAGE: 'json',
-      COIN_DATA_DIR: tmpDir, SUPERADMIN_NAME: 'admin',
+      COIN_DATA_DIR: tmpDir, PLAN_FILE: planFile, SUPERADMIN_NAME: 'admin',
       SUPERADMIN_PASSWORD: 'TestAdmin123!', SESSION_SECRET: 'test-secret',
       WX_APPSECRET: '', NODE_ENV: 'test'
     },
@@ -146,4 +155,42 @@ test('真实账号可一步删除（旧版要求先标记测试）', async () =>
 test('不能删除自己', async () => {
   const r = await request('DELETE', '/api/admin/users/u1');
   assert.equal(r.status, 400);
+});
+
+
+test('发行计划：读取、整份保存与字段规范化', async () => {
+  let r = await request('GET', '/api/admin/plan');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.plan.years.length, 1);
+  assert.equal(r.body.plan.years[0].items.length, 1);
+
+  const plan = r.body.plan;
+  plan.years[0].items.push({
+    key: 'test-coin-2', name: '第二枚测试币', kind: 'note',
+    status: 'issued', face: '5', mintage: '2000'
+  });
+  r = await request('PUT', '/api/admin/plan', { plan });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.items, 2);
+
+  const again = await request('GET', '/api/admin/plan');
+  assert.equal(again.body.plan.years[0].items.length, 2);
+  assert.equal(again.body.plan.years[0].items[1].face, 5, '数字字段应被规范化为 number');
+  assert.equal(again.body.plan.years[0].items[1].mintage, 2000);
+});
+
+test('发行计划：重复 key 被拒绝', async () => {
+  const r = await request('GET', '/api/admin/plan');
+  const plan = r.body.plan;
+  plan.years[0].items.push({ key: 'test-coin', name: '重复标识', kind: 'coin', status: 'issued' });
+  const bad = await request('PUT', '/api/admin/plan', { plan });
+  assert.equal(bad.status, 400);
+  assert.ok(/重复/.test(bad.body.error || ''));
+});
+
+test('审计记录发行计划更新', async () => {
+  const r = await request('GET', '/api/admin/audit?q=plan');
+  assert.equal(r.status, 200);
+  assert.ok(r.body.total >= 1);
+  assert.ok(r.body.items.some((x) => x.action === 'plan.update'));
 });

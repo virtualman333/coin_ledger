@@ -97,6 +97,7 @@ import { errorMessage } from '../api/client';
 | 页面 | 主要 API | 备注 |
 |---|---|---|
 | Users | `usersApi` | 标杆页，主程实现；服务端分页/批量/详情抽屉/角色与禁用/一步删除 |
+| Plan | `planApi` | 发行计划年度与项目维护；整份编辑后一次 PUT 保存（`/api/admin/plan`），后端校验 key 唯一并写 `public/data/plan.json` |
 | Feedback | `feedbackApi` | `list(status)` → `{items, open}`，本地分页 |
 | Series | `seriesApi` | `list()` → `{items}`，行内编辑 + 新建/换图/删除 |
 | Audit | `auditApi` | `list(params)` → `{items,total}`，服务端分页 |

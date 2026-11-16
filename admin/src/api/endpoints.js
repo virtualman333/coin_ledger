@@ -41,6 +41,11 @@ export const coinsApi = {
   updateOne: (body) => http.patch('/admin/coin', body)
 };
 
+export const planApi = {
+  get: () => http.get('/admin/plan'),
+  save: (plan) => http.put('/admin/plan', { plan })
+};
+
 export const imagesApi = {
   all: () => http.get('/admin/coins'),
   upload: (body) => http.post('/admin/image', body),

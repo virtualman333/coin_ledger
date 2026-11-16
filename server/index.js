@@ -51,6 +51,7 @@ let GALLERY = {};    // 品种 → 多图（正面 / 背面 / 整套）
 let GALLERY_VER = ''; // gallery.json 的 mtime，用来给图片 URL 加 ?v= 破缓存
 let DESC = {};       // 品种官方介绍（摘自央行发行公告）
 let PLAN = { years: [] };  // 普通纪念币年度发行计划（public/data/plan.json）
+const PLAN_FILE = process.env.PLAN_FILE || path.join(PUBLIC_DIR, 'data', 'plan.json');
 
 function loadSeed() {
   const raw = fs.readFileSync(SEED_FILE, 'utf8');
@@ -78,7 +79,7 @@ function loadSeed() {
     DESC = {};
   }
   try {
-    PLAN = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'data', 'plan.json'), 'utf8'));
+    PLAN = JSON.parse(fs.readFileSync(PLAN_FILE, 'utf8'));
     const planN = (PLAN.years || []).reduce((a, y) => a + (y.items || []).length, 0);
     console.log(`[boot] 发行计划 ${(PLAN.years || []).length} 个年度 / ${planN} 个项目`);
   } catch {
@@ -359,6 +360,45 @@ function requireLogin(req, res, d) {
   return me;
 }
 
+
+
+/** 校验发行计划：结构完整、项目 key 全局唯一、必填字段非空 */
+function validatePlan(plan) {
+  if (!plan || typeof plan !== 'object') return '计划数据不合法';
+  if (!Array.isArray(plan.years)) return '缺少 years 数组';
+  const keys = new Set();
+  for (const y of plan.years) {
+    if (!y || !Number.isFinite(Number(y.year))) return '年度缺少合法 year';
+    if (!Array.isArray(y.items)) return y.year + ' 年缺少 items 数组';
+    for (const it of y.items) {
+      if (!it || typeof it.key !== 'string' || !it.key.trim()) return '项目缺少 key';
+      if (keys.has(it.key)) return '项目 key 重复：' + it.key;
+      keys.add(it.key);
+      if (!String(it.name || '').trim()) return '项目 ' + it.key + ' 缺少名称';
+    }
+  }
+  return '';
+}
+
+/** 表单里数字常被提交成字符串，落盘前统一收敛类型 */
+function normalizePlan(plan) {
+  if (!plan || typeof plan !== 'object') return plan;
+  const NUM = ['face', 'mintage', 'limit', 'coinNo', 'proxy'];
+  (plan.years || []).forEach((y) => {
+    if (!Array.isArray(y.items)) return;
+    y.items.forEach((it) => {
+      NUM.forEach((k) => {
+        if (it[k] === '') delete it[k];
+        else if (it[k] !== undefined && it[k] !== null) it[k] = Number(it[k]) || 0;
+      });
+      if (it.extra !== undefined) it.extra = it.extra === true || it.extra === 'true' || it.extra === 1;
+      if (Array.isArray(it.schedule)) {
+        it.schedule = it.schedule.filter((s) => s && (String(s.k || '').trim() || String(s.v || '').trim()));
+      }
+    });
+  });
+  return plan;
+}
 
 /** 从发行计划里按 key 找项目 */
 function findPlanItem(key) {
@@ -1445,6 +1485,29 @@ async function handleApi(req, res, pathname) {
   }
 
   /* ---------------- 系列管理 ---------------- */
+  /* ---------------- 发行计划管理 ---------------- */
+  if (pathname === '/api/admin/plan' && method === 'GET') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    return sendJSON(res, 200, { ok: true, plan: PLAN });
+  }
+
+  if (pathname === '/api/admin/plan' && method === 'PUT') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const body = await readBody(req, 512 * 1024);
+    const next = normalizePlan(body && body.plan ? body.plan : body);
+    const bad = validatePlan(next);
+    if (bad) return sendJSON(res, 400, { ok: false, error: bad });
+    fs.writeFileSync(PLAN_FILE, JSON.stringify(next, null, 1) + '\n', 'utf8');
+    PLAN = next;   // /api/bootstrap 立即下发新计划，无需重启
+    const years = (next.years || []).length;
+    const items = (next.years || []).reduce((a, y) => a + (y.items || []).length, 0);
+    audit.log(me.name, 'plan.update', '', years + ' 个年度 / ' + items + ' 个项目', clientIP(req));
+    console.log('[admin] 更新发行计划：' + years + ' 个年度 / ' + items + ' 个项目');
+    return sendJSON(res, 200, { ok: true, years, items });
+  }
+
   if (pathname === '/api/admin/series' && method === 'POST') {
     const me = requireAdmin(req, res, d);
     if (!me) return;

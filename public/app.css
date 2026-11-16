@@ -2371,61 +2371,6 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 .sm-static a{color:var(--muted);text-decoration:none}
 .sm-static a:hover{color:var(--gold)}
 
-/* ---------- 管理端：左侧导航 + 右侧内容 ---------- */
-#pane-admin.on{
-  display:grid;
-  grid-template-columns:172px minmax(0,1fr);
-  gap:0 22px;
-  align-items:start;
-}
-#pane-admin > .sec-head{grid-column:1 / -1;margin-bottom:16px}
-#adminTabs{
-  grid-column:1;grid-row:2 / span 30;
-  position:sticky;top:76px;align-self:start;
-  display:flex;flex-direction:column;gap:3px;
-  padding:14px 12px;border:1px solid var(--line2);border-radius:14px;
-  background:var(--panel);
-}
-.anav-title{
-  padding:0 8px 10px;color:var(--text);font-size:14px;font-weight:600;
-  border-bottom:1px solid var(--line2);margin-bottom:8px;
-}
-.agroup{
-  padding:10px 8px 4px;color:var(--dim);font-size:10.5px;
-  letter-spacing:.12em;text-transform:uppercase;
-}
-#adminTabs .atab{
-  width:100%;text-align:left;padding:9px 11px;border-radius:9px;
-  border:none;background:transparent;color:var(--muted);font-size:13px;
-  cursor:pointer;transition:background .15s,color .15s;
-}
-#adminTabs .atab:hover{background:var(--input-bg);color:var(--text)}
-#adminTabs .atab.on{background:var(--gold);color:#fff;font-weight:600}
-#adminTabs .atab.on::before{content:'▸';margin-right:6px;font-size:11px}
-.anav-foot{
-  margin-top:14px;padding:10px 8px 0;border-top:1px solid var(--line2);
-  color:var(--dim);font-size:10.5px;line-height:1.5;
-}
-#pane-admin .apanel{grid-column:2;min-width:0}
-#pane-admin .apanel::before{
-  content:attr(data-title);
-  display:block;margin:0 0 14px;padding-bottom:10px;
-  border-bottom:1px solid var(--line2);
-  color:var(--text);font-size:15px;font-weight:600;
-}
-#pane-admin .apanel[hidden]{display:none}
-@media (max-width:860px){
-  #pane-admin.on{display:block}
-  #adminTabs{
-    position:static;flex-direction:row;flex-wrap:wrap;align-items:center;
-    gap:6px;padding:10px;margin-bottom:16px;
-  }
-  .anav-title,.anav-foot{display:none}
-  .agroup{padding:0 6px 0 2px;letter-spacing:0}
-  #adminTabs .atab{width:auto;padding:7px 12px;border:1px solid var(--line2);font-size:12px}
-  #adminTabs .atab.on{color:#fff}
-}
-
 /* 加入藏品：按套 / 按单枚 选择 */
 .au-mask{
   position:fixed;inset:0;z-index:220;display:flex;align-items:center;justify-content:center;
