@@ -224,6 +224,26 @@ STORAGE=json bash deploy/install.sh
 > `deploy/install.sh` 仍用于首次部署与回滚，但**升级时不要再执行**，否则会重新启用 systemd
 > 单元，与 Supervisor 同时抢 3100 端口。回滚脚本见服务器 `/root/coin-ledger-rollback-systemd.sh`。
 
+## Web 管理控制台（2026-11-16 起）
+
+前台登录后可见的「管理端」按钮跳转到独立的 Vue 3 + Vite 应用：
+**https://coin.virtualman.top/console/**（8 个页面：用户、反馈、访客、参数、图片、系列、审计、封禁）。
+与前台共用同源 Cookie 会话，未登录 / 非管理员会看到门禁提示；工程结构与页面规范见
+[admin/README.md](admin/README.md)、[admin/PAGE_SPEC.md](admin/PAGE_SPEC.md)。
+
+**只在本地构建，服务器不构建**：
+
+```bash
+cd admin && npm install && npm run build
+# 上传 admin/dist/ 内容 → /www/wwwroot/coin-ledger/public/console/
+# nginx 片段 deploy/console-nginx.conf 放到站点 extension 目录，nginx -t && nginx -s reload
+# 后端代码变更时：/www/server/panel/pyenv/bin/supervisorctl restart coin-ledger
+```
+
+**SEO 保护**：控制台挂全新路径 `/console/`，页面 `noindex` + nginx `X-Robots-Tag`
++ `robots.txt` 新增 `Disallow: /console/`；前台 `<head>`、真实路径路由 `/coin/N`、
+`sitemap.xml` 与已收录 URL 的返回内容一律不动，部署前后逐页比对过 SEO 指纹。
+
 脚本做的事：探测/安装 Node → 同步代码到 `/www/wwwroot/coin-ledger`（保留 `data/` 与 `node_modules/`）→ 生成 `/etc/coin-ledger.env`（600）→ **建库建账号**（`coin_ledger`）→ `npm install`（mysql2）→ **首次把 `data/db.json` 导入 MySQL** → 装 systemd 单元并启动 → 写 Nginx 站点配置并 reload → 配置日志轮转（保留 14 天）→ 添加每日 03:20 备份的 cron → 自检 `/api/health`。
 
 几个关键点：

@@ -38,13 +38,19 @@ npm install
 npm run dev        # http://127.0.0.1:5174/console/ ，/api 代理到 127.0.0.1:3100
 ```
 
-## 构建与部署
+## 构建与部署（已上线）
 
 ```bash
 cd admin
+npm install
 npm run build      # 产物 admin/dist/
-# 将 dist/ 内容上传到服务器 /www/wwwroot/coin-ledger/console/
-# nginx: location ^~ /console/ { alias .../console/; try_files $uri $uri/ /console/index.html; }
+# 上传 dist/ 内容 → /www/wwwroot/coin-ledger/public/console/
+# nginx 片段：deploy/console-nginx.conf → /www/server/panel/vhost/nginx/extension/coin.virtualman.top/console.conf
+# 部署后：nginx -t && nginx -s reload；后端代码变更时 supervisorctl restart coin-ledger
 ```
 
-`dist/` 与 `node_modules/` 不进仓库（见 `admin/.gitignore`）；部署脚本只上传构建产物。
+`dist/` 与 `node_modules/` 不进仓库（见 `admin/.gitignore`）；**服务器从不做 npm install / build**，
+只接收本地构建好的静态产物。
+
+线上入口 `https://coin.virtualman.top/console/`：前台「管理端」按钮（管理员登录后可见）
+跳转过来；直接访问 `/admin` 仍保留旧前台 pane，避免改动已收录 URL 的返回行为。

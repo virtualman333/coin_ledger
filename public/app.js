@@ -3576,7 +3576,7 @@ function initMisc(){
   var accountBtn = document.getElementById('accountBtn');
   if (accountBtn) accountBtn.addEventListener('click', function(){ goTab('account'); });
   var adminBtn = document.getElementById('adminBtn');
-  if (adminBtn) adminBtn.addEventListener('click', function(){ goTab('admin'); });
+  if (adminBtn) adminBtn.addEventListener('click', function(){ window.location.href = '/console/'; });
 
   document.querySelector('.authtabs').addEventListener('click', function(e){
     var b = e.target.closest('.au');

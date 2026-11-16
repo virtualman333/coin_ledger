@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /data/
+# 管理控制台：独立后台，禁止抓取（只新增此行，不影响任何已收录页面）
+Disallow: /console/
 # 蜜罐诱饵：守规矩的爬虫不会碰 Disallow 路径，扫到这里的多半是恶意爬虫。
 # 真人不看 robots.txt；万一误点也只记一次，不会封（见 server/guard.js）。
 Disallow: /api/__trap

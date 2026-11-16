@@ -1122,7 +1122,9 @@ async function handleApi(req, res, pathname) {
     const body = await readBody(req);
     const ip = String(body.ip || '').trim();
     if (!ip) throw badRequest('缺少 ip');
-    return sendJSON(res, 200, { ok: true, removed: guard.unban(ip) });
+    const removed = guard.unban(ip);
+    audit.log(me.name, 'guard.unban', ip, removed ? '已解封' : '未找到封禁', clientIP(req));
+    return sendJSON(res, 200, { ok: true, removed });
   }
 
   /* ---------------- 用户管理（分页 / 搜索 / 批量 / 角色 / 禁用 / 审计） ---------------- */
@@ -1423,6 +1425,7 @@ async function handleApi(req, res, pathname) {
     const body = await readBody(req, 4096);
     const hit = feedback.update(fbMatch[1], body);
     if (!hit) return sendJSON(res, 404, { ok: false, error: '反馈不存在' });
+    audit.log(me.name, 'feedback.' + (body.status === 'done' ? 'done' : 'reopen'), fbMatch[1], '', clientIP(req));
     return sendJSON(res, 200, { ok: true, item: hit });
   }
 
@@ -1431,6 +1434,7 @@ async function handleApi(req, res, pathname) {
     if (!me) return;
     const hit = feedback.remove(fbMatch[1]);
     if (!hit) return sendJSON(res, 404, { ok: false, error: '反馈不存在' });
+    audit.log(me.name, 'feedback.delete', fbMatch[1], '', clientIP(req));
     return sendJSON(res, 200, { ok: true });
   }
 
@@ -1448,6 +1452,7 @@ async function handleApi(req, res, pathname) {
     const r = seriesSvc.create(body);
     if (!r.ok) return sendJSON(res, 400, { ok: false, error: r.error });
     console.log('[series] 新建系列 ' + r.item.key + ' ' + r.item.name);
+    audit.log(me.name, 'series.create', r.item.key, r.item.name, clientIP(req));
     return sendJSON(res, 200, { ok: true, item: r.item, items: seriesSvc.listWithCount(SEED.coins) });
   }
 
@@ -1460,6 +1465,7 @@ async function handleApi(req, res, pathname) {
     const r = seriesSvc.saveImage(key, body.data);
     if (!r.ok) return sendJSON(res, 400, { ok: false, error: r.error });
     seriesSvc.update(key, { img: r.img });
+    audit.log(me.name, 'series.image', key, r.img, clientIP(req));
     return sendJSON(res, 200, { ok: true, img: r.img, items: seriesSvc.listWithCount(SEED.coins) });
   }
 
@@ -1470,6 +1476,7 @@ async function handleApi(req, res, pathname) {
     const body = await readBody(req, 16384);
     const r = seriesSvc.update(serieMatch[1], body);
     if (!r.ok) return sendJSON(res, 404, { ok: false, error: r.error });
+    audit.log(me.name, 'series.update', serieMatch[1], JSON.stringify(body), clientIP(req));
     return sendJSON(res, 200, { ok: true, item: r.item, items: seriesSvc.listWithCount(SEED.coins) });
   }
 
@@ -1480,6 +1487,7 @@ async function handleApi(req, res, pathname) {
     if (!r.ok) return sendJSON(res, 404, { ok: false, error: r.error });
     fs.writeFileSync(SEED_FILE, JSON.stringify(SEED) + '\n', 'utf8');
     console.log('[series] 删除系列 ' + serieMatch[1] + '，清理成员 ' + r.touched + ' 个');
+    audit.log(me.name, 'series.delete', serieMatch[1], '清理 ' + r.touched + ' 个品种', clientIP(req));
     return sendJSON(res, 200, { ok: true, touched: r.touched, items: seriesSvc.listWithCount(SEED.coins) });
   }
 
@@ -1511,6 +1519,7 @@ async function handleApi(req, res, pathname) {
     if (done.length) {
       fs.writeFileSync(SEED_FILE, JSON.stringify(SEED) + '\n', 'utf8');
       console.log('[admin] 批量修改 ' + done.length + ' 个品种');
+      audit.log(me.name, 'coins.batchUpdate', '', '修改 ' + done.length + ' 个品种', clientIP(req));
     }
     return sendJSON(res, 200, { ok: failed.length === 0, saved: done.length, failed: failed });
   }
@@ -1560,6 +1569,7 @@ async function handleApi(req, res, pathname) {
     if (!Object.keys(applied).length) return sendJSON(res, 400, { ok: false, error: '没有可保存的字段' });
     fs.writeFileSync(SEED_FILE, JSON.stringify(SEED) + '\n', 'utf8');
     console.log('[admin] 修改品种 ' + id + ' ' + coin.name + '：' + JSON.stringify(applied));
+    audit.log(me.name, 'coin.update', String(id), JSON.stringify(applied), clientIP(req));
     return sendJSON(res, 200, { ok: true, coin, applied });
   }
 
@@ -1580,6 +1590,7 @@ async function handleApi(req, res, pathname) {
     if (clean.length) GALLERY[id] = clean;
     else delete GALLERY[id];
     writeGallery();
+    audit.log(me.name, 'gallery.update', String(id), clean.length + ' 张图', clientIP(req));
     return sendJSON(res, 200, { ok: true, images: GALLERY[id] || [] });
   }
 
@@ -1606,6 +1617,7 @@ async function handleApi(req, res, pathname) {
     GALLERY[String(id)] = list;
     writeGallery();
     console.log('[admin] 上传图片 ' + fname + '（' + Math.round(buf.length / 1024) + 'KB）');
+    audit.log(me.name, 'image.upload', fname, kind, clientIP(req));
     return sendJSON(res, 200, { ok: true, file: fname, images: list });
   }
 
@@ -1623,6 +1635,7 @@ async function handleApi(req, res, pathname) {
     else delete GALLERY[id];
     try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', hit.f)); } catch (e) { /* 文件可能已不在 */ }
     writeGallery();
+    audit.log(me.name, 'image.delete', id + ':' + kind, hit.f, clientIP(req));
     return sendJSON(res, 200, { ok: true, images: rest });
   }
 
