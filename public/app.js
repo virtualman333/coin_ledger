@@ -4360,16 +4360,13 @@ function initMpFab(){
     setOpen(panel.hidden);
   });
   if (close) close.addEventListener('click', function(e){ e.stopPropagation(); setOpen(false); });
-  document.addEventListener('click', function(e){
-    if (panel.hidden) return;
-    if (e.target.closest && e.target.closest('#mpFab')) return;
-    setOpen(false);
-  });
+  /* 二维码默认常驻显示：不再因为点击页面其它位置就自动收起。
+     需要收起时用面板右上角的 ✕、按钮，或 Esc，都是用户主动操作。 */
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && !panel.hidden) setOpen(false);
   });
 
-  // 手机端：进来就展开二维码，点按钮或空白处收起
+  // 窄屏下 .mp-fab 由 CSS 隐藏，正文内联引导接管；这里保留会话内记忆逻辑
   var KEY = 'cl_mp_qr_closed';
   var vw = document.documentElement.clientWidth || window.innerWidth || 0;
   var small = vw > 0 && vw <= 720;
