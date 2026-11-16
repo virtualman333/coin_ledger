@@ -1,6 +1,6 @@
 <template>
   <section>
-    <PageHeader title="发行管理" desc="维护央行年度发行计划。改动先在本地暂存，确认后整份保存；保存后 /plan 页面与小程序立即生效。">
+    <PageHeader title="发行管理" desc="维护央行年度发行计划。改动先在本地暂存，确认后整份保存；保存后网站 /plan 立即生效，小程序需重新打包数据后上传。">
       <template #actions>
         <el-button :loading="loading" @click="askReload">刷新</el-button>
         <el-button type="primary" :disabled="!dirty" :loading="saving" @click="askSave">
@@ -353,7 +353,7 @@ function askDeleteItem(yi, ii) {
   askConfirm({
     title: '删除发行项目', danger: true, dangerText: '删除后需保存才会写入文件',
     message: `删除「${it.name}」？`, confirmText: it.key, confirmLabel: '删除',
-    effects: ['该项目会从发行计划中移除', '保存后 /plan 页面与小程序同步生效']
+    effects: ['该项目会从发行计划中移除', '保存后网站 /plan 生效（小程序需重新打包）']
   }, async () => {
     draft.value.years[yi].items.splice(ii, 1);
     markDirty();
@@ -376,7 +376,7 @@ function askDeleteYear(yi) {
 function askSave() {
   askConfirm({
     title: '保存发行计划', message: `将 ${yearCount.value} 个年度 / ${itemCount.value} 个项目写入 public/data/plan.json？`,
-    effects: ['保存后网站 /plan 与小程序立即使用新数据', '操作会记入审计日志'],
+    effects: ['保存后网站 /plan 立即使用新数据（小程序需重新打包）', '操作会记入审计日志'],
     confirmLabel: '保存'
   }, saveAll);
 }
