@@ -50,6 +50,17 @@ function request(method, url, body, withCookie = true) {
 before(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cl-admin-api-'));
   // 发行计划写到临时文件，测试不会改动仓库里的 public/data/plan.json
+  // 成员管理会写 coins.json，用临时 SEED 隔离，测试不碰仓库数据
+  const seedFile = path.join(tmpDir, 'coins.json');
+  fs.writeFileSync(seedFile, JSON.stringify({
+    updated: '2026-01-01',
+    series: { SX: '生肖贺岁', EV: '周年庆典' },
+    sets: {}, defaults: [],
+    coins: [
+      { i: 0, name: '测试币A', year: 2000, series: 'SX', seriesKeys: ['SX'] },
+      { i: 1, name: '测试币B', year: 2001, series: 'EV', seriesKeys: ['EV'] }
+    ]
+  }), 'utf8');
   const planFile = path.join(tmpDir, 'plan.json');
   fs.writeFileSync(planFile, JSON.stringify({
     updated: '2026-01-01', note: 'test fixture',
@@ -63,7 +74,7 @@ before(async () => {
     env: {
       ...process.env,
       PORT: String(PORT), HOST: '127.0.0.1', STORAGE: 'json',
-      COIN_DATA_DIR: tmpDir, PLAN_FILE: planFile, SUPERADMIN_NAME: 'admin',
+      COIN_DATA_DIR: tmpDir, PLAN_FILE: planFile, SEED_FILE: seedFile, SUPERADMIN_NAME: 'admin',
       SUPERADMIN_PASSWORD: 'TestAdmin123!', SESSION_SECRET: 'test-secret',
       WX_APPSECRET: '', NODE_ENV: 'test'
     },
@@ -193,4 +204,35 @@ test('审计记录发行计划更新', async () => {
   assert.equal(r.status, 200);
   assert.ok(r.body.total >= 1);
   assert.ok(r.body.items.some((x) => x.action === 'plan.update'));
+});
+
+
+test('系列成员：整份设置与 count 更新', async () => {
+  const r = await request('POST', '/api/admin/series/members', { key: 'SX', ids: [1, 2] });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.count, 2);
+  assert.equal(r.body.changed, 1);   // 币A 本来就在 SX，只需给币B 加上
+  const series = await request('GET', '/api/series');
+  const sx = series.body.items.find((x) => x.key === 'SX');
+  assert.equal(sx.count, 2);
+});
+
+test('系列成员：移除后 count 归零，不回退到主系列', async () => {
+  const r = await request('POST', '/api/admin/series/members', { key: 'SX', ids: [] });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.count, 0);
+  const series = await request('GET', '/api/series');
+  assert.equal(series.body.items.find((x) => x.key === 'SX').count, 0);
+});
+
+test('系列成员：不存在的系列被拒绝', async () => {
+  const r = await request('POST', '/api/admin/series/members', { key: 'NOPE', ids: [1] });
+  assert.equal(r.status, 400);
+});
+
+test('审计记录系列成员变更', async () => {
+  const r = await request('GET', '/api/admin/audit?q=series.members');
+  assert.equal(r.status, 200);
+  assert.ok(r.body.total >= 1);
+  assert.ok(r.body.items.some((x) => x.action === 'series.members'));
 });

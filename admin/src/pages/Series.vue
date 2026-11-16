@@ -51,9 +51,10 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="230" fixed="right">
+          <el-table-column label="操作" width="300" fixed="right">
             <template #default="{ row }">
               <div class="s-acts">
+                <el-button size="small" @click="openMembers(row)">成员</el-button>
                 <el-button
                   size="small" type="primary" plain
                   :loading="drafts[row.key].saving" :disabled="drafts[row.key].uploading"
@@ -106,6 +107,46 @@
       </template>
     </el-dialog>
 
+    <!-- 成员管理：勾选该系列包含哪些品种，整份保存 -->
+    <el-drawer v-model="memberOpen" :title="'成员管理 · ' + memberKey + ' ' + memberName" size="720px">
+      <div class="m-toolbar">
+        <el-input v-model="memberKw" placeholder="搜索品种名称 / 编号 / 年份" clearable style="width:260px">
+          <template #prefix><el-icon><Search /></el-icon></template>
+        </el-input>
+        <span class="cl-mono">已选 {{ memberChecked.size }} / 共 {{ memberCoins.length }} 个品种</span>
+        <div class="cl-spacer" />
+        <el-button size="small" @click="memberSelectAll(true)">全选当前筛选</el-button>
+        <el-button size="small" @click="memberSelectAll(false)">清空当前筛选</el-button>
+      </div>
+
+      <el-table :data="filteredMemberRows" v-loading="memberLoading" size="small" stripe max-height="500" row-key="id">
+        <el-table-column width="46">
+          <template #default="{ row }">
+            <el-checkbox
+              :model-value="memberChecked.has(row.id)"
+              @change="(v) => toggleMember(row.id, v)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="id" label="#" width="60" class-name="cl-mono" />
+        <el-table-column prop="name" label="品种" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="year" label="年份" width="80" />
+        <el-table-column label="主系列" width="110">
+          <template #default="{ row }">{{ seriesLabel(row.series) }}</template>
+        </el-table-column>
+        <el-table-column label="所属系列" min-width="190" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.seriesKeys.map(seriesLabel).join('、') || '—' }}</template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="memberOpen = false">取消</el-button>
+        <el-button type="primary" :loading="memberSaving" @click="saveMembers">
+          保存成员（{{ memberChecked.size }}）
+        </el-button>
+      </template>
+    </el-drawer>
+
     <!-- 删除确认 -->
     <ConfirmDialog
       v-model="confirmOpen" title="删除系列" :danger="true"
@@ -119,7 +160,7 @@
 </template>
 
 <script setup>
-import { nextTick, reactive, ref, watch } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import PageHeader from '../components/PageHeader.vue';
 import AsyncState from '../components/AsyncState.vue';
@@ -287,6 +328,84 @@ async function doDelete() {
     deleting.value = false;
   }
 }
+/* ---------- 成员管理 ---------- */
+const memberOpen = ref(false);
+const memberKey = ref('');
+const memberName = ref('');
+const memberKw = ref('');
+const memberCoins = ref([]);
+const memberSeriesList = ref([]);
+const memberLoading = ref(false);
+const memberSaving = ref(false);
+const memberChecked = ref(new Set());
+
+const filteredMemberRows = computed(() => {
+  const q = memberKw.value.trim().toLowerCase();
+  if (!q) return memberCoins.value;
+  return memberCoins.value.filter((c) =>
+    String(c.name).toLowerCase().includes(q) ||
+    String(c.id) === q ||
+    String(c.year).includes(q));
+});
+
+function seriesLabel(k) {
+  const hit = memberSeriesList.value.find((s) => s.key === k);
+  return hit ? hit.name : (k || '—');
+}
+function toggleMember(id, on) {
+  const next = new Set(memberChecked.value);
+  if (on) next.add(id); else next.delete(id);
+  memberChecked.value = next;
+}
+function memberSelectAll(on) {
+  const next = new Set(memberChecked.value);
+  filteredMemberRows.value.forEach((r) => { if (on) next.add(r.id); else next.delete(r.id); });
+  memberChecked.value = next;
+}
+
+async function openMembers(row) {
+  memberKey.value = row.key;
+  memberName.value = row.name || '';
+  memberKw.value = '';
+  memberOpen.value = true;
+  memberLoading.value = true;
+  try {
+    const [seriesRes, coinsRes] = await Promise.all([seriesApi.list(), seriesApi.coins()]);
+    memberSeriesList.value = Array.isArray(seriesRes) ? seriesRes : (seriesRes.items || []);
+    memberCoins.value = (coinsRes.coins || []).map((c) => ({
+      id: Number(c.i) + 1,
+      name: c.name,
+      year: c.year,
+      series: c.series || '',
+      seriesKeys: Array.isArray(c.seriesKeys)
+        ? c.seriesKeys.slice()
+        : (c.series ? [c.series] : [])
+    }));
+    memberChecked.value = new Set(
+      memberCoins.value.filter((c) => c.seriesKeys.indexOf(row.key) >= 0).map((c) => c.id)
+    );
+  } catch (err) {
+    ElMessage.error(errorMessage(err));
+  } finally {
+    memberLoading.value = false;
+  }
+}
+
+async function saveMembers() {
+  memberSaving.value = true;
+  try {
+    const ids = Array.from(memberChecked.value);
+    const res = await seriesApi.members(memberKey.value, ids);
+    ElMessage.success('已保存 ' + (res.count || 0) + ' 个成员，变更 ' + (res.changed || 0) + ' 个品种');
+    memberOpen.value = false;
+    await refresh();   // 系列列表的品种数会随之更新
+  } catch (err) {
+    ElMessage.error(errorMessage(err));
+  } finally {
+    memberSaving.value = false;
+  }
+}
+
 </script>
 
 <style scoped>
@@ -296,4 +415,5 @@ async function doDelete() {
 }
 .s-acts { display: flex; gap: 6px; flex-wrap: wrap; }
 .s-file { display: none; }
+.m-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 </style>

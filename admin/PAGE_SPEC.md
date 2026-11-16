@@ -99,7 +99,7 @@ import { errorMessage } from '../api/client';
 | Users | `usersApi` | 标杆页，主程实现；服务端分页/批量/详情抽屉/角色与禁用/一步删除 |
 | Plan | `planApi` | 发行计划年度与项目维护；整份编辑后一次 PUT 保存（`/api/admin/plan`），后端校验 key 唯一并写 `public/data/plan.json` |
 | Feedback | `feedbackApi` | `list(status)` → `{items, open}`，本地分页 |
-| Series | `seriesApi` | `list()` → `{items}`，行内编辑 + 新建/换图/删除 |
+| Series | `seriesApi` | `list()` → `{items}`，行内编辑 + 新建/换图/删除；「成员」抽屉用 `coins()` 全量品种勾选，`members(key, ids)` 整份保存成员（一次请求完成增减） |
 | Audit | `auditApi` | `list(params)` → `{items,total}`，服务端分页 |
 | Guard | `guardApi` | `bans()` → `{bans, stats}`，解封 |
 | Params | `coinsApi` + `imagesApi`（经 `CoinImageEditor`） | `all()` → `{coins, series, sets, gallery}`，批量编辑保存；行内「图片」按钮 / 缩略图直接配置四类图片 |

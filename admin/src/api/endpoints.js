@@ -32,7 +32,9 @@ export const seriesApi = {
   create: (body) => http.post('/admin/series', body),
   update: (key, body) => http.patch('/admin/series/' + encodeURIComponent(key), body),
   remove: (key) => http.del('/admin/series/' + encodeURIComponent(key)),
-  image: (key, data) => http.post('/admin/series/image', { key, data })
+  image: (key, data) => http.post('/admin/series/image', { key, data }),
+  coins: () => http.get('/admin/coins'),
+  members: (key, ids) => http.post('/admin/series/members', { key, ids })
 };
 
 export const coinsApi = {

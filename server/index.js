@@ -26,7 +26,7 @@ const VERSION = require('../package.json').version || '1.0.0';
 const PORT = Number(process.env.PORT || 3100);
 const HOST = process.env.HOST || '127.0.0.1';
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const SEED_FILE = path.join(PUBLIC_DIR, 'data', 'coins.json');
+const SEED_FILE = process.env.SEED_FILE || path.join(PUBLIC_DIR, 'data', 'coins.json');
 const START_AT = Date.now();
 
 const SUPERADMIN_NAME = process.env.SUPERADMIN_NAME || 'virtualman';
@@ -1506,6 +1506,44 @@ async function handleApi(req, res, pathname) {
     audit.log(me.name, 'plan.update', '', years + ' 个年度 / ' + items + ' 个项目', clientIP(req));
     console.log('[admin] 更新发行计划：' + years + ' 个年度 / ' + items + ' 个项目');
     return sendJSON(res, 200, { ok: true, years, items });
+  }
+
+  /* 批量设置某系列的成员（整份替换）：一次请求完成增减，避免逐条 PATCH 被限流打断 */
+  if (pathname === '/api/admin/series/members' && method === 'POST') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const body = await readBody(req, 65536);
+    const key = String(body.key || '').trim();
+    if (!seriesSvc.load().items.some((seriesItem) => seriesItem.key === key)) {
+      return sendJSON(res, 400, { ok: false, error: '系列不存在' });
+    }
+    if (!Array.isArray(body.ids)) return sendJSON(res, 400, { ok: false, error: '缺少 ids 数组' });
+    const want = new Set(body.ids.map(Number));
+    let changed = 0;
+    SEED.coins.forEach((c) => {
+      const id = Number(c.i) + 1;
+      const cur = Array.isArray(c.seriesKeys) ? c.seriesKeys.slice() : (c.series ? [c.series] : []);
+      const has = cur.indexOf(key) >= 0;
+      const should = want.has(id);
+      if (has === should) return;
+      const next = has ? cur.filter((k) => k !== key) : cur.concat([key]);
+      // 同步主系列字段：移出后不再把该系列当主系列，加入时可补上，
+      // 否则 seriesSvc.listWithCount 会在 seriesKeys 为空时回退到 series 而算错数量。
+      if (c.series === key && !should) c.series = next[0] || '';
+      if (!c.series && should) c.series = key;
+      c.seriesKeys = next;
+      changed += 1;
+    });
+    if (changed) {
+      fs.writeFileSync(SEED_FILE, JSON.stringify(SEED) + '\n', 'utf8');
+      audit.log(me.name, 'series.members', key,
+        '变更 ' + changed + ' 个品种 / 现有 ' + want.size + ' 个成员', clientIP(req));
+      console.log('[admin] 系列 ' + key + ' 成员更新：变更 ' + changed + ' 个品种');
+    }
+    return sendJSON(res, 200, {
+      ok: true, key, count: want.size, changed,
+      series: seriesSvc.listWithCount(SEED.coins)
+    });
   }
 
   if (pathname === '/api/admin/series' && method === 'POST') {
