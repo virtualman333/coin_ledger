@@ -52,7 +52,8 @@ function publicUser(u) {
     createdAt: u.createdAt,
     lastLogin: u.lastLogin || null,
     wx: !!u.wxOpenid,          // 是否绑定微信
-    isTest: !!u.isTest,        // 测试账号（只有这类账号允许被删除）
+    isTest: !!u.isTest,        // 测试账号
+    disabled: !!u.disabled,    // 被管理员禁用（禁用后会话立即失效）
     nickname: u.nickname || '',           // 显示昵称，没设就用登录名
     avatar: u.avatar ? '/avatar/' + u.avatar : '',
     hasPassword: !!u.hash
@@ -138,6 +139,7 @@ function currentUser(req, doc) {
   if (!payload) return null;
   const u = findByID(doc, payload.id);
   if (!u) return null;
+  if (u.disabled) return null;   // 禁用后已签发的会话也立即失效
   return u;
 }
 

@@ -20,6 +20,7 @@ const wxsec = require('./wxsec');
 const reminders = require('./reminders');
 const seriesSvc = require('./series');
 const guard = require('./guard');
+const audit = require('./audit');
 
 const VERSION = require('../package.json').version || '1.0.0';
 const PORT = Number(process.env.PORT || 3100);
@@ -935,6 +936,9 @@ async function handleApi(req, res, pathname) {
       return sendJSON(res, 401, { ok: false, error: '用户名或密码不正确' });
     }
     auth.clearFail(ip);
+    if (u.disabled) {
+      return sendJSON(res, 403, { ok: false, error: '账号已被禁用，请联系管理员' });
+    }
     await store.commit((draft) => {
       const t = auth.findByID(draft, u.id);
       if (t) t.lastLogin = new Date().toISOString();
@@ -1121,16 +1125,58 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, { ok: true, removed: guard.unban(ip) });
   }
 
+  /* ---------------- 用户管理（分页 / 搜索 / 批量 / 角色 / 禁用 / 审计） ---------------- */
+  const adminQuery = url.parse(req.url, true).query;
+
   if (pathname === '/api/admin/users' && method === 'GET') {
     const me = requireAdmin(req, res, d);
     if (!me) return;
-    const list = d.users.map((u) => Object.assign(auth.publicUser(u), {
+    const kw = String(adminQuery.q || '').trim().toLowerCase();
+    const role = String(adminQuery.role || 'all');
+    const status = String(adminQuery.status || 'all');
+    const sort = String(adminQuery.sort || '-createdAt');
+    const page = Math.max(1, Number(adminQuery.page) || 1);
+    const size = Math.min(200, Math.max(1, Number(adminQuery.size) || 20));
+
+    let list = d.users.map((u) => Object.assign(auth.publicUser(u), {
       holdings: Array.isArray(d.holdings[u.id]) ? d.holdings[u.id].length : 0
     }));
-    return sendJSON(res, 200, { ok: true, users: list });
+    const stats = {
+      total: list.length,
+      admins: list.filter((u) => u.role === 'admin').length,
+      tests: list.filter((u) => u.isTest).length,
+      disabled: list.filter((u) => u.disabled).length
+    };
+    if (kw) list = list.filter((u) =>
+      [u.id, u.name, u.nickname].some((v) => String(v || '').toLowerCase().includes(kw)));
+    if (role === 'admin' || role === 'user') list = list.filter((u) => u.role === role);
+    if (status === 'active') list = list.filter((u) => !u.disabled && !u.isTest);
+    else if (status === 'disabled') list = list.filter((u) => u.disabled);
+    else if (status === 'test') list = list.filter((u) => u.isTest);
+
+    const desc = sort.charAt(0) === '-';
+    const key = desc ? sort.slice(1) : sort;
+    list.sort((a, b) => {
+      const av = a[key] == null ? '' : a[key];
+      const bv = b[key] == null ? '' : b[key];
+      const n = (typeof av === 'number' && typeof bv === 'number')
+        ? av - bv
+        : String(av).localeCompare(String(bv), 'zh-CN');
+      return desc ? -n : n;
+    });
+    return sendJSON(res, 200, {
+      ok: true,
+      users: list.slice((page - 1) * size, page * size),
+      total: list.length, page, size, stats
+    });
   }
 
-  /* 超管查看某个用户的藏品明细 */
+  if (pathname === '/api/admin/audit' && method === 'GET') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    return sendJSON(res, 200, Object.assign({ ok: true }, audit.query(adminQuery)));
+  }
+
   const holdMatch = pathname.match(/^\/api\/admin\/users\/([A-Za-z0-9_]+)\/holdings$/);
   if (holdMatch && method === 'GET') {
     const me = requireAdmin(req, res, d);
@@ -1141,48 +1187,91 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, { ok: true, user: auth.publicUser(target), holdings: items });
   }
 
-  const delMatch = pathname.match(/^\/api\/admin\/users\/([A-Za-z0-9_]+)$/);
-  const userMatch = delMatch;
+  const userMatch = pathname.match(/^\/api\/admin\/users\/([A-Za-z0-9_]+)$/);
 
-  /* 标记 / 取消「测试账号」 */
+  if (userMatch && method === 'GET') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const target = auth.findByID(d, userMatch[1]);
+    if (!target) return sendJSON(res, 404, { ok: false, error: '用户不存在' });
+    return sendJSON(res, 200, {
+      ok: true,
+      user: Object.assign(auth.publicUser(target), {
+        holdings: Array.isArray(d.holdings[target.id]) ? d.holdings[target.id].length : 0
+      })
+    });
+  }
+
+  if (pathname === '/api/admin/users/batch' && method === 'POST') {
+    const me = requireAdmin(req, res, d);
+    if (!me) return;
+    const body = await readBody(req, 16384);
+    const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+    const action = String(body.action || '');
+    const ALLOWED = { markTest: 1, unmarkTest: 1, disable: 1, enable: 1, delete: 1 };
+    if (!ids.length || !ALLOWED[action]) return sendJSON(res, 400, { ok: false, error: '参数不合法' });
+    if (ids.length > 100) return sendJSON(res, 400, { ok: false, error: '一次最多操作 100 个账号' });
+    let affected = 0;
+    await store.commit((draft) => {
+      ids.forEach((id) => {
+        if (id === me.id) return;
+        const u = auth.findByID(draft, id);
+        if (!u) return;
+        if (action === 'delete') {
+          if (u.role === 'admin') return;
+          draft.users = draft.users.filter((x) => x.id !== id);
+          delete draft.holdings[id];
+        } else if (action === 'markTest') u.isTest = true;
+        else if (action === 'unmarkTest') u.isTest = false;
+        else if (action === 'disable') u.disabled = true;
+        else if (action === 'enable') u.disabled = false;
+        affected += 1;
+      });
+    });
+    audit.log(me.name, 'user.batch.' + action, ids.join(','), '成功 ' + affected + ' 个', clientIP(req));
+    return sendJSON(res, 200, { ok: true, affected });
+  }
+
   if (userMatch && method === 'PATCH') {
     const me = requireAdmin(req, res, d);
     if (!me) return;
     const target = auth.findByID(d, userMatch[1]);
     if (!target) return sendJSON(res, 404, { ok: false, error: '用户不存在' });
     const body = await readBody(req, 4096);
-    if (typeof body.isTest !== 'boolean') {
-      return sendJSON(res, 400, { ok: false, error: '缺少 isTest 字段（true / false）' });
+    const patch = {};
+    if (typeof body.isTest === 'boolean') patch.isTest = body.isTest;
+    if (typeof body.disabled === 'boolean') patch.disabled = body.disabled;
+    if (body.role === 'admin' || body.role === 'user') patch.role = body.role;
+    if (!Object.keys(patch).length) return sendJSON(res, 400, { ok: false, error: '没有可修改的字段' });
+    if (target.id === me.id) return sendJSON(res, 400, { ok: false, error: '不能修改自己的账号状态' });
+    if (patch.role && target.role === 'admin' && patch.role !== 'admin'
+        && d.users.filter((u) => u.role === 'admin').length <= 1) {
+      return sendJSON(res, 400, { ok: false, error: '至少保留一个管理员' });
     }
-    if (target.id === me.id) return sendJSON(res, 400, { ok: false, error: '不能改自己的账号类型' });
     await store.commit((draft) => {
       const u = auth.findByID(draft, target.id);
-      if (u) u.isTest = body.isTest;
+      if (u) Object.assign(u, patch);
     });
-    console.log('[admin] ' + (body.isTest ? '标记测试账号' : '取消测试账号') + '：' + target.name);
-    return sendJSON(res, 200, { ok: true, isTest: body.isTest });
+    audit.log(me.name, 'user.patch', target.name, JSON.stringify(patch), clientIP(req));
+    return sendJSON(res, 200, Object.assign({ ok: true }, patch));
   }
 
-  if (delMatch && method === 'DELETE') {
+  if (userMatch && method === 'DELETE') {
     const me = requireAdmin(req, res, d);
     if (!me) return;
-    const target = auth.findByID(d, delMatch[1]);
+    const target = auth.findByID(d, userMatch[1]);
     if (!target) return sendJSON(res, 404, { ok: false, error: '用户不存在' });
     if (target.id === me.id) return sendJSON(res, 400, { ok: false, error: '不能删除自己' });
-    if (target.role === 'admin') return sendJSON(res, 400, { ok: false, error: '不能删除管理员账号' });
-    if (!target.isTest) {
-      return sendJSON(res, 403, {
-        ok: false,
-        error: '只有「测试账号」可以删除。这是真实账号，先标记为测试账号再删。',
-      });
+    if (target.role === 'admin' && d.users.filter((u) => u.role === 'admin').length <= 1) {
+      return sendJSON(res, 400, { ok: false, error: '至少保留一个管理员' });
     }
     await store.commit((draft) => {
       draft.users = draft.users.filter((u) => u.id !== target.id);
       delete draft.holdings[target.id];
     });
+    audit.log(me.name, 'user.delete', target.name, '账号及藏品已删除', clientIP(req));
     return sendJSON(res, 200, { ok: true });
   }
-
 
 
   /* ---------------- 发行预约提醒（订阅消息） ---------------- */
