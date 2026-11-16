@@ -85,6 +85,7 @@ import AsyncState from '../components/AsyncState.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { imagesApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
+import { compressImage } from '../utils/image';
 
 const KINDS = { main: '主图', obverse: '正面', reverse: '背面', set: '正反面' };
 
@@ -143,33 +144,12 @@ function pickFile() {
   if (fileInput.value) { fileInput.value.value = ''; fileInput.value.click(); }
 }
 
-function compress(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onerror = () => reject(new Error('读取文件失败'));
-    fr.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('这张图读不出来'));
-      img.onload = () => {
-        const scale = Math.min(1, 900 / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.86));
-      };
-      img.src = fr.result;
-    };
-    fr.readAsDataURL(file);
-  });
-}
-
 async function onFile(e) {
   const file = e.target.files && e.target.files[0];
   if (!file || !currentId.value) return;
   uploading.value = true;
   try {
-    const data = await compress(file);
+    const data = await compressImage(file);
     await imagesApi.upload({ id: currentId.value, kind: uploadKind.value, data });
     ElMessage.success('图片已上传');
     await load();

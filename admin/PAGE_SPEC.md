@@ -72,6 +72,9 @@ import { errorMessage } from '../api/client';
 | `PageHeader` | `title`, `desc` | `#actions` |
 | `AsyncState` | `loading:Boolean`, `error:String` | `@retry`，默认插槽放表格 |
 | `ConfirmDialog` | `v-model`, `title`, `message`, `danger`, `dangerText`, `effects:String[]`, `confirmText`, `confirmLabel`, `loading` | `@confirm`（需 `confirmText` 时输入一致才可点） |
+| `CoinImageEditor` | `v-model`, `coin:{id,name}`, `images:[{f,k}]` | `@changed`（上传 / 删除成功后父级刷新数据） |
+
+图片压缩与路径工具统一放在 `src/utils/image.js`（`compressImage` / `imageFull` / `imagePreview` / `IMAGE_KINDS`），参数页与图片页共用同一份实现。
 
 `useTable(loader, options)` 返回：
 `rows, allRows, total, loading, error, params, load, reload, refresh, search, setParam, onPageChange, onSizeChange, applyLocal`
@@ -98,6 +101,6 @@ import { errorMessage } from '../api/client';
 | Series | `seriesApi` | `list()` → `{items}`，行内编辑 + 新建/换图/删除 |
 | Audit | `auditApi` | `list(params)` → `{items,total}`，服务端分页 |
 | Guard | `guardApi` | `bans()` → `{bans, stats}`，解封 |
-| Params | `coinsApi` | `all()` → `{coins, series, sets, gallery}`，批量编辑保存 |
+| Params | `coinsApi` + `imagesApi`（经 `CoinImageEditor`） | `all()` → `{coins, series, sets, gallery}`，批量编辑保存；行内「图片」按钮 / 缩略图直接配置四类图片 |
 | Images | `imagesApi` | 复用 `all()`，左列表 + 右图集 + 上传/删除 |
 | Visitors | `visitorsApi` | `list(params)`、`detail(params)`，来源/视图切换 + 明细抽屉 |

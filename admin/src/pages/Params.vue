@@ -34,7 +34,9 @@
         <el-table :data="rows" v-loading="loading" stripe row-key="id" size="small">
           <el-table-column label="图" width="62">
             <template #default="{ row }">
-              <img class="p-thumb" :src="thumb(row.id)" loading="lazy" alt="" @error="onImgError" />
+              <button class="p-thumb-btn" type="button" title="配置图片" aria-label="配置图片" @click="openImages(row)">
+                <img class="p-thumb" :src="thumb(row.id)" loading="lazy" alt="" @error="onImgError" />
+              </button>
             </template>
           </el-table-column>
           <el-table-column prop="id" label="#" width="54" class-name="cl-mono" />
@@ -69,8 +71,9 @@
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="112" fixed="right">
+          <el-table-column label="操作" width="170" fixed="right">
             <template #default="{ row }">
+              <el-button size="small" text @click="openImages(row)">图片</el-button>
               <el-button size="small" text type="primary" :disabled="!isDirty(row)" :loading="savingId === row.id" @click="saveOne(row)">存</el-button>
               <el-button size="small" text :disabled="!isDirty(row)" @click="undo(row)">撤销</el-button>
             </template>
@@ -84,6 +87,11 @@
         />
       </div>
     </AsyncState>
+
+    <CoinImageEditor
+      v-model="imageOpen" :coin="imageCoin" :images="imageList"
+      @changed="onImagesChanged"
+    />
   </section>
 </template>
 
@@ -92,6 +100,7 @@ import { computed, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import PageHeader from '../components/PageHeader.vue';
 import AsyncState from '../components/AsyncState.vue';
+import CoinImageEditor from '../components/CoinImageEditor.vue';
 import { useTable } from '../composables/useTable';
 import { coinsApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
@@ -122,7 +131,7 @@ const table = useTable(async () => {
 });
 const {
   rows, allRows, total, loading, error, params,
-  reload, search, setParam, onPageChange, onSizeChange
+  reload, refresh, search, setParam, onPageChange, onSizeChange
 } = table;
 
 const withMain = computed(() => allRows.value.filter((r) =>
@@ -156,6 +165,21 @@ function patchOf(row) {
 
 function thumb(id) { return '/img/th/s/' + String(id).padStart(3, '0') + '.jpg'; }
 function onImgError(e) { e.target.style.visibility = 'hidden'; }
+
+/* ---------- 行内配置图片 ---------- */
+const imageOpen = ref(false);
+const imageCoin = ref({ id: 0, name: '' });
+const imageList = computed(() =>
+  imageCoin.value.id ? (meta.value.gallery[String(imageCoin.value.id)] || []) : []);
+
+function openImages(row) {
+  imageCoin.value = { id: row.id, name: row.name };
+  imageOpen.value = true;
+}
+async function onImagesChanged() {
+  // refresh() 保留当前页码与筛选，避免配完图被弹回第一页
+  await refresh();
+}
 
 function clearDirty(ids) {
   ids.forEach((id) => { delete drafts[id]; delete dirty[id]; });
@@ -202,4 +226,11 @@ async function saveOne(row) {
 
 <style scoped>
 .p-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; background: #0f141b; }
+.p-thumb-btn {
+  padding: 0; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; cursor: pointer; line-height: 0;
+  transition: border-color .15s, transform .15s;
+}
+.p-thumb-btn:hover { border-color: var(--cl-gold); transform: translateY(-1px); }
+.p-thumb-btn:focus-visible { outline: 2px solid var(--cl-gold); outline-offset: 2px; }
 </style>
