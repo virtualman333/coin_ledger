@@ -11,7 +11,7 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "check": "node --check server/index.js && node --check server/store.js && node --check server/store-json.js && node --check server/store-mysql.js && node --check server/auth.js && node --check server/guard.js && node --check public/app.js",
-    "test": "node --test tests/guard.test.js",
+    "test": "node --test tests/guard.test.js tests/mp-fab.test.js",
     "migrate": "node tools/migrate-to-mysql.js",
     "smoke": "node tools/smoke.js",
     "seo:push": "node tools/baidu_push.js",

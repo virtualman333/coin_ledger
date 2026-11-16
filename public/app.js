@@ -4342,7 +4342,9 @@ boot()
   });
 
 /* ---------------- 小程序引导 ---------------- */
-(function(){
+/* 本脚本在 <body> 末尾、.mp-fab 之前同步执行：此时 mpBtn 还没进 DOM。
+   必须等 DOMContentLoaded 再绑定，否则点「小程序」没反应、二维码永远不显示。 */
+function initMpFab(){
   var btn = document.getElementById('mpBtn');
   var panel = document.getElementById('mpPanel');
   var close = document.getElementById('mpClose');
@@ -4390,10 +4392,12 @@ boot()
       } catch (e) { /* 隐私模式忽略 */ }
     }
   };
-})();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMpFab);
+else initMpFab();
 
 /* ---------------- 手机端内联引导 ---------------- */
-(function(){
+function initMpInline(){
   var box = document.getElementById('mpInline');
   if (!box) return;
   var KEY = 'cl_mp_hint_off';
@@ -4426,4 +4430,6 @@ boot()
     box.hidden = true;
     try { localStorage.setItem(KEY, '1'); } catch (e) { /* 隐私模式忽略 */ }
   });
-})();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMpInline);
+else initMpInline();
