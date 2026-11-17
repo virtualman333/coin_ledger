@@ -142,7 +142,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   console.log('\n[1.5] 新分类与一套口径');
   const seriesCodes = Object.keys(cat.series);
-  ok(seriesCodes.length === 18, '系列数 ' + seriesCodes.length + '（原 16）');
+  ok(seriesCodes.length === 19 && seriesCodes.indexOf('SX') < 0
+    && cat.series.SX1 === '一轮生肖贺岁' && cat.series.SX2 === '二轮生肖贺岁',
+    '系列数 19 · 生肖贺岁已拆一轮/二轮：' + seriesCodes.length);
   ok(cat.series.AY === '奥运' && cat.series.TY === '体育赛事' && cat.series.EX === '盛会·博览',
     '奥运与体育赛事已拆分，盛会独立成类');
   const olympic = cat.coins.filter((c) => c.series === 'AY');

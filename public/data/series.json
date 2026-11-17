@@ -3,11 +3,19 @@
  "note": "系列主数据：name/desc/img/sort 可在管理端修改；品种通过 seriesKeys 关联，可属于多个系列。",
  "items": [
   {
-   "key": "SX",
-   "name": "生肖贺岁",
-   "desc": "",
+   "key": "SX1",
+   "name": "一轮生肖贺岁",
+   "desc": "2003—2014 年发行的十二生肖贺岁普通纪念币，一轮十二枚（羊年起到马年止）。",
    "img": "img/series/sx-v3.jpg",
    "sort": 10,
+   "imgFrom": "set"
+  },
+  {
+   "key": "SX2",
+   "name": "二轮生肖贺岁",
+   "desc": "2015—2026 年发行的十二生肖贺岁普通纪念币，二轮十二枚，2026 马年收官。",
+   "img": "img/series/sx2-v3.jpg",
+   "sort": 11,
    "imgFrom": "set"
   },
   {
