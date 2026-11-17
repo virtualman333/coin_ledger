@@ -1713,6 +1713,21 @@ async function handleApi(req, res, pathname) {
     if (buf.length > 4 * 1024 * 1024) return sendJSON(res, 413, { ok: false, error: '图片超过 4MB，请先压缩' });
     const fname = String(id).padStart(3, '0') + SUFFIX[kind] + '.jpg';
     fs.writeFileSync(path.join(PUBLIC_DIR, 'img', fname), buf);
+
+    // 主图上传时，前端会附带两张按内容裁切好的方形缩略图（480 / 160）。
+    // 站点列表与小图直接读 /img/th/NNN.jpg 和 /img/th/s/NNN.jpg。
+    if (kind === 'main') {
+      [['thumb480', ''], ['thumb160', 's']].forEach((pair) => {
+        const tm = /^data:image\/(?:jpeg|jpg);base64,([A-Za-z0-9+/=]+)$/.exec(String(body[pair[0]] || ''));
+        if (!tm) return;
+        const thumb = Buffer.from(tm[1], 'base64');
+        if (!thumb.length || thumb.length > 2 * 1024 * 1024) return;
+        const dir = path.join(PUBLIC_DIR, 'img', 'th', pair[1]);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, fname), thumb);
+      });
+    }
+
     const list = (GALLERY[String(id)] || []).filter((it) => it.k !== kind);
     list.push({ f: fname, k: kind });
     GALLERY[String(id)] = list;
@@ -1735,6 +1750,10 @@ async function handleApi(req, res, pathname) {
     if (rest.length) GALLERY[id] = rest;
     else delete GALLERY[id];
     try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', hit.f)); } catch (e) { /* 文件可能已不在 */ }
+    if (kind === 'main') {
+      try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', 'th', hit.f)); } catch (e) { /* 可能没有 */ }
+      try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', 'th', 's', hit.f)); } catch (e) { /* 可能没有 */ }
+    }
     writeGallery();
     audit.log(me.name, 'image.delete', id + ':' + kind, hit.f, clientIP(req));
     return sendJSON(res, 200, { ok: true, images: rest });

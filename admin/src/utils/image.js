@@ -27,6 +27,66 @@ export function compressImage(file, maxSide = 900, quality = 0.86) {
   });
 }
 
+/**
+ * 生成方形缩略图：先按内容边界裁掉白边，再等比缩放留 4% 余量。
+ * 上传主图时自动生成 480 / 160 两种规格，随上传请求一起交给服务端落盘。
+ */
+export function makeThumbnail(file, size, quality = 0.86) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error('读取文件失败'));
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('这张图读不出来'));
+      img.onload = () => {
+        try {
+          const src = document.createElement('canvas');
+          src.width = img.width;
+          src.height = img.height;
+          const sctx = src.getContext('2d', { willReadFrequently: true });
+          sctx.drawImage(img, 0, 0);
+
+          // 找非白像素边界（白底商品图/官方图都适用）
+          let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
+          try {
+            const px = sctx.getImageData(0, 0, img.width, img.height).data;
+            for (let y = 0; y < img.height; y += 1) {
+              for (let x = 0; x < img.width; x += 1) {
+                const i = (y * img.width + x) * 4;
+                if (px[i] < 238 || px[i + 1] < 238 || px[i + 2] < 238) {
+                  if (x < x0) x0 = x;
+                  if (x > x1) x1 = x;
+                  if (y < y0) y0 = y;
+                  if (y > y1) y1 = y;
+                }
+              }
+            }
+          } catch (e) { /* 读不到像素时退化为整图 */ }
+          if (x1 <= x0 || y1 <= y0) { x0 = 0; y0 = 0; x1 = img.width - 1; y1 = img.height - 1; }
+          const cw = x1 - x0 + 1;
+          const ch = y1 - y0 + 1;
+
+          const out = document.createElement('canvas');
+          out.width = size;
+          out.height = size;
+          const ctx = out.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, size, size);
+          const scale = Math.min(size / cw, size / ch) * 0.96;
+          const w = Math.max(1, Math.round(cw * scale));
+          const h = Math.max(1, Math.round(ch * scale));
+          ctx.drawImage(src, x0, y0, cw, ch, (size - w) / 2, (size - h) / 2, w, h);
+          resolve(out.toDataURL('image/jpeg', quality));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
 /** 品种图片的绝对路径（管理端挂在 /console/，相对路径会 404） */
 export function imageFull(f) {
   return '/img/' + f;

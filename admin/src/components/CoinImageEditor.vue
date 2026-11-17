@@ -51,7 +51,7 @@ import { ElMessage } from 'element-plus';
 import ConfirmDialog from './ConfirmDialog.vue';
 import { imagesApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
-import { compressImage, imageFull, imagePreview, IMAGE_KINDS } from '../utils/image';
+import { compressImage, makeThumbnail, imageFull, imagePreview, IMAGE_KINDS } from '../utils/image';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -92,8 +92,18 @@ async function onFile(e) {
   busyKind.value = kind;
   try {
     const data = await compressImage(file);
-    await imagesApi.upload({ id: props.coin.id, kind, data });
-    ElMessage.success('图片已上传');
+    const body = { id: props.coin.id, kind, data };
+    // 主图额外生成两种预生成缩略图（站点列表卡片与小图都读这两个文件）
+    if (kind === 'main') {
+      const [big, small] = await Promise.all([
+        makeThumbnail(file, 480),
+        makeThumbnail(file, 160),
+      ]);
+      body.thumb480 = big;
+      body.thumb160 = small;
+    }
+    await imagesApi.upload(body);
+    ElMessage.success(kind === 'main' ? '主图已上传，缩略图已同步生成' : '图片已上传');
     cacheBust.value = Date.now();
     emit('changed');
   } catch (err) {
