@@ -347,6 +347,10 @@ const GALLERY_FILE = path.join(__dirname, '..', 'public', 'data', 'gallery.json'
 function writeGallery() {
   const doc = { updated: new Date().toISOString().slice(0, 10), coins: GALLERY };
   fs.writeFileSync(GALLERY_FILE, JSON.stringify(doc) + '\n', 'utf8');
+  // 关键：galleryVer 原本只在服务启动时算一次，管理端换图后它不变，
+  // 前台 /img/ 的 7 天缓存就会一直显示旧图（比如换了正面仍显示背面）。
+  // 每次写 gallery 同步刷新内存版本号，图片 URL 的 ?v= 立即失效。
+  GALLERY_VER = String(Date.now()).slice(-8);
 }
 
 function isSecure(req) {
