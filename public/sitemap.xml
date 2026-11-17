@@ -1523,4 +1523,15 @@
       <image:caption>面额 20 元 · 纸质 · 发行量 20000 万张</image:caption>
     </image:image>
   </url>
+  <url>
+    <loc>https://coin.virtualman.top/coin/137</loc>
+    <lastmod>2026-11-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://coin.virtualman.top/img/137.jpg</image:loc>
+      <image:title>中国京剧艺术普通纪念币（丑角）（2026 纪念币）实物图</image:title>
+      <image:caption>面额 5 元 · 黄铜合金 · 发行量 6000 万枚</image:caption>
+    </image:image>
+  </url>
 </urlset>

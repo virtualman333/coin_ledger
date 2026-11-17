@@ -3080,6 +3080,26 @@
    "seriesKeys": [
     "CN"
    ]
+  },
+  {
+   "i": 136,
+   "year": 2026,
+   "name": "中国京剧艺术普通纪念币（丑角）",
+   "series": "JJ",
+   "face": 5,
+   "mintage": 6000,
+   "material": "黄铜合金",
+   "dia": 30,
+   "kind": "coin",
+   "est": 5,
+   "limit": 20,
+   "set": "single",
+   "pieces": 1,
+   "obverse": "中华人民共和国国徽，上方刊「中华人民共和国」国名，下方刊年号「2026」，辅以中国戏曲乐器图案",
+   "reverse": "中国京剧艺术中丑角形象，局部为彩色图案，辅以装饰化图形，并刊「中国京剧艺术」及面额「5元」",
+   "seriesKeys": [
+    "JJ"
+   ]
   }
  ],
  "defaults": [
