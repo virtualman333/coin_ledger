@@ -2639,6 +2639,47 @@ function planDaysUntil(dateStr){
   return Math.round((d - today) / 86400000);
 }
 
+/**
+ * 解析预约区间。支持「2026-11-17 22:00 至 11-18 24:00」这种带时刻的写法，
+ * 24:00 视为次日 00:00；只有日期的写法交给原来的按天倒计时。
+ */
+function planReserveRange(text) {
+  if (!text) return null;
+  var s = String(text).replace(/\s+/g, ' ').trim();
+  var m = s.match(/^(\d{4}-\d{2}-\d{2})(?:\s+(\d{1,2}):(\d{2}))?\s*至\s*(?:(\d{4})-)?(\d{2})-(\d{2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  var y = m[1].slice(0, 4);
+  var start = new Date(m[1] + 'T' + (m[2] || '00') + ':' + (m[3] || '00') + ':00');
+  var endY = m[4] || y;
+  var eh = m[7], em = m[8];
+  var end;
+  if (eh === '24') {
+    end = new Date(endY + '-' + m[5] + '-' + m[6] + 'T00:00:00');
+    end.setDate(end.getDate() + 1);
+  } else {
+    end = new Date(endY + '-' + m[5] + '-' + m[6] + 'T' + (eh || '23') + ':' + (em || '59') + ':00');
+  }
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+  return { start: start, end: end };
+}
+
+/** 按「当前时刻」算预约状态；没有精确时刻的公告返回 null */
+function planReserveState(text) {
+  if (!/\d{1,2}:\d{2}/.test(String(text || ''))) return null;
+  var r = planReserveRange(text);
+  if (!r) return null;
+  var now = new Date();
+  if (now < r.start) {
+    var h = Math.ceil((r.start - now) / 3600000);
+    return { cls: 'soon', text: h < 24 ? ('距预约 ' + h + ' 小时') : ('距预约 ' + Math.ceil(h / 24) + ' 天') };
+  }
+  if (now <= r.end) {
+    var rest = Math.ceil((r.end - now) / 3600000);
+    return { cls: 'now', text: '预约中 · 剩 ' + rest + ' 小时' };
+  }
+  return { cls: 'end', text: '预约已结束' };
+}
+
 /** 计划项详情弹层：预约/兑换/承办银行/图案 */
 function showPlanDetail(it){
   var old = document.getElementById('planModal');
@@ -2739,8 +2780,13 @@ function renderPlan(){
       var days = up ? planDaysUntil(it.date) : null;
       if (up) upcomingAll.push(it);
       var c = it.coinNo ? DB[it.coinNo - 1] : null;
+      // 有精确预约时刻的按「当前时刻」算，否则退回按天倒计时
+      var rs = planReserveState(it.reserve);
+      var reservingNow = !!(rs && rs.cls === 'now');
       var countdown = '';
-      if (up && days !== null) {
+      if (rs) {
+        countdown = '<span class="plan-cd plan-cd-' + rs.cls + '">' + rs.text + '</span>';
+      } else if (up && days !== null) {
         countdown = days > 0
           ? '<span class="plan-cd">还有 ' + days + ' 天</span>'
           : (days === 0 ? '<span class="plan-cd">今天发行</span>' : '<span class="plan-cd plan-cd-done">已过发行日</span>');
@@ -2760,9 +2806,11 @@ function renderPlan(){
           '</div>' +
         '</div>' +
         '<div class="plan-right">' +
-          (up
-            ? '<span class="plan-badge">待发行</span>'
-            : '<span class="plan-badge is-done">已发行</span>') +
+          (reservingNow
+            ? '<span class="plan-badge is-now">预约中</span>'
+            : (up
+              ? '<span class="plan-badge">待发行</span>'
+              : '<span class="plan-badge is-done">已发行</span>')) +
           '<div class="plan-date">' + (it.date ? it.date.slice(5) + ' 发行' : '日期待定') + '</div>' +
           (it.reserve ? '<div class="plan-reserve">' + esc(it.reserve) + ' 预约</div>' : '') +
           (it.exchange ? '<div class="plan-exchange">' + esc(it.exchange) + ' 兑换</div>' : '') +

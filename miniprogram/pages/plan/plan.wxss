@@ -256,3 +256,9 @@
 .pd-btn::after {
   border: none;
 }
+
+/* 预约中（按当前时刻判定） */
+.badge.now{background:rgba(212,175,55,.16);color:#9a6b1f;font-weight:600}
+.cd.cd-now{color:#9a6b1f;font-weight:600}
+.cd.cd-soon{color:#9a6b1f}
+.cd.cd-end{color:#b3aa9b}

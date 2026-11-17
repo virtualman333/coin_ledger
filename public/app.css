@@ -2489,3 +2489,14 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 @media (max-width:720px){
   .vd-row{grid-template-columns:1fr 1fr;gap:4px 10px}
 }
+
+/* 发行计划：按当前时刻计算的预约状态 */
+.plan-cd-now{color:var(--gold) !important;font-weight:600}
+.plan-cd-soon{color:var(--gold) !important}
+.plan-cd-end{color:var(--dim) !important}
+.plan-badge.is-now{
+  background:rgba(212,175,55,.16);
+  border-color:var(--gold);
+  color:var(--gold);
+  font-weight:600;
+}

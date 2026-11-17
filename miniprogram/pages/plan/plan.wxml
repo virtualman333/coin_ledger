@@ -40,11 +40,11 @@
           </view>
         </view>
         <view class="it-right">
-          <text class="badge {{it.isUp ? '' : 'done'}}">{{it.isUp ? '待发行' : '已发行'}}</text>
+          <text class="badge {{it.reserveNow ? 'now' : (it.isUp ? '' : 'done')}}">{{it.badgeText}}</text>
           <text class="it-date">{{it.dateText}} 发行</text>
           <text class="it-reserve" wx:if="{{it.reserveText}}">{{it.reserveText}} 预约</text>
           <text class="it-exchange" wx:if="{{it.exchangeText}}">{{it.exchangeText}} 兑换</text>
-          <text class="cd" wx:if="{{it.cdText}}">{{it.cdText}}</text>
+          <text class="cd {{it.cdCls}}" wx:if="{{it.cdText}}">{{it.cdText}}</text>
           <text class="it-limit" wx:if="{{it.limitText}}">{{it.limitText}}</text>
           <view
             class="remind {{reminded[it.key] ? 'on' : ''}}"

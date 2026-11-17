@@ -5,6 +5,45 @@ const store = require('../../utils/store');
 // 订阅消息模板（日程提醒）。后台改模板时要同步这里
 const TMPL_ID = 'VbGee94SWDa5DUBkHx2Kii8Dp0OobE1PneOJg9Id_ao';
 
+/**
+ * 预约状态：带时刻的公告按「当前时刻」算（如 11-17 22:00 至 11-18 24:00）。
+ * 24:00 按次日 00:00 处理；只有日期的公告返回 null，沿用按天倒计时。
+ */
+function reserveRange(text) {
+  if (!text) return null;
+  const s = String(text).replace(/\s+/g, ' ').trim();
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})(?:\s+(\d{1,2}):(\d{2}))?\s*至\s*(?:(\d{4})-)?(\d{2})-(\d{2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  const y = m[1].slice(0, 4);
+  const start = new Date(m[1] + 'T' + (m[2] || '00') + ':' + (m[3] || '00') + ':00');
+  const endY = m[4] || y;
+  const eh = m[7], em = m[8];
+  let end;
+  if (eh === '24') {
+    end = new Date(endY + '-' + m[5] + '-' + m[6] + 'T00:00:00');
+    end.setDate(end.getDate() + 1);
+  } else {
+    end = new Date(endY + '-' + m[5] + '-' + m[6] + 'T' + (eh || '23') + ':' + (em || '59') + ':00');
+  }
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+  return { start, end };
+}
+
+function reserveState(text) {
+  if (!/\d{1,2}:\d{2}/.test(String(text || ''))) return null;
+  const r = reserveRange(text);
+  if (!r) return null;
+  const now = new Date();
+  if (now < r.start) {
+    const h = Math.ceil((r.start - now) / 3600000);
+    return { cls: 'soon', text: h < 24 ? ('距预约 ' + h + ' 小时') : ('距预约 ' + Math.ceil(h / 24) + ' 天') };
+  }
+  if (now <= r.end) {
+    return { cls: 'now', text: '预约中 · 剩 ' + Math.ceil((r.end - now) / 3600000) + ' 小时' };
+  }
+  return { cls: 'end', text: '预约已结束' };
+}
+
 Page({
   data: {
     years: [],
@@ -39,10 +78,13 @@ Page({
         const d = it.date ? new Date(it.date + 'T00:00:00') : null;
         const days = d ? Math.round((d - today) / 86400000) : null;
         const isUp = it.status === 'upcoming';
-        let cdText = '';
-        if (isUp && days !== null) {
+        const rs = reserveState(it.reserve);
+        const reserveNow = !!(rs && rs.cls === 'now');
+        let cdText = rs ? rs.text : '';
+        if (!cdText && isUp && days !== null) {
           cdText = days > 0 ? ('还有 ' + days + ' 天') : (days === 0 ? '今天发行' : '已过发行日');
         }
+        const badgeText = reserveNow ? '预约中' : (isUp ? '待发行' : '已发行');
         const row = {
           key: it.key,
           name: it.name,
@@ -52,6 +94,9 @@ Page({
           unit: it.kind === 'note' ? '张' : '枚',
           mintageText: it.mintage ? cat.money(it.mintage) + ' 万' : '',
           note: it.note || '',
+          badgeText,
+          reserveNow,
+          cdCls: rs ? ('cd-' + rs.cls) : '',
           dateText: it.date ? it.date.slice(5).replace(/-/g, '/') : '待定',
           dateFull: it.date || '',
           reserveText: it.reserve ? it.reserve.replace(/-/g, '/') : '',
