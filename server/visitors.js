@@ -48,8 +48,62 @@ function recentlySeen(sid, tab, seconds, client) {
   );
 }
 
+/** 本地日期（服务器时区，国内部署即北京时间）；存的是 UTC ISO，直接 slice 会在 00:00-08:00 错一天 */
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
 function dayKey(iso) {
-  return String(iso || '').slice(0, 10);
+  const d = iso ? new Date(iso) : null;
+  return (d && !isNaN(d.getTime())) ? dateStr(d) : '';
+}
+
+const RANGE_KEYS = ['today', 'week', 'month', 'year', 'all'];
+
+/** 区间边界：start 含、end 不含；周一为一周起点。未知值退回 all，保持旧调用方行为 */
+function resolveRange(name) {
+  const key = RANGE_KEYS.indexOf(String(name || '')) >= 0 ? String(name) : 'all';
+  if (key === 'all') return { key, start: null, end: null };
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let start, end;
+  if (key === 'today') {
+    start = new Date(y, m, d); end = new Date(y, m, d + 1);
+  } else if (key === 'week') {
+    const back = (now.getDay() + 6) % 7;
+    start = new Date(y, m, d - back); end = new Date(y, m, d - back + 7);
+  } else if (key === 'month') {
+    start = new Date(y, m, 1); end = new Date(y, m + 1, 1);
+  } else {
+    start = new Date(y, 0, 1); end = new Date(y + 1, 0, 1);
+  }
+  return { key, start, end };
+}
+
+function filterByRange(items, range) {
+  const r = range && range.start ? range : resolveRange(range);
+  if (!r.start) return (items || []).slice();
+  const from = r.start.getTime(), to = r.end.getTime();
+  return (items || []).filter((x) => {
+    const t = Date.parse(x.at);
+    return !isNaN(t) && t >= from && t < to;
+  });
+}
+
+/** 趋势粒度：今日看小时，周/月看天，年/全部看月，避免 365 根柱子 */
+function granularityOf(key) {
+  return key === 'today' ? 'hour' : (key === 'year' || key === 'all' ? 'month' : 'day');
+}
+function bucketKey(iso, gran) {
+  const d = iso ? new Date(iso) : null;
+  if (!d || isNaN(d.getTime())) return '';
+  if (gran === 'hour') return String(d.getHours()).padStart(2, '0');
+  if (gran === 'month') return dayKey(iso).slice(0, 7);
+  return dayKey(iso);
+}
+function bucketLabel(k, gran) {
+  if (gran === 'hour') return k + ':00';
+  if (gran === 'month') return k.slice(5) + '月';
+  return k.slice(5);
 }
 
 /**
@@ -89,9 +143,9 @@ function pageRetention(items) {
   });
 
   const nextDay = (day) => {
-    const d = new Date(day + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + 1);
-    return d.toISOString().slice(0, 10);
+    const d = new Date(day + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    return dateStr(d);
   };
   mp.forEach((x) => {
     const ip = x.ip || ('sid:' + x.sid);
@@ -175,17 +229,22 @@ function detail(items, query) {
 function stats(items, options) {
   const opts = options || {};
   const client = opts.client && opts.client !== 'all' ? opts.client : '';
-  const rows = client ? items.filter((x) => (x.client || 'web') === client) : items;
-  const days = {};
-  const sessions = {};
-  // 访客数按独立 IP 计：同一 IP 开多个标签页 / 多个会话仍算一个人。
+  const all = items || [];
+  const range = resolveRange(opts.range);
+  const scoped = filterByRange(all, range);
+  const rows = client ? scoped.filter((x) => (x.client || 'web') === client) : scoped;
+  const gran = granularityOf(range.key);
   const ipKey = (x) => x.ip || ('sid:' + x.sid);
 
+  const buckets = {};
+  const sessions = {};
   rows.forEach((x) => {
-    const k = dayKey(x.at);
-    if (!days[k]) days[k] = { pv: 0, ips: {} };
-    days[k].pv += 1;
-    days[k].ips[ipKey(x)] = 1;
+    const k = bucketKey(x.at, gran);
+    if (k) {
+      if (!buckets[k]) buckets[k] = { pv: 0, ips: {} };
+      buckets[k].pv += 1;
+      buckets[k].ips[ipKey(x)] = 1;
+    }
     if (!sessions[x.sid]) {
       sessions[x.sid] = {
         first: x.at, last: x.at, pages: {}, ip: x.ip, ua: x.ua,
@@ -196,22 +255,30 @@ function stats(items, options) {
     sessions[x.sid].pages[x.tab] = 1;
   });
 
-  const daily = Object.keys(days).sort().reverse().slice(0, 7).map((k) => ({
+  // 今日 24 小时 / 月 12 个月 / 天 14 日，超出部分前端也看不过来
+  const limit = gran === 'hour' ? 24 : (gran === 'month' ? 12 : 14);
+  const daily = Object.keys(buckets).sort().slice(-limit).map((k) => ({
     date: k,
-    pv: days[k].pv,
-    uv: Object.keys(days[k].ips).length,
+    label: bucketLabel(k, gran),
+    pv: buckets[k].pv,
+    uv: Object.keys(buckets[k].ips).length,
   }));
-  const sids = Object.keys(sessions);
-  const allIps = {};
-  rows.forEach((x) => { allIps[ipKey(x)] = 1; });
-  const today = new Date().toISOString().slice(0, 10);
-  const todayRows = rows.filter((x) => dayKey(x.at) === today);
-  const todayIps = {};
-  todayRows.forEach((x) => { todayIps[ipKey(x)] = 1; });
 
-  // 来源分布始终按全量算，切筛选时也能对比
+  const sids = Object.keys(sessions);
+  const rangeIps = {}, allIps = {}, todayIps = {};
+  rows.forEach((x) => { rangeIps[ipKey(x)] = 1; });
+  all.forEach((x) => { allIps[ipKey(x)] = 1; });
+  const today = dateStr(new Date());
+  let todayPv = 0;
+  all.forEach((x) => {
+    if (dayKey(x.at) !== today) return;
+    todayPv += 1;
+    todayIps[ipKey(x)] = 1;
+  });
+
+  // 来源分布按所选区间算，和上面的卡片/趋势保持同口径
   const byClient = { web: { pv: 0, ips: {} }, mp: { pv: 0, ips: {} } };
-  items.forEach((x) => {
+  scoped.forEach((x) => {
     const c = (x.client || 'web') === 'mp' ? 'mp' : 'web';
     byClient[c].pv += 1;
     byClient[c].ips[ipKey(x)] = 1;
@@ -233,11 +300,21 @@ function stats(items, options) {
     };
   }).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 40);
 
+  const stamps = scoped.map((x) => Date.parse(x.at)).filter((t) => !isNaN(t));
+  const from = stamps.length ? dateStr(new Date(Math.min.apply(null, stamps))) : '';
+  const to = stamps.length ? dateStr(new Date(Math.max.apply(null, stamps))) : '';
+
   return {
     client: client || 'all',
-    totalPv: rows.length,
-    totalUv: Object.keys(allIps).length,
-    todayPv: todayRows.length,
+    range: { key: range.key, from, to },
+    gran,
+    rangePv: rows.length,
+    rangeUv: Object.keys(rangeIps).length,
+    totalPv: rows.length,          // 兼容旧字段：旧的 total* 现在即「所选区间」
+    totalUv: Object.keys(rangeIps).length,
+    allPv: all.length,
+    allUv: Object.keys(allIps).length,
+    todayPv,
     todayUv: Object.keys(todayIps).length,
     daily,
     sessions: latest,
@@ -248,9 +325,9 @@ function stats(items, options) {
     avgPages: sids.length
       ? Math.round((sids.reduce((n, k) => n + Object.keys(sessions[k].pages).length, 0) / sids.length) * 10) / 10
       : 0,
-    retention: pageRetention(items),
+    retention: pageRetention(scoped),
     ipGroups: ipGroups(rows),
   };
 }
 
-module.exports = { load, add, recentlySeen, stats, pageRetention, ipGroups, detail, dayKey };
+module.exports = { load, add, recentlySeen, stats, pageRetention, ipGroups, detail, dayKey, resolveRange, filterByRange };

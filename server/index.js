@@ -1370,8 +1370,9 @@ async function handleApi(req, res, pathname) {
     if (!me) return;
     const vq = url.parse(req.url, true).query;
     const client = ['web', 'mp'].indexOf(String(vq.client || '')) >= 0 ? String(vq.client) : 'all';
+    const range = ['today', 'week', 'month', 'year', 'all'].indexOf(String(vq.range || '')) >= 0 ? String(vq.range) : 'all';
     const items = visitors.load().items;
-    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.stats(items, { client })));
+    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.stats(items, { client, range })));
   }
 
   /* 管理员查看某个 IP / 会话的访问明细 */
@@ -1381,8 +1382,10 @@ async function handleApi(req, res, pathname) {
     const dq = url.parse(req.url, true).query;
     const ip = String(dq.ip || '').slice(0, 80);
     const sid = String(dq.sid || '').slice(0, 40);
+    const range = ['today', 'week', 'month', 'year', 'all'].indexOf(String(dq.range || '')) >= 0 ? String(dq.range) : 'all';
     if (!ip && !sid) return sendJSON(res, 400, { ok: false, error: '缺少 ip 或 sid' });
-    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.detail(visitors.load().items, { ip, sid })));
+    const scoped = visitors.filterByRange(visitors.load().items, range);
+    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.detail(scoped, { ip, sid })));
   }
 
   /* ---------------- 功能建议（更多功能页） ---------------- */

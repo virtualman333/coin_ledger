@@ -57,11 +57,37 @@ Page({
 
   onLoad() {
     this.build();
+    this.startTicker();
   },
 
   onShow() {
     this.build();
     this.loadReminders();
+    this.startTicker();
+  },
+
+  onHide() { this.stopTicker(); },
+
+  onUnload() { this.stopTicker(); },
+
+  /** 预约状态按当前时刻算，页面开着也要跟着走；后台挂起时靠 onShow 重建 */
+  startTicker() {
+    this.stopTicker();
+    this._ticker = setInterval(() => {
+      this.build();
+      if (this.data.detail) {
+        const all = this.data.years.reduce((a, y) => a.concat(y.items), []);
+        const fresh = all.filter((x) => x.key === this.data.detail.key)[0];
+        this.setData({ detail: fresh || null });
+      }
+    }, 60000);
+  },
+
+  stopTicker() {
+    if (this._ticker) {
+      clearInterval(this._ticker);
+      this._ticker = null;
+    }
   },
 
   /** 把 plan.json 转成渲染结构：算倒计时、把待发行排前面 */
