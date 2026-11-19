@@ -21,7 +21,7 @@ const url = require('url');
 const fp = require('fastify-plugin');
 
 const config = require('../config');
-const pageRender = require('../legacy/page-render');
+const pageRender = require('../services/seo');
 const { clientIP } = require('../legacy/api-handler');
 
 const PUBLIC_DIR = config.PUBLIC_DIR;
@@ -85,8 +85,9 @@ module.exports = fp(async function staticPlugin(app) {
     const raw = request.raw;
     const { pathname } = url.parse(raw.url || '/');
 
-    // /api/* 交给 routes/legacy（Fastify 路由层），静态层不插手
+    // /api/* 交给 Fastify 路由层；SPA 真实路径交给 routes/seo.js
     if (pathname.startsWith('/api/')) return;
+    if (pageRender.isRoutePath(pathname)) return;
 
     reply.hijack();
     if (raw.method !== 'GET' && raw.method !== 'HEAD') {

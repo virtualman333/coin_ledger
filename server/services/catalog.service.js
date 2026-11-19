@@ -430,6 +430,48 @@ class CatalogService {
   }
 
   /**
+   * 老形态品种对象（逐字保键序）。
+   *
+   * json 模式直接拿 coins.json 的原对象 —— 存量 137 条有 17 种键顺序，
+   * 任何固定投影顺序都会让 /api/bootstrap 与 /api/admin/coins 的 JSON
+   * 字符串发生变化（快照按 JSON.stringify 取摘要，会判失败）。
+   * db 模式没有原始对象，用投影生成规范键序（此时没有基线可比）。
+   *
+   * @param {object[]} [rows] 已读出的行（db 模式复用，避免二次查询）
+   * @returns {Promise<object[]>} 老形态品种对象
+   */
+  async legacyCoins(rows) {
+    if (typeof this.repos.coins.listLegacyRaw === 'function') {
+      return this.repos.coins.listLegacyRaw();
+    }
+    const list = Array.isArray(rows) ? rows : await this.repos.coins.listPublished();
+    return list.slice().sort((a, b) => Number(a.no) - Number(b.no)).map((r) => projectLegacyCoin(r));
+  }
+
+  /**
+   * bootstrap 用的 series 映射：json 模式取原对象，db 模式由行推导。
+   *
+   * @param {object[]} seriesRows 系列行
+   * @param {object[]} coinRows 品种行
+   * @returns {Promise<object>} key → name
+   */
+  async legacySeriesMap(seriesRows, coinRows) {
+    if (typeof this.repos.series.legacyMapRaw === 'function') return this.repos.series.legacyMapRaw();
+    return projectLegacySeriesMap(seriesRows, coinRows);
+  }
+
+  /**
+   * bootstrap 用的 sets 映射：json 模式取原对象，db 模式由行推导。
+   *
+   * @param {object[]} setRows 套系行
+   * @returns {Promise<object>} code → set
+   */
+  async legacySetsMap(setRows) {
+    if (typeof this.repos.sets.legacyMapRaw === 'function') return this.repos.sets.legacyMapRaw();
+    return projectLegacySets(setRows);
+  }
+
+  /**
    * 组装 /api/bootstrap 的目录部分（用户域字段由调用方拼）。
    *
    * 顺序红线：coins 必须是 `no ASC`（不是 category_rank,year DESC,no）——
@@ -443,10 +485,13 @@ class CatalogService {
     const prices = c.prices && typeof c.prices === 'object' ? c.prices : {};
 
     const rows = await this.repos.coins.listPublished();
-    const sorted = rows.slice().sort((a, b) => Number(a.no) - Number(b.no));
-    const coins = sorted.map((row) => {
-      const override = prices[String(Number(row.no) - 1)];
-      return projectLegacyCoin(row, { withPrice: typeof override === 'number' ? override : null });
+    const legacyCoins = await this.legacyCoins(rows);
+    const coins = legacyCoins.map((c, i) => {
+      const idx = c.i === undefined ? i : Number(c.i);
+      const override = prices[String(idx)];
+      // 与 legacy buildBootstrap 同款：无覆盖时原样返回同一个对象引用，
+      // 有覆盖时 Object.assign 只在原位置改 est，键序不变
+      return typeof override === 'number' ? Object.assign({}, c, { est: override }) : c;
     });
 
     const [seriesRows, setRows, descRows, imageRows, plan, defaults, galleryVer] = await Promise.all([
@@ -464,10 +509,15 @@ class CatalogService {
 
     const imgReal = await this.repos.images.realMainNos();
 
+    const [seriesMap, setsMap] = await Promise.all([
+      this.legacySeriesMap(seriesRows, rows),
+      this.legacySetsMap(setRows)
+    ]);
+
     return {
       coins: coins,
-      series: projectLegacySeriesMap(seriesRows, rows),
-      sets: projectLegacySets(setRows),
+      series: seriesMap,
+      sets: setsMap,
       defaults: defaults.map((d) => {
         const item = {
           name: d.name,
@@ -488,6 +538,17 @@ class CatalogService {
       seriesMeta: seriesWithCount(seriesRows, rows),
       desc: desc
     };
+  }
+
+  /**
+   * 系列列表（含 count）：把模块级函数挂到实例上，供 series.service 调用。
+   *
+   * @param {object[]} seriesRows 系列行
+   * @param {object[]} coinRows 品种行
+   * @returns {object[]} 系列列表
+   */
+  seriesWithCount(seriesRows, coinRows) {
+    return seriesWithCount(seriesRows, coinRows);
   }
 
   /**

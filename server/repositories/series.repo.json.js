@@ -41,6 +41,16 @@ function create() {
       return allRows().filter((r) => r.seriesKey === String(key))[0] || null;
     },
 
+    /**
+     * coins.json 的 series 映射（19 个主系列 key → 名称），保持原键序。
+     *
+     * @returns {object} 原始 series 对象
+     */
+    async legacyMapRaw() {
+      const doc = source.coinsDoc() || {};
+      return doc.series && typeof doc.series === 'object' ? doc.series : {};
+    },
+
     async upsert() {
       throw new common.ReadonlyError();
     },

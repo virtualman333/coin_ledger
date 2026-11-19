@@ -219,3 +219,96 @@ test('guard 恶意 UA：403 文案不变', async () => {
   assert.equal(r.status, 403);
   assert.deepEqual(r.json, { ok: false, error: '请求被拒绝' });
 });
+
+/* ---------------- T03：目录接口层 ---------------- */
+
+test('GET /api/series：20 个系列 + count，与 legacy 同构', async () => {
+  const r = await req('GET', '/api/series');
+  assert.equal(r.status, 200);
+  assert.deepEqual(Object.keys(r.json), ['ok', 'items']);
+  assert.equal(r.json.items.length, 20);
+  assert.deepEqual(Object.keys(r.json.items[0]), ['key', 'name', 'desc', 'img', 'sort', 'imgFrom', 'count']);
+  assert.ok(r.json.items.every((s) => Number.isInteger(s.count)));
+});
+
+test('GET /api/catalog：统一排序 category_rank → year DESC → no ASC', async () => {
+  const all = await req('GET', '/api/catalog?page=1&size=5');
+  assert.equal(all.status, 200);
+  assert.deepEqual(Object.keys(all.json), ['ok', 'total', 'page', 'size', 'items']);
+  assert.equal(all.json.total, 137);
+  assert.equal(all.json.page, 1);
+  assert.equal(all.json.size, 5);
+  // 2026 年的普通币排在最前，且 no 升序
+  assert.deepEqual(all.json.items.map((x) => x.no), [132, 133, 134, 137, 127]);
+  assert.ok(all.json.items.every((x) => x.category === 'commemorative_coin'));
+
+  const notes = await req('GET', '/api/catalog?category=note');
+  assert.equal(notes.json.total, 10);
+  assert.ok(notes.json.items.every((x) => x.category === 'commemorative_note'));
+
+  const pm = await req('GET', '/api/catalog?category=pm');
+  assert.equal(pm.json.total, 0, '当前还没有贵金属，T04 落库后这里应为 3');
+
+  // 公开接口不接受伪造 status=draft
+  const draft = await req('GET', '/api/catalog?status=draft');
+  assert.equal(draft.json.total, 137);
+});
+
+test('GET /api/coin/:no：单品种含描述与多图，未知编号 404', async () => {
+  const one = await req('GET', '/api/coin/1');
+  assert.equal(one.status, 200);
+  assert.equal(one.json.coin.no, 1);
+  assert.ok(one.json.desc && one.json.desc.text, '应有央行公告原文');
+  assert.equal(one.json.images.length, 2);
+
+  const missing = await req('GET', '/api/coin/999');
+  assert.equal(missing.status, 404);
+  assert.deepEqual(missing.json, { ok: false, error: '品种不存在' });
+});
+
+test('T03 写接口鉴权闸门：未登录仍是 401，登录后可访问', async () => {
+  const paths = [
+    ['PATCH', '/api/admin/coin'],
+    ['PATCH', '/api/admin/coins'],
+    ['POST', '/api/admin/series'],
+    ['POST', '/api/admin/series/members'],
+    ['PUT', '/api/admin/plan'],
+    ['POST', '/api/admin/gallery'],
+    ['POST', '/api/admin/image'],
+    ['DELETE', '/api/admin/image?id=1&kind=main']
+  ];
+  const loggedCookie = cookie;
+  cookie = '';   // 前面的登录测试已把 Cookie 挂到全局，这里显式匿名
+  try {
+    for (const [method, url] of paths) {
+      const anonymous = await req(method, url, {});
+    assert.equal(anonymous.status, 401, method + ' ' + url + ' 应拦在登录闸门外');
+      assert.deepEqual(anonymous.json, { ok: false, error: '请先登录', needLogin: true });
+    }
+  } finally {
+    cookie = loggedCookie;
+  }
+
+  // 登录后的错误文案与 legacy 一致（用不存在的 id，不写文件）
+  const badCoin = await req('PATCH', '/api/admin/coin', { id: 99999, patch: { face: 1 } });
+  assert.equal(badCoin.status, 404);
+  assert.deepEqual(badCoin.json, { ok: false, error: '品种不存在' });
+
+  const badKind = await req('POST', '/api/admin/image', { id: 1, kind: 'bad', data: '' });
+  assert.equal(badKind.status, 400);
+  assert.deepEqual(badKind.json, { ok: false, error: '图片类型不合法' });
+});
+
+test('T03 发行计划整份替换：保存后 bootstrap 立即生效', async () => {
+  const current = await req('GET', '/api/admin/plan');
+  assert.equal(current.status, 200);
+  const plan = current.json.plan;
+
+  const saved = await req('PUT', '/api/admin/plan', { plan: JSON.parse(JSON.stringify(plan)) });
+  assert.equal(saved.status, 200);
+  assert.deepEqual(saved.json, { ok: true, years: 2, items: 10 });
+
+  const boot = await req('GET', '/api/bootstrap');
+  assert.equal(boot.json.plan.years.length, plan.years.length);
+  assert.equal(boot.json.plan.years[0].items.length, plan.years[0].items.length);
+});

@@ -1,15 +1,20 @@
 'use strict';
 /**
- * 路由装配总入口。
+ * 路由装配总入口（T03 更新）。
  *
- * 顺序有意义：先注册具体路径，再注册 /* 兜底。
- * find-my-way 的匹配优先级是「静态 > 参数 > 通配」，所以 /api/health 一定命中
- * routes/health.js，其余全部落到 routes/legacy.js（绞杀者兜底）。
+ * 顺序有意义：先具体路径，再 /* 兜底。find-my-way 的匹配优先级是
+ * 「静态 > 参数 > 通配」，所以 /api/health、/api/bootstrap、/api/catalog、
+ * /coin/:no 与四个管理端子域都会命中各自路由，其余全部落到 legacy。
  *
- * T03 起在这里逐个 app.register：bootstrap / catalog / account / auth / reminders /
- * feedback / seo / admin[...]，每迁一个域就把对应分支从 legacy 摘掉。
+ * T03 已迁出：health(1) + bootstrap(1) + series(1) + 2 个新接口
+ * + 页面渲染（SEO）+ 管理端参数/图片/系列/发行计划（约 12 个处理器）。
+ * 其余约 30 个接口继续走 routes/legacy.js 委托老 handler —— 绞杀者模式。
  */
 const healthRoutes = require('./health');
+const bootstrapRoutes = require('./bootstrap');
+const catalogRoutes = require('./catalog');
+const seoRoutes = require('./seo');
+const adminRoutes = require('./admin');
 const legacyRoutes = require('./legacy');
 
 /**
@@ -20,5 +25,9 @@ const legacyRoutes = require('./legacy');
  */
 module.exports = async function registerAll(app) {
   await app.register(healthRoutes);
+  await app.register(bootstrapRoutes);
+  await app.register(catalogRoutes);
+  await app.register(seoRoutes);
+  await app.register(adminRoutes);
   await app.register(legacyRoutes);
 };

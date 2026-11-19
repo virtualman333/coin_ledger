@@ -1414,6 +1414,12 @@ async function handleApi(req, res, pathname) {
 /* ---------------------------------------------------------
    对外暴露（index.js 薄壳 / app.js / 静态层用）
    --------------------------------------------------------- */
+/** T03：图库服务写文件后调用，刷新内存里的 galleryVer（与旧 writeGallery 同一函数）。 */
+function touchGallery() { writeGallery(); }
+
+/** T03：发行计划服务整份替换后调用，让老 reminders 分支立即看到新计划。 */
+function setPlan(next) { PLAN = next; }
+
 module.exports = {
   // 生命周期
   loadSeed: loadSeed,
@@ -1433,6 +1439,9 @@ module.exports = {
   defaultHoldings: defaultHoldings,
 
   // 只读视图（health / 分层实现取数用；不要在这些对象上原地改业务字段）
+  touchGallery: touchGallery,
+  setPlan: setPlan,
+
   state: function () {
     return {
       seed: SEED,

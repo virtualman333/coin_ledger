@@ -58,10 +58,21 @@ async function buildApp(opts = {}) {
   await app.register(require('./plugins/db'));
   await app.register(require('./plugins/errors'));
 
-  // /api/* 永不缓存（legacy 的 sendJSON 已经设过，这里给原生路由兜底）
-  app.addHook('onSend', async function apiNoStore(request, reply, payload) {
+  // T03：目录域数据源 + catalog.service 一次装配，所有新路由共享同一实例。
+  // db 模式用 plugins/db 建好的池；json 模式不建池（回滚位必须能独立启动）。
+  const { createDataSource } = require('./services/data-source');
+  const catalogService = require('./services/catalog.service');
+  const dataSource = createDataSource({ mode: config.DATA_SOURCE, pool: app.db });
+  app.decorate('dataSource', dataSource);
+  app.decorate('catalog', catalogService.create(dataSource));
+
+  // /api/* 永不缓存 + nosniff（legacy sendJSON 两个头都设过，原生路由在这里兜底）
+  app.addHook('onSend', async function apiHeaders(request, reply, payload) {
     const { pathname } = require('url').parse(request.raw.url || '/');
-    if (pathname.startsWith('/api/')) reply.header('Cache-Control', 'no-store');
+    if (pathname.startsWith('/api/')) {
+      reply.header('Cache-Control', 'no-store');
+      reply.header('X-Content-Type-Options', 'nosniff');
+    }
     return payload;
   });
 

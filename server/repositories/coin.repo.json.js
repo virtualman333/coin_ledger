@@ -133,6 +133,19 @@ function create() {
         .sort(common.compareCatalogOrder);
     },
 
+    /**
+     * 老形态原始品种对象（json 模式专用）。
+     * 刻意**不做投影**：coins.json 的 137 条有 17 种键顺序，只有原样交出去
+     * 才能保证 /api/admin/coins 与 /api/bootstrap 的 JSON 逐字不变。
+     * MySQL 模式没有这个方法，service 会走 projectLegacyCoin。
+     *
+     * @returns {object[]} coins.json 的 coins 数组（原对象引用）
+     */
+    async listLegacyRaw() {
+      const doc = source.coinsDoc() || {};
+      return Array.isArray(doc.coins) ? doc.coins : [];
+    },
+
     async insert() {
       throw new common.ReadonlyError();
     },

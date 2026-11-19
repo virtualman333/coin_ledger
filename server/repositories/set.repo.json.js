@@ -40,6 +40,16 @@ function create() {
       return allRows().filter((r) => r.setCode === String(code))[0] || null;
     },
 
+    /**
+     * coins.json 的 sets 映射（21 个套系），保持原键序。
+     *
+     * @returns {object} 原始 sets 对象
+     */
+    async legacyMapRaw() {
+      const doc = source.coinsDoc() || {};
+      return doc.sets && typeof doc.sets === 'object' ? doc.sets : {};
+    },
+
     async upsert() {
       throw new common.ReadonlyError();
     }
