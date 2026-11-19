@@ -14,16 +14,16 @@ Page({
   data: {
     // 管理首页改成功能入口卡片，比一上来横排五个 tab 清楚
     modules: [
-      { group: '内容', items: [
+      { group: '内容', cls: 'g-content', items: [
         { k: 'params', t: '参数', d: '品种基础数据', i: '⚙' },
         { k: 'images', t: '图片', d: '实物图与图集', i: '▣' },
         { k: 'series', t: '系列', d: '归类与卡图', i: '❖' },
       ] },
-      { group: '运营', items: [
+      { group: '运营', cls: 'g-ops', items: [
         { k: 'users', t: '用户', d: '账号与权限', i: '♙' },
         { k: 'feedback', t: '反馈', d: '纠错与建议', i: '✎' },
       ] },
-      { group: '数据', items: [
+      { group: '数据', cls: 'g-data', items: [
         { k: 'visitors', t: '访客', d: '访问与留存', i: '◷' },
       ] },
     ],
@@ -78,13 +78,22 @@ Page({
     }
     this.setData({ coinCount: cat.total });
     this.loadFeedback();      // 首页只取角标数，进模块再加载明细
+    this.loadUserCount();
   },
 
   onPullDownRefresh() {
     const task = this.data.viewMode === 'module'
       ? this.loadTab(this.data.tab)
-      : this.loadFeedback();
+      : Promise.all([this.loadFeedback(), this.loadUserCount()]);
     Promise.resolve(task).then(() => wx.stopPullDownRefresh()).catch(() => wx.stopPullDownRefresh());
+  },
+
+  /** 首页「用户」只取总数，不拉列表 */
+  loadUserCount() {
+    return api.get('/api/admin/users?page=1&size=1').then((res) => {
+      const n = (res.stats && res.stats.total) || (res.users || []).length;
+      this.setData({ userCount: n });
+    }).catch(() => {});
   },
 
   switchTab(e) {
@@ -94,14 +103,28 @@ Page({
     this.loadTab(k);
   },
 
+  /** 概览数字直达模块，省一次「回首页再点」 */
+  statTap(e) {
+    const k = e.currentTarget.dataset.k;
+    if (!k) return;
+    this.openModule({ currentTarget: { dataset: { k } } });
+  },
+
   openModule(e) {
     const k = e.currentTarget.dataset.k;
+    if (!k) return;
+    wx.vibrateShort && wx.vibrateShort({ type: 'light' });
     this.setData({ viewMode: 'module', tab: k, vsDetail: null, vsShowVisitors: k === 'visitors' });
+    wx.pageScrollTo && wx.pageScrollTo({ scrollTop: 0, duration: 180 });
     this.loadTab(k);
   },
 
   backHome() {
     this.setData({ viewMode: 'home', tab: '', vsDetail: null, vsShowVisitors: false });
+    wx.pageScrollTo && wx.pageScrollTo({ scrollTop: 0, duration: 180 });
+    // 处理完反馈 / 用户后回首页，角标和总数立刻是新的
+    this.loadFeedback();
+    this.loadUserCount();
   },
 
   loadTab(k) {
@@ -338,7 +361,8 @@ Page({
       const users = (res.users || []).map((u) => Object.assign({}, u, {
         createdAtText: dayText(u.createdAt),
       }));
-      this.setData({ users, userCount: users.length });
+      const total = (res.stats && res.stats.total) || users.length;
+      this.setData({ users, userCount: total });
     }).catch((e) => wx.showToast({ title: e.message || '加载失败', icon: 'none' }));
   },
 

@@ -1,36 +1,42 @@
 <view class="page">
-  <!-- 概览 -->
+  <!-- 概览：三个数字都能点，直达对应模块 -->
   <view class="stats">
-    <view class="stat">
+    <view class="stat" data-k="users" bindtap="statTap" hover-class="stat-hover" hover-stay-time="80" aria-role="button" aria-label="进入用户管理">
       <text class="s-num">{{userCount}}</text>
       <text class="s-k">用户</text>
     </view>
-    <view class="stat">
+    <view class="stat" data-k="params" bindtap="statTap" hover-class="stat-hover" hover-stay-time="80" aria-role="button" aria-label="进入参数管理">
       <text class="s-num">{{coinCount}}</text>
       <text class="s-k">品种</text>
     </view>
-    <view class="stat">
+    <view class="stat" data-k="feedback" bindtap="statTap" hover-class="stat-hover" hover-stay-time="80" aria-role="button" aria-label="进入反馈处理">
       <text class="s-num {{openCount ? 'warn' : ''}}">{{openCount}}</text>
       <text class="s-k">待处理反馈</text>
     </view>
   </view>
 
-  <!-- 管理首页：功能入口 -->
+  <!-- 管理首页：原生式分组列表 -->
   <block wx:if="{{viewMode === 'home'}}">
     <view class="mgroup" wx:for="{{modules}}" wx:key="group" wx:for-item="grp">
       <view class="mgroup-t">{{grp.group}}</view>
-      <view class="mrow">
+      <view class="mgroup-card {{grp.cls}}">
         <view
-          class="mcard"
+          class="mrow"
           wx:for="{{grp.items}}"
           wx:key="k"
           data-k="{{item.k}}"
           bindtap="openModule"
-          hover-class="tap-hover"
+          hover-class="mrow-hover"
+          hover-stay-time="80"
+          aria-role="button"
+          aria-label="{{item.t}}"
         >
-          <text class="mi">{{item.i}}</text>
+          <view class="mi"><text class="mi-g">{{item.i}}</text></view>
           <view class="mtext">
-            <text class="mt">{{item.t}}</text>
+            <view class="mt-line">
+              <text class="mt">{{item.t}}</text>
+              <text class="mbadge" wx:if="{{item.k === 'feedback' && openCount}}">{{openCount}}</text>
+            </view>
             <text class="md">{{item.d}}</text>
           </view>
           <text class="mgo">›</text>
@@ -41,7 +47,7 @@
 
   <!-- 模块页顶部 -->
   <view class="mod-head" wx:else>
-    <text class="mod-back" bindtap="backHome">‹ 管理首页</text>
+    <text class="mod-back" bindtap="backHome" hover-class="tap-hover" hover-stay-time="80">‹ 返回</text>
     <text class="mod-name">{{tab === 'visitors' ? '访客统计' : (tab === 'users' ? '用户管理' : (tab === 'params' ? '参数管理' : (tab === 'images' ? '图片管理' : (tab === 'series' ? '系列管理' : '反馈处理'))))}}</text>
   </view>
 
