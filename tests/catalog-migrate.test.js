@@ -102,7 +102,7 @@ test('迁移计划：no = i+1、dia 双列、mintage 小数、无 DELETE', () =>
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/--.*$/gm, '')
     .replace(/^\s*\/\/.*$/gm, '');
-  const sqlFiles = ['001_catalog_core.sql', '002_catalog_aux.sql', '003_guards.sql', '004_precious_metal.sql'];
+  const sqlFiles = ['001_catalog_core.sql', '002_catalog_aux.sql', '003_guards.sql', '004_precious_metal.sql', '005_edge_widen.sql'];
   sqlFiles.forEach((f) => {
     const sql = stripComments(fs.readFileSync(path.join(ROOT, 'server', 'migrations', f), 'utf8'));
     assert.equal(/DELETE\s+FROM\s+cl_coins/i.test(sql), false, f + ' 不允许出现 DELETE FROM cl_coins');
@@ -118,9 +118,15 @@ test('迁移计划是幂等的：同一份源数据两次 buildPlan 结果完全
   assert.equal(JSON.stringify(a) === JSON.stringify(b), true, '两次生成的写入计划必须逐字相同');
 });
 
+test('005 前向修复：edge 必须放宽到 128（MySQL 5.7 严格模式下 9 条存量超长）', () => {
+  const sql = fs.readFileSync(path.join(ROOT, 'server', 'migrations', '005_edge_widen.sql'), 'utf8');
+  assert.match(sql, /ALTER TABLE cl_coins[\s\S]*MODIFY COLUMN edge VARCHAR\(128\)/i);
+  assert.match(sql, /no=25\(42\)/);
+});
+
 test('迁移执行器：按 -- @@ 切块，003 的两个触发器各自整段', () => {
   const list = runner.listMigrations();
-  assert.deepEqual(list.map((m) => m.version), ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal']);
+  assert.deepEqual(list.map((m) => m.version), ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_edge_widen']);
 
   const guard = list.filter((m) => m.version === '003_guards')[0];
   assert.equal(guard.blocks.length, 4, '003 应为 4 块：2 个 DROP + 2 个 CREATE TRIGGER（视图已故意省略，见文件末尾说明）');
@@ -225,17 +231,17 @@ test('迁移执行器（桩连接）：首次全跑、二次全跳过、checksum
   };
 
   const first = await runner.apply(fakeConn, {});
-  assert.deepEqual(first.applied, ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal']);
+  assert.deepEqual(first.applied, ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_edge_widen']);
   assert.equal(first.skipped.length, 0);
-  assert.equal(first.blocks, 14, '4 个文件共 14 个语句块');
-  assert.equal(sent.length, 14, '每块必须整段发送一次（不能按分号再切）');
+  assert.equal(first.blocks, 15, '5 个文件共 15 个语句块');
+  assert.equal(sent.length, 15, '每块必须整段发送一次（不能按分号再切）');
   // 触发器整段里既有 BEGIN 又有分号，证明切块没有破坏语句
   assert.ok(sent.some((s) => /BEGIN[\s\S]*END;/.test(s)), '触发器必须整段发送');
 
   sent.length = 0;
   const second = await runner.apply(fakeConn, {});
   assert.deepEqual(second.applied, []);
-  assert.equal(second.skipped.length, 4, '第二次执行必须全部跳过');
+  assert.equal(second.skipped.length, 5, '第二次执行必须全部跳过');
   assert.equal(sent.length, 0, '已应用版本不应再发送任何语句');
 
   // 改文件内容 → checksum 不一致 → 必须报错（禁止悄悄改历史迁移）
