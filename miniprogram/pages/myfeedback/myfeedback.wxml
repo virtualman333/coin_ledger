@@ -1,0 +1,24 @@
+<view class="page">
+  <view class="hd">
+    <text class="h1">我的反馈</text>
+    <text class="h2">你提交的纠错与建议，处理进展会显示在这里</text>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && !items.length}}">还没有提交过反馈</view>
+
+  <view class="fb" wx:for="{{items}}" wx:key="id">
+    <view class="fb-top">
+      <text class="fb-coin">{{item.coinName || '功能建议'}}</text>
+      <text class="badge {{item.done ? 'done' : ''}}">{{item.done ? '已处理' : '待处理'}}</text>
+    </view>
+    <text class="fb-text">{{item.text}}</text>
+    <view class="fb-imgs" wx:if="{{item.imgs.length}}">
+      <image wx:for="{{item.imgs}}" wx:for-item="src" wx:key="*this" src="{{src}}" data-src="{{src}}" data-urls="{{item.imgs}}" bindtap="preview" mode="aspectFill"></image>
+    </view>
+    <view class="fb-reply" wx:if="{{item.reply}}">
+      <text class="r-label">管理员回复</text>
+      <text class="r-text">{{item.reply}}</text>
+    </view>
+    <text class="fb-date">{{item.dateText}}</text>
+  </view>
+</view>

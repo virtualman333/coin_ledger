@@ -53,11 +53,51 @@ Page({
     reminded: {},        // { planKey: '11月17日 09:00' }
     loggedIn: false,
     totalCoins: 0,
+    tab: 'coin',                 // coin=普通纪念币（钞） / pm=贵金属
+    pmYears: [],                 // 来自统一 API 的贵金属计划
+    plansFromApi: null,
   },
 
   onLoad() {
     this.build();
+    this.loadPlans();
     this.startTicker();
+  },
+
+  /** 后端一个 API 服务：Web 与小程序共用 /api/plans */
+  loadPlans() {
+    api.getPlans().then((res) => {
+      if (!res || !res.ok) return;
+      this.setData({ plansFromApi: res });
+      this.build();
+      this.buildPm();
+    }).catch(() => {});   // 接口不可用时沿用本地 catalog 数据
+  },
+
+  /** 贵金属计划按项目（套）展示，不做预约倒计时 */
+  buildPm() {
+    const src = this.data.plansFromApi && this.data.plansFromApi.planPm;
+    if (!src || !Array.isArray(src.years)) return;
+    const pmYears = src.years.slice(0, 20).map((y) => ({
+      year: y.year,
+      total: y.items.length,
+      pieces: y.items.reduce((a, it) => a + (Number(it.pieces) || 0), 0),
+      items: y.items.map((it) => ({
+        key: it.key,
+        name: it.name,
+        code: it.code,
+        pieces: it.pieces,
+        dateText: it.release || '',
+        announce: it.announce || '',
+      })),
+    }));
+    this.setData({ pmYears });
+  },
+
+  switchTab(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (tab === this.data.tab) return;
+    this.setData({ tab });
   },
 
   onShow() {
@@ -92,7 +132,8 @@ Page({
 
   /** 把 plan.json 转成渲染结构：算倒计时、把待发行排前面 */
   build() {
-    const plan = (cat.plan && cat.plan.years) ? cat.plan : { years: [] };
+    const apiPlan = this.data.plansFromApi && this.data.plansFromApi.plan;
+    const plan = (apiPlan && apiPlan.years) ? apiPlan : ((cat.plan && cat.plan.years) ? cat.plan : { years: [] });
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let next = null;

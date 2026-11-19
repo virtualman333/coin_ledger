@@ -242,9 +242,12 @@
       data-src="{{item}}"
       bindtap="previewFbImage"
     ></image>
+    <view class="fb-prev-reply" wx:if="{{fbDetail.reply}}">上次回复：{{fbDetail.reply}}</view>
     <text class="fb-meta">{{fbDetail.userName}} · {{fbDetail.createdAtText}}</text>
+    <textarea class="fb-reply" placeholder="回复用户（用户可在自己的反馈里看到）" maxlength="800" value="{{fbReply}}" bindinput="onFbReplyInput"></textarea>
     <view class="fb-actions">
-      <button class="btn-ghost half" bindtap="toggleFb">{{fbDetail.status === 'open' ? '标记已处理' : '改回待处理'}}</button>
+      <button class="btn-primary half" bindtap="saveFbReply">回复并处理</button>
+      <button class="btn-ghost half" bindtap="toggleFb">{{fbDetail.status === 'open' ? '仅标已处理' : '改回待处理'}}</button>
       <button class="btn-danger half" bindtap="deleteFb">删除</button>
     </view>
   </view>

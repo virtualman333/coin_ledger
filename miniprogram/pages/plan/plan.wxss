@@ -262,3 +262,12 @@
 .cd.cd-now{color:#9a6b1f;font-weight:600}
 .cd.cd-soon{color:#9a6b1f}
 .cd.cd-end{color:#b3aa9b}
+
+/* 发行计划双 tab：普通 / 贵金属 */
+.plan-tabs{display:flex;gap:14rpx;padding:16rpx 0 4rpx}
+.plan-tab{
+  padding:10rpx 28rpx;border-radius:999rpx;
+  border:1rpx solid #e6e0d4;background:#fff;
+  color:#7d766b;font-size:25rpx;line-height:1.4
+}
+.plan-tab.on{background:#fbf1d8;border-color:#d9bd82;color:#9a6b1f;font-weight:600}

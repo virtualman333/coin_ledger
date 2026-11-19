@@ -1,0 +1,62 @@
+{
+ "version": 1,
+ "updated": "2026-11-19",
+ "note": "顶层品类注册表。每个大类是独立的一套：数据表、系列、发行计划、页面入口。新增品类只改这里 + 补对应数据源，不再往旧表里塞。status=active 已开放，planned 预留入口。",
+ "categories": [
+  {
+   "code": "coin",
+   "name": "普通纪念币",
+   "short": "普通币",
+   "status": "active",
+   "source": "cl_coins",
+   "seriesSource": "series",
+   "planSource": "plan",
+   "desc": "双色铜合金等流通纪念币，按卷 20 枚计",
+   "icon": "coin"
+  },
+  {
+   "code": "note",
+   "name": "纪念钞",
+   "short": "纪念钞",
+   "status": "active",
+   "source": "cl_coins",
+   "seriesSource": "series",
+   "planSource": "plan",
+   "desc": "纸钞／塑料钞，按张计",
+   "icon": "note"
+  },
+  {
+   "code": "pm",
+   "name": "贵金属纪念币",
+   "short": "贵金属",
+   "status": "active",
+   "source": "cl_ecgci_pm",
+   "seriesSource": "pmProjects",
+   "planSource": "planPm",
+   "desc": "金、银、铂等贵金属纪念币，逐枚计，不进入藏品成本口径",
+   "icon": "pm"
+  },
+  {
+   "code": "ancient",
+   "name": "古钱币",
+   "short": "古钱币",
+   "status": "planned",
+   "source": "",
+   "seriesSource": "",
+   "planSource": "",
+   "desc": "待收录",
+   "icon": "ancient"
+  },
+  {
+   "code": "foreign",
+   "name": "境外纪念币",
+   "short": "境外币",
+   "status": "planned",
+   "source": "",
+   "seriesSource": "",
+   "planSource": "",
+   "desc": "待收录",
+   "icon": "foreign"
+  }
+ ]
+}

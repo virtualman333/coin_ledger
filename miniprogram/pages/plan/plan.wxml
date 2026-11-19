@@ -12,7 +12,35 @@
     </view>
   </view>
 
-  <block wx:if="{{has}}">
+  <view class="plan-tabs">
+    <view class="plan-tab {{tab === 'coin' ? 'on' : ''}}" data-tab="coin" bindtap="switchTab">普通纪念币（钞）</view>
+    <view class="plan-tab {{tab === 'pm' ? 'on' : ''}}" data-tab="pm" bindtap="switchTab">贵金属纪念币</view>
+  </view>
+
+  <block wx:if="{{tab === 'pm'}}">
+    <view class="year" wx:for="{{pmYears}}" wx:key="year" wx:for-item="y">
+      <view class="year-head">
+        <text class="y-num">{{y.year}} 年</text>
+        <text class="y-meta">{{y.total}} 个项目 · {{y.pieces}} 枚</text>
+      </view>
+      <view class="item" wx:for="{{y.items}}" wx:key="key" wx:for-item="it">
+        <view class="it-main">
+          <text class="it-name">{{it.name}}</text>
+          <view class="it-sub">
+            <text class="it-tag">{{it.code}}</text>
+            <text>{{it.pieces}} 枚</text>
+            <text class="it-note" wx:if="{{it.dateText}}">{{it.dateText}} 发行</text>
+          </view>
+        </view>
+        <text class="badge done">已发行</text>
+      </view>
+    </view>
+    <view class="foot" wx:if="{{pmYears.length}}">
+      <text>贵金属计划来自中国人民银行年度发行公告，由金币云集目录聚合。不进入藏品与成本口径。</text>
+    </view>
+  </block>
+
+  <block wx:if="{{tab === 'coin' && has}}">
     <view class="year" wx:for="{{years}}" wx:key="year" wx:for-item="y">
       <view class="year-head">
         <text class="y-num">{{y.year}} 年</text>
@@ -68,7 +96,7 @@
     </view>
   </block>
 
-  <view class="empty" wx:else>
+  <view class="empty" wx:if="{{tab === 'coin' && !has}}">
     <text>暂无可用的发行计划数据</text>
   </view>
 </view>

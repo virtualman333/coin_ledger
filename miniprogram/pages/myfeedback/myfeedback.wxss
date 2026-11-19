@@ -1,0 +1,17 @@
+.page{padding:24rpx}
+.hd{margin-bottom:20rpx}
+.h1{display:block;font-size:40rpx;font-weight:700;color:#2a2620}
+.h2{display:block;margin-top:8rpx;font-size:23rpx;color:#9a948a;line-height:1.6}
+.empty{padding:90rpx 0;text-align:center;color:#9a948a;font-size:26rpx}
+.fb{padding:22rpx;margin-bottom:16rpx;border-radius:16rpx;background:#fff;border:1rpx solid #ece7dc}
+.fb-top{display:flex;align-items:center;justify-content:space-between;gap:12rpx}
+.fb-coin{font-size:27rpx;font-weight:600;color:#2a2620;flex:1;min-width:0}
+.badge{font-size:21rpx;padding:3rpx 14rpx;border-radius:999rpx;background:#fbf1d8;color:#9a6b1f;white-space:nowrap}
+.badge.done{background:#eef4ec;color:#4f7a4a}
+.fb-text{display:block;margin-top:12rpx;font-size:26rpx;line-height:1.7;color:#5a5a5a}
+.fb-imgs{display:flex;gap:10rpx;margin-top:14rpx}
+.fb-imgs image{width:130rpx;height:130rpx;border-radius:10rpx;background:#f3f0e9}
+.fb-reply{margin-top:16rpx;padding:16rpx 18rpx;border-radius:12rpx;background:#fbf7ea;border-left:5rpx solid #d4af37}
+.r-label{display:block;font-size:21rpx;color:#9a6b1f;font-weight:600;margin-bottom:6rpx}
+.r-text{display:block;font-size:26rpx;color:#5a4a2e;line-height:1.7}
+.fb-date{display:block;margin-top:14rpx;font-size:21rpx;color:#b2aca0}

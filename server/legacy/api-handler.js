@@ -1044,6 +1044,14 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, { ok: true, id: rec.id });
   }
 
+  /* 用户查自己的反馈与管理员回复 */
+  if (pathname === '/api/feedback/mine' && method === 'GET') {
+    const me = requireLogin(req, res, d);
+    if (!me) return;
+    const items = feedback.listByUser(me.id);
+    return sendJSON(res, 200, { ok: true, items, open: items.filter((x) => x.status === 'open').length });
+  }
+
   /* ---------------- 纠错反馈 ---------------- */
   if (pathname === '/api/feedback' && method === 'POST') {
     const me = requireLogin(req, res, d);

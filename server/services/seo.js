@@ -40,11 +40,12 @@ function setData(next) {
    抓取端不跑 JS，标题/描述只能在这一层按路由换掉，否则全站一个标题。
    --------------------------------------------------------- */
 const SITE = 'https://coin.virtualman.top';
-const SPA_TABS = new Set(['home', 'plan', 'overview', 'series', 'holdings', 'cost', 'all', 'sitemap', 'account', 'admin']);
+const SPA_TABS = new Set(['home', 'plan', 'overview', 'series', 'holdings', 'cost', 'all', 'sitemap', 'account', 'myfeedback', 'admin']);
 /* 标题/描述里不要再写死数字：{n}=品种数 {s}=系列数，渲染时按 coins.json 现算。
    之前 /all 的描述一直是「135 个普通纪念币」（数据早已 136），
    因为上一轮的兜底替换只认「N 个品种」这个句式，抓不到「N 个普通纪念币」。 */
 const TAB_SEO = {
+  myfeedback: ['我的反馈 | 藏币录', '查看自己提交的纠错与建议，以及管理员的处理结果与回复。'],
   sitemap: ['站点地图 | 藏币录',
     '藏币录全部页面与 136 个纪念币／纪念钞品种的索引，按系列分类，可直接进入任一品种详情。'],
   plan: ['发行计划 | 藏币录',

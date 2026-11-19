@@ -44,6 +44,8 @@ const SITE = str('SITE', 'https://coin.virtualman.top');
 const DATA_DIR = str('COIN_DATA_DIR', path.join(ROOT, 'data'));
 const SEED_FILE = str('SEED_FILE', path.join(PUBLIC_DIR, 'data', 'coins.json'));
 const PLAN_FILE = str('PLAN_FILE', path.join(PUBLIC_DIR, 'data', 'plan.json'));
+const PLAN_PM_FILE = str('PLAN_PM_FILE', path.join(PUBLIC_DIR, 'data', 'plan-pm.json'));
+const CATEGORIES_FILE = str('CATEGORIES_FILE', path.join(PUBLIC_DIR, 'data', 'categories.json'));
 const GALLERY_FILE = path.join(PUBLIC_DIR, 'data', 'gallery.json');
 const DESCRIPTIONS_FILE = path.join(PUBLIC_DIR, 'data', 'descriptions.json');
 const SERIES_FILE = path.join(PUBLIC_DIR, 'data', 'series.json');
@@ -166,6 +168,8 @@ module.exports = {
   DATA_DIR: DATA_DIR,
   SEED_FILE: SEED_FILE,
   PLAN_FILE: PLAN_FILE,
+  PLAN_PM_FILE: PLAN_PM_FILE,
+  CATEGORIES_FILE: CATEGORIES_FILE,
   GALLERY_FILE: GALLERY_FILE,
   DESCRIPTIONS_FILE: DESCRIPTIONS_FILE,
   SERIES_FILE: SERIES_FILE,

@@ -9,6 +9,7 @@
     "pages/about/about",
     "pages/holdings/holdings",
     "pages/feedback/feedback",
+    "pages/myfeedback/myfeedback",
     "pages/series/series",
     "pages/admin/admin",
     "pages/admin-user/admin-user",

@@ -79,7 +79,34 @@
   </view>
 </view>
 
-<view class="list">
+<!-- 贵金属全量库（金币云集 2823 条）：卡片网格 + 占位图 + 加载更多 -->
+<view class="pm-full" wx:if="{{category === 'pm'}}">
+  <view class="pm-bar">贵金属纪念币 · 共 {{pmTotal || '…'}} 条</view>
+  <view class="pm-grid">
+    <view
+      class="pm-card"
+      wx:for="{{pmRows}}"
+      wx:key="code"
+      hover-class="pm-card-hover"
+      data-code="{{item.code}}"
+      bindtap="goPmDetail"
+    >
+      <view class="pm-ph pm-{{item.metalClass}}"><text>{{item.metalChar}}</text></view>
+      <view class="pm-card-b">
+        <view class="pm-card-t">{{item.name}}</view>
+        <view class="pm-card-m">{{item.metaText}}</view>
+        <view class="pm-card-f">面额 {{item.faceText}} · 成色 {{item.fineness || '—'}}%</view>
+        <view class="pm-card-c">{{item.code}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="pm-loading" wx:if="{{pmLoading}}">加载中…</view>
+  <view class="pm-more" wx:if="{{!pmLoading && pmLoaded && pmPage < pmPages}}" bindtap="loadMorePm">加载更多（{{pmPage}}/{{pmPages}}）</view>
+  <view class="pm-empty" wx:if="{{pmLoaded && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词试试</view>
+  <view class="pm-end" wx:if="{{pmLoaded && pmRows.length > 0 && pmPage >= pmPages}}">已显示全部 {{pmTotal}} 条</view>
+</view>
+
+<view class="list" wx:if="{{category !== 'pm'}}">
   <view
     class="row"
     wx:for="{{rows}}"

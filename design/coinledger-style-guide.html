@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>藏币录 · 小程序视觉风格预览稿</title>
+<!--
+  藏币录 · Phase 3 可视化预览（单文件，无外部依赖，可 file:// 直接打开）
+  色值/令牌来源：design/coinledger-visual-direction.md v1.1
+  布局/标注来源：design/coinledger-ux-spec.md v1.0
+  注意：本页是「设计系统展示页」，不是小程序本身；所有数据均为虚构占位示意。
+-->
+<style>
+/* ============================================================
+   0. 主题无关令牌：品牌金 10 级、中性阶、字体、字号、间距、圆角
+   （rpx → px 换算基准：750rpx 设计稿 ≈ 375pt，1rpx ≈ 0.5px）
+   ============================================================ */
+:root{
+  /* 品牌金阶梯（固定色阶，不随主题换值；界面一律走语义别名） */
+  --cl-brand-50:#FDF7EA;  --cl-brand-100:#F6F1E4; --cl-brand-200:#F3E3C0;
+  --cl-brand-300:#E8C877; --cl-brand-400:#D9B364; --cl-brand-500:#B8934A;
+  --cl-brand-600:#9A6B1F; --cl-brand-700:#7A541A; --cl-brand-800:#6B4A18; --cl-brand-900:#4A3410;
+  /* 中性阶梯（固定色阶） */
+  --cl-neutral-0:#FFFFFF; --cl-neutral-50:#FAF8F3; --cl-neutral-100:#F6F4EF;
+  --cl-neutral-150:#F3EFE6; --cl-neutral-200:#F1ECE0; --cl-neutral-300:#E8E2D5;
+  --cl-neutral-400:#D8CDB8; --cl-neutral-500:#A39C8E; --cl-neutral-600:#8A8378;
+  --cl-neutral-650:#6B6559; --cl-neutral-800:#3A352C; --cl-neutral-900:#2B2926; --cl-neutral-950:#1D1D1F;
+  /* 字体栈 */
+  --cl-font-sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",system-ui,sans-serif;
+  --cl-font-serif:"Songti SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+  /* 字号阶梯（px = rpx ÷ 2） */
+  --cl-fs-2xs:10px; --cl-fs-xs:11px; --cl-fs-sm:12px; --cl-fs-base:14px; --cl-fs-md:15px;
+  --cl-fs-lg:16px;  --cl-fs-xl:18px;  --cl-fs-2xl:22px; --cl-fs-3xl:27px;
+  /* 间距标尺 */
+  --cl-space-1:4px; --cl-space-2:8px; --cl-space-3:12px; --cl-space-4:16px;
+  --cl-space-5:20px; --cl-space-6:24px; --cl-space-8:32px; --cl-space-10:40px;
+  /* 圆角 */
+  --cl-radius-xs:4px; --cl-radius-sm:6px; --cl-radius-md:7px; --cl-radius-lg:10px;
+  --cl-radius-xl:12px; --cl-radius-2xl:14px; --cl-radius-pill:999px;
+  /* 固定场景色（深色徽章等，两主题一致） */
+  --cl-ai-badge-bg:#2B2926; --cl-ai-badge-text:#F6E7C6;
+  --cl-year-badge-bg:rgba(36,28,20,.66); --cl-year-badge-text:#F0D79A;
+}
+
+/* ============================================================
+   1. 浅色主题（小程序默认：暖白纸感）
+   ============================================================ */
+body[data-theme="light"]{
+  color-scheme:light;
+  --cl-bg:#F6F4EF; --cl-surface:#FFFFFF; --cl-surface-2:#FAF8F3; --cl-sunken:#F1ECE0;
+  --cl-text:#2B2926; --cl-text-muted:#8A8378; --cl-text-dim:#A39C8E; --cl-text-strong:#1D1D1F;
+  --cl-text-assist:#6B6559;               /* 需阅读的辅助字 ≥4.5:1 */
+  --cl-brand:#9A6B1F; --cl-brand-strong:#7A541A; --cl-brand-soft:#F6F1E4;
+  --cl-line:#EFECE4; --cl-line-2:#E8E2D5; --cl-border-base:#E2D8C4;
+  --cl-progress-track:#F1ECE0; --cl-progress-fill:linear-gradient(90deg,#B8934A,#E8C877);
+  --cl-price-badge-bg:#FDF7EA; --cl-ghost-bg:#F4EFE4; --cl-ghost-hover:#F6F1E4; --cl-ghost-text:#7A541A;
+  --cl-on-brand:#FFFFFF; --cl-disabled:#D8CDB8; --cl-on-disabled:#FFFFFF;
+  --cl-success:#2F7A4F; --cl-warning:#A8781A; --cl-danger:#B23A2E; --cl-info:#4A6B8A;
+  --cl-up:#C0392B; --cl-down:#1E8E5A; --cl-price-main:#9A6B1F;
+  --cl-overlay:rgba(24,20,14,.45);
+  --cl-shadow-1:0 2px 6px rgba(60,48,26,.06);
+  --cl-shadow-2:0 2px 7px rgba(60,48,26,.05);
+  --cl-shadow-3:0 7px 18px rgba(60,48,26,.10);
+  --cl-shadow-4:0 8px 20px rgba(0,0,0,.28);
+  --cl-shadow-focus:0 0 0 2px rgba(154,107,31,.18);
+  --cl-hero-bg:linear-gradient(135deg,#221A12 0%,#3C2E1C 58%,#5D4726 100%);
+  --cl-hero-title:linear-gradient(90deg,#F3E3C0,#E8C877);
+  --cl-hero-sub:rgba(243,227,192,.62); --cl-hero-stroke:rgba(243,227,192,.30);
+  --cl-tabbar-bg:#FFFFFF; --cl-tabbar-text:#8A8378; --cl-tabbar-active:#9A6B1F;
+  --cl-phone-frame:#2B2926; --cl-stage:#F6F4EF;
+}
+
+/* ============================================================
+   2. 深色主题（网站端默认：暖黑烫金；同一张映射表的深色列）
+   ============================================================ */
+body[data-theme="dark"]{
+  color-scheme:dark;
+  --cl-bg:#0A0C10; --cl-surface:#141A22; --cl-surface-2:#1A212B; --cl-sunken:#0E1319;
+  --cl-text:#E9EDF3; --cl-text-muted:#8B94A3; --cl-text-dim:#616B7A; --cl-text-strong:#FFF8E2;
+  --cl-text-assist:#A9B3C2;
+  --cl-brand:#E8C877; --cl-brand-strong:#B8934A; --cl-brand-soft:rgba(212,175,55,.07);
+  --cl-line:rgba(212,175,55,.16); --cl-line-2:rgba(255,255,255,.07); --cl-border-base:rgba(255,255,255,.18);
+  --cl-progress-track:#0E1319; --cl-progress-fill:linear-gradient(90deg,#B8934A,#F3E3C0);
+  --cl-price-badge-bg:rgba(212,175,55,.07); --cl-ghost-bg:rgba(212,175,55,.07);
+  --cl-ghost-hover:rgba(212,175,55,.14); --cl-ghost-text:#E8C877;
+  --cl-on-brand:#141A22; --cl-disabled:rgba(255,255,255,.14); --cl-on-disabled:#8B94A3;
+  --cl-success:#3DDC97; --cl-warning:#D9A441; --cl-danger:#E88080; --cl-info:#7FA8D0;
+  --cl-up:#FF6B5A; --cl-down:#3DDC97; --cl-price-main:#E8C877;
+  --cl-overlay:rgba(4,6,9,.72);
+  --cl-shadow-1:0 4px 12px rgba(0,0,0,.45);
+  --cl-shadow-2:0 4px 12px rgba(0,0,0,.45);
+  --cl-shadow-3:0 8px 24px rgba(0,0,0,.45);
+  --cl-shadow-4:0 12px 30px rgba(0,0,0,.55);
+  --cl-shadow-focus:0 0 0 2px rgba(232,200,119,.28);
+  --cl-hero-bg:linear-gradient(135deg,#101318 0%,#1A1510 58%,#2A2115 100%);
+  --cl-hero-title:linear-gradient(90deg,#FFF8E2,#E8C877,#B8934A);
+  --cl-hero-sub:rgba(243,227,192,.55); --cl-hero-stroke:rgba(232,200,119,.30);
+  --cl-tabbar-bg:#141A22; --cl-tabbar-text:#616B7A; --cl-tabbar-active:#E8C877;
+  --cl-phone-frame:#05070A; --cl-stage:#0A0C10;
+}
+
+/* ============================================================
+   3. 基础排版
+   ============================================================ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--cl-stage); color:var(--cl-text);
+  font-family:var(--cl-font-sans); font-size:var(--cl-fs-base); line-height:1.6;
+  -webkit-font-smoothing:antialiased; transition:background .22s,color .22s;
+}
+/* 所有数字等宽对齐（品牌纪律） */
+.num,.price,.hex,.token,.clock,.badge-count{font-variant-numeric:tabular-nums lining-nums}
+.wrap{max-width:1500px;margin:0 auto;padding:0 28px}
+a{color:inherit}
+svg{display:block}
+
+/* 顶部标题区 */
+.masthead{border-bottom:1px solid var(--cl-line-2);background:var(--cl-surface)}
+.masthead-inner{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:28px 0 26px}
+.masthead-left{display:flex;align-items:center;gap:18px;flex:1 1 420px;min-width:280px}
+.brandmark{width:56px;height:56px;color:var(--cl-brand);flex:none}
+.brandmark svg{width:100%;height:100%}
+.masthead h1{
+  margin:0;font-family:var(--cl-font-serif);font-size:30px;font-weight:600;line-height:1.25;
+  letter-spacing:.04em;color:var(--cl-text-strong)
+}
+.masthead .sub{margin:6px 0 0;color:var(--cl-text-assist);font-size:var(--cl-fs-sm)}
+.masthead-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.theme-hint{font-size:var(--cl-fs-xs);color:var(--cl-text-dim)}
+.theme-toggle{
+  min-height:44px;padding:0 18px;border-radius:var(--cl-radius-md);
+  border:1px solid var(--cl-border-base);background:var(--cl-surface-2);color:var(--cl-text);
+  font-family:inherit;font-size:var(--cl-fs-sm);cursor:pointer;transition:background .18s,border-color .18s
+}
+.theme-toggle:hover{background:var(--cl-ghost-hover);border-color:var(--cl-brand)}
+.theme-toggle:focus-visible{outline:none;box-shadow:var(--cl-shadow-focus)}
+
+/* 通用区块 */
+section{padding:44px 0 8px}
+.sec-head{margin-bottom:20px}
+.kicker{
+  font-size:var(--cl-fs-2xs);letter-spacing:.22em;text-transform:uppercase;
+  color:var(--cl-brand-strong);font-weight:600
+}
+.sec-head h2{
+  margin:6px 0 6px;font-family:var(--cl-font-serif);font-size:24px;font-weight:600;
+  color:var(--cl-text-strong);letter-spacing:.03em
+}
+.sec-head p{margin:0;color:var(--cl-text-assist);font-size:var(--cl-fs-sm);max-width:900px}
+.panel{
+  background:var(--cl-surface);border:1px solid var(--cl-line-2);
+  border-radius:var(--cl-radius-lg);padding:20px;box-shadow:var(--cl-shadow-1);margin-bottom:16px
+}
+.panel-title{
+  margin:0 0 14px;font-size:var(--cl-fs-sm);font-weight:600;color:var(--cl-text);
+  display:flex;align-items:center;gap:8px
+}
+.panel-title::before{content:"";width:3px;height:14px;background:var(--cl-brand);border-radius:2px}
+.note{font-size:var(--cl-fs-xs);color:var(--cl-text-dim);margin:10px 0 0;line-height:1.7}
+
+/* ============================================================
+   4. Token 展示区
+   ============================================================ */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.swatches.brand{grid-template-columns:repeat(auto-fill,minmax(116px,1fr))}
+.swatch{min-width:0;border:1px solid var(--cl-line-2);border-radius:var(--cl-radius-sm);overflow:hidden;background:var(--cl-surface)}
+.swatch .chip{height:58px;border-bottom:1px solid rgba(128,128,128,.10)}
+.swatch .meta{padding:7px 9px 8px}
+.swatch .tk{display:block;font-size:10px;color:var(--cl-text-assist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swatch .hx{display:block;font-size:11px;font-weight:600;color:var(--cl-text-strong);margin-top:2px}
+.swatch .ds{display:block;font-size:10px;color:var(--cl-text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+
+/* 字号阶梯 */
+.type-list{display:grid;gap:0}
+.type-row{
+  display:grid;grid-template-columns:120px 92px 1fr;align-items:baseline;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--cl-line-2)
+}
+.type-row:last-child{border-bottom:0}
+.type-row .tk{font-size:var(--cl-fs-xs);color:var(--cl-brand-strong);font-weight:600}
+.type-row .sz{font-size:var(--cl-fs-xs);color:var(--cl-text-dim)}
+.type-row .sample{color:var(--cl-text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+
+/* 间距 / 圆角 / 阴影 */
+.space-list{display:grid;gap:10px}
+.space-row{display:grid;grid-template-columns:120px 1fr 56px;align-items:center;gap:12px}
+.space-row .tk{font-size:var(--cl-fs-xs);color:var(--cl-text-assist)}
+.space-row .bar{height:14px;border-radius:3px;background:var(--cl-brand);opacity:.82}
+.space-row .val{font-size:var(--cl-fs-xs);color:var(--cl-text-dim)}
+.radius-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.radius-item{text-align:center}
+.radius-box{height:56px;background:var(--cl-surface-2);border:1px solid var(--cl-line-2)}
+.radius-item span{display:block;font-size:var(--cl-fs-xs);color:var(--cl-text-assist);margin-top:6px}
+.shadow-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px}
+.shadow-box{
+  height:74px;border-radius:var(--cl-radius-lg);background:var(--cl-surface);
+  display:flex;align-items:center;justify-content:center;font-size:var(--cl-fs-xs);color:var(--cl-text-assist)
+}
+.sh1{box-shadow:var(--cl-shadow-1)}.sh2{box-shadow:var(--cl-shadow-2)}
+.sh3{box-shadow:var(--cl-shadow-3)}.sh4{box-shadow:var(--cl-shadow-4)}
+
+/* 方孔圆钱母题三态 */
+.coin-trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.coin-cell{
+  border:1px solid var(--cl-line-2);border-radius:var(--cl-radius-lg);background:var(--cl-surface-2);
+  padding:18px;text-align:center;min-height:188px;position:relative;overflow:hidden
+}
+.coin-cell .stage{height:112px;display:flex;align-items:center;justify-content:center;color:var(--cl-brand)}
+.coin-cell .stage svg{width:100px;height:100px}
+.coin-cell strong{display:block;font-size:var(--cl-fs-sm);color:var(--cl-text-strong);margin-top:6px}
+.coin-cell small{display:block;font-size:var(--cl-fs-xs);color:var(--cl-text-dim);margin-top:3px}
+.coin-watermark{color:var(--cl-brand);opacity:.16}
+.coin-watermark svg{width:124px;height:124px}
+
+/* ============================================================
+   5. 手机预览外框
+   ============================================================ */
+.phone-scroll{overflow-x:auto;padding:4px 2px 16px}
+.phone-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(375px,1fr));gap:22px;align-items:start}
+.phone-card{min-width:375px}
+.phone-cap{margin:0 0 10px;display:flex;align-items:baseline;gap:10px}
+.phone-cap b{font-size:var(--cl-fs-base);color:var(--cl-text-strong);font-weight:600}
+.phone-cap span{font-size:var(--cl-fs-xs);color:var(--cl-text-dim)}
+.phone{
+  width:375px;height:720px;padding:7px;border-radius:46px;background:var(--cl-phone-frame);
+  box-shadow:var(--cl-shadow-4);margin:0 auto
+}
+.screen{
+  height:100%;border-radius:39px;overflow:hidden;display:flex;flex-direction:column;
+  background:var(--cl-bg);color:var(--cl-text);position:relative
+}
+.statusbar{height:42px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:relative;z-index:3;background:var(--cl-surface)}
+.statusbar .clock{font-size:12px;font-weight:600;color:var(--cl-text-strong)}
+.island{
+  position:absolute;left:50%;top:9px;transform:translateX(-50%);width:96px;height:24px;
+  border-radius:14px;background:var(--cl-phone-frame)
+}
+.indicators{display:flex;align-items:center;gap:5px;color:var(--cl-text-strong)}
+.indicators svg{width:17px;height:12px}
+.screen-body{flex:1;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain}
+.screen-body::-webkit-scrollbar{display:none}
+.screen-body.pad{padding:12px 12px 18px}
+.navbar{
+  height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 14px;
+  background:var(--cl-surface);border-bottom:1px solid var(--cl-line-2)
+}
+.navbar .back{font-size:20px;line-height:1;color:var(--cl-text);width:24px}
+.navbar .ttl{font-size:var(--cl-fs-base);font-weight:600;color:var(--cl-text-strong)}
+.tabbar{
+  height:56px;flex:none;display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--cl-tabbar-bg);border-top:1px solid var(--cl-line-2);padding-bottom:2px
+}
+.tabitem{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--cl-tabbar-text)}
+.tabitem svg{width:21px;height:21px}
+.tabitem span{font-size:10px}
+.tabitem.on{color:var(--cl-tabbar-active)}
+
+/* 手机内通用小组件 */
+.card{background:var(--cl-surface);border-radius:var(--cl-radius-lg);box-shadow:var(--cl-shadow-2);padding:12px}
+.sec-row{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 9px}
+.sec-row h4{margin:0;font-size:var(--cl-fs-base);font-weight:600;color:var(--cl-text-strong)}
+.sec-row .more{font-size:var(--cl-fs-xs);color:var(--cl-brand-strong)}
+.thumb{
+  border-radius:var(--cl-radius-sm);background:var(--cl-surface-2);color:var(--cl-brand);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden
+}
+.thumb svg{width:60%;height:60%;opacity:.22}
+.thumb .ph{font-size:9px;color:var(--cl-text-dim);position:absolute;bottom:5px}
+.year-badge{
+  display:inline-block;padding:1px 7px;border-radius:var(--cl-radius-pill);
+  background:var(--cl-year-badge-bg);color:var(--cl-year-badge-text);font-size:9px
+}
+.tag{
+  display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:var(--cl-radius-pill);
+  background:var(--cl-ghost-bg);color:var(--cl-ghost-text);font-size:10px;line-height:1.5
+}
+.tag.neutral{background:var(--cl-brand-soft);color:var(--cl-text-assist)}
+.tag.on{background:var(--cl-brand);color:var(--cl-on-brand)}
+.tag.off{opacity:.6}
+.tag.warn{background:transparent;color:var(--cl-warning);padding-left:0;padding-right:0}
+.progress{height:5px;border-radius:var(--cl-radius-pill);background:var(--cl-progress-track);overflow:hidden;position:relative}
+.progress i{display:block;height:100%;border-radius:var(--cl-radius-pill);background:var(--cl-progress-fill)}
+.progress.full i::after{
+  content:"";position:absolute;right:2px;top:50%;transform:translateY(-50%);width:6px;height:6px;
+  background:var(--cl-brand);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)
+}
+.muted{color:var(--cl-text-dim)}
+.assist{color:var(--cl-text-assist)}
+.gold{color:var(--cl-price-main)}
+
+/* 首页 Hero */
+.hero{
+  position:relative;overflow:hidden;border-radius:var(--cl-radius-2xl);
+  background:var(--cl-hero-bg);padding:18px 18px 40px;color:var(--cl-hero-sub);min-height:176px
+}
+.hero .wm{position:absolute;right:-18px;bottom:-30px;color:var(--cl-brand);opacity:.18}
+.hero .wm svg{width:170px;height:170px}
+.hero .line{position:absolute;left:18px;bottom:14px;width:112px;height:2px;background:linear-gradient(90deg,rgba(232,200,119,.5),transparent)}
+.hero h3{
+  margin:0;font-family:var(--cl-font-serif);font-size:var(--cl-fs-3xl);font-weight:600;letter-spacing:.12em;
+  line-height:1.2;background:var(--cl-hero-title);-webkit-background-clip:text;background-clip:text;color:transparent
+}
+.hero p{margin:7px 0 12px;font-size:11px;position:relative;z-index:1}
+.hero .share{
+  display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:var(--cl-radius-pill);
+  border:1px solid var(--cl-hero-stroke);color:var(--cl-brand-300);font-size:10px;position:relative;z-index:1
+}
+.hero .hero-img{
+  position:absolute;right:20px;top:22px;width:58px;height:58px;border-radius:var(--cl-radius-lg);
+  border:1px solid var(--cl-brand-400);transform:rotate(-6deg);background:var(--cl-surface-2);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--cl-shadow-4);color:var(--cl-brand)
+}
+.hero .hero-img svg{width:44px;height:44px;opacity:.5}
+
+/* 账本浮层 */
+.ledger{
+  position:relative;margin:-24px 5px 0;background:var(--cl-surface);border-radius:var(--cl-radius-xl);
+  box-shadow:var(--cl-shadow-3);padding:13px 13px 11px;z-index:2
+}
+.ledger-head{display:flex;align-items:center;justify-content:space-between}
+.ledger-head b{font-size:var(--cl-fs-sm);color:var(--cl-text-strong)}
+.ledger-head span{font-size:10px;color:var(--cl-text-dim)}
+.ledger .pg{margin:9px 0 10px}
+.four{display:grid;grid-template-columns:repeat(4,1fr)}
+.four > div{padding:0 5px;border-right:1px solid var(--cl-line-2);min-width:0}
+.four > div:first-child{padding-left:0}
+.four > div:last-child{border-right:0}
+.four .k{display:block;font-size:9px;color:var(--cl-text-assist);white-space:nowrap}
+.four .v{display:block;font-size:12px;font-weight:600;color:var(--cl-text-strong);margin-top:2px;white-space:nowrap}
+.four .v small{font-size:9px;font-weight:400}
+.four .v.up{color:var(--cl-up)}
+.four .v.down{color:var(--cl-down)}
+
+/* 最新发行横滑 */
+.hscroll{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:3px}
+.hscroll::-webkit-scrollbar{display:none}
+.release{flex:0 0 118px;background:var(--cl-surface);border-radius:var(--cl-radius-lg);box-shadow:var(--cl-shadow-2);padding:7px}
+.release .pic{height:78px;border-radius:var(--cl-radius-sm);background:var(--cl-surface-2);display:flex;align-items:center;justify-content:center;color:var(--cl-brand)}
+.release .pic svg{width:44px;height:44px;opacity:.24}
+.release .nm{font-size:10px;color:var(--cl-text-strong);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.release .pr{font-size:10px;color:var(--cl-price-main);margin-top:2px}
+.release .pr em{font-style:normal;font-size:9px;color:var(--cl-text-dim)}
+
+.series-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.series-card{background:var(--cl-surface);border-radius:var(--cl-radius-lg);box-shadow:var(--cl-shadow-2);padding:10px}
+.series-card .t{font-size:11px;color:var(--cl-text-strong);font-weight:600}
+.series-card .m{font-size:9px;color:var(--cl-text-assist);margin:3px 0 7px}
+.footmini{font-size:9px;color:var(--cl-text-dim);text-align:center;line-height:1.7;margin:16px 4px 0}
+
+/* 清单页 */
+.searchline{display:flex;gap:8px;align-items:center}
+.fake-search{
+  flex:1;height:36px;border-radius:var(--cl-radius-pill);background:var(--cl-surface);
+  border:1px solid var(--cl-line-2);display:flex;align-items:center;gap:6px;padding:0 12px;
+  color:var(--cl-text-dim);font-size:11px
+}
+.fake-search svg{width:14px;height:14px;flex:none}
+.filter-btn{
+  height:36px;padding:0 12px;border-radius:var(--cl-radius-md);background:var(--cl-surface);
+  border:1px solid var(--cl-border-base);color:var(--cl-text);font-size:11px;position:relative;display:flex;align-items:center;gap:6px
+}
+.badge-count{
+  background:var(--cl-brand);color:var(--cl-on-brand);border-radius:var(--cl-radius-pill);
+  min-width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;padding:0 3px
+}
+.caps{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin-top:11px;padding-bottom:2px}
+.caps::-webkit-scrollbar{display:none}
+.cap{flex:none;height:27px;padding:0 11px;border-radius:var(--cl-radius-pill);background:var(--cl-surface);border:1px solid var(--cl-line-2);color:var(--cl-text-assist);font-size:10px;display:inline-flex;align-items:center}
+.cap.on{background:var(--cl-brand);border-color:var(--cl-brand);color:var(--cl-on-brand)}
+.countbar{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 7px;font-size:10px;color:var(--cl-text-assist)}
+.listrow{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--cl-line-2)}
+.listrow:last-child{border-bottom:0}
+.listrow .thumb{width:55px;height:55px;flex:none}
+.listrow .info{flex:1;min-width:0}
+.listrow .nm{font-size:12px;color:var(--cl-text-strong);font-weight:500;display:flex;align-items:center;gap:6px}
+.listrow .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listrow .meta{font-size:10px;color:var(--cl-text-assist);margin-top:3px}
+.listrow .src{font-size:9px;color:var(--cl-text-dim);margin-top:2px}
+.listrow .right{text-align:right;flex:none}
+.listrow .right .yr{font-size:10px;color:var(--cl-text-assist)}
+.listrow .right .pv{font-size:12px;color:var(--cl-price-main);font-weight:600;margin-top:4px}
+.listrow .right .pf{font-size:9px;color:var(--cl-text-dim);margin-top:1px}
+
+/* 计划页 */
+.plan-head{background:var(--cl-surface);border-radius:var(--cl-radius-lg);padding:12px;box-shadow:var(--cl-shadow-2)}
+.plan-head h3{margin:0;font-size:var(--cl-fs-lg);color:var(--cl-text-strong);font-weight:600;font-family:var(--cl-font-serif)}
+.plan-head .src{font-size:10px;color:var(--cl-text-assist);margin-top:4px}
+.plan-head .note{font-size:10px;color:var(--cl-text-dim);background:var(--cl-surface-2);border-radius:var(--cl-radius-sm);padding:7px 8px;margin-top:9px;line-height:1.6}
+.next-bar{
+  margin-top:10px;border-radius:var(--cl-radius-lg);padding:10px 11px;background:var(--cl-hero-bg);
+  color:var(--cl-hero-sub);display:flex;align-items:center;gap:8px
+}
+.next-bar .lb{font-size:9px;padding:2px 7px;border-radius:var(--cl-radius-pill);border:1px solid var(--cl-hero-stroke);color:var(--cl-brand-300)}
+.next-bar .nn{flex:1;min-width:0}
+.next-bar .nn b{display:block;font-size:11px;color:var(--cl-brand-200);font-weight:600}
+.next-bar .nn small{font-size:9px}
+.next-bar .cd{text-align:right;font-size:9px;color:var(--cl-brand-200)}
+.next-bar .cd b{display:block;font-size:14px;color:var(--cl-brand-300)}
+.year-head{display:flex;align-items:center;gap:6px;margin:16px 2px 8px;font-size:10px;color:var(--cl-text-assist)}
+.year-head b{font-size:12px;color:var(--cl-text-strong)}
+.plan-row{background:var(--cl-surface);border-radius:var(--cl-radius-lg);box-shadow:var(--cl-shadow-2);padding:10px 11px;margin-bottom:8px}
+.plan-row .top{display:flex;align-items:flex-start;gap:8px}
+.plan-row .nm{flex:1;min-width:0;font-size:12px;color:var(--cl-text-strong);font-weight:500}
+.plan-row .meta{font-size:9px;color:var(--cl-text-assist);margin-top:3px;line-height:1.5}
+.badge{font-size:9px;padding:2px 8px;border-radius:var(--cl-radius-pill);white-space:nowrap;flex:none}
+.badge.gold{background:var(--cl-ghost-bg);color:var(--cl-ghost-text)}
+.badge.light{background:var(--cl-brand-soft);color:var(--cl-text-assist)}
+.badge.gray{background:var(--cl-sunken);color:var(--cl-text-dim)}
+.plan-row .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding-top:8px;border-top:1px solid var(--cl-line-2)}
+.plan-row .when{font-size:9px;color:var(--cl-text-dim);line-height:1.5}
+.remind{
+  flex:none;height:27px;padding:0 10px;border-radius:var(--cl-radius-md);border:1px solid var(--cl-border-base);
+  background:var(--cl-surface);color:var(--cl-brand-strong);font-size:10px;display:inline-flex;align-items:center
+}
+.remind.done{background:var(--cl-brand-soft);color:var(--cl-ghost-text);border-color:transparent}
+
+/* 详情页 */
+.detail-pic{
+  height:200px;background:var(--cl-surface-2);display:flex;align-items:center;justify-content:center;
+  color:var(--cl-brand);position:relative
+}
+.detail-pic svg{width:112px;height:112px;opacity:.22}
+.detail-pic .txt{position:absolute;font-size:10px;color:var(--cl-text-dim);bottom:36px}
+.detail-pic .hint{
+  position:absolute;right:10px;bottom:9px;background:var(--cl-year-badge-bg);color:var(--cl-year-badge-text);
+  font-size:9px;padding:3px 8px;border-radius:var(--cl-radius-pill)
+}
+.thumbs{display:flex;gap:8px;padding:9px 12px 0}
+.thumbs .thumb{width:46px;height:46px;border:1px solid var(--cl-line-2)}
+.thumbs .thumb.on{border-color:var(--cl-brand);box-shadow:var(--cl-shadow-focus)}
+.detail-body{padding:12px}
+.title-line{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.title-line h3{margin:0;font-size:var(--cl-fs-xl);font-weight:600;color:var(--cl-text-strong);font-family:var(--cl-font-serif)}
+.title-line .meta{font-size:10px;color:var(--cl-text-assist);margin-top:3px}
+.price-badge{
+  flex:none;min-width:142px;background:var(--cl-price-badge-bg);border-radius:var(--cl-radius-md);padding:8px 10px
+}
+.price-badge .amt{font-size:var(--cl-fs-2xl);font-weight:600;color:var(--cl-price-main);line-height:1.15;white-space:nowrap}
+.price-badge .amt small{font-size:10px;font-weight:400;color:var(--cl-brand-400)}
+.price-badge .tip{font-size:9px;color:var(--cl-text-dim);margin-top:3px;line-height:1.45}
+.price-badge .chg{font-size:9px;color:var(--cl-up);margin-top:2px}
+.price-badge .chg.down{color:var(--cl-down)}
+.setline{font-size:10px;color:var(--cl-text-assist);margin-top:10px;display:flex;align-items:center;gap:8px}
+.setline .progress{flex:1}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:13px;border-top:1px solid var(--cl-line-2)}
+.fact{padding:8px 0;border-bottom:1px solid var(--cl-line-2)}
+.fact:nth-child(odd){padding-right:8px}
+.fact:nth-child(even){padding-left:10px;border-left:1px solid var(--cl-line-2)}
+.fact .k{font-size:9px;color:var(--cl-text-dim)}
+.fact .v{font-size:11px;color:var(--cl-text-strong);margin-top:2px}
+.ai-card{background:var(--cl-surface-2);border-radius:var(--cl-radius-lg);padding:10px 11px;margin-top:12px}
+.ai-card .hd{display:flex;align-items:center;gap:7px}
+.ai-badge{background:var(--cl-ai-badge-bg);color:var(--cl-ai-badge-text);border-radius:var(--cl-radius-xs);font-size:9px;padding:2px 6px}
+.ai-card .pv{font-size:15px;color:var(--cl-price-main);font-weight:600}
+.ai-card p{margin:6px 0 0;font-size:9px;color:var(--cl-text-assist);line-height:1.6}
+.ai-card .disclaimer{color:var(--cl-text-dim)}
+.actions{margin-top:14px;display:grid;gap:8px}
+.actions .mini{display:flex;gap:8px}
+.actions .mini .btn{flex:1}
+.danger-link{
+  align-self:center;background:none;border:0;color:var(--cl-danger);font-size:10px;
+  font-family:inherit;cursor:pointer;padding:6px 10px
+}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:11px}
+.chips::-webkit-scrollbar{display:none}
+
+/* 我的页 */
+.mine-hero{
+  border-radius:var(--cl-radius-2xl);background:var(--cl-hero-bg);padding:14px 16px 18px;color:var(--cl-hero-sub);position:relative;overflow:hidden
+}
+.mine-hero .wm{position:absolute;right:-20px;top:-26px;color:var(--cl-brand);opacity:.14}
+.mine-hero .wm svg{width:150px;height:150px}
+.mine-hero .u{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.mine-hero .avatar{width:30px;height:30px;border-radius:50%;background:var(--cl-brand-soft);color:var(--cl-brand);display:flex;align-items:center;justify-content:center}
+.mine-hero .avatar svg{width:22px;height:22px}
+.mine-hero .u b{font-size:11px;color:var(--cl-brand-200);font-weight:500}
+.mine-hero .big{font-size:9px;margin-top:12px;position:relative;z-index:1}
+.mine-hero .big .v{font-size:27px;color:var(--cl-brand-300);font-weight:600;display:block;line-height:1.25}
+.mine-hero .big .chg{font-size:9px;color:var(--cl-up)}
+.mine-hero .mini-three{display:grid;grid-template-columns:repeat(3,1fr);margin-top:11px;position:relative;z-index:1}
+.mine-hero .mini-three div{border-right:1px solid var(--cl-hero-stroke);padding-left:8px}
+.mine-hero .mini-three div:first-child{padding-left:0}
+.mine-hero .mini-three div:last-child{border-right:0}
+.mine-hero .mini-three .k{font-size:9px;display:block}
+.mine-hero .mini-three .v{font-size:11px;color:var(--cl-brand-200);display:block}
+.mine-hero .pgwrap{margin-top:11px;position:relative;z-index:1}
+.mine-hero .pgwrap .lb{font-size:9px;display:flex;justify-content:space-between;margin-bottom:5px}
+.mine-hero .pgwrap .progress{background:rgba(255,255,255,.14)}
+.menu{background:var(--cl-surface);border-radius:var(--cl-radius-lg);box-shadow:var(--cl-shadow-2);margin-top:11px;overflow:hidden}
+.menu .item{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-bottom:1px solid var(--cl-line-2);font-size:11px;color:var(--cl-text)}
+.menu .item:last-child{border-bottom:0}
+.menu .item .l{display:flex;align-items:center;gap:8px}
+.menu .item .ico{width:16px;height:16px;color:var(--cl-brand)}
+.menu .item .r{font-size:10px;color:var(--cl-text-dim)}
+.empty-card{
+  margin-top:11px;border:1px dashed var(--cl-line);border-radius:var(--cl-radius-lg);
+  background:var(--cl-surface);padding:12px;text-align:center
+}
+.empty-card .coin-watermark{margin:6px auto 2px}
+.empty-card b{display:block;font-size:11px;color:var(--cl-text-strong)}
+.empty-card p{margin:3px 0 9px;font-size:9px;color:var(--cl-text-dim)}
+
+/* ============================================================
+   6. 按钮（四态）/ 组件小样
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;padding:0 16px;border-radius:var(--cl-radius-md);
+  border:1px solid transparent;font-family:inherit;font-size:var(--cl-fs-md);font-weight:500;line-height:1;
+  cursor:pointer;transition:background .18s,border-color .18s,color .18s
+}
+.btn:focus-visible{outline:none;box-shadow:var(--cl-shadow-focus)}
+.btn-primary{background:var(--cl-brand);color:var(--cl-on-brand)}
+.btn-primary:hover,.btn-primary.is-hover{background:var(--cl-brand-strong)}
+.btn-ghost{background:var(--cl-ghost-bg);color:var(--cl-ghost-text)}
+.btn-ghost:hover,.btn-ghost.is-hover{background:var(--cl-ghost-hover)}
+.btn-outline{background:var(--cl-surface);border-color:var(--cl-border-base);color:var(--cl-ghost-text)}
+.btn-outline:hover,.btn-outline.is-hover{background:var(--cl-price-badge-bg)}
+.btn[disabled]{background:var(--cl-disabled);color:var(--cl-on-disabled);opacity:.6;cursor:not-allowed;border-color:transparent}
+.btn-sm{min-height:30px;padding:0 11px;font-size:var(--cl-fs-sm)}
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.comp-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.comp-label{font-size:var(--cl-fs-xs);color:var(--cl-text-dim);min-width:52px}
+.price-demo{display:inline-block}
+.price-demo .pb{
+  background:var(--cl-price-badge-bg);border-radius:var(--cl-radius-md);padding:10px 14px;min-width:200px
+}
+.price-demo .amt{font-size:var(--cl-fs-2xl);font-weight:600;color:var(--cl-price-main);line-height:1.2}
+.price-demo .amt small{font-size:var(--cl-fs-xs);font-weight:400;color:var(--cl-brand-400)}
+.price-demo .tip{font-size:var(--cl-fs-xs);color:var(--cl-text-dim);margin-top:4px}
+.price-demo .chg{font-size:var(--cl-fs-xs);color:var(--cl-up);margin-top:3px}
+.sheet-demo{
+  height:238px;border-radius:var(--cl-radius-lg);border:1px solid var(--cl-line-2);
+  background:var(--cl-overlay);position:relative;overflow:hidden;display:flex;align-items:flex-end
+}
+.sheet{
+  width:100%;background:var(--cl-surface);border-radius:var(--cl-radius-2xl) var(--cl-radius-2xl) 0 0;
+  padding:10px 14px 14px;box-shadow:var(--cl-shadow-3)
+}
+.sheet .handle{width:32px;height:3px;border-radius:3px;background:var(--cl-line);margin:0 auto 9px}
+.sheet h5{margin:0;font-size:var(--cl-fs-base);color:var(--cl-text-strong)}
+.sheet .r{display:flex;justify-content:space-between;font-size:var(--cl-fs-xs);color:var(--cl-text-assist);margin-top:7px}
+.sheet .btns{display:flex;gap:8px;margin-top:12px}
+.sheet .btns .btn{flex:1;min-height:36px;font-size:var(--cl-fs-sm)}
+
+/* ============================================================
+   7. 数据诚信正反例
+   ============================================================ */
+.integrity{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.ex-box{border:1px solid var(--cl-line-2);border-radius:var(--cl-radius-lg);background:var(--cl-surface);padding:16px}
+.ex-box.good{border-top:3px solid var(--cl-success)}
+.ex-box.bad{border-top:3px solid var(--cl-danger)}
+.ex-label{display:flex;align-items:center;gap:7px;font-size:var(--cl-fs-base);font-weight:600;color:var(--cl-text-strong)}
+.ex-label .mk{width:19px;height:19px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;line-height:1}
+.ex-label .mk.ok{background:var(--cl-success)}
+.ex-label .mk.no{background:var(--cl-danger)}
+.ex-box ul{margin:12px 0 0;padding-left:18px;font-size:var(--cl-fs-sm);color:var(--cl-text-assist);line-height:1.9}
+.mini-price{margin-top:13px;background:var(--cl-price-badge-bg);border-radius:var(--cl-radius-md);padding:10px 12px;display:inline-block}
+.mini-price .a{font-size:22px;font-weight:600;color:var(--cl-price-main)}
+.mini-price .t{font-size:var(--cl-fs-xs);color:var(--cl-text-dim);margin-top:2px}
+.mini-price .c{font-size:var(--cl-fs-xs);color:var(--cl-up);margin-top:2px}
+.cross{position:relative;border:1px dashed var(--cl-danger);border-radius:var(--cl-radius-md);padding:11px 12px;margin-top:13px;opacity:.88}
+.cross::after{
+  content:"✕ 反例";position:absolute;right:-1px;top:-1px;background:var(--cl-danger);color:#fff;
+  font-size:9px;line-height:1;padding:4px 7px;border-radius:0 var(--cl-radius-md) 0 var(--cl-radius-md)
+}
+.cross .raw{font-size:22px;font-weight:600;color:var(--cl-up)}
+.cross .raw.g{color:var(--cl-down);font-size:var(--cl-fs-sm)}
+.cross .strike{text-decoration:line-through;text-decoration-color:var(--cl-danger)}
+.cross .warnline{font-size:var(--cl-fs-xs);color:var(--cl-danger);margin-top:6px}
+
+.site-footer{
+  margin-top:48px;border-top:1px solid var(--cl-line-2);padding:24px 0 40px;
+  font-size:var(--cl-fs-xs);color:var(--cl-text-dim);text-align:center;line-height:1.9
+}
+.site-footer b{color:var(--cl-text-assist);font-weight:500}
+
+/* 响应式：窄屏收紧外层留白，手机框保持 375px 并横向滚动 */
+@media (max-width:700px){
+  .wrap{padding:0 14px}
+  .masthead-inner{padding:20px 0}
+  .masthead h1{font-size:23px}
+  section{padding-top:32px}
+  .type-row{grid-template-columns:94px 74px 1fr}
+  .space-row{grid-template-columns:90px 1fr 44px}
+  .phone-card{min-width:375px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- 可复用 SVG 符号：方孔圆钱母题（currentColor 自适应深浅） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="coin-outline" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1" opacity=".45"/>
+    <path d="M40 40h20v20H40z" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="coin-solid" viewBox="0 0 100 100">
+    <path fill-rule="evenodd" d="M50 4a46 46 0 1 0 0 92 46 46 0 1 0 0-92zm-10 36v20h20V40z" fill="currentColor"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 5" opacity=".55"/>
+    <text x="50" y="56" text-anchor="middle" font-size="15" font-family="Songti SC,Noto Serif SC,serif" fill="currentColor">藏</text>
+  </symbol>
+  <symbol id="ico-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-plan" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-mine" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============================ 顶部标题区 ============================ -->
+<header class="masthead">
+  <div class="wrap masthead-inner">
+    <div class="masthead-left">
+      <div class="brandmark"><svg><use href="#coin-solid"/></svg></div>
+      <div>
+        <h1>藏币录 · 小程序视觉风格</h1>
+        <p class="sub">一本可随身携带的、可信的中国纪念币收藏册 —— 纸的温度、烫金的克制、档案的严谨。</p>
+      </div>
+    </div>
+    <div class="masthead-right">
+      <span class="theme-hint">双皮肤预览 · 切换后手机界面同步换肤</span>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">切换到深色</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============================ 1. Design Token ============================ -->
+<section id="tokens">
+  <div class="sec-head">
+    <div class="kicker">01 / Design Tokens</div>
+    <h2>设计令牌</h2>
+    <p>以下色值与阶梯严格取自 Phase 1 视觉方向 v1.1。rpx → px 换算基准为 375pt 机型（1rpx ≈ 0.5px）；界面组件只引用语义变量，不写死 HEX。</p>
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title">品牌金 10 级阶梯 · Brand Gold Ramp</h3>
+    <div class="swatches brand" id="brandRamp"></div>
+    <p class="note">--cl-brand-600 #9A6B1F 为核心主色；浅底小号金字用 -700 保证对比度。金阶为固定色阶，不随主题变更；界面通过 --cl-brand / --cl-brand-strong 等语义别名取当前主题值。</p>
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title">中性 / 语义 / 涨跌色</h3>
+    <div class="swatches" id="neutralRamp" style="margin-bottom:16px"></div>
+    <div class="sem-grid" id="semanticSwatches"></div>
+    <p class="note">涨跌色遵循中国约定「涨红跌绿」，且仅用于带「较上次」标注的变化幅度。价格金额主体使用中性权威金 --cl-price-main，永不随涨跌变色。</p>
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title">字号阶梯 · 9 级</h3>
+    <div class="type-list" id="typeLadder"></div>
+    <p class="note">正文系统栈；标题/品牌字宋体 "Songti SC","Noto Serif SC",serif；全部数字 font-variant-numeric: tabular-nums。字重仅 400 / 500 / 600。</p>
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title">间距 / 圆角 / 阴影</h3>
+    <div class="comp-grid">
+      <div>
+        <div class="panel-title" style="font-weight:400">8rpx 间距标尺</div>
+        <div class="space-list" id="spaceRuler"></div>
+      </div>
+      <div>
+        <div class="panel-title" style="font-weight:400">圆角</div>
+        <div class="radius-list" id="radiusList"></div>
+      </div>
+      <div>
+        <div class="panel-title" style="font-weight:400">暖棕阴影分级</div>
+        <div class="shadow-list">
+          <div class="shadow-box sh1">shadow-1 · 通用卡片</div>
+          <div class="shadow-box sh2">shadow-2 · 系列小卡</div>
+          <div class="shadow-box sh3">shadow-3 · 账本浮层</div>
+          <div class="shadow-box sh4">shadow-4 · Hero 图</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 class="panel-title">核心母题 · 方孔圆钱 SVG（currentColor 自适应）</h3>
+    <div class="coin-trio">
+      <div class="coin-cell">
+        <div class="stage"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+        <strong>线稿 outline</strong><small>空态 / 占位 / 列表缩略图 · stroke 1.5–2rpx</small>
+      </div>
+      <div class="coin-cell">
+        <div class="stage"><svg viewBox="0 0 100 100"><use href="#coin-solid"/></svg></div>
+        <strong>实心印章 solid</strong><small>品牌 Logo / 头像 · 径向烫金 + 方孔</small>
+      </div>
+      <div class="coin-cell">
+        <div class="stage coin-watermark"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+        <strong>水印 watermark</strong><small>Hero 右下 / 空态背景 · 透明度 0.06–0.22</small>
+      </div>
+    </div>
+    <p class="note">几何简化：只保留「外圆 + 方孔」两个基本形，无写实铜钱纹理与锈迹；装饰动画 ≤ 600ms。</p>
+  </div>
+</section>
+
+<!-- ============================ 2. 五页手机预览 ============================ -->
+<section id="screens">
+  <div class="sec-head">
+    <div class="kicker">02 / Screen Previews</div>
+    <h2>手机界面预览</h2>
+    <p>五个 375 × 720 模拟屏，按 Phase 2 的信息架构与标注层级绘制。屏内可滚动；窄屏下可横向滚动查看。所有币名、金额、年份均为虚构占位示意。</p>
+  </div>
+
+  <div class="phone-scroll">
+  <div class="phone-grid">
+
+    <!-- ① 首页 -->
+    <div class="phone-card">
+      <p class="phone-cap"><b>① 首页 · index</b><span>现在 · 我的概览</span></p>
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar"><span class="clock">9:41</span><span class="island"></span><span class="indicators">
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+            <svg viewBox="0 0 18 12"><path d="M1 4a11 11 0 0 1 16 0M4 7a7 7 0 0 1 10 0M7 10a3 3 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 22 12"><rect x="1" y="2" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="4" width="11" height="4" rx="1"/><path d="M20 5v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="screen-body pad">
+            <!-- 深棕 Hero -->
+            <div class="hero">
+              <div class="wm"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+              <div class="hero-img"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+              <h3>藏币录</h3>
+              <p>1984 — 2026 · 示例目录 128 个品种</p>
+              <span class="share">分享给朋友</span>
+              <span class="line"></span>
+            </div>
+            <!-- 账本浮层（四数 + 参考标注 + 较上次） -->
+            <div class="ledger">
+              <div class="ledger-head"><b>我的收藏账本</b><span>已藏 12 / 128 个品种</span></div>
+              <div class="progress pg"><i style="width:38%"></i></div>
+              <div class="four">
+                <div><span class="k">面值</span><span class="v num">¥1,280</span></div>
+                <div><span class="k">投入</span><span class="v num">¥12,800</span></div>
+                <div><span class="k">参考市值</span><span class="v num gold">¥18,600</span></div>
+                <div><span class="k">浮动</span><span class="v up num">↑2.3%<small> 较上次</small></span></div>
+              </div>
+            </div>
+            <!-- 最新发行横滑 -->
+            <div class="sec-row"><h4>最新发行</h4><span class="more">全部 ›</span></div>
+            <div class="hscroll">
+              <div class="release"><div class="pic"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div><div class="nm">示例币·甲</div><div class="pr num">¥128 <em>参考</em></div></div>
+              <div class="release"><div class="pic"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div><div class="nm">示例币·乙</div><div class="pr num">¥256 <em>参考</em></div></div>
+              <div class="release"><div class="pic"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div><div class="nm">示例币·丙</div><div class="pr num">— <em>暂无来源</em></div></div>
+            </div>
+            <!-- 按系列 -->
+            <div class="sec-row"><h4>按系列</h4><span class="more">全部 8 个 ›</span></div>
+            <div class="series-grid">
+              <div class="series-card"><div class="t">示例系列 A</div><div class="m num">已藏 3 · 共 8</div><div class="progress"><i style="width:38%"></i></div></div>
+              <div class="series-card"><div class="t">示例系列 B</div><div class="m num">已藏 5 · 共 10</div><div class="progress"><i style="width:50%"></i></div></div>
+            </div>
+            <p class="footmini">价格数据为参考估算，不构成投资建议<br>联系微信（点击复制）· 示例数据</p>
+          </div>
+          <div class="tabbar">
+            <div class="tabitem on"><svg><use href="#ico-home"/></svg><span>首页</span></div>
+            <div class="tabitem"><svg><use href="#ico-plan"/></svg><span>计划</span></div>
+            <div class="tabitem"><svg><use href="#ico-list"/></svg><span>清单</span></div>
+            <div class="tabitem"><svg><use href="#ico-mine"/></svg><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 全套清单 -->
+    <div class="phone-card">
+      <p class="phone-cap"><b>② 全套清单 · list</b><span>全量 · 客观目录</span></p>
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar"><span class="clock">9:41</span><span class="island"></span><span class="indicators">
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+            <svg viewBox="0 0 18 12"><path d="M1 4a11 11 0 0 1 16 0M4 7a7 7 0 0 1 10 0M7 10a3 3 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 22 12"><rect x="1" y="2" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="4" width="11" height="4" rx="1"/><path d="M20 5v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="screen-body pad">
+            <div class="searchline">
+              <div class="fake-search"><svg><use href="#ico-search"/></svg>搜索品种 / 年份 / 系列</div>
+              <div class="filter-btn">筛选 <span class="badge-count num">2</span></div>
+            </div>
+            <div class="caps">
+              <span class="cap on">全部</span><span class="cap">示例系列 A</span><span class="cap">示例系列 B</span><span class="cap">2026</span><span class="cap">1984</span>
+            </div>
+            <div class="countbar"><span class="num">128 个品种 · 已收 12</span><span>年份 ↓</span></div>
+            <div class="card" style="padding:2px 10px">
+              <div class="listrow">
+                <div class="thumb"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg><span class="ph">暂无图片</span></div>
+                <div class="info"><div class="nm"><span>示例币·甲</span><span class="tag on">已收</span></div><div class="meta num">2026 · 面额 ¥10 · 示例系列 A</div><div class="src">发行量 — 暂无来源</div></div>
+                <div class="right"><div class="yr num">2026</div><div class="pv num">¥128</div><div class="pf">参考估值</div></div>
+              </div>
+              <div class="listrow">
+                <div class="thumb"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg><span class="ph">暂无图片</span></div>
+                <div class="info"><div class="nm"><span>示例币·乙</span></div><div class="meta num">2025 · 面额 ¥10 · 示例系列 B</div><div class="src">发行量 — 暂无来源</div></div>
+                <div class="right"><div class="yr num">2025</div><div class="pv num">¥256</div><div class="pf">参考估值</div></div>
+              </div>
+              <div class="listrow">
+                <div class="thumb"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg><span class="ph">暂无图片</span></div>
+                <div class="info"><div class="nm"><span>示例币·丙</span><span class="tag">已收</span></div><div class="meta num">2024 · 面额 — · 示例系列 A</div><div class="src">面额 — 暂无来源</div></div>
+                <div class="right"><div class="yr num">2024</div><div class="pv num">—</div><div class="pf">暂无来源</div></div>
+              </div>
+              <div class="listrow">
+                <div class="thumb"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg><span class="ph">暂无图片</span></div>
+                <div class="info"><div class="nm"><span>示例币·丁</span></div><div class="meta num">2023 · 面额 ¥10 · 示例系列 B</div><div class="src">发行量 — 暂无来源</div></div>
+                <div class="right"><div class="yr num">2023</div><div class="pv num">¥128</div><div class="pf">参考估值</div></div>
+              </div>
+            </div>
+            <p class="footmini">行级估值为参考估算，非实际成交价</p>
+          </div>
+          <div class="tabbar">
+            <div class="tabitem"><svg><use href="#ico-home"/></svg><span>首页</span></div>
+            <div class="tabitem"><svg><use href="#ico-plan"/></svg><span>计划</span></div>
+            <div class="tabitem on"><svg><use href="#ico-list"/></svg><span>清单</span></div>
+            <div class="tabitem"><svg><use href="#ico-mine"/></svg><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 发行计划 -->
+    <div class="phone-card">
+      <p class="phone-cap"><b>③ 发行计划 · plan</b><span>未来 · 客观事件</span></p>
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar"><span class="clock">9:41</span><span class="island"></span><span class="indicators">
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+            <svg viewBox="0 0 18 12"><path d="M1 4a11 11 0 0 1 16 0M4 7a7 7 0 0 1 10 0M7 10a3 3 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 22 12"><rect x="1" y="2" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="4" width="11" height="4" rx="1"/><path d="M20 5v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="screen-body pad">
+            <div class="plan-head">
+              <h3>发行计划</h3>
+              <div class="src">来源：示例公告（虚构）· 以发行前公告为准</div>
+              <div class="note">预约当天 09:00 微信通知；每次授权只发一条。拒绝后仍可复制公告链接自行关注。</div>
+            </div>
+            <div class="next-bar">
+              <span class="lb">下一枚</span>
+              <span class="nn"><b>示例币·丙</b><small class="num">发行日 2026-12-01 · 面额 ¥10</small></span>
+              <span class="cd num"><b>23 天</b>后发行</span>
+            </div>
+            <div class="year-head"><b class="num">2026 年</b><span>· 计划 3 项 ·</span><span class="tag warn">增发 1</span><span class="num">· 已发 1</span></div>
+            <div class="plan-row">
+              <div class="top"><div class="nm">示例币·丙<div class="meta num">预约中 · 面额 ¥10 · 发行量 —（暂无来源）</div></div><span class="badge gold">预约中</span></div>
+              <div class="bottom"><div class="when num">预约 12-05 至 12-12 · 兑换 12-20 起</div><button class="remind" type="button">提醒我</button></div>
+            </div>
+            <div class="plan-row">
+              <div class="top"><div class="nm">示例币·戊<div class="meta num">即将发行 · 面额 — · 发行日 待定</div></div><span class="badge light">即将</span></div>
+              <div class="bottom"><div class="when">日程待公告 · 发行量 — 暂无来源</div><button class="remind" type="button">提醒我</button></div>
+            </div>
+            <div class="plan-row">
+              <div class="top"><div class="nm">示例币·己<div class="meta num">面额 ¥10 · 发行量 —（暂无来源）</div></div><span class="badge gray">已结束</span></div>
+              <div class="bottom"><div class="when num">发行 2026-01-10 · 预约已结束</div><span style="font-size:9px;color:var(--cl-text-dim)">仅查看计划详情 ›</span></div>
+            </div>
+            <p class="footmini">计划来源声明常驻 · 计划有变请以最新公告为准<br>去全套清单看看已发的 1 个品种 ›</p>
+          </div>
+          <div class="tabbar">
+            <div class="tabitem"><svg><use href="#ico-home"/></svg><span>首页</span></div>
+            <div class="tabitem on"><svg><use href="#ico-plan"/></svg><span>计划</span></div>
+            <div class="tabitem"><svg><use href="#ico-list"/></svg><span>清单</span></div>
+            <div class="tabitem"><svg><use href="#ico-mine"/></svg><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 详情 -->
+    <div class="phone-card">
+      <p class="phone-cap"><b>④ 品种详情 · detail</b><span>估值标注层级的核心样板</span></p>
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar"><span class="clock">9:41</span><span class="island"></span><span class="indicators">
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+            <svg viewBox="0 0 18 12"><path d="M1 4a11 11 0 0 1 16 0M4 7a7 7 0 0 1 10 0M7 10a3 3 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 22 12"><rect x="1" y="2" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="4" width="11" height="4" rx="1"/><path d="M20 5v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="navbar"><span class="back">‹</span><span class="ttl">品种详情</span></div>
+          <div class="screen-body">
+            <!-- 无图 → 方孔圆钱占位，不用 broken image -->
+            <div class="detail-pic"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg><span class="txt">暂无实拍图</span><span class="hint num">1 / 2 · 左右滑动</span></div>
+            <div class="thumbs"><div class="thumb on"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div><div class="thumb"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div></div>
+            <div class="detail-body">
+              <div class="title-line">
+                <div><h3>示例币·甲</h3><div class="meta num">2026 · 示例系列 A · <span class="tag on">已收</span></div></div>
+                <!-- L1 金额主体中性金 + L2 强制标注 + L4 变化值带「较上次」 -->
+                <div class="price-badge" aria-label="参考估值 128 元，非实际成交价">
+                  <div class="amt num"><small>¥</small>128</div>
+                  <div class="tip">参考估值 · 非实际成交价</div>
+                  <div class="chg num">↑2.3% 较上次估值</div>
+                  <div class="tip num">一套 20 枚 ≈ ¥2,560</div>
+                </div>
+              </div>
+              <div class="setline"><span>套系进度 3 / 8</span><span class="progress" style="flex:1"><i style="width:38%"></i></span></div>
+              <div class="facts">
+                <div class="fact"><div class="k">年份</div><div class="v num">2026</div></div>
+                <div class="fact"><div class="k">面额</div><div class="v num">¥10</div></div>
+                <div class="fact"><div class="k">材质</div><div class="v">— <span class="muted" style="font-size:9px">暂无来源</span></div></div>
+                <div class="fact"><div class="k">发行量</div><div class="v">— <span class="muted" style="font-size:9px">暂无来源</span></div></div>
+                <div class="fact"><div class="k">系列</div><div class="v">示例系列 A</div></div>
+                <div class="fact"><div class="k">来源 ⓘ</div><div class="v">— <span class="muted" style="font-size:9px">暂无来源</span></div></div>
+              </div>
+              <!-- L5 AI 推理价：独立浅底卡 + 深色徽章 + 假设说明 -->
+              <div class="ai-card">
+                <div class="hd"><span class="ai-badge">AI 推理</span><span class="pv num">¥132</span></div>
+                <p>按发行量·材质·年代推算，面值已按年化 2.5% 通胀折算（假设示例）。</p>
+                <p class="disclaimer">仅供参考 · 估算于 2026-01-01</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-primary btn-sm" type="button" style="width:100%">加入我的藏品</button>
+                <div class="mini">
+                  <button class="btn btn-outline btn-sm" type="button">分享</button>
+                  <button class="btn btn-ghost btn-sm" type="button">纠错反馈</button>
+                </div>
+                <button class="danger-link" type="button">从我的藏品移出（需二次确认）</button>
+              </div>
+              <div class="sec-row" style="margin-bottom:0"><h4 style="font-size:12px">同系列</h4></div>
+              <div class="chips"><span class="tag">示例币·乙</span><span class="tag">示例币·丙</span><span class="tag">示例币·丁</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 我的 / 账本 -->
+    <div class="phone-card">
+      <p class="phone-cap"><b>⑤ 我的 · mine</b><span>现在 · 我的私有数据</span></p>
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar"><span class="clock">9:41</span><span class="island"></span><span class="indicators">
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+            <svg viewBox="0 0 18 12"><path d="M1 4a11 11 0 0 1 16 0M4 7a7 7 0 0 1 10 0M7 10a3 3 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 22 12"><rect x="1" y="2" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="4" width="11" height="4" rx="1"/><path d="M20 5v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="screen-body pad">
+            <div class="mine-hero">
+              <div class="wm"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+              <div class="u"><div class="avatar"><svg viewBox="0 0 100 100"><use href="#coin-solid"/></svg></div><b>收藏者 · 示例用户</b><span style="font-size:9px;margin-left:auto">账户安全 ›</span></div>
+              <div class="big">参考市值（估算）<span class="v num">¥18,600</span><span class="chg num">↑2.3% 较上次估值</span></div>
+              <div class="mini-three">
+                <div><span class="k">投入</span><span class="v num">¥12,800</span></div>
+                <div><span class="k">面值</span><span class="v num">¥1,280</span></div>
+                <div><span class="k">品种 / 套数</span><span class="v num">12 / 18</span></div>
+              </div>
+              <div class="pgwrap"><div class="lb"><span>已收 12 / 共 128 个品种</span><span class="num">38%</span></div><div class="progress"><i style="width:38%"></i></div></div>
+            </div>
+            <div class="menu">
+              <div class="item"><span class="l"><svg class="ico"><use href="#ico-list"/></svg>我的藏品</span><span class="r num">12 个品种 ›</span></div>
+              <div class="item"><span class="l"><svg class="ico"><use href="#ico-mine"/></svg>账户与安全</span><span class="r">›</span></div>
+              <div class="item"><span class="l"><svg class="ico"><use href="#ico-plan"/></svg>关于藏币录</span><span class="r num">v1.0 ›</span></div>
+              <div class="item"><span class="l"><svg class="ico"><use href="#ico-home"/></svg>反馈</span><span class="r">›</span></div>
+            </div>
+            <!-- 空态示例：方孔圆钱水印 + 主文案 + 辅助 + 按钮 -->
+            <div class="empty-card">
+              <div class="coin-watermark"><svg viewBox="0 0 100 100"><use href="#coin-outline"/></svg></div>
+              <b>登录后开始记你的藏品</b>
+              <p>与网页版同一账号 · 游客可自由浏览目录与估值</p>
+              <button class="btn btn-primary btn-sm" type="button" style="width:100%">登录 / 注册</button>
+            </div>
+            <p class="footmini">价格数据为参考估算，不构成投资建议<br>云端同步 · 数据日期 2026-01-01</p>
+          </div>
+          <div class="tabbar">
+            <div class="tabitem"><svg><use href="#ico-home"/></svg><span>首页</span></div>
+            <div class="tabitem"><svg><use href="#ico-plan"/></svg><span>计划</span></div>
+            <div class="tabitem"><svg><use href="#ico-list"/></svg><span>清单</span></div>
+            <div class="tabitem on"><svg><use href="#ico-mine"/></svg><span>我的</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</section>
+
+<!-- ============================ 3. 组件规范 ============================ -->
+<section id="components">
+  <div class="sec-head">
+    <div class="kicker">03 / Components</div>
+    <h2>组件规范小样</h2>
+    <p>按钮四态、标签、进度条、价格徽章与底部弹层。所有组件只使用语义令牌，主题切换后自动适配。</p>
+  </div>
+  <div class="comp-grid">
+    <div class="panel">
+      <h3 class="panel-title">按钮 · 四态</h3>
+      <div class="comp-row" style="margin-bottom:10px"><span class="comp-label">主按钮</span>
+        <button class="btn btn-primary" type="button">默认</button>
+        <button class="btn btn-primary is-hover" type="button">悬停</button>
+        <button class="btn btn-primary" type="button" disabled>禁用</button>
+      </div>
+      <div class="comp-row" style="margin-bottom:10px"><span class="comp-label">次按钮</span>
+        <button class="btn btn-ghost" type="button">默认</button>
+        <button class="btn btn-ghost is-hover" type="button">悬停</button>
+        <button class="btn btn-ghost" type="button" disabled>禁用</button>
+      </div>
+      <div class="comp-row" style="margin-bottom:10px"><span class="comp-label">描边</span>
+        <button class="btn btn-outline" type="button">默认</button>
+        <button class="btn btn-outline is-hover" type="button">悬停</button>
+        <button class="btn btn-outline" type="button" disabled>禁用</button>
+      </div>
+      <div class="comp-row"><span class="comp-label">危险</span>
+        <button class="danger-link" type="button" style="font-size:var(--cl-fs-base)">从我的藏品移出</button>
+        <span class="note" style="margin:0">弱化小字 · 必须二次确认</span>
+      </div>
+      <p class="note">触控热区 ≥ 88rpx；hover 仅变背景/透明度，不位移缩放。</p>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-title">标签 / 徽章</h3>
+      <div class="comp-row">
+        <span class="tag">默认金标</span><span class="tag neutral">中性标签</span>
+        <span class="tag on">已收</span><span class="tag off">禁用</span>
+        <span class="tag warn">增发 1</span><span class="year-badge num">2026</span>
+      </div>
+      <h3 class="panel-title" style="margin-top:22px">进度条</h3>
+      <div class="space-list">
+        <div><div class="countbar" style="margin:0 0 4px"><span>系列进度 38%</span></div><div class="progress"><i style="width:38%"></i></div></div>
+        <div><div class="countbar" style="margin:6px 0 4px"><span>集齐 100%</span></div><div class="progress full"><i style="width:100%"></i></div></div>
+        <div><div class="countbar" style="margin:6px 0 4px"><span>还没开始</span></div><div class="progress"><i style="width:0"></i></div></div>
+      </div>
+      <p class="note">0% 用「还没开始」文案；100% 末端加极小方孔印记。</p>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-title">价格徽章 · 参考估值标准件</h3>
+      <div class="price-demo">
+        <div class="pb">
+          <div class="amt num"><small>¥</small>128 <small>/ 枚</small></div>
+          <div class="tip">参考估值 · 非实际成交价</div>
+          <div class="chg num">↑2.3% 较上次估值</div>
+        </div>
+      </div>
+      <p class="note">L1 中性金金额 → L2 强制标注 → L4 变化值（含「较上次」）。红绿只出现在 L4；无上一期数据时降级为中性金文本。</p>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-title">底部弹层 · 小样</h3>
+      <div class="sheet-demo">
+        <div class="sheet">
+          <div class="handle"></div>
+          <h5>示例币·丙 · 发行计划</h5>
+          <div class="r"><span>状态</span><span class="badge gold">预约中</span></div>
+          <div class="r"><span>发行日</span><span class="num">2026-12-01</span></div>
+          <div class="r"><span>发行量</span><span>— 暂无来源</span></div>
+          <div class="r"><span>公告来源</span><span>示例公告（虚构）ⓘ</span></div>
+          <div class="btns">
+            <button class="btn btn-outline" type="button">复制公告链接</button>
+            <button class="btn btn-primary" type="button">关闭</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">遮罩 --cl-overlay；顶部圆角 --cl-radius-2xl；max-height 86vh + 安全区。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 4. 数据诚信 ============================ -->
+<section id="integrity">
+  <div class="sec-head">
+    <div class="kicker">04 / Data Integrity</div>
+    <h2>数据诚信 · 正反例对照</h2>
+    <p>价格是参考估值，不是行情。金额主体中性、标注同屏、未知字段用「—」，是产品可信度的第一触点。</p>
+  </div>
+  <div class="integrity">
+    <div class="ex-box good">
+      <div class="ex-label"><span class="mk ok">✓</span>正确 · 有来源、弱刺激、强标注</div>
+      <div class="mini-price">
+        <div class="a num">¥128</div>
+        <div class="t">参考估值 · 非实际成交价</div>
+        <div class="c num">↑2.3% 较上次估值</div>
+      </div>
+      <ul>
+        <li>金额用中性权威金，字号层级清晰</li>
+        <li>「参考估值 · 非实际成交价」与金额同屏紧邻</li>
+        <li>红绿仅用于带箭头 + 「较上次」的变化值</li>
+        <li>无来源字段显示「—」+「暂无来源」，不填推定值</li>
+      </ul>
+    </div>
+    <div class="ex-box bad">
+      <div class="ex-label"><span class="mk no">✕</span>错误示例 · 仅作对照，禁止上线</div>
+      <div class="cross">
+        <div class="raw num">¥128 <span class="raw g num" style="display:inline">↑ 5.0%</span></div>
+        <div class="t" style="font-size:var(--cl-fs-xs);color:var(--cl-danger)">现价 · 实时行情</div>
+        <div class="warnline">✕ 裸红绿金额，无「参考」标注，伪装成交易行情</div>
+      </div>
+      <div class="cross">
+        <div class="num strike" style="font-size:var(--cl-fs-base)">发行量 1,000,000 枚</div>
+        <div class="warnline">✕ 无来源却编造具体数字；应显示「— 暂无来源」</div>
+      </div>
+      <ul>
+        <li>禁止 K 线 / 分时图 / 交易所风格隐喻</li>
+        <li>禁止把 AI 推理价与官方估值并列同款样式</li>
+        <li>无法附加「较上次」时，一律降级为中性金文本</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <b>本页为视觉风格稿，价格为参考估值示意，非真实数据。</b><br>
+    藏币录 · Phase 1 视觉方向 v1.1 + Phase 2 体验规范 v1.0 → Phase 3 可视化预览 ｜ 单文件离线可打开，无外部资源依赖
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  /* ---------- 1. 主题切换：只切 body 的 data-theme，所有界面走 CSS 变量 ---------- */
+  var body = document.body;
+  var toggle = document.getElementById('themeToggle');
+  function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    var toDark = theme !== 'dark';
+    toggle.textContent = toDark ? '切换到深色' : '切换到浅色';
+    toggle.setAttribute('aria-pressed', String(!toDark));
+  }
+  applyTheme('light');
+  toggle.addEventListener('click', function () {
+    applyTheme(body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------- 2. 用脚本生成重复令牌色卡，避免手写 HEX 与文档不一致 ---------- */
+  function makeSwatch(token, hex, desc) {
+    var el = document.createElement('div');
+    el.className = 'swatch';
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.background = hex;
+    var meta = document.createElement('div');
+    meta.className = 'meta';
+    var tk = document.createElement('span'); tk.className = 'tk'; tk.textContent = token;
+    var hx = document.createElement('span'); hx.className = 'hx hex'; hx.textContent = hex;
+    meta.appendChild(tk); meta.appendChild(hx);
+    if (desc) { var ds = document.createElement('span'); ds.className = 'ds'; ds.textContent = desc; meta.appendChild(ds); }
+    el.appendChild(chip); el.appendChild(meta);
+    return el;
+  }
+
+  var brand = [
+    ['--cl-brand-50', '#FDF7EA', '价格徽章底'], ['--cl-brand-100', '#F6F1E4', '浅金信息条'],
+    ['--cl-brand-200', '#F3E3C0', 'Hero 标题字'], ['--cl-brand-300', '#E8C877', '深色主题主金'],
+    ['--cl-brand-400', '#D9B364', '进度/按钮渐变'], ['--cl-brand-500', '#B8934A', '深色辅助金'],
+    ['--cl-brand-600', '#9A6B1F', '核心主色'], ['--cl-brand-700', '#7A541A', '浅底小号金字'],
+    ['--cl-brand-800', '#6B4A18', '暗金描边'], ['--cl-brand-900', '#4A3410', '印章暗部']
+  ];
+  var brandBox = document.getElementById('brandRamp');
+  brand.forEach(function (r) { brandBox.appendChild(makeSwatch(r[0], r[1], r[2])); });
+
+  var neutral = [
+    ['--cl-neutral-0', '#FFFFFF', '卡片底'], ['--cl-neutral-50', '#FAF8F3', '图框底'],
+    ['--cl-neutral-100', '#F6F4EF', '页面底'], ['--cl-neutral-150', '#F3EFE6', '分割线'],
+    ['--cl-neutral-200', '#F1ECE0', '进度槽'], ['--cl-neutral-300', '#E8E2D5', '控件描边'],
+    ['--cl-neutral-400', '#D8CDB8', '禁用描边'], ['--cl-neutral-500', '#A39C8E', '弱化角标'],
+    ['--cl-neutral-600', '#8A8378', 'muted'], ['--cl-neutral-650', '#6B6559', '辅助正文'],
+    ['--cl-neutral-800', '#3A352C', '正文'], ['--cl-neutral-900', '#2B2926', '标题'],
+    ['--cl-neutral-950', '#1D1D1F', '最高优先级字']
+  ];
+  var neutralBox = document.getElementById('neutralRamp');
+  neutral.forEach(function (r) { neutralBox.appendChild(makeSwatch(r[0], r[1], r[2])); });
+
+  /* 语义色卡：色块跟随当前主题，标注同时给出浅/深两列值 */
+  var semantic = [
+    ['--cl-success', '成功', '#2F7A4F', '#3DDC97'],
+    ['--cl-warning', '警示', '#A8781A', '#D9A441'],
+    ['--cl-danger', '危险', '#B23A2E', '#E88080'],
+    ['--cl-info', '信息', '#4A6B8A', '#7FA8D0'],
+    ['--cl-up', '涨（红）', '#C0392B', '#FF6B5A'],
+    ['--cl-down', '跌（绿）', '#1E8E5A', '#3DDC97'],
+    ['--cl-price-main', '估值主体金', '#9A6B1F', '#E8C877'],
+    ['--cl-hero-bg', '品牌 Hero', '#221A12 → #5D4726', '#101318 → #2A2115']
+  ];
+  var semBox = document.getElementById('semanticSwatches');
+  semantic.forEach(function (r) {
+    var el = document.createElement('div');
+    el.className = 'swatch';
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    if (r[0] === '--cl-hero-bg') { chip.style.background = 'var(--cl-hero-bg)'; }
+    else { chip.style.background = 'var(' + r[0] + ')'; }
+    var meta = document.createElement('div'); meta.className = 'meta';
+    var tk = document.createElement('span'); tk.className = 'tk'; tk.textContent = r[0] + ' · ' + r[1];
+    var hx = document.createElement('span'); hx.className = 'hx hex'; hx.textContent = '浅 ' + r[2];
+    var hx2 = document.createElement('span'); hx2.className = 'hx hex'; hx2.style.color = 'var(--cl-text-dim)'; hx2.textContent = '深 ' + r[3];
+    meta.appendChild(tk); meta.appendChild(hx); meta.appendChild(hx2);
+    el.appendChild(chip); el.appendChild(meta);
+    semBox.appendChild(el);
+  });
+
+  /* 字号阶梯示例 */
+  var types = [
+    ['--cl-fs-2xs', '20rpx / 10px', '角标 · 藏币录 1234567890'],
+    ['--cl-fs-xs', '22rpx / 11px', '次要说明 · 藏币录 1234567890'],
+    ['--cl-fs-sm', '24rpx / 12px', '辅助文字 · 藏币录 1234567890'],
+    ['--cl-fs-base', '28rpx / 14px', '正文基准 · 藏币录 1234567890'],
+    ['--cl-fs-md', '30rpx / 15px', '按钮文字 · 藏币录 1234567890'],
+    ['--cl-fs-lg', '32rpx / 16px', '分区标题 · 藏币录 1234567890'],
+    ['--cl-fs-xl', '36rpx / 18px', '卡片主标题 · 藏币录 1234567890'],
+    ['--cl-fs-2xl', '44rpx / 22px', '大数值 · 藏币录 1234567890'],
+    ['--cl-fs-3xl', '54rpx / 27px', 'Hero 品牌字 · 藏币录 1234567890']
+  ];
+  var typeBox = document.getElementById('typeLadder');
+  types.forEach(function (r, i) {
+    var row = document.createElement('div'); row.className = 'type-row';
+    var a = document.createElement('span'); a.className = 'tk'; a.textContent = r[0];
+    var b = document.createElement('span'); b.className = 'sz num'; b.textContent = r[1];
+    var c = document.createElement('span'); c.className = 'sample'; c.textContent = r[2];
+    c.style.fontSize = 'var(' + r[0] + ')';
+    c.style.fontWeight = i >= 5 ? '600' : (i === 4 ? '500' : '400');
+    if (i === 8) { c.style.fontFamily = 'var(--cl-font-serif)'; c.style.letterSpacing = '.12em'; }
+    row.appendChild(a); row.appendChild(b); row.appendChild(c);
+    typeBox.appendChild(row);
+  });
+
+  /* 间距标尺 */
+  var spaces = [
+    ['--cl-space-1', 4, '8rpx'], ['--cl-space-2', 8, '16rpx'], ['--cl-space-3', 12, '24rpx'],
+    ['--cl-space-4', 16, '32rpx'], ['--cl-space-5', 20, '40rpx'], ['--cl-space-6', 24, '48rpx'],
+    ['--cl-space-8', 32, '64rpx'], ['--cl-space-10', 40, '80rpx']
+  ];
+  var spaceBox = document.getElementById('spaceRuler');
+  spaces.forEach(function (r) {
+    var row = document.createElement('div'); row.className = 'space-row';
+    row.innerHTML = '<span class="tk">' + r[0] + '</span><span class="bar" style="width:' + r[1] + 'px"></span><span class="val num">' + r[2] + '</span>';
+    spaceBox.appendChild(row);
+  });
+
+  /* 圆角 */
+  var radii = [
+    ['--cl-radius-xs', '4px / 8rpx', '4px'], ['--cl-radius-sm', '6px / 12rpx', '6px'],
+    ['--cl-radius-md', '7px / 14rpx', '7px'], ['--cl-radius-lg', '10px / 20rpx', '10px'],
+    ['--cl-radius-xl', '12px / 24rpx', '12px'], ['--cl-radius-2xl', '14px / 28rpx', '14px'],
+    ['--cl-radius-pill', '胶囊', '999px']
+  ];
+  var radiusBox = document.getElementById('radiusList');
+  radii.forEach(function (r) {
+    var item = document.createElement('div'); item.className = 'radius-item';
+    var box = document.createElement('div'); box.className = 'radius-box'; box.style.borderRadius = r[2];
+    var label = document.createElement('span'); label.textContent = r[0] + ' · ' + r[1];
+    item.appendChild(box); item.appendChild(label); radiusBox.appendChild(item);
+  });
+})();
+</script>
+</body>
+</html>

@@ -17,6 +17,7 @@
  * 「深比较」判定零漂移，另外提供 `--strict-key-order` 只做提示、不判失败。
  */
 const common = require('../schemas/common');
+const source = require('../repositories/json-source');  // 只读配置：发行计划/品类注册表走同一缓存层
 
 /* 排序口径从 common 再导出，保持「catalog.service 是唯一入口」的可读性 */
 const CATALOG_ORDER_SQL = common.CATALOG_ORDER_SQL;
@@ -445,6 +446,11 @@ class CatalogService {
    * @param {object[]} [rows] 已读出的行（db 模式复用，避免二次查询）
    * @returns {Promise<object[]>} 老形态品种对象
    */
+  /** 实例入口：coin.service 通过 app.catalog 调用，不能只挂在模块静态导出上 */
+  projectLegacyGallery(imageRows) {
+    return projectLegacyGallery(imageRows);
+  }
+
   async legacyCoins(rows) {
     if (typeof this.repos.coins.listLegacyRaw === 'function') {
       return this.repos.coins.listLegacyRaw();

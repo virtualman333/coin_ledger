@@ -322,6 +322,7 @@
       <span class="spacer"></span>
       <span class="muted" id="planSource"></span>
     </div>
+    <div class="plan-tabs" id="planTabs"></div>
     <div id="planBody"></div>
   </section>
 
@@ -394,10 +395,22 @@
   </section>
 
   <!-- ============ 账户 ============ -->
+  <section class="pane" role="tabpanel" id="pane-myfeedback">
+    <div class="sec-head">
+      <h2>我的反馈</h2>
+      <span class="muted" id="mfMeta"></span>
+      <span class="spacer"></span>
+      <button class="btn ghost xs" data-goto="all">去清单反馈 ›</button>
+    </div>
+    <div id="mfBody"></div>
+  </section>
+
   <section class="pane" id="pane-account">
     <div class="sec-head">
       <h2>账户</h2>
       <span class="muted">一个账号一套账本，多端同步</span>
+      <span class="spacer"></span>
+      <button class="btn ghost xs" id="toMyFeedback" type="button">我的反馈与回复</button>
     </div>
 
     <div class="authwrap" id="authForms">
@@ -500,7 +513,7 @@
      真人从搜索结果点进来会被误封。诱饵改放在 robots.txt 的 Disallow 里。 -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/app.js?v=3.0.46"></script>
+<script src="/app.js?v=3.0.50"></script>
   <button type="button" class="to-top" id="toTop" aria-label="回到顶部" tabindex="-1">↑</button>
 
 <!-- 小程序引导：桌面端悬浮，点开看码 -->

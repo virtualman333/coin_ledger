@@ -7,7 +7,7 @@
  * 单独一个 data/feedback.json 更省事，也方便直接看/备份。
  *
  * 结构：
- *   { items: [ { id, uid, userName, coinId, coinName, text, images:[文件名], status, createdAt, handledAt } ] }
+ *   { items: [ { id, uid, userName, coinId, coinName, text, images:[文件名], status, createdAt, handledAt, reply, repliedAt } ] }
  */
 const fs = require('fs');
 const path = require('path');
@@ -97,8 +97,27 @@ function update(id, patch) {
     hit.handledAt = patch.status === 'done' ? new Date().toISOString() : null;
   }
   if (typeof patch.note === 'string') hit.note = patch.note.slice(0, 500);
+  // 管理员回复：用户端可见。留空表示撤回回复。
+  if (typeof patch.reply === 'string') {
+    var r = patch.reply.trim().slice(0, 800);
+    if (r) { hit.reply = r; hit.repliedAt = new Date().toISOString(); }
+    else { delete hit.reply; delete hit.repliedAt; }
+  }
   save(doc);
   return hit;
+}
+
+/** 某用户自己的反馈（含管理员回复），按时间倒序 */
+function listByUser(uid) {
+  return load().items
+    .filter((x) => Number(x.uid) === Number(uid))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+    .map((x) => ({
+      id: x.id, coinId: x.coinId, coinName: x.coinName, text: x.text,
+      images: x.images || [], status: x.status,
+      createdAt: x.createdAt, handledAt: x.handledAt || null,
+      reply: x.reply || '', repliedAt: x.repliedAt || null
+    }));
 }
 
 function remove(id) {
@@ -113,4 +132,4 @@ function remove(id) {
   return hit;
 }
 
-module.exports = { load, list, add, update, remove, decodeImage, saveBuffer, saveImage, todayCount, IMG_DIR };
+module.exports = { load, list, listByUser, add, update, remove, decodeImage, saveBuffer, saveImage, todayCount, IMG_DIR };

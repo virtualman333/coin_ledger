@@ -78,6 +78,16 @@ function planDoc() {
   return readJson(config.PLAN_FILE, { updated: '', note: '', years: [] });
 }
 
+/** 贵金属发行计划（{ years:[{year,items[]}] }） */
+function planPmDoc() {
+  return readJson(config.PLAN_PM_FILE, { updated: '', years: [] });
+}
+
+/** 顶层品类注册表（{ categories:[...] }） */
+function categoriesDoc() {
+  return readJson(config.CATEGORIES_FILE, { categories: [] });
+}
+
 /** 目录绝对路径（文件名固定，只有 SEED/PLAN 可被环境变量改） */
 const FILES = {
   seed: config.SEED_FILE,
@@ -86,6 +96,8 @@ const FILES = {
   gallery: config.GALLERY_FILE,
   images: config.IMAGES_FILE,
   plan: config.PLAN_FILE,
+  planPm: config.PLAN_PM_FILE,
+  categories: config.CATEGORIES_FILE,
   dataDir: path.dirname(config.GALLERY_FILE)
 };
 
@@ -98,5 +110,7 @@ module.exports = {
   galleryDoc: galleryDoc,
   imagesDoc: imagesDoc,
   planDoc: planDoc,
+  planPmDoc: planPmDoc,
+  categoriesDoc: categoriesDoc,
   FILES: FILES
 };

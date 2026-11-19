@@ -48,6 +48,11 @@
         <text class="menu-v">{{displayName}}</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" hover-class="tap-hover" bindtap="goMyFeedback">
+        <text class="menu-k">我的反馈</text>
+        <text class="menu-v">查看处理结果与回复</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" hover-class="tap-hover" bindtap="goAbout">
         <text class="menu-k">关于藏币录</text>
         <text class="menu-v">v{{appVersion}}</text>

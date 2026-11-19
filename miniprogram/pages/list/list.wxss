@@ -272,3 +272,97 @@
   margin: 0 8rpx;
   color: #d6cebe;
 }
+
+/* 分类切换：普通纪念币 / 纪念钞 / 贵金属
+   之前 .cat-tabs / .cat-tab 没有任何样式，三个 view 直接挤成一行纯文字。 */
+.cat-tabs {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 18rpx 0 4rpx;
+}
+
+.cat-tab {
+  padding: 10rpx 28rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid #e6e0d4;
+  background: #ffffff;
+  color: #7d766b;
+  font-size: 25rpx;
+  line-height: 1.4;
+  transition: background .15s, color .15s;
+}
+
+.cat-tab.on {
+  background: #fbf1d8;
+  border-color: #d9bd82;
+  color: #9a6b1f;
+  font-weight: 600;
+}
+
+/* ===== 贵金属全量库（金币云集 2823 条）卡片网格 ===== */
+.pm-full { padding: 8rpx 24rpx 40rpx; }
+.pm-bar { font-size: 24rpx; color: #9a8f7c; margin: 6rpx 0 18rpx; }
+.pm-grid { display: flex; flex-wrap: wrap; gap: 18rpx; }
+.pm-card {
+  width: calc((100% - 18rpx) / 2);
+  box-sizing: border-box;
+  background: #fff;
+  border: 1rpx solid #eae2d2;
+  border-radius: 18rpx;
+  overflow: hidden;
+}
+.pm-card-hover { opacity: .88; transform: scale(.98); }
+.pm-ph {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.pm-ph::after {
+  content: "";
+  position: absolute;
+  left: 16%; top: 16%; right: 16%; bottom: 16%;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255,255,255,.55);
+  box-shadow: inset 0 0 0 10rpx rgba(255,255,255,.18);
+}
+.pm-ph text {
+  font-size: 64rpx;
+  font-weight: 800;
+  color: rgba(255,255,255,.92);
+  z-index: 1;
+}
+.pm-gold { background: linear-gradient(145deg, #d4a72c, #b8861b); }
+.pm-silver { background: linear-gradient(145deg, #b9c0c8, #9099a3); }
+.pm-platinum { background: linear-gradient(145deg, #8d95a0, #6b7480); }
+.pm-other { background: linear-gradient(145deg, #c9a227, #a88418); }
+.pm-card-b { padding: 14rpx 16rpx 18rpx; }
+.pm-card-t {
+  font-size: 25rpx;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #2b2620;
+  min-height: 72rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pm-card-m { margin-top: 8rpx; font-size: 21rpx; color: #9a8f7c; }
+.pm-card-f { margin-top: 8rpx; font-size: 21rpx; color: #b8861b; }
+.pm-card-c { margin-top: 6rpx; font-size: 19rpx; color: #b8ae9c; font-family: monospace; }
+.pm-loading, .pm-empty, .pm-end { text-align: center; font-size: 23rpx; color: #9a8f7c; padding: 28rpx 0; }
+.pm-more {
+  text-align: center;
+  font-size: 25rpx;
+  color: #a8781f;
+  font-weight: 600;
+  padding: 22rpx 0;
+  margin-top: 16rpx;
+  border: 1rpx solid #d9bd82;
+  border-radius: 14rpx;
+  background: #fbf1d8;
+}

@@ -1,6 +1,7 @@
 const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const api = require('../../utils/api');
 
 Page({
   data: {
@@ -23,6 +24,13 @@ Page({
     hasExtra: false,
     filterOpen: false,      // 筛选项默认收起，避免顶部占掉半屏
     extraCount: 0,          // 已生效的筛选条件数量（角标）
+    // 贵金属全量库（金币云集 2823 条）：分页接口，独立于本地 catalog
+    pmRows: [],
+    pmPage: 0,
+    pmPages: 0,
+    pmTotal: 0,
+    pmLoading: false,
+    pmLoaded: false,
   },
 
   onLoad(query) {
@@ -117,12 +125,84 @@ Page({
   },
 
   pickCategory(e) {
-    this.setData({ category: e.currentTarget.dataset.cat || 'coin' }, () => this.render());
+    const category = e.currentTarget.dataset.cat || 'coin';
+    this.setData({ category }, () => {
+      if (category === 'pm') {
+        if (!this.data.pmLoaded) this.loadPmFull(1, false);
+      } else {
+        this.render();
+      }
+    });
+  },
+
+  /** 贵金属全量库：从 /api/catalog/pm 分页拉（2823 条），带搜索 q */
+  loadPmFull(page, append) {
+    if (this.data.pmLoading) return;
+    this.setData({ pmLoading: true });
+    const kw = String(this.data.keyword || '').trim();
+    let path = '/api/catalog/pm?page=' + page + '&pageSize=30';
+    if (kw) path += '&q=' + encodeURIComponent(kw);
+    api.get(path).then((j) => {
+      const items = Array.isArray(j.items) ? j.items : [];
+      const rows = items.map((it) => ({
+        code: it.code,
+        codeId: it.code,
+        name: it.name,
+        year: it.year,
+        projectName: it.projectName,
+        metaText: [it.material, it.weightG ? it.weightG + '克' : '', it.quality].filter(Boolean).join(' · '),
+        faceText: it.face != null ? it.face + ' 元' : '—',
+        fineness: it.fineness,
+        metalClass: /金/.test(it.material || '') ? 'gold' : (/银/.test(it.material || '') ? 'silver' : (/铂/.test(it.material || '') ? 'platinum' : 'other')),
+        metalChar: /金/.test(it.material || '') ? '金' : (/银/.test(it.material || '') ? '银' : (/铂/.test(it.material || '') ? '铂' : '币')),
+      }));
+      this.setData({
+        pmRows: append ? this.data.pmRows.concat(rows) : rows,
+        pmPage: Number(j.page) || page,
+        pmPages: Number(j.pages) || 0,
+        pmTotal: Number(j.total) || 0,
+        pmLoading: false,
+        pmLoaded: true,
+        count: Number(j.total) || 0,
+      });
+    }).catch(() => {
+      this.setData({ pmLoading: false, pmLoaded: true, pmRows: [], count: 0 });
+      wx.showToast({ title: '贵金属目录加载失败', icon: 'none' });
+    });
+  },
+
+  loadMorePm() {
+    if (!this.data.pmLoaded || this.data.pmLoading) return;
+    if (this.data.pmPage < this.data.pmPages) this.loadPmFull(this.data.pmPage + 1, true);
+  },
+
+  onReachBottom() {
+    if (this.data.category === 'pm') this.loadMorePm();
+  },
+
+  /** 点贵金属卡片：弹出公告事实（无价格、无死链图片） */
+  goPmDetail(e) {
+    const code = e.currentTarget.dataset.code;
+    const it = this.data.pmRows.filter((x) => x.code === code)[0];
+    if (!it) return;
+    wx.showModal({
+      title: it.name,
+      content: '编号：' + it.code + '\n项目：' + (it.projectName || '—') + '\n年份：' + it.year
+        + '\n材质：' + it.metaText + '\n面额：' + it.faceText + '\n成色：' + (it.fineness || '—') + '%'
+        + '\n\n贵金属纪念币无稳定二级市场报价，本站不提供参考估值。',
+      showCancel: false,
+      confirmText: '知道了',
+    });
   },
 
   render() {
     const kw = String(this.data.keyword || '').trim().toLowerCase();
     const category = this.data.category || 'coin';
+    if (category === 'pm') {
+      // pm 模式数据来自分页接口，由 loadPmFull 维护；这里只处理服务端搜索的重新拉取
+      if (this.data.pmLoaded) this.loadPmFull(1, false);
+      return;
+    }
     const code = this.data.code;
     const owned = store.ownedNames();
     const onlyOwn = this.data.onlyOwn;

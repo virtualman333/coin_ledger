@@ -61,6 +61,7 @@ Page({
     keyword: '',
     feedbacks: [],
     fbStatus: 'open',
+    fbReply: '',
     editing: false,
     editName: '',
     editId: 0,
@@ -630,7 +631,7 @@ Page({
     const it = this.data.feedbacks.filter((x) => x.id === id)[0];
     if (!it) return;
     const images = (it.images || []).map((f) => (String(f).indexOf('http') === 0 ? f : api.BASE + '/feedback/' + f));
-    this.setData({ fbDetail: Object.assign({}, it, { images: images }) });
+    this.setData({ fbDetail: Object.assign({}, it, { images: images }), fbReply: it.reply || '' });
   },
 
   closeFb() {
@@ -640,6 +641,28 @@ Page({
   previewFbImage(e) {
     const src = e.currentTarget.dataset.src;
     wx.previewImage({ urls: this.data.fbDetail.images, current: src });
+  },
+
+  onFbReplyInput(e) {
+    this.setData({ fbReply: e.detail.value });
+  },
+
+  /** 回复并标记为已处理：用户在自己的反馈列表里能看到 */
+  saveFbReply() {
+    const it = this.data.fbDetail;
+    if (!it) return;
+    const reply = String(this.data.fbReply || '').trim();
+    if (!reply) { wx.showToast({ title: '先写点回复内容', icon: 'none' }); return; }
+    wx.showLoading({ title: '保存中' });
+    api.patch('/api/admin/feedback/' + it.id, { reply, status: 'done' }).then(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '已回复', icon: 'success' });
+      this.setData({ fbDetail: null, fbReply: '' });
+      this.loadFeedback();
+    }).catch((e) => {
+      wx.hideLoading();
+      wx.showToast({ title: e.message || '保存失败', icon: 'none' });
+    });
   },
 
   toggleFb() {

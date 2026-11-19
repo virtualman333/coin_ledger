@@ -60,6 +60,8 @@ module.exports = {
   getToken,
   setToken,
   get: (path) => request('GET', path),
+  // 品类化发行计划：Web 与小程序共用的只读接口
+  getPlans: (category) => request('GET', '/api/plans' + (category ? '?category=' + encodeURIComponent(category) : '')),
   put: (path, data) => request('PUT', path, data),
   post: (path, data) => request('POST', path, data),
   patch: (path, data) => request('PATCH', path, data),
