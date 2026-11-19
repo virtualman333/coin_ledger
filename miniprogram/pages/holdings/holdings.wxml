@@ -36,7 +36,7 @@
 
     <block wx:if="{{!empty}}">
       <view class="tools">
-        <text class="tools-text">{{groups.length}} 个分组 · 长按卡片可改数量与成本</text>
+        <text class="tools-text">{{groups.length}} 个分组 · 左滑或长按卡片可改数量与成本</text>
         <text class="tools-btn" hover-class="tap-hover" bindtap="toggleAll">{{allOpen ? '收起' : '展开'}}</text>
       </view>
 
@@ -56,17 +56,28 @@
           <view class="gbar"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
 
           <view
-            class="hcard"
+            class="hswipe"
             wx:for="{{group.items}}"
             wx:key="id"
             wx:for-index="ii"
-            data-g="{{gi}}"
-            data-i="{{ii}}"
-            data-id="{{item.coinId}}"
-            bindtap="goDetail"
-            bindlongpress="openSheet"
-            hover-class="tap-hover"
+            wx:for-item="item"
           >
+            <view class="hswipe-acts">
+              <view class="hs-act hs-cost" data-g="{{gi}}" data-i="{{ii}}" data-focus="cost" catchtap="openSheet">改成本</view>
+              <view class="hs-act hs-qty" data-g="{{gi}}" data-i="{{ii}}" data-focus="rolls" catchtap="openSheet">改数量</view>
+            </view>
+            <view
+              class="hcard {{swipeId === item.id ? 'swiped' : ''}}"
+              data-g="{{gi}}"
+              data-i="{{ii}}"
+              data-id="{{item.coinId}}"
+              data-hold="{{item.id}}"
+              bindtap="goDetail"
+              bindlongpress="openSheet"
+              bindtouchstart="swipeStart"
+              bindtouchend="swipeEnd"
+              hover-class="tap-hover"
+            >
             <view class="hc-fig">
               <image
                 wx:if="{{!item.imgFail}}"
@@ -100,11 +111,12 @@
               <text class="hc-val">¥{{item.marketText}}</text>
               <text class="hc-pnl {{item.pnlCls}}">{{item.pnlText}}<text wx:if="{{item.pnlPct !== null}}"> {{item.pnlPct > 0 ? '+' : ''}}{{item.pnlPct}}%</text></text>
             </view>
+            </view>
           </view>
         </view>
       </block>
 
-      <view class="foot-hint">长按任意一枚，可以改数量、改成本和移出</view>
+      <view class="foot-hint">左滑或长按任意一枚，可以改数量、改成本和移出</view>
     </block>
 
     <view class="foot-note" wx:if="{{syncTip}}">{{syncTip}}</view>
@@ -146,6 +158,7 @@
           class="sr-field"
           type="digit"
           value="{{sheet.unitCost}}"
+          focus="{{sheet.focus === 'cost'}}"
           bindinput="onSheetCost"
           placeholder="0"
           placeholder-class="ph"

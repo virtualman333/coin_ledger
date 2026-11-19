@@ -22,6 +22,7 @@ Page({
     },
     groups: [],
     empty: true,
+    swipeId: '',        // 左滑展开操作的那张卡片（持仓 id）
   },
 
   onShow() {
@@ -136,15 +137,17 @@ Page({
     });
   },
 
-  /** 长按卡片 → 底部操作面板 */
+  /** 长按卡片 / 左滑点操作 → 底部编辑面板 */
   openSheet(e) {
-    const gi = Number(e.currentTarget.dataset.g);
-    const ii = Number(e.currentTarget.dataset.i);
+    const ds = e.currentTarget.dataset;
+    const gi = Number(ds.g);
+    const ii = Number(ds.i);
     const group = this.data.groups[gi];
     const item = group && group.items[ii];
     if (!item) return;
     wx.vibrateShort && wx.vibrateShort({ type: 'light' });
     this.setData({
+      swipeId: '',
       sheet: {
         id: item.id,
         coinId: item.coinId,
@@ -157,8 +160,32 @@ Page({
         marketText: item.marketText,
         costText: item.costText,
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),
+        // 左滑「改成本」直接聚焦输入框；「改数量」聚焦步进器
+        focus: ds.focus || '',
       },
     });
+  },
+
+  swipeStart(e) {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    this._swipe = { x: t.clientX, y: t.clientY, id: e.currentTarget.dataset.hold || '' };
+  },
+
+  /** 只在水平位移明显大于垂直时判为左滑，避免和页面上下滚动打架 */
+  swipeEnd(e) {
+    const s = this._swipe;
+    this._swipe = null;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!s || !t || !s.id) return;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    this.setData({ swipeId: dx < 0 ? s.id : '' });
+  },
+
+  closeSwipe() {
+    if (this.data.swipeId) this.setData({ swipeId: '' });
   },
 
   noop() {},
@@ -192,7 +219,7 @@ Page({
       .then(() => store.refresh({ force: true }))
       .then(() => {
         wx.hideLoading();
-        this.setData({ sheet: null });
+        this.setData({ sheet: null, swipeId: '' });
         this.render();
         wx.showToast({ title: '已保存', icon: 'success' });
       })
@@ -213,7 +240,7 @@ Page({
       success: (res) => {
         if (!res.confirm) return;
         store.removeHolding(sheet.id).then(() => store.refresh({ force: true })).then(() => {
-          this.setData({ sheet: null });
+          this.setData({ sheet: null, swipeId: '' });
           this.render();
           wx.showToast({ title: '已移出', icon: 'success' });
         }).catch((err) => {
@@ -279,6 +306,8 @@ Page({
   },
 
   goDetail(e) {
+    // 卡片处于左滑展开状态时，点一下先收起，不跳详情
+    if (this.data.swipeId) { this.setData({ swipeId: '' }); return; }
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     wx.navigateTo({ url: '/pages/detail/detail?id=' + id });

@@ -51,10 +51,14 @@ function track(route) {
     if (now - last < 30000) return;           // 同页面 30 秒内不重复
     try { wx.setStorageSync(key, now); } catch (e) {}
 
+    // 必须带登录态：后端按 Authorization 解析出用户，管理端访客列表才显示是谁
+    const token = api.getToken();
+    const header = { 'content-type': 'application/json' };
+    if (token) header.Authorization = 'Bearer ' + token;
     wx.request({
       url: api.BASE + '/api/visit',
       method: 'POST',
-      header: { 'content-type': 'application/json' },
+      header,
       data: { sid: sid(), tab, path: route, client: 'mp' },
       fail() {},
     });

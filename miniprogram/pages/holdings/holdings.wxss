@@ -216,6 +216,47 @@
 }
 
 /* ================= 藏品卡片 ================= */
+/* 左滑：卡片左移，右侧露出「改成本 / 改数量」 */
+.hswipe {
+  position: relative;
+  margin-bottom: 16rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.hswipe .hcard {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+  transition: transform 0.22s ease;
+}
+
+.hswipe .hcard.swiped {
+  transform: translateX(-200rpx);
+}
+
+.hswipe-acts {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1;
+}
+
+.hs-act {
+  width: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1.3;
+}
+
+.hs-cost { background: #b98f43; }
+.hs-qty { background: #6b6459; }
+
 .hcard {
   display: flex;
   margin-bottom: 16rpx;
