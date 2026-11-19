@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS cl_coins (
   thickness      VARCHAR(16)      NULL,
   weight         VARCHAR(16)      NULL COMMENT 'legacy 展示文本 9.32克；结构化克重看 weight_g',
   caster         VARCHAR(64)      NULL,
-  edge           VARCHAR(32)      NULL COMMENT '初始宽度 32；005_edge_widen.sql 放宽到 128（公告原文最长 42 字符）',
+  edge           VARCHAR(32)      NULL,
   obverse        TEXT             NULL,
   reverse        TEXT             NULL,
   spec_from      VARCHAR(64)      NULL COMMENT '旧字段 specFrom：参数是否推定',
