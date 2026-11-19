@@ -1489,28 +1489,38 @@ tr.dirty .acell{border-color:rgba(212,175,55,.45)}
   transition:border-color .16s,background .16s,color .16s;
 }
 .why:hover,.why:focus-visible{border-color:var(--gold);background:var(--gold-hover);color:var(--text);outline:none}
+/* 气泡必须默认 display:none。哪怕只是 opacity:0，它仍然占着布局宽度，
+ * 把整页 scrollWidth 从 390 撑到 585（手机上能横向拖出一片空白），所以改成
+ * 显示时才挂载，入场动效交给 animation。 */
 .why::after{
-  content:attr(data-tip);
+  content:attr(data-tip);display:none;
   position:absolute;left:-10px;bottom:calc(100% + 9px);z-index:40;
   width:max-content;max-width:min(280px,72vw);
   padding:9px 11px;border-radius:10px;border:1px solid var(--line2);
   background:var(--surf-2);color:var(--text);
   box-shadow:0 12px 30px var(--sh-3),0 0 0 1px var(--hair);
   font:400 12px/1.65 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-  letter-spacing:0;text-align:left;white-space:normal;
-  opacity:0;transform:translateY(4px);pointer-events:none;
-  transition:opacity .16s ease,transform .16s ease;
+  letter-spacing:0;text-align:left;white-space:normal;pointer-events:none;
 }
 .why::before{
-  content:"";position:absolute;left:13px;bottom:calc(100% + 4px);z-index:41;
+  content:"";display:none;
+  position:absolute;left:13px;bottom:calc(100% + 4px);z-index:41;
   width:9px;height:9px;transform:rotate(45deg);
   background:var(--surf-2);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);
-  opacity:0;transition:opacity .16s ease;
 }
-.why:hover::after,.why:focus-visible::after,.why.on::after{opacity:1;transform:translateY(0)}
-.why:hover::before,.why:focus-visible::before,.why.on::before{opacity:1}
-@media (max-width:520px){
-  .why::after{left:-4px;max-width:66vw}
+.why:hover::after,.why:focus-visible::after,.why.on::after{display:block;animation:whyIn .16s ease both}
+.why:hover::before,.why:focus-visible::before,.why.on::before{display:block;animation:whyFade .16s ease both}
+@keyframes whyIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes whyFade{from{opacity:0}to{opacity:1}}
+/* 手机上按钮常贴着行尾，280px 的锚定气泡放不下，改成贴着底部的浮层，拇指也够得到 */
+@media (max-width:640px){
+  .why::after{
+    position:fixed;left:12px;right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom,0px));
+    width:auto;max-width:none;z-index:120;
+    box-shadow:0 18px 40px var(--sh-3),0 0 0 1px var(--hair);
+  }
+  .why::before{display:none!important}
 }
 
 /* ---------- 管理后台 v2 ---------- */
@@ -2611,3 +2621,96 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   .pm-card-t{font-size:11.5px;min-height:32px}
   .pm-modal{padding:16px}
 }
+
+/* 贵金属详情：向普通币详情页看齐（币面图 + 图案说明 + 规格 + 公告） */
+.pm-figs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px}
+.pm-fig{margin:0;text-align:center}
+.pm-fig img{
+  width:100%;aspect-ratio:1;object-fit:contain;cursor:zoom-in;
+  border-radius:10px;background:var(--hair);border:1px solid var(--line2)
+}
+.pm-fig-na{
+  width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;background:var(--hair)
+}
+.pm-fig figcaption{margin-top:6px;font-size:11px;color:var(--dim);line-height:1.6}
+.pm-fig figcaption b{color:var(--text);margin-right:6px}
+.pm-more-facts{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:12px}
+.pm-announce{margin:12px 0 4px;border-top:1px solid var(--hair);padding-top:10px}
+.pm-announce summary{cursor:pointer;font-size:12px;color:var(--gold);font-weight:600;list-style:none}
+.pm-announce summary::-webkit-details-marker{display:none}
+.pm-announce summary:before{content:'▸ '}
+.pm-announce[open] summary:before{content:'▾ '}
+.pm-ann-text{
+  margin-top:8px;max-height:220px;overflow:auto;white-space:pre-wrap;
+  font-size:12px;line-height:1.85;color:var(--muted)
+}
+.pm-src{margin-top:10px;font-size:10.5px;color:var(--dim)}
+@media (max-width:640px){
+  .pm-figs{gap:8px}
+  .pm-more-facts{grid-template-columns:1fr 1fr}
+}
+
+/* 贵金属项目筛选（与系列下拉区分，强调是另一套分类） */
+.pm-full-bar select.pm-full-q{cursor:pointer;max-width:220px}
+
+/* 贵金属卡片：用数据库里存的本地缩略图，不再显示金色占位符号 */
+.pm-thumb{
+  width:100%;aspect-ratio:1;object-fit:cover;
+  display:block;border-radius:10px 10px 0 0;background:#f6f4ef
+}
+
+/* =========================================================
+   2026-11-20 手机首屏：一屏看懂这站是什么、一屏内能点开始
+   1) 小程序引导条默认收起（只留一行），二维码点开才占位
+   2) 品牌行在顶栏已出现过，首屏不再重复
+   3) 5 项统计压成一排（原来 2 列 3 行 208px，最后一项还独占一行）
+   4) 顶栏触控目标补到 44px
+   ========================================================= */
+@media (max-width:640px){
+  .hh-kicker{display:none}
+
+  .home-stats{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:6px 2px;margin-top:16px;padding:12px 6px
+  }
+  .home-stats .hs b{font-size:17px;line-height:1.3}
+  .home-stats .hs i{font-size:10px;letter-spacing:0;white-space:nowrap}
+  .home-stats>*:last-child:nth-child(odd){grid-column:auto;justify-self:stretch;min-width:0}
+
+  #authBtn{min-height:44px;display:inline-flex;align-items:center}
+  #themeBtn{width:44px;height:44px}
+  .sysbar-brand{min-height:44px}
+
+  .mp-inline{margin-bottom:10px}
+  .mpi-head{padding:9px 12px}
+  .mpi-more{position:relative;height:34px}
+  .mpi-more::after{content:"";position:absolute;inset:-6px -6px}
+
+  /* 5) 剩余的小热区：视觉大小不变，用伪元素把可点范围往外长，
+   *    这样不改变布局高度（统计栏仍留在首屏），又不会点不中。 */
+  .mpi-x{position:relative}
+  .mpi-x::after{content:"";position:absolute;inset:-9px}
+  .why{position:relative}
+  .why::before{content:"";position:absolute;inset:-15px;display:block!important;
+    border:0!important;background:none!important;transform:none!important;opacity:1!important}
+  /* 轮播点只有 6px。要凑到 44px 就必须让热区大幅压到相邻点甚至上面的主图上，
+   * 反而把点击抢走，所以这里按 WCAG 2.5.8 的 AA 底线做成 24×24，并把间距拉到 18px
+   * 保证相邻热区不重叠（6+18=24，正好首尾相接）。 */
+  .hh-dots{gap:18px}
+  .hh-dot{position:relative}
+  .hh-dot::after{content:"";position:absolute;inset:-9px}
+}
+
+/* 藏品页品类筛选 */
+.hold-cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.hold-cats button{
+  appearance:none;border:1px solid var(--line2);background:var(--panel);
+  color:var(--muted);font-family:inherit;font-size:12px;line-height:1.5;
+  padding:6px 13px;border-radius:999px;cursor:pointer
+}
+.hold-cats button.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold);font-weight:600}
+
+/* 贵金属详情操作区（和普通币详情页的收藏按钮同款位置） */
+.pm-detail-actions{display:flex;justify-content:center;margin:14px 0 4px}
+.pm-detail-actions .btn{min-width:160px}

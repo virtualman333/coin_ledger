@@ -44,7 +44,7 @@
   "inLanguage": "zh-CN"
 }
 </script>
-<link rel="stylesheet" href="/app.css?v=3.0.37">
+<link rel="stylesheet" href="/app.css?v=3.0.59">
 <script>
 /* 在首帧前定好主题，避免深色闪一下再变白 */
 (function(){
@@ -285,6 +285,12 @@
         <span class="muted">按账本记 · 整卷 20 枚、独立钞按张 · 数字可直接修改</span>
         <span class="spacer"></span>
       </div>
+      <div class="hold-cats" id="holdCats">
+        <button type="button" class="on" data-hcat="all">全部</button>
+        <button type="button" data-hcat="coin">普通纪念币</button>
+        <button type="button" data-hcat="note">纪念钞</button>
+        <button type="button" data-hcat="pm">贵金属</button>
+      </div>
       <div id="holdingsBox"></div>
 
       <div class="sec-head" style="margin-top:30px">
@@ -513,7 +519,7 @@
      真人从搜索结果点进来会被误封。诱饵改放在 robots.txt 的 Disallow 里。 -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/app.js?v=3.0.50"></script>
+<script src="/app.js?v=3.0.59"></script>
   <button type="button" class="to-top" id="toTop" aria-label="回到顶部" tabindex="-1">↑</button>
 
 <!-- 小程序引导：桌面端悬浮，点开看码 -->
