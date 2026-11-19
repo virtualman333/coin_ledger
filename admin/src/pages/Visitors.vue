@@ -15,6 +15,7 @@
         <el-radio-button value="all">全部</el-radio-button>
       </el-radio-group>
       <span class="cl-mono vs-range">{{ rangeHint }}</span>
+      <span class="cl-mono vs-live" v-if="lastUpdated">更新于 {{ lastUpdated }} · 每 30 秒自动刷新</span>
       <div class="cl-spacer" />
       <el-radio-group v-model="client" size="small" @change="onFilterChange">
         <el-radio-button value="all">全部来源</el-radio-button>
@@ -31,8 +32,8 @@
       <div class="cl-stat-grid">
         <div class="cl-stat"><b>{{ data.rangePv ?? 0 }}</b><span>{{ rangeLabel }} PV</span></div>
         <div class="cl-stat"><b>{{ data.rangeUv ?? 0 }}</b><span>{{ rangeLabel }}独立 IP</span></div>
-        <div class="cl-stat"><b>{{ data.todayPv ?? 0 }}</b><span>今日 PV</span></div>
-        <div class="cl-stat"><b>{{ data.todayUv ?? 0 }}</b><span>今日独立 IP</span></div>
+        <div class="cl-stat" v-if="range !== 'today'"><b>{{ data.todayPv ?? 0 }}</b><span>今日 PV</span></div>
+        <div class="cl-stat" v-if="range !== 'today'"><b>{{ data.todayUv ?? 0 }}</b><span>今日独立 IP</span></div>
         <div class="cl-stat"><b>{{ data.allPv ?? 0 }}</b><span>累计 PV</span></div>
         <div class="cl-stat"><b>{{ data.allUv ?? 0 }}</b><span>累计独立 IP</span></div>
         <div class="cl-stat"><b>{{ data.avgPages ?? 0 }}</b><span>平均每会话页</span></div>
@@ -148,7 +149,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import PageHeader from '../components/PageHeader.vue';
 import AsyncState from '../components/AsyncState.vue';
@@ -162,7 +163,15 @@ const TABS = {
   overview: '总览', cost: '成本'
 };
 function tabName(k) { return TABS[k] || k || '—'; }
-function fmt(v) { return v ? String(v).replace('T', ' ').slice(0, 16) : '—'; }
+/** 后端存 UTC ISO，直接截串会差 8 小时；这里按浏览器本地时区显示 */
+function fmt(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).replace('T', ' ').slice(0, 16);
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+    + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
 function device(ua) {
   const s = String(ua || '');
   if (/iPhone|Android|Mobile/i.test(s)) return '手机';
@@ -212,11 +221,16 @@ const rows = computed(() => rowsAll.value.slice((page.value - 1) * size.value, p
 const maxPv = computed(() => Math.max(1, ...daily.value.map((d) => Number(d.pv) || 0)));
 function barWidth(pv) { return Math.round((Number(pv) || 0) / maxPv.value * 100); }
 
-async function load() {
-  loading.value = true;
+const lastUpdated = ref('');
+
+async function load(opts) {
+  const silent = !!(opts && opts.silent);
+  if (silent && loading.value) return;
+  if (!silent) loading.value = true;
   error.value = '';
   try {
     data.value = await visitorsApi.list({ client: client.value, range: range.value });
+    lastUpdated.value = new Date().toLocaleTimeString('zh-CN', { hour12: false });
   } catch (e) {
     error.value = errorMessage(e);
   } finally {
@@ -224,7 +238,25 @@ async function load() {
   }
 }
 function onFilterChange() { page.value = 1; load(); }
-onMounted(load);
+
+// 访客数据是实时写入的，页面每 30 秒静默拉一次；切回标签页立刻补一次
+const POLL_MS = 30000;
+let timer = 0;
+function onVisible() {
+  if (document.visibilityState === 'visible') load({ silent: true });
+}
+onMounted(() => {
+  load();
+  timer = setInterval(() => {
+    if (document.visibilityState === 'hidden') return;
+    load({ silent: true });
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', onVisible);
+});
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer);
+  document.removeEventListener('visibilitychange', onVisible);
+});
 
 /* 明细 */
 const drawer = ref(false);
@@ -259,6 +291,7 @@ async function openDetail(row) {
 <style scoped>
 .vs-h3 { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
 .vs-range { font-size: 12px; color: var(--cl-muted); }
+.vs-live { font-size: 12px; color: var(--cl-dim); }
 .vs-source { font-size: 11px; color: var(--cl-dim); margin: -6px 0 10px; }
 .vs-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .vs-trend { max-height: 260px; overflow-y: auto; }
