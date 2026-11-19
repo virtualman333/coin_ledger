@@ -54,10 +54,10 @@ before(async () => {
   const seedFile = path.join(tmpDir, 'coins.json');
   fs.writeFileSync(seedFile, JSON.stringify({
     updated: '2026-01-01',
-    series: { SX: '生肖贺岁', EV: '周年庆典' },
+    series: { SX1: '一轮生肖贺岁', EV: '周年庆典' },
     sets: {}, defaults: [],
     coins: [
-      { i: 0, name: '测试币A', year: 2000, series: 'SX', seriesKeys: ['SX'] },
+      { i: 0, name: '测试币A', year: 2000, series: 'SX1', seriesKeys: ['SX1'] },
       { i: 1, name: '测试币B', year: 2001, series: 'EV', seriesKeys: ['EV'] }
     ]
   }), 'utf8');
@@ -208,21 +208,21 @@ test('审计记录发行计划更新', async () => {
 
 
 test('系列成员：整份设置与 count 更新', async () => {
-  const r = await request('POST', '/api/admin/series/members', { key: 'SX', ids: [1, 2] });
+  const r = await request('POST', '/api/admin/series/members', { key: 'SX1', ids: [1, 2] });
   assert.equal(r.status, 200);
   assert.equal(r.body.count, 2);
-  assert.equal(r.body.changed, 1);   // 币A 本来就在 SX，只需给币B 加上
+  assert.equal(r.body.changed, 1);   // 币A 本来就在 SX1，只需给币B 加上
   const series = await request('GET', '/api/series');
-  const sx = series.body.items.find((x) => x.key === 'SX');
+  const sx = series.body.items.find((x) => x.key === 'SX1');
   assert.equal(sx.count, 2);
 });
 
 test('系列成员：移除后 count 归零，不回退到主系列', async () => {
-  const r = await request('POST', '/api/admin/series/members', { key: 'SX', ids: [] });
+  const r = await request('POST', '/api/admin/series/members', { key: 'SX1', ids: [] });
   assert.equal(r.status, 200);
   assert.equal(r.body.count, 0);
   const series = await request('GET', '/api/series');
-  assert.equal(series.body.items.find((x) => x.key === 'SX').count, 0);
+  assert.equal(series.body.items.find((x) => x.key === 'SX1').count, 0);
 });
 
 test('系列成员：不存在的系列被拒绝', async () => {

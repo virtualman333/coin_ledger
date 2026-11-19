@@ -1,0 +1,21 @@
+sequenceDiagram
+  autonumber
+  participant SH as Supervisor
+  participant C as config.js
+  participant D as DataSource
+  participant MR as CoinRepo(mysql)
+  participant JR as CoinRepo(json)
+
+  SH->>C: restart coin-ledger (env DATA_SOURCE=db)
+  C->>C: 解析开关，缺省 json（上线首启不改变现状）
+  C->>D: init(mode)
+  alt mode = db
+    D->>MR: 装配 MySQL 仓储
+    MR->>MR: ping + 校验 cl_coins 存在
+    MR-->>D: 读写可用
+  else mode = json
+    D->>JR: 装配 JSON 只读仓储（启动读入 public/data）
+    JR-->>D: 读路径可用，写路径返回 503 只读模式
+  end
+  D-->>C: Repos 就绪
+  Note over C: 切换顺序 先切读 S2 → 观察 5 分钟 → 再切写 S3；回滚改回 json 后重启即可（≤10s）

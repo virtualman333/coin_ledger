@@ -1,0 +1,157 @@
+classDiagram
+  direction LR
+
+  class CoinRow {
+    +number id
+    +number no
+    +string category
+    +number category_rank
+    +string kind
+    +number year
+    +string name
+    +string series
+    +List~string~ series_keys
+    +number face
+    +number mintage
+    +string material
+    +number dia
+    +string dia_text
+    +string size
+    +number est
+    +string set_code
+    +number pieces
+    +string metal
+    +number purity
+    +number weight_g
+    +boolean is_set
+    +number set_pieces
+    +string source_url
+    +string status
+  }
+
+  class PmPieceRow {
+    +number coin_no
+    +number seq
+    +string name
+    +string metal
+    +number weight_g
+    +number purity
+    +number face
+    +number max_mintage
+    +string shape
+    +string size_text
+  }
+
+  class DescriptionRow {
+    +number coin_no
+    +string title
+    +string url
+    +string body
+    +string body_md
+    +string published_on
+    +string source
+  }
+
+  class ImageRow {
+    +number coin_no
+    +string kind
+    +string filename
+    +boolean is_mock
+  }
+
+  class SeriesRow {
+    +string series_key
+    +string name
+    +string descr
+    +string img
+    +number sort
+  }
+
+  class PlanYearRow {
+    +number year
+    +string published_at
+    +string published_by
+    +string itemsJson
+  }
+
+  class CoinRepo {
+    +listPublished(filter) CoinRow[]
+    +findByNo(no) CoinRow
+    +insert(data) number
+    +update(no, patch) CoinRow
+    +nextNo() number
+    +countByCategory() Map
+  }
+
+  class JsonCoinRepo {
+    +listPublished(filter) CoinRow[]
+    +findByNo(no) CoinRow
+    +insert(data) never
+    +update(no, patch) never
+  }
+
+  class PmPieceRepo {
+    +listByCoin(no) PmPieceRow[]
+    +replaceAll(no, pieces) void
+  }
+
+  class CatalogService {
+    -string CATALOG_ORDER_SQL
+    +query(filter) CoinDTO[]
+    +projectLegacyCoin(row) object
+    +projectCatalogCoin(row) object
+    +buildBootstrap(user) object
+    +assertOrder(rows) void
+  }
+
+  class CoinService {
+    +create(payload, actor) CoinRow
+    +update(no, patch, actor) CoinRow
+    +setStatus(no, status, actor) CoinRow
+    +removeDraft(no, actor) void
+    -assertNoImmutable(no) void
+    -assertNewNoRange(no) void
+  }
+
+  class PmService {
+    +createSet(payload, actor) CoinRow
+    +updateSet(no, patch, actor) CoinRow
+    +replacePieces(no, pieces, actor) void
+    +validate(payload) ValidationResult
+    +publish(no, actor) CoinRow
+  }
+
+  class SeoService {
+    +renderIndex(route) string
+    +ssrCoinBlock(coin, idx) string
+    +sitemapEntries() SitemapEntry[]
+    +productJsonLd(coin) object
+  }
+
+  class DataSource {
+    +string mode
+    +Repos repos
+    +assertWritable() void
+  }
+
+  class Audit {
+    +log(actor, action, target, detail, ip) void
+  }
+
+  CoinRepo <|.. JsonCoinRepo : JSON 只读回退
+  CoinRepo --> CoinRow : 读
+  CoinRow "1" --> "0..1" DescriptionRow : coin_no
+  CoinRow "1" --> "0..*" PmPieceRow : coin_no
+  CoinRow "1" --> "0..*" ImageRow : coin_no
+  CoinRow "0..*" --> "0..1" SeriesRow : series_key
+  PlanYearRow ..> CoinRow : 只含普通币钞（不含贵金属）
+  CatalogService --> CoinRepo : 依赖
+  CatalogService --> PmPieceRepo : 依赖
+  CatalogService --> SeoService : 供数
+  CoinService --> CoinRepo : 写
+  CoinService --> Audit : 审计
+  PmService --> CoinRepo : 写
+  PmService --> PmPieceRepo : 写
+  SeoService --> CatalogService : 取数
+  DataSource --> CoinRepo : 装配
+  DataSource --> PmPieceRepo : 装配

@@ -10,16 +10,23 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "check": "node --check server/index.js && node --check server/store.js && node --check server/store-json.js && node --check server/store-mysql.js && node --check server/auth.js && node --check server/guard.js && node --check server/visitors.js && node --check public/app.js",
-    "test": "node --test tests/guard.test.js tests/mp-fab.test.js tests/admin-api.test.js tests/visitors-range.test.js tests/visitors-api.test.js tests/mp-visit-auth.test.js tests/mp-holdings-swipe.test.js",
+    "check": "node tools/check-syntax.js",
+    "test": "node --test tests/guard.test.js tests/mp-fab.test.js tests/admin-api.test.js tests/visitors-range.test.js tests/visitors-api.test.js tests/mp-visit-auth.test.js tests/mp-holdings-swipe.test.js tests/contract-smoke.test.js tests/catalog-migrate.test.js",
     "migrate": "node tools/migrate-to-mysql.js",
     "smoke": "node tools/smoke.js",
     "seo:push": "node tools/baidu_push.js",
     "mp:upload": "node tools/mp_upload.js",
     "mp:preview": "node tools/mp_preview.js",
-    "mp:smoke": "node tools/mp_smoke.js"
+    "mp:smoke": "node tools/mp_smoke.js",
+    "snapshot:record": "node tools/api-snapshot.js --record",
+    "snapshot:check": "node tools/api-snapshot.js --check",
+    "migrate:catalog": "node tools/migrate-catalog-to-db.js",
+    "export:json": "node tools/export-json.js",
+    "diff:catalog": "node tools/diff-catalog.js"
   },
   "dependencies": {
+    "fastify": "^4.29.1",
+    "fastify-plugin": "^4.5.1",
     "miniprogram-ci": "^2.1.31",
     "mysql2": "^3.24.6"
   },

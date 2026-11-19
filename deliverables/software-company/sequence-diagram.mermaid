@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  participant B as Browser
+  participant N as Nginx
+  participant F as Fastify(app.js)
+  participant G as plugin/security
+  participant A as plugin/auth
+  participant R as routes/catalog
+  participant S as CatalogService
+  participant P as CoinRepo(mysql)
+  participant DB as MySQL
+
+  B->>N: GET /api/bootstrap
+  N->>F: proxy_pass 127.0.0.1:3100
+  F->>G: onRequest guard.inspect(cls=read)
+  G-->>F: 放行（或 429/403 JSON）
+  F->>A: preHandler 解析 Cookie 得到 req.user
+  A-->>F: user 或 null
+  F->>R: handler(req, reply)
+  R->>S: buildBootstrap(user, prices)
+  S->>P: listPublished(status=published)
+  P->>DB: SELECT ... ORDER BY no ASC
+  DB-->>P: rows(137)
+  P-->>S: CoinRow[]
+  S->>S: projectLegacyCoin(row) 逐行投影（唯一实现）
+  S->>P: listSeries / listSets / listImages / listPlan / listDefaults
+  P-->>S: 元数据集合
+  S-->>R: coins, series, sets, desc, plan, defaults, gallery
+  R-->>F: reply.send(payload)
+  F->>F: onSend 补 Cache-Control no-store
+  F-->>N: 200 JSON
+  N-->>B: 200

@@ -1,0 +1,38 @@
+sequenceDiagram
+  autonumber
+  participant AD as Admin UI
+  participant R as routes/admin/pm
+  participant PS as PmService
+  participant CR as CoinRepo
+  participant PR as PmPieceRepo
+  participant DB as MySQL
+  participant AU as Audit
+
+  AD->>R: POST /api/admin/pm (新建，默认 draft)
+  R->>R: requireAdmin()
+  R->>PS: createSet(payload, actor)
+  PS->>PS: validate(payload) 必填与条件必填
+  alt 校验失败
+    PS-->>R: ok=false, error, field
+    R-->>AD: 400 字段级错误
+  else 校验通过
+    PS->>CR: nextNo() + insert(data)
+    CR->>DB: BEGIN; SELECT MAX(no) FOR UPDATE; INSERT cl_coins; COMMIT
+    DB-->>CR: newNo = 138
+    CR-->>PS: CoinRow
+    PS->>PR: replaceAll(138, pieces)
+    PR->>DB: DELETE + INSERT cl_pm_pieces（同事务）
+    PS->>AU: log(actor, pm.create, 138, 15 枚, ip)
+    PS->>PS: bumpCatalogRev() 使 60s 缓存失效
+    PS-->>R: CoinRow
+    R-->>AD: 200 ok=true, coin
+  end
+
+  AD->>R: POST /api/admin/pm/138/status (published)
+  R->>PS: publish(138, actor)
+  PS->>PS: 断言 verified=1 且 pieces 行数 = set_pieces
+  PS->>CR: setStatus(138, published)
+  CR->>DB: UPDATE cl_coins SET status=? WHERE no=138
+  PS->>AU: log(actor, pm.publish, 138)
+  PS-->>R: CoinRow
+  R-->>AD: 200 ok=true
