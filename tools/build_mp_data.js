@@ -10,12 +10,12 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const OUT = path.join(ROOT, 'miniprogram', 'data', 'catalog.js');
+const OUT = process.env.MP_OUT || path.join(ROOT, 'miniprogram', 'data', 'catalog.js');
 
 /* T04：优先吃 export:json 的 latest 产物（与 DB 同源）；没有就回落 public/data，
    并明确打印警告 —— 灰度期两者可能不同步，静默回落最危险（arch 6.3）。 */
-const LATEST = path.join(ROOT, 'data', 'exports', 'latest');
-const SRC = fs.existsSync(path.join(LATEST, 'coins.json')) ? LATEST : path.join(ROOT, 'public', 'data');
+const LATEST = process.env.MP_EXPORT_DIR || path.join(ROOT, 'data', 'exports', 'latest');
+const SRC = process.env.MP_EXPORT_DIR || (fs.existsSync(path.join(LATEST, 'coins.json')) ? LATEST : path.join(ROOT, 'public', 'data'));
 if (SRC === path.join(ROOT, 'public', 'data')) {
   console.warn('  ! data/exports/latest 不存在，回落 public/data/*.json（请先跑 export:json）');
 }
@@ -95,60 +95,100 @@ try {
   console.warn('  ! 没读到 plan.json，发行计划将为空');
 }
 
-/* 贵金属已上架套：从种子文件读取（draft 不打包），字段与网站 /api/catalog 一致。
-   种子路径与后端共用 config.PM_SEED_FILE 的默认值（这里不连库、不引 Fastify）。 */
-const pmSeedFile = path.join(ROOT, 'data', 'seeds', 'precious-metal-2026.json');
-let pmRows = [];
+/* 贵金属套：以「导出产物」判定是否已上架，规格明细从种子按 no 关联。
+   db 模式下 publish 只改 cl_coins.status，种子文件永远是 draft ——
+   只看种子会把已上架的套当成普通币打进包（QA 第 6 个 Bug）。
+   export:json 已给上架 PM 补 category/status/no，这里优先认它；
+   两种来源按 no 去重，draft 绝不进包。 */
+const pmSeedFile = process.env.MP_PM_SEED_FILE || path.join(ROOT, 'data', 'seeds', 'precious-metal-2026.json');
+const pmRowFromSet = (s) => ({
+  id: Number(s.no),
+  no: Number(s.no),
+  category: 'precious_metal',
+  hasPrice: false,
+  year: s.year,
+  name: s.name,
+  series: s.series || 'PM',
+  seriesKeys: s.series_keys || ['PM'],
+  face: s.face,
+  mintage: null,
+  mintageNote: s.mintage_note || '',
+  material: s.material || '',
+  dia: '—',
+  diaText: '—',
+  diaLabel: '规格',
+  thickness: '',
+  weight: s.set_weight_g ? s.set_weight_g + ' 克（全套）' : '',
+  caster: s.caster || '',
+  edge: '',
+  obverse: s.obverse || '',
+  reverse: s.reverse || '',
+  specFrom: '',
+  limit: 0,
+  kind: 'coin',
+  est: undefined,
+  set: 'single',
+  pieces: s.set_pieces,
+  setSize: s.set_pieces,
+  img: fs.existsSync(path.join(ROOT, 'public', 'img', String(s.no).padStart(3, '0') + '.jpg')),
+  pm: {
+    metal: s.metal, purity: s.purity, weightG: s.weight_g, weightText: null,
+    spec: null, shape: s.shape, quality: s.quality, issueMethod: s.issue_method,
+    issueDate: s.issue_date, isSet: !!s.is_set, setPieces: s.set_pieces,
+    setWeightG: s.set_weight_g, setFaceTotal: s.set_face_total,
+    salesChannel: s.sales_channel, dealer: s.dealer, certificate: s.certificate,
+    packaging: s.packaging, mintageNote: s.mintage_note,
+    pieces: (s.pieces || []).map((p) => ({
+      seq: p.seq, name: p.name, metal: p.metal, weightG: p.weight_g, purity: p.purity,
+      face: p.face, maxMintage: p.max_mintage, mintageUnit: 'piece', shape: p.shape,
+      sizeText: p.size_text, quality: p.quality, reverseText: p.reverse_text || ''
+    }))
+  }
+});
+
+const collectPmSources = (exportedCoins, seedDoc) => {
+  const seedSets = (seedDoc && seedDoc.sets) || [];
+  const byNo = new Map(seedSets.map((x) => [Number(x.no), x]));
+  const published = new Set();
+
+  (Array.isArray(exportedCoins) ? exportedCoins : []).forEach((c) => {
+    if (c.category !== 'precious_metal') return;
+    if (c.status && c.status !== 'published') return;
+    published.add(Number(c.no));
+  });
+  seedSets.forEach((x) => { if (x.status === 'published') published.add(Number(x.no)); });
+
+  // 普通币钞：导出里若混入 PM 老形态行，统一剔除，避免「同 no 两条」
+  const noOf = (c) => (c && c.no !== undefined ? Number(c.no) : Number(c && c.i) + 1);
+  const ordinary = (Array.isArray(exportedCoins) ? exportedCoins : [])
+    .filter((c) => c.category !== 'precious_metal' && noOf(c) <= 137);
+
+  const pmRows = Array.from(published).sort((a, b) => a - b).map((no) => {
+    const seedSet = byNo.get(no);
+    if (seedSet) return pmRowFromSet(Object.assign({}, seedSet, { status: 'published' }));
+    // 管理端新建、种子里没有的套：仍按 PM 形态出包（无规格表），绝不误标普通币
+    const exported = (Array.isArray(exportedCoins) ? exportedCoins : [])
+      .filter((c) => noOf(c) === no)[0] || {};
+    return pmRowFromSet({
+      no: no, year: exported.year || 2026, name: exported.name || ('贵金属 ' + no),
+      series: 'PM', face: exported.face || 0, material: exported.material || '',
+      set_pieces: 0, status: 'published', pieces: []
+    });
+  });
+  return { ordinary: ordinary, pmRows: pmRows };
+};
+
+let pmSeedDoc = { sets: [] };
 try {
-  const pmDoc = JSON.parse(fs.readFileSync(pmSeedFile, 'utf8'));
-  pmRows = (pmDoc.sets || []).filter((s) => s.status === 'published').map((s) => ({
-    id: s.no,
-    no: s.no,
-    category: 'precious_metal',
-    hasPrice: false,
-    year: s.year,
-    name: s.name,
-    series: s.series || 'PM',
-    seriesKeys: s.series_keys || ['PM'],
-    face: s.face,
-    mintage: null,
-    mintageNote: s.mintage_note || '',
-    material: s.material || '',
-    dia: '—',
-    diaText: '—',
-    diaLabel: '规格',
-    thickness: '',
-    weight: s.set_weight_g ? s.set_weight_g + ' 克（全套）' : '',
-    caster: s.caster || '',
-    edge: '',
-    obverse: s.obverse || '',
-    reverse: s.reverse || '',
-    specFrom: '',
-    limit: 0,
-    kind: 'coin',
-    est: undefined,
-    set: 'single',
-    pieces: s.set_pieces,
-    setSize: s.set_pieces,
-    img: fs.existsSync(path.join(ROOT, 'public', 'img', String(s.no).padStart(3, '0') + '.jpg')),
-    pm: {
-      metal: s.metal, purity: s.purity, weightG: s.weight_g, weightText: null,
-      spec: null, shape: s.shape, quality: s.quality, issueMethod: s.issue_method,
-      issueDate: s.issue_date, isSet: !!s.is_set, setPieces: s.set_pieces,
-      setWeightG: s.set_weight_g, setFaceTotal: s.set_face_total,
-      salesChannel: s.sales_channel, dealer: s.dealer, certificate: s.certificate,
-      packaging: s.packaging, mintageNote: s.mintage_note,
-      pieces: (s.pieces || []).map((p) => ({
-        seq: p.seq, name: p.name, metal: p.metal, weightG: p.weight_g, purity: p.purity,
-        face: p.face, maxMintage: p.max_mintage, mintageUnit: 'piece', shape: p.shape,
-        sizeText: p.size_text, quality: p.quality, reverseText: p.reverse_text || ''
-      }))
-    }
-  }));
+  pmSeedDoc = JSON.parse(fs.readFileSync(pmSeedFile, 'utf8'));
 } catch (e) {
-  console.warn('  ! 贵金属种子不可读，小程序包不含贵金属：' + e.message);
+  console.warn('  ! 贵金属种子不可读，已上架套将按导出形态打包：' + e.message);
 }
-const allCoins = coins.concat(pmRows);
+const collected = collectPmSources(coins, pmSeedDoc);
+const pmRows = collected.pmRows;
+const allCoins = collected.ordinary.concat(pmRows);
+
+
 
 const payload = {
   generatedAt: new Date().toISOString(),

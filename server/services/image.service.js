@@ -96,6 +96,7 @@ function create(ctx) {
       } else {
         await ctx.withTx(async (conn) => {
           await repos.images.replaceForCoin(conn, Number(id), clean, false);
+          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
         });
       }
 
@@ -161,6 +162,7 @@ function create(ctx) {
       } else {
         await ctx.withTx(async (conn) => {
           await repos.images.replaceForCoin(conn, id, list, false);
+          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
         });
       }
 
@@ -204,6 +206,7 @@ function create(ctx) {
         await ctx.withTx(async (conn) => {
           await repos.images.replaceForCoin(conn, Number(id),
             rest.map((it) => ({ f: it.f, k: it.k })), false);
+          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
         });
       }
 

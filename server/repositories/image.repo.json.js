@@ -67,6 +67,16 @@ function create() {
     },
 
     /**
+     * json 模式不需要 DB 版本号：legacy.touchGallery() 已经刷新内存与文件。
+     * 保留同签名，避免调用方分支判断。
+     *
+     * @returns {Promise<string>} 空串
+     */
+    async bumpVersion() {
+      return '';
+    },
+
+    /**
      * 图库版本号：沿用老实现的口径 —— gallery.json 的 mtime 后 8 位。
      *
      * @returns {Promise<string>} 版本号

@@ -114,6 +114,49 @@ function buildXml(coins, real, today) {
 }
 
 /**
+ * 合并「老形态品种」与「已上架贵金属」，按 no 去重。
+ *
+ * db 模式下 legacyCoins() 读的 cl_coins 已经包含上架的 138..140，
+ * 而 pmPublished 又是同一批套 —— 直接 concat 会让 /coin/138..140 在
+ * sitemap 里各出现两次（QA 第 5 个 Bug，产物 149 条而非 146 条）。
+ * json 模式老形态只有 coins.json 的 137 条，过滤是空操作，产物不变。
+ *
+ * @param {object[]} legacyCoins 老形态品种
+ * @param {object[]} pmPublished 已上架贵金属
+ * @returns {object[]} 去重后的品种数组（普通在前、PM 在后）
+ */
+function assembleSitemapCoins(legacyCoins, pmPublished) {
+  const seen = new Set();
+  const out = [];
+  (Array.isArray(legacyCoins) ? legacyCoins : []).forEach((c) => {
+    const no = c.no === undefined ? Number(c.i) + 1 : Number(c.no);
+    // 老形态若在库里混进了 PM，交给下面的 pmPublished 统一投影（priority=0.5）
+    if (c.category === 'precious_metal' || no > 137) return;
+    if (seen.has(no)) return;
+    seen.add(no);
+    out.push(c);
+  });
+  (Array.isArray(pmPublished) ? pmPublished : []).forEach((r) => {
+    const no = Number(r.no);
+    if (seen.has(no)) return;
+    seen.add(no);
+    out.push({
+      i: no - 1,
+      no: no,
+      year: r.year,
+      name: r.name,
+      kind: r.kind || 'coin',
+      face: r.face,
+      material: r.material,
+      mintage: null,
+      mintage_note: r.mintageNote || '',
+      category: 'precious_metal'
+    });
+  });
+  return out;
+}
+
+/**
  * CLI 主流程。
  *
  * @param {string[]} argv 参数
@@ -140,20 +183,7 @@ async function main(argv) {
       pmSvc.listPublished(),
       handle.ds.repos.images.realMainNos()
     ]);
-    // 贵金属只取已上架的；字段按 sitemap 所需最小集合投影，mintage 恒 NULL 不传
-    const pmCoins = pmPublished.map((r) => ({
-      i: Number(r.no) - 1,
-      no: Number(r.no),
-      year: r.year,
-      name: r.name,
-      kind: r.kind || 'coin',
-      face: r.face,
-      material: r.material,
-      mintage: null,
-      mintage_note: r.mintageNote || '',
-      category: 'precious_metal'
-    }));
-    const coins = legacyCoins.concat(pmCoins);
+    const coins = assembleSitemapCoins(legacyCoins, pmPublished);
     const xml = buildXml(coins, real, date);
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, xml, 'utf8');
@@ -163,7 +193,7 @@ async function main(argv) {
   }
 }
 
-module.exports = { PAGES: PAGES, buildXml: buildXml, openDataSource: openDataSource };
+module.exports = { PAGES: PAGES, buildXml: buildXml, assembleSitemapCoins: assembleSitemapCoins, openDataSource: openDataSource };
 
 if (require.main === module) {
   main(process.argv).catch((e) => {

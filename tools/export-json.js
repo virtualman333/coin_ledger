@@ -76,7 +76,13 @@ async function buildDocs(ds, baseDir) {
       generated: now.toISOString()
     },
     series: catalog.projectLegacySeriesMap(seriesRows, sortedCoins),
-    coins: sortedCoins.map((r) => catalog.projectLegacyCoin(r, { withExtras: false })),
+    // 只给贵金属补 no/category/status 三个「允许新增」字段：
+    // build_mp_data 在 db 模式下要靠 category/status 认出已上架的套，
+    // 否则它们会被当成普通币打进小程序包（QA 第 6 个 Bug）。
+    // 普通币钞保持老形态逐字不变，回滚资产与基线 diff 不受影响。
+    coins: sortedCoins.map((r) => catalog.projectLegacyCoin(r, {
+      withExtras: r.category === 'precious_metal'
+    })),
     defaults: defaults.map((d) => {
       const item = {
         name: d.name,

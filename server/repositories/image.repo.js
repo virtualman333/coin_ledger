@@ -68,6 +68,31 @@ function create(pool) {
     },
 
     /**
+     * 递增图库版本号（前端给图片 URL 加 ?v= 破 7 天强缓存）。
+     *
+     * db 模式必须在这里写 cl_meta['catalog.gallery_ver'] —— version() 读的就是它。
+     * 旧值是迁移时写入的 8 位时间戳数字串，直接 +1 保证「每次改图必变」，
+     * 即使两次请求落在同一毫秒也不会撞号（纯 Date.now() 有这个坑）。
+     *
+     * @param {object} [conn] 事务连接；必须与 replaceForCoin 用同一条
+     * @returns {Promise<string>} 新版本号
+     */
+    async bumpVersion(conn) {
+      const runner = conn || pool;
+      const [rows] = await runner.query("SELECT v FROM cl_meta WHERE k = 'catalog.gallery_ver' LIMIT 1");
+      const prev = rows.length && rows[0].v ? String(rows[0].v) : '';
+      const next = /^\d{1,15}$/.test(prev)
+        ? String(Number(prev) + 1)
+        : String(Date.now()).slice(-8);
+      await runner.query(
+        "INSERT INTO cl_meta (k, v) VALUES ('catalog.gallery_ver', ?) "
+        + 'ON DUPLICATE KEY UPDATE v = VALUES(v)',
+        [next]
+      );
+      return next;
+    },
+
+    /**
      * 整套替换某品种的图（order 变化时也安全：先删后插，事务内）。
      *
      * @param {object} conn 事务连接
