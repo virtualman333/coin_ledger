@@ -50,8 +50,8 @@ function create(pool) {
           publishedBy: y.publishedBy === null || y.publishedBy === undefined ? undefined : String(y.publishedBy),
           sourceUrl: y.sourceUrl === null || y.sourceUrl === undefined ? undefined : String(y.sourceUrl),
           sourceText: y.sourceText === null || y.sourceText === undefined ? undefined : String(y.sourceText),
-          items: parseItems(y.items),
-          ord: Number(y.ord) || 0
+          items: parseItems(y.items)
+          // ord 是库内排序辅助列（SQL ORDER BY 用），按共享约定不对外投影
         }))
       };
     },
