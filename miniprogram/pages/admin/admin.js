@@ -37,6 +37,13 @@ Page({
       { v: 'web', t: '网页' },
       { v: 'mp', t: '小程序' },
     ],
+    vsRange: 'all',
+    vsRanges: [
+      { v: 'today', t: '今日' },
+      { v: 'week', t: '近 7 天' },
+      { v: 'month', t: '近 30 天' },
+      { v: 'all', t: '全部' },
+    ],
     vsViews: [
       { v: 'ip', t: '按 IP' },
       { v: 'sid', t: '按会话' },
@@ -45,6 +52,7 @@ Page({
     visRows: [],
     vsDetail: null,
     vsLoading: false,
+    vsError: '',
     userCount: 0,
     coinCount: 0,
     openCount: 0,
@@ -138,18 +146,20 @@ Page({
 
   /* ---------------- 访客统计 ---------------- */
   loadVisitors() {
-    this.setData({ vsLoading: true });
-    return api.get('/api/admin/visitors?client=' + this.data.vsClient)
+    this.setData({ vsLoading: true, vsError: '' });
+    return api.get('/api/admin/visitors?client=' + this.data.vsClient + '&range=' + this.data.vsRange)
       .then((res) => {
         this.setData({
           vsLoading: false,
+          vsError: '',
           visitors: res,
           visRows: this.mapVisRows(res),
         });
       })
       .catch((e) => {
-        this.setData({ vsLoading: false });
-        wx.showToast({ title: e.message || '加载失败', icon: 'none' });
+        const msg = (e && e.message) || '加载失败';
+        // 错误留在页面上，不再只弹个 toast 一闪而过
+        this.setData({ vsLoading: false, vsError: msg, visitors: null, visRows: [] });
       });
   },
 
@@ -200,6 +210,11 @@ Page({
     this.loadVisitors();
   },
 
+  setVsRange(e) {
+    this.setData({ vsRange: e.currentTarget.dataset.v });
+    this.loadVisitors();
+  },
+
   setVsView(e) {
     const view = e.currentTarget.dataset.v;
     this.setData({ vsView: view, visRows: this.mapVisRows(this.data.visitors) });
@@ -208,7 +223,8 @@ Page({
   openVsDetail(e) {
     const kind = e.currentTarget.dataset.kind;
     const key = e.currentTarget.dataset.key;
-    const q = kind === 'ip' ? ('ip=' + encodeURIComponent(key)) : ('sid=' + encodeURIComponent(key));
+    const q = (kind === 'ip' ? ('ip=' + encodeURIComponent(key)) : ('sid=' + encodeURIComponent(key)))
+      + '&range=' + this.data.vsRange;
     api.get('/api/admin/visitors/detail?' + q).then((res) => {
       const name = (k) => ({
         home: '首页', all: '全套清单', plan: '发行计划', series: '系列',

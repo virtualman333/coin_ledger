@@ -179,20 +179,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   });
   files.push(build({ name: 'admin', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: adm.data }));
 
+  // 用线上真实返回结构渲染，避免手写样例掩盖字段变化
   const admv = loadPage('pages/admin/admin');
-  admv.setData({
-    viewMode: 'module',
-    tab: 'visitors',
-    vsShowVisitors: true,
-    visitors: {
-      todayPv: 86, todayUv: 21, totalPv: 255, totalUv: 56,
-      byClient: { web: { pv: 237, uv: 49 }, mp: { pv: 18, uv: 7 } },
-    },
-    visRows: [
-      { key: '223.74.122.90', kind: 'ip', main: '藏友', src: '小程序', srcCls: 'mp', device: '手机', meta: '12 次 · 3 会话 · 4 页 · 2 天', sub: '2026/11/15 21:04', ip: '223.74.122.90' },
-      { key: '116.24.8.31', kind: 'ip', main: '访客', src: '网页', srcCls: 'web', device: '电脑', meta: '5 次 · 1 会话 · 2 页 · 1 天', sub: '2026/11/15 18:22', ip: '116.24.8.31' },
-    ],
-  });
+  const realVis = JSON.parse(fsx.readFileSync(process.env.VIS_JSON || 'C:/Users/15155/AppData/Local/Temp/visitors.json', 'utf8'));
+  admv.data = Object.assign(admv.data, { viewMode: 'module', tab: 'visitors', vsShowVisitors: true, vsError: '' });
+  admv.data.visitors = realVis;
+  admv.data.visRows = admv.mapVisRows.call(admv, realVis).slice(0, 12);
   files.push(build({ name: 'admin-visitors-mp', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: admv.data }));
 
   const admDetail = loadPage('pages/admin/admin');

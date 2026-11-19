@@ -579,3 +579,22 @@
   font-size: 23rpx;
   text-align: center;
 }
+
+/* 访客加载失败：常驻提示，点一下重试 */
+.vs-err{
+  padding: 28rpx 20rpx;
+  border: 1rpx solid #f0dede;
+  border-radius: 14rpx;
+  background: #fdf6f6;
+  color: #b4544c;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+/* 访客区间说明 */
+.vs-note{
+  display: block;
+  margin: -6rpx 0 16rpx 4rpx;
+  color: #b3aa9b;
+  font-size: 20rpx;
+}

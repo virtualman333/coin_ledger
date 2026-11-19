@@ -250,7 +250,7 @@
   </view>
 
   <!-- 访客统计 -->
-  <block wx:if="{{vsShowVisitors}}">
+  <block wx:if="{{tab === 'visitors'}}">
     <view class="vs-bar">
       <text
         class="vchip {{vsClient === item.v ? 'on' : ''}}"
@@ -261,12 +261,25 @@
       >{{item.t}}</text>
     </view>
 
-    <view class="vs-cards">
-      <view class="vsc"><text class="vsn">{{visitors.todayPv}}</text><text class="vsk">今日 PV</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.todayUv}}</text><text class="vsk">今日 IP</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.pv}}</text><text class="vsk">小程序 PV</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.uv}}</text><text class="vsk">小程序 IP</text></view>
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsRange === item.v ? 'on' : ''}}"
+        wx:for="{{vsRanges}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsRange"
+      >{{item.t}}</text>
     </view>
+
+    <view class="vs-cards" wx:if="{{visitors}}">
+      <view class="vsc"><text class="vsn">{{visitors.rangePv}}</text><text class="vsk">访问次数</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.rangeUv}}</text><text class="vsk">独立 IP</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.todayPv}}</text><text class="vsk">今日 PV</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.pv}}</text><text class="vsk">小程序 PV</text></view>
+    </view>
+    <text class="vs-note" wx:if="{{visitors}}">
+      区间 {{visitors.range.from}} 至 {{visitors.range.to}} · 累计 {{visitors.allPv}} 次访问
+    </text>
 
     <view class="vs-bar">
       <text
@@ -280,6 +293,7 @@
     </view>
 
     <view class="loading" wx:if="{{vsLoading}}">加载中…</view>
+    <view class="vs-err" wx:elif="{{vsError}}" bindtap="loadVisitors">{{vsError}}，点击重试</view>
     <view class="card list" wx:elif="{{visRows.length}}">
       <view
         class="vr"
