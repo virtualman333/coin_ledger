@@ -106,6 +106,20 @@ function allRows() {
     .map(rowFromLegacy);
 }
 
+/**
+ * 贵金属种子（no=138..140）映射成与普通品种相同的行形状。
+ * 刻意延迟 require：pm.service 会 require 本文件，模块顶层互相引用会成环；
+ * 调用时两个模块都已加载完，因此安全。
+ * allRows() 保持只返回 137 条存量 —— T02 的零漂移测试依赖这个口径。
+ *
+ * @returns {object[]} 贵金属行（含 draft）
+ */
+function pmRows() {
+  const pmService = require('../services/pm.service');
+  const doc = pmService.readSeed();
+  return (doc.sets || []).map(pmService.rowFromSeed);
+}
+
 function create() {
   return {
     mode: 'json',
@@ -123,7 +137,21 @@ function create() {
 
     async findByNo(no) {
       const n = Number(no);
-      return allRows().filter((r) => r.no === n)[0] || null;
+      return allRows().filter((r) => r.no === n)[0]
+        || pmRows().filter((r) => r.no === n)[0] || null;
+    },
+
+    /**
+     * 含贵金属种子的全量行（公开查询走 status 过滤，draft 自然不会出现）。
+     *
+     * @param {{status?: string}} [filter] 状态过滤
+     * @returns {Promise<object[]>} 行列表
+     */
+    async listAllIncludingPm(filter) {
+      const f = filter || {};
+      const rows = allRows().concat(pmRows());
+      if (f.status === 'published' || f.status === 'draft') return rows.filter((r) => r.status === f.status);
+      return rows;
     },
 
     async listByCategory(category, filter) {
@@ -160,7 +188,7 @@ function create() {
 
     async nextNo() {
       // 只读模式下不分配新编号；给「新建」表单做只读预览时可以调它，但要显式允许
-      const rows = allRows();
+      const rows = allRows().concat(pmRows());
       return rows.reduce((m, r) => Math.max(m, r.no), 0) + 1;
     },
 
@@ -168,6 +196,7 @@ function create() {
       const out = {};
       common.CATEGORIES.forEach((c) => { out[c] = 0; });
       allRows().forEach((r) => { out[r.category] = (out[r.category] || 0) + 1; });
+      pmRows().forEach((r) => { out[r.category] = (out[r.category] || 0) + 1; });
       return out;
     },
 

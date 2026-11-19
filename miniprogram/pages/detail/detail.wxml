@@ -50,7 +50,7 @@
           <text class="tag title-own" wx:if="{{owned}}">已收</text>
         </view>
       </view>
-      <view class="price-badge" wx:if="{{unitPrice}}">
+      <view class="price-badge" wx:if="{{unitPrice && coin.hasPrice}}">
         <view class="pb-main">
           <text class="pb-cur">¥</text><text class="pb-num">{{unitPrice}}</text>
           <text class="pb-unit">/{{unitLabel}}</text>
@@ -59,9 +59,19 @@
         <text class="pb-tip">参考价</text>
       </view>
     </view>
-    <view class="set-line" wx:if="{{setInfo}}">
+    <view class="set-line" wx:if="{{setInfo && coin.hasPrice}}">
       <text class="set-name">{{setInfo.name}}</text>
       <text class="set-prog">本套已收 {{setInfo.owned}} / {{setInfo.total}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{coin.category === 'precious_metal'}}">
+    <view class="pm-head">贵金属 · 全套 {{coin.pm.setPieces}} 枚</view>
+    <view class="pm-fact">整套面额合计 {{coin.face}} 元 · 总克重 {{coin.pm.setWeightG}} 克</view>
+    <view class="pm-fact">成色 {{coin.pm.purity}} · 发行方式 {{coin.pm.issueMethod}}</view>
+    <view class="pm-fact" wx:if="{{coin.pm.mintageNote}}">{{coin.pm.mintageNote}}</view>
+    <view class="pm-piece" wx:for="{{coin.pm.pieces}}" wx:key="seq">
+      {{item.seq}}. {{item.name}} · {{item.weightG}}克 · {{item.face}}元 · {{item.maxMintage}}枚
     </view>
   </view>
 

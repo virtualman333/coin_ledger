@@ -32,6 +32,16 @@
     </view>
   </view>
 
+  <view class="cat-tabs">
+    <view
+      class="cat-tab {{category === item.code ? 'on' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="code"
+      data-cat="{{item.code}}"
+      bindtap="pickCategory"
+    >{{item.name}}</view>
+  </view>
+
   <scroll-view class="tabs" scroll-x enable-flex>
     <view
       class="tab {{code === item.code ? 'tab-on' : ''}}"

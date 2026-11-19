@@ -9,6 +9,7 @@ const coinsRoutes = require('./coins');
 const seriesRoutes = require('./series');
 const planRoutes = require('./plan');
 const imagesRoutes = require('./images');
+const pmRoutes = require('./pm');
 
 /**
  * 注册全部管理端目录域路由。
@@ -21,4 +22,5 @@ module.exports = async function adminRoutes(app) {
   await app.register(seriesRoutes);
   await app.register(planRoutes);
   await app.register(imagesRoutes);
+  await app.register(pmRoutes);
 };

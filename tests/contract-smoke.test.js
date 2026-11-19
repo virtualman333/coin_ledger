@@ -299,6 +299,45 @@ test('T03 写接口鉴权闸门：未登录仍是 401，登录后可访问', asy
   assert.deepEqual(badKind.json, { ok: false, error: '图片类型不合法' });
 });
 
+/* ---------------- T04：贵金属红线 ---------------- */
+
+test('T04 管理端 /api/admin/pm：能看到 3 套 draft，套级 mintage/weight_g 为 NULL', async () => {
+  const r = await req('GET', '/api/admin/pm?status=draft');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.total, 3);
+  assert.deepEqual(r.json.items.map((x) => x.no), [138, 139, 140]);
+  r.json.items.forEach((x) => {
+    assert.equal(x.category, 'precious_metal');
+    assert.equal(x.mintage, null);
+    assert.equal(x.weightG, null, 'A2：套级 weight_g 必须留空');
+    assert.equal(x.isSet, 1);
+    assert.ok(Array.isArray(x.pieces) && x.pieces.length === x.setPieces);
+    assert.ok(x.pieces.every((p) => Number(p.maxMintage) > 0));
+  });
+  const saved = cookie;
+  cookie = '';
+  try {
+    const anon = await req('GET', '/api/admin/pm');
+    assert.equal(anon.status, 401);
+    assert.deepEqual(anon.json, { ok: false, error: '请先登录', needLogin: true });
+  } finally {
+    cookie = saved;
+  }
+});
+
+test('T04 公开面：draft 不泄漏（catalog=0、/coin/138=404），bootstrap 仍 137 条', async () => {
+  const cat = await req('GET', '/api/catalog?category=pm');
+  assert.equal(cat.status, 200);
+  assert.equal(cat.json.total, 0, '未上架的贵金属不能出现在公开目录');
+
+  const page = await req('GET', '/coin/138');
+  assert.equal(page.status, 404, '未上架的贵金属详情页不应公开');
+
+  const boot = await req('GET', '/api/bootstrap');
+  assert.equal(boot.json.coins.length, 137, 'bootstrap 绝不能被贵金属种子改动');
+  assert.equal(Object.keys(boot.json.series).length, 19, 'series 映射不能被贵金属系列卡改动');
+});
+
 test('T03 发行计划整份替换：保存后 bootstrap 立即生效', async () => {
   const current = await req('GET', '/api/admin/plan');
   assert.equal(current.status, 200);

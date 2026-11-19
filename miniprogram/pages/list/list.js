@@ -11,6 +11,8 @@ Page({
     searchActive: false,         // 未点击前不渲染 input，彻底避免自动弹输入法
     searchFocus: false,
     rows: [],
+    category: 'coin',
+    categories: [{ code: 'coin', name: '普通纪念币' }, { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' }],
     count: 0,
     ownedCount: 0,
     tabs: [],
@@ -114,12 +116,21 @@ Page({
     this.render();
   },
 
+  pickCategory(e) {
+    this.setData({ category: e.currentTarget.dataset.cat || 'coin' }, () => this.render());
+  },
+
   render() {
     const kw = String(this.data.keyword || '').trim().toLowerCase();
+    const category = this.data.category || 'coin';
     const code = this.data.code;
     const owned = store.ownedNames();
     const onlyOwn = this.data.onlyOwn;
     let list = cat.coins.filter((c) => {
+      const ccat = cat.categoryOf(c);
+      if (category === 'pm' && ccat !== 'precious_metal') return false;
+      if (category === 'coin' && ccat !== 'commemorative_coin') return false;
+      if (category === 'note' && ccat !== 'commemorative_note') return false;
       if (code && (c.seriesKeys || [c.series]).indexOf(code) < 0) return false;
       if (this.data.yearFilter && String(c.year) !== this.data.yearFilter) return false;
       if (this.data.faceFilter && Number(c.face) !== Number(this.data.faceFilter)) return false;

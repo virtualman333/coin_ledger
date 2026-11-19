@@ -39,6 +39,27 @@ module.exports = async function seoRoutes(app) {
   });
 
   app.get('/coin/:no', async function coinPageHandler(request, reply) {
+    const no = Number(request.params.no);
+
+    // 贵金属走独立 SSR 分支：只出公告事实与规格表，不拼接任何价格文字（arch 6.4）
+    // draft 尚未核验上架，公开页面仍按不存在处理（404）—— 与公开 API 口径一致
+    if (no >= 138) {
+      const pmSvc = require('../services/pm.service').create({
+        dataSource: app.dataSource,
+        withTx: app.withTx
+      });
+      const pm = await pmSvc.findByNo(no);
+      if (pm) {
+        reply.hijack();
+        if (pm.status !== 'published') {
+          reply.raw.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('404 Not Found');
+          return;
+        }
+        seo.sendPmIndex(reply.raw, pm);
+        return;
+      }
+    }
+
     const route = seo.spaRoute('/coin/' + String(request.params.no));
     if (!route) {
       // 越界页码：legacy 的 serveStatic 回 404 纯文本，保持一致

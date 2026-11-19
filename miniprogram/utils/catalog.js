@@ -6,6 +6,10 @@ const raw = require('../data/catalog.js');
 const api = require('./api');
 
 const PER_SET = 20;
+
+/** 老包体可能没有 category 字段：按 kind 兜底，绝不把贵金属误判成普通币 */
+const categoryOf = (c) => (c && c.category) || ((c && c.kind === 'note') ? 'commemorative_note' : 'commemorative_coin');
+const isPm = (c) => categoryOf(c) === 'precious_metal';
 const SETS = raw.sets || {};
 const SERIES = raw.series || {};
 
@@ -83,7 +87,7 @@ const coins = raw.coins.map((c) => {
     setFaceBase: round2(unit.face * setSizeBaseOf(c)),
     group: groupName(c),
     short: shortName(c.name),
-    seriesName: SERIES[c.series] || '其他',
+    seriesName: isPm(c) ? '贵金属' : (SERIES[c.series] || '其他'),
     imgUrl: c.img ? api.BASE + '/img/' + pad3(c.id) + '.jpg' : '',
     // 统一裁切过的方形缩略图（去白边、币占满画布），卡片与大图预览用它
     thumbUrl: c.img ? api.BASE + '/img/th/' + pad3(c.id) + '.jpg' : '',
@@ -222,6 +226,9 @@ function signed(n) {
 
 module.exports = {
   PER_SET,
+  categoryOf,
+  isPm,
+  pmCoins: coins.filter(isPm),
   coins,
   byId,
   byName,

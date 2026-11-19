@@ -98,7 +98,10 @@ function spaRoute(pathname) {
   const m = /^\/coin\/(\d{1,3})$/.exec(p);
   if (m) {
     const i = Number(m[1]) - 1;
-    return (i >= 0 && i < SEED.coins.length) ? { tab: 'coin', i } : null;
+    if (i >= 0 && i < SEED.coins.length) return { tab: 'coin', i };
+    // 贵金属不进 SEED（bootstrap 必须逐字不变），单独从 PM_COINS 命中
+    const no = Number(m[1]);
+    return PM_COINS.some((c) => Number(c.no) === no) ? { tab: 'coin', i, pm: true, no } : null;
   }
   const name = p.replace(/^\//, '');
   if (!name) return { tab: 'home', i: null };
@@ -140,6 +143,7 @@ const SX_CSS = '<style>'
   + '</style>';
 
 function ssrCoinBlock(c, idx) {
+  if (c && c.category === 'precious_metal') return pmSsrBlock(c);
   const isNote = c.kind === 'note';
   const unit = isNote ? '张' : '枚';
   const no = String(idx + 1).padStart(3, '0');
@@ -259,6 +263,7 @@ function sitemapStaticBlock() {
 }
 
 function renderIndex(route) {
+  if (route && route.pm) return renderPmIndex(route);
   const tpl = indexTemplate();
   if (!tpl) return null;
   const total = SEED.coins.length;
@@ -365,6 +370,19 @@ function sendIndex(res, route) {
   res.end(html);
 }
 
+/* 贵金属目录（由 routes/seo.js 从 pm.service 注入；不进 SEED，避免污染 bootstrap） */
+let PM_COINS = [];
+
+/**
+ * 注入已上架的贵金属套（SSR 专用）。
+ *
+ * @param {object[]} list 行（camelCase）
+ * @returns {void}
+ */
+function setPmCoins(list) {
+  PM_COINS = Array.isArray(list) ? list : [];
+}
+
 /**
  * 该路径是否由 routes/seo.js 的原生路由处理（其余非 /api 请求才落静态层）。
  * 只认真实存在的 SPA 路径：/ 、10 个 tab、/coin/<数字>。
@@ -380,8 +398,154 @@ function isRoutePath(pathname) {
   return SPA_TABS.has(name);
 }
 
+/**
+ * 贵金属 SSR 正文块：只列公告事实与套内规格，**不出现任何价格文字**。
+ * 尤其不能拼「收藏参考／单枚约 X 元」—— 贵金属 est 恒 NULL，
+ * 拼出来就是「约 0 元」，爬虫抓到会直接误导用户（arch 6.4）。
+ *
+ * @param {object} c 贵金属行（camelCase）
+ * @returns {string} HTML
+ */
+function pmSsrBlock(c) {
+  const pieces = Array.isArray(c.pieces) ? c.pieces : [];
+  const fact = (k, v) => '<div><span>' + k + '</span>' + escHtml(v) + '</div>';
+  const facts = [
+    fact('整套面额合计', c.face + ' 元'),
+    fact('材质', c.material || '—'),
+    fact('成色', c.purity ? (Number(c.purity) * 100).toFixed(1) + '%' : '—'),
+    fact('总克重', c.setWeightG !== null && c.setWeightG !== undefined ? c.setWeightG + ' 克' : '—'),
+    fact('套内枚数', c.setPieces + ' 枚'),
+    fact('发行方式', c.issueMethod || '—'),
+    fact('发行日期', c.issueDate || '—'),
+    fact('销售渠道', c.salesChannel || '—'),
+    fact('经销单位', c.dealer || '—')
+  ].join('');
+  const rows = pieces.map((p) => '<tr>'
+    + '<td>' + escHtml(p.seq) + '</td>'
+    + '<td>' + escHtml(p.name) + '</td>'
+    + '<td>' + escHtml(p.metal) + '</td>'
+    + '<td>' + escHtml(p.weightG) + ' 克</td>'
+    + '<td>' + escHtml(p.face) + ' 元</td>'
+    + '<td>' + escHtml(p.purity ? (Number(p.purity) * 100).toFixed(1) + '%' : '—') + '</td>'
+    + '<td>' + escHtml(p.maxMintage) + ' 枚</td>'
+    + '</tr>').join('');
+  return '<article class="sx" id="ssrCoin">'
+    + '<nav class="sx-crumb"><a href="/">藏币录</a> › <a href="/all">全套发行清单</a>'
+    + ' › <a href="/all?category=pm">贵金属</a> › <span>' + escHtml(c.name) + '</span></nav>'
+    + '<div class="sx-fig"><img src="/img/' + String(c.no).padStart(3, '0') + '.jpg" alt="'
+    + escHtml(c.name) + ' 实物图" width="480" height="480"></div>'
+    + '<h1>' + escHtml(c.name) + '（' + c.year + ' 年贵金属纪念币）</h1>'
+    + '<p>' + c.year + ' 年中国人民银行发行的贵金属纪念币，' + escHtml(c.name)
+    + '，全套 ' + c.setPieces + ' 枚，总面额 ' + c.face + ' 元，总克重 ' + c.setWeightG + ' 克。'
+    + (c.mintageNote ? '最大发行量逐枚不同，见下方规格表。' : '') + '</p>'
+    + '<div class="sx-facts">' + facts + '</div>'
+    + (c.obverse || c.reverse
+      ? '<h2>币面图案</h2>'
+        + (c.obverse ? '<h3>正面</h3><p>' + escHtml(c.obverse) + '</p>' : '')
+        + (c.reverse ? '<h3>背面</h3><p>' + escHtml(c.reverse) + '</p>' : '')
+      : '')
+    + '<h2>套内规格（发行量单位：枚）</h2>'
+    + '<table class="sx-pm"><thead><tr><th>序号</th><th>名称</th><th>材质</th><th>克重</th><th>面额</th><th>成色</th><th>最大发行量</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>'
+    + '<p class="sx-note">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。发行量与克重均以中国人民银行公告为准。</p>'
+    + '</article>';
+}
+
+/**
+ * 贵金属页面整页渲染（独立 meta，不复用普通币的「参考市价」文案）。
+ *
+ * @param {object} route {pm:true,no}
+ * @returns {string|null} HTML
+ */
+function renderPmIndex(route) {
+  const tpl = indexTemplate();
+  if (!tpl) return null;
+  const c = PM_COINS.filter((x) => Number(x.no) === Number(route.no))[0];
+  if (!c) return null;
+
+  const path = '/coin/' + c.no;
+  const url = SITE + path;
+  const title = c.name + '（' + c.year + ' 贵金属纪念币）全套 ' + c.setPieces + ' 枚 · 总面额 ' + c.face + ' 元 | 藏币录';
+  const desc = c.year + ' 年发行的贵金属纪念币「' + c.name + '」，全套 ' + c.setPieces + ' 枚，'
+    + '总克重 ' + c.setWeightG + ' 克，整套面额合计 ' + c.face + ' 元，发行量逐枚见规格明细。';
+  const product = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: c.name,
+    image: SITE + '/img/' + String(c.no).padStart(3, '0') + '.jpg',
+    description: desc,
+    category: '贵金属纪念币',
+    brand: { '@type': 'Organization', name: '中国人民银行' },
+    additionalProperty: [
+      { '@type': 'PropertyValue', name: '材质', value: c.material || '' },
+      { '@type': 'PropertyValue', name: '总克重', value: c.setWeightG + ' 克' },
+      { '@type': 'PropertyValue', name: '整套面额合计', value: c.face + ' 元' },
+      { '@type': 'PropertyValue', name: '套内枚数', value: c.setPieces + ' 枚' }
+    ]
+  };
+  const crumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首页', item: SITE + '/' },
+      { '@type': 'ListItem', position: 2, name: '贵金属', item: SITE + '/all?category=pm' },
+      { '@type': 'ListItem', position: 3, name: c.name, item: url }
+    ]
+  };
+  const ld = '<script type="application/ld+json">' + JSON.stringify(product) + '</script>\n'
+    + '<script type="application/ld+json">' + JSON.stringify(crumb) + '</script>\n';
+
+  let out = tpl
+    .replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>')
+    .replace(/(<meta name="description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
+    .replace(/(<meta property="og:title" content=")[\s\S]*?(">)/, '$1' + escHtml(title) + '$2')
+    .replace(/(<meta property="og:description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1' + url + '$2')
+    .replace(/(<link rel="canonical" href=")[^"]*(")/, '$1' + url + '$2');
+
+  out = out
+    .replace(/(id="coinTotalA">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
+    .replace(/(id="coinTotalB">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
+    .replace(/(id="filterCount">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
+    .replace(/(id="cntAll">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
+    .replace(/(data-copy="total">)\d+(<)/g, '$1' + SEED.coins.length + '$2');
+
+  // 模板里两处通用的「参考价」文案对贵金属不成立（est 恒 NULL），页面级替换掉，
+  // 否则爬虫仍会在贵金属页抓到「136 个品种…市场参考价」这类误导文字
+  out = out.replace(/(<meta name="twitter:description" content=")[^"]*(">)/,
+    '$1贵金属纪念币发行信息与套内规格，本站不提供参考估值。$2');
+  out = out.replace(/<span class="muted">[^<]*二级市场参考价[^<]*<\/span>/g, '');
+
+  out = out.replace('<main class="wrap" id="main" tabindex="-1">',
+    '<main class="wrap" id="main" tabindex="-1">' + pmSsrBlock(c));
+  return out.replace('</head>', ld + SX_CSS + '</head>');
+}
+
+/**
+ * 直接输出贵金属页面（routes/seo.js 用）。
+ *
+ * @param {import('http').ServerResponse} res 原始响应
+ * @param {object} row 贵金属行
+ * @returns {void}
+ */
+function sendPmIndex(res, row) {
+  setPmCoins([row]);
+  const html = renderPmIndex({ pm: true, no: row.no });
+  if (!html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('404 Not Found'); return; }
+  res.writeHead(200, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': Buffer.byteLength(html),
+    'Cache-Control': 'no-cache'
+  });
+  res.end(html);
+}
+
 module.exports = {
   setData: setData,
+  setPmCoins: setPmCoins,
+  renderPmIndex: renderPmIndex,
+  sendPmIndex: sendPmIndex,
+  pmSsrBlock: pmSsrBlock,
   isRoutePath: isRoutePath,
   // 路由与渲染
   spaRoute: spaRoute,

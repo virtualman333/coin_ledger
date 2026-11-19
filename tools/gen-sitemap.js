@@ -64,6 +64,8 @@ async function openDataSource() {
 function buildXml(coins, real, today) {
   const REAL = new Set(real.map(Number));
   const rows = PAGES.map((x) => ({ loc: SITE + x.p, pri: x.pri, freq: x.freq }));
+  // 贵金属固定 0.5，不稀释普通币的 0.8/0.9（arch 7.4）
+  const ordinaryCount = coins.filter((c) => c.category !== 'precious_metal').length;
 
   coins.forEach((c, i) => {
     const no = c.i === undefined ? i + 1 : Number(c.i) + 1;
@@ -71,7 +73,7 @@ function buildXml(coins, real, today) {
     const isPm = c.category === 'precious_metal';
     const row = {
       loc: SITE + '/coin/' + no,
-      pri: i >= coins.length - 20 ? '0.8' : '0.6',   // 近 20 个（最新发行）给高一点
+      pri: isPm ? '0.5' : (i >= ordinaryCount - 20 ? '0.8' : '0.6'),  // 近 20 个普通币给高一点
       freq: 'monthly'
     };
     // 图片 sitemap：收藏站的图片搜索流量不可忽略，只填真有实拍图的
@@ -129,10 +131,29 @@ async function main(argv) {
   const handle = await openDataSource();
   try {
     const svc = catalog.create(handle.ds);
-    const [coins, real] = await Promise.all([
+    const pmSvc = require('../server/services/pm.service').create({
+      dataSource: handle.ds,
+      withTx: async () => {}
+    });
+    const [legacyCoins, pmPublished, real] = await Promise.all([
       svc.legacyCoins(),
+      pmSvc.listPublished(),
       handle.ds.repos.images.realMainNos()
     ]);
+    // 贵金属只取已上架的；字段按 sitemap 所需最小集合投影，mintage 恒 NULL 不传
+    const pmCoins = pmPublished.map((r) => ({
+      i: Number(r.no) - 1,
+      no: Number(r.no),
+      year: r.year,
+      name: r.name,
+      kind: r.kind || 'coin',
+      face: r.face,
+      material: r.material,
+      mintage: null,
+      mintage_note: r.mintageNote || '',
+      category: 'precious_metal'
+    }));
+    const coins = legacyCoins.concat(pmCoins);
     const xml = buildXml(coins, real, date);
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, xml, 'utf8');

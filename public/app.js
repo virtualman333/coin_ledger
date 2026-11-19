@@ -4,6 +4,8 @@
    所以前端单独放到静态站也能跑（只是没有账号与多端同步）。
    ========================================================= */
 var DB = [];              // 发行清单（est 已含行情覆盖）
+var PM_DB = [];           // 已上架贵金属套（独立从 /api/catalog?category=pm 拉取，不进 bootstrap）
+var VIEW_CATEGORY = 'coin'; // /all 分段：默认普通纪念币，贵金属首屏 0 条
 var DEFAULTS = [];        // 服务端初始藏品种子
 var SERIES = {};          // 系列代码 -> 中文名
 var SET_META = {};        // 套系定义：setId -> {name,total,unit,members}
@@ -958,11 +960,21 @@ function renderSeries(){
           : '<div class="sc-own dim">还没有这个系列的藏品</div>')) +
       (miss ? '<div class="sc-miss">' + miss + '</div>' : '') +
     '</button>';
-  }).join('');
+  }).join('')
+    // 贵金属卡排最后（等价 sort=200），且只出已上架的套：draft 首屏 0 个
+    + PM_DB.map(function(d){
+        return '<button class="scard pm-card" data-pm-coin="' + d.no + '">' +
+          '<div class="sc-top"><span class="sc-name">贵金属</span>' +
+          '<span class="sc-prog">' + (d.pm ? d.pm.setPieces : d.pieces) + ' 枚</span></div>' +
+          '<div class="sc-desc">' + esc(d.name) + '</div>' +
+          '<div class="sc-own dim">' + esc(d.material || '') + '</div></button>';
+      }).join('');
 
   box.onclick = function(e){
     var card = e.target.closest('.scard');
     if (!card) return;
+    var pmNo = card.getAttribute('data-pm-coin');
+    if (pmNo) { location.href = '/coin/' + pmNo; return; }   // 贵金属卡直达详情
     // 从系列页进来时清掉其它筛选条件，避免叠加成空结果
     filterSet = card.getAttribute('data-set');
     document.getElementById('q').value = '';
@@ -1295,6 +1307,7 @@ function renderCoin(i){
   var box = document.getElementById('coinBox');
   if (!box) return;
   var d = DB[i];
+  if (!d && i >= DB.length && PM_DB[i - DB.length]) { renderPmCoin(PM_DB[i - DB.length], i); return; }
   if (!d) { goTab('all'); return; }
 
   var up = unitPrice(d);
@@ -1776,13 +1789,87 @@ function initAdvFilters(){
   }
 }
 
+/* =========================================================
+   T04：目录分段 + 贵金属（只读参考数据，不进藏品/成本口径）
+   ========================================================= */
+/** 当前分段看到的品种：coin=普通纪念币、note=纪念钞、pm=贵金属 */
+function activeCatalog(){
+  if (VIEW_CATEGORY === 'pm') return PM_DB;
+  if (VIEW_CATEGORY === 'note') return DB.filter(function(d){ return d.kind === 'note'; });
+  return DB.filter(function(d){ return d.kind !== 'note'; });
+}
+
+/** 已上架贵金属（公开接口，draft 不会出现）；失败时静默降级为空 */
+function loadPmCatalog(){
+  return fetch('/api/catalog?category=pm&size=200', { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : { items: [] }; })
+    .then(function(j){ PM_DB = Array.isArray(j.items) ? j.items : []; return j; })
+    .catch(function(){ PM_DB = []; return { items: [] }; });
+}
+
+/** 注入分段控件（不改 index.html，保证 SSR 的 HTML 基线逐字不变） */
+function ensureCategoryTabs(){
+  var pane = document.getElementById('pane-all');
+  if (!pane || document.getElementById('catTabs')) return;
+  var q = new URLSearchParams(location.search || '');
+  var want = q.get('category');
+  if (want === 'coin' || want === 'note' || want === 'pm') VIEW_CATEGORY = want;
+  var box = document.createElement('div');
+  box.className = 'cat-tabs'; box.id = 'catTabs';
+  box.innerHTML = [['coin','普通纪念币'],['note','纪念钞'],['pm','贵金属']].map(function(x){
+    return '<button type="button" data-cat="' + x[0] + '"' + (VIEW_CATEGORY === x[0] ? ' class="on"' : '') + '>' + x[1] + '</button>';
+  }).join('');
+  pane.insertBefore(box, pane.querySelector('.toolbar'));
+  box.onclick = function(e){
+    var b = e.target.closest('[data-cat]'); if (!b) return;
+    VIEW_CATEGORY = b.getAttribute('data-cat');
+    Array.prototype.forEach.call(box.querySelectorAll('button'), function(x){ x.className = x === b ? 'on' : ''; });
+    try {
+      var u = new URL(location.href);
+      if (VIEW_CATEGORY === 'coin') u.searchParams.delete('category'); else u.searchParams.set('category', VIEW_CATEGORY);
+      history.replaceState(null, '', u.pathname + u.search);
+    } catch (err) { /* 老浏览器忽略 */ }
+    renderTable();
+  };
+}
+
+/** 贵金属详情页：只有公告事实 + 规格表，绝不渲染价格/藏品/成本 */
+function renderPmCoin(d, i){
+  var box = document.getElementById('coinBox'); if (!box) return;
+  var no = d.no;
+  var fact = function(k, v){ return '<div class="cf"><i>' + esc(k) + '</i><b>' + esc(v) + '</b></div>'; };
+  var rows = (d.pm && d.pm.pieces ? d.pm.pieces : []).map(function(p){
+    return '<tr><td>' + p.seq + '</td><td>' + esc(p.name) + '</td><td>' + esc(p.metal) + '</td>'
+      + '<td>' + p.weightG + ' 克</td><td>' + p.face + ' 元</td><td>' + p.maxMintage + ' 枚</td></tr>';
+  }).join('');
+  box.innerHTML = '<div class="coin-top"><button class="btn ghost xs" data-goto="all">← 返回清单</button>'
+    + '<span class="muted">贵金属 · 第 ' + no + ' 号</span></div>'
+    + '<div class="coin-hero"><div class="coin-media"><div class="coin-fig">'
+      + '<img class="fig-main" src="' + imgMid(no) + '" alt="' + esc(d.name) + '" width="320" height="320"></div></div>'
+    + '<div class="coin-main"><div class="coin-kicker">' + d.year + ' · 贵金属纪念币</div>'
+      + '<h2 class="coin-title">' + esc(d.name) + '</h2>'
+      + '<div class="coin-tags"><span class="tag-chip">全套 ' + (d.pm ? d.pm.setPieces : d.pieces) + ' 枚</span></div>'
+      + '<div class="coin-facts">'
+      + fact('整套面额合计', d.face + ' 元') + fact('材质', d.material || '—')
+      + fact('成色', d.pm && d.pm.purity ? (d.pm.purity * 100).toFixed(1) + '%' : '—')
+      + fact('总克重', d.pm && d.pm.setWeightG ? d.pm.setWeightG + ' 克' : '—')
+      + fact('发行方式', d.pm && d.pm.issueMethod ? d.pm.issueMethod : '—')
+      + fact('销售渠道', d.pm && d.pm.salesChannel ? d.pm.salesChannel : '—')
+      + '</div></div></div>'
+    + '<div class="coin-desc"><h3>套内规格（发行量单位：枚）</h3>'
+      + '<table class="pm-pieces"><thead><tr><th>序号</th><th>名称</th><th>材质</th><th>克重</th><th>面额</th><th>最大发行量</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table>'
+      + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。</p></div>';
+  box.onclick = function(e){ var b = e.target.closest('[data-goto]'); if (b) goTab(b.getAttribute('data-goto')); };
+}
+
 function renderTable(){
   var q = document.getElementById('q').value.trim().toLowerCase();
   var fs = document.getElementById('fSeries').value;
   var fy = document.getElementById('fYear').value;
   var onlyMine = document.getElementById('fMine').checked;
 
-  var rows = DB.filter(function(d){
+  var rows = activeCatalog().filter(function(d){
     if(q){
       var hay = (d.name + ' ' + d.year + ' ' + SERIES[d.series] + ' ' + d.material).toLowerCase();
       if(hay.indexOf(q) < 0) return false;
@@ -1820,7 +1907,7 @@ function renderTable(){
   var stats = setStats();
   var html = '';
   rows.forEach(function(d){
-    var own = isOwned(d.name);
+    if (d.category === 'precious_metal') {      var pidx = DB.length + PM_DB.indexOf(d);      html += '<tr class="pm" data-pm="' + d.no + '">'        + '<td class="y">' + d.year + '</td>'        + '<td class="nm"><a href="/coin/' + d.no + '">' + esc(d.name) + '</a><small>贵金属 · ' + esc(d.material || '') + '</small></td>'        + '<td><span class="tag PM">贵金属</span></td>'        + '<td class="price plain">全套 ' + d.face + ' 元</td>'        + '<td class="price">—</td><td class="price plain">全套 ' + (d.pm ? d.pm.setPieces : d.pieces) + ' 枚</td>'        + '<td class="mint">逐枚见详情</td><td>—</td></tr>';      return;    }    var own = isOwned(d.name);
     // 一套件数由套系声明：整卷 20 枚、整刀 20 张，多枚套币按发行套（如 3 枚）
     var isNote = d.kind === 'note';
     var sp = setPriceOf(d);
@@ -2920,7 +3007,7 @@ function goTab(name, opts){
   if (opts.scroll !== false) scrollToTop();
   if (name === 'plan') renderPlan();
   if (name === 'sitemap') renderSitemap();
-  if (name === 'all') syncSetFilter();
+  if (name === 'all') { ensureCategoryTabs(); syncSetFilter(); }
   if (name === 'account') renderProfile();
   if (name === 'home') renderHome();
 }
@@ -2933,7 +3020,7 @@ var LAST_ALL_SCROLL = 0;
 function goCoin(i, opts){
   opts = opts || {};
   i = Number(i);
-  if (!(i >= 0 && i < DB.length)) { goTab('all'); return; }
+  if (!(i >= 0 && i < DB.length + PM_DB.length)) { goTab('all'); return; }
   if (currentTab() === 'all') LAST_ALL_SCROLL = window.pageYOffset || 0;
   activatePane('coin');
   if (opts.push !== false) {
@@ -3421,6 +3508,7 @@ setTimeout(function(){
 }, 8000);
 
 boot()
+  .then(loadPmCatalog)
   .then(start)
   .catch(function(e){
     console.error(e);

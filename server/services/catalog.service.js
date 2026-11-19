@@ -377,7 +377,12 @@ class CatalogService {
   async query(filter) {
     const f = filter || {};
     const status = f.status === 'draft' ? 'draft' : 'published';
-    const rows = await this.repos.coins.listAll({ status: status });
+    // json 模式需要把贵金属种子并入查询视图（draft 由 status 过滤自然排除）；
+    // db 模式迁移后 cl_coins 里本来就有 PM 行，沿用 listAll。
+    const loader = typeof this.repos.coins.listAllIncludingPm === 'function'
+      ? this.repos.coins.listAllIncludingPm.bind(this.repos.coins)
+      : this.repos.coins.listAll.bind(this.repos.coins);
+    const rows = await loader({ status: status });
 
     let list = rows.slice().sort(common.compareCatalogOrder);
 

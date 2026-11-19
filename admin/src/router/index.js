@@ -17,7 +17,8 @@ export const MENU = [
       { path: '/params', title: '品种参数', icon: 'EditPen' },
       { path: '/images', title: '图片管理', icon: 'Picture' },
       { path: '/series', title: '系列管理', icon: 'Collection' },
-      { path: '/plan', title: '发行管理', icon: 'Calendar' }
+      { path: '/plan', title: '发行管理', icon: 'Calendar' },
+      { path: '/precious-metal', title: '贵金属', icon: 'Coin' }
     ]
   },
   {
@@ -42,6 +43,7 @@ const routes = [
       { path: 'images', name: 'images', component: () => import('../pages/Images.vue'), meta: { title: '图片管理' } },
       { path: 'series', name: 'series', component: () => import('../pages/Series.vue'), meta: { title: '系列管理' } },
       { path: 'plan', name: 'plan', component: () => import('../pages/Plan.vue'), meta: { title: '发行管理' } },
+      { path: 'precious-metal', name: 'precious-metal', component: () => import('../pages/PreciousMetal.vue'), meta: { title: '贵金属' } },
       { path: 'audit', name: 'audit', component: () => import('../pages/Audit.vue'), meta: { title: '操作审计' } },
       { path: 'guard', name: 'guard', component: () => import('../pages/Guard.vue'), meta: { title: '封禁管理' } }
     ]
