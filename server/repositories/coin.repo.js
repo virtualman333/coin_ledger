@@ -92,8 +92,9 @@ function create(pool) {
      * @param {number} no 业务主键
      * @returns {Promise<object|null>} 行或 null
      */
-    async findByNo(no) {
-      const [rows] = await pool.query('SELECT ' + coinSchema.SELECT_LIST + ' FROM cl_coins c WHERE c.no = ? LIMIT 1', [Number(no)]);
+    async findByNo(no, conn) {
+      const runner = conn || pool;
+      const [rows] = await runner.query('SELECT ' + coinSchema.SELECT_LIST + ' FROM cl_coins c WHERE c.no = ? LIMIT 1', [Number(no)]);
       return rows.length ? rows[0] : null;
     },
 
@@ -123,12 +124,13 @@ function create(pool) {
      * @param {Object<string, unknown>} cols 列名 → 值（由 service 用 schemas/coin 收敛）
      * @returns {Promise<number>} 业务主键 no
      */
-    async insert(cols) {
+    async insert(cols, conn) {
+      const runner = conn || pool;
       const keys = Object.keys(cols || {});
       if (!keys.length) throw new Error('coin.insert 需要至少一个字段');
       const params = keys.map((k) => (Array.isArray(cols[k]) ? JSON.stringify(cols[k]) : cols[k]));
       const sql = 'INSERT INTO cl_coins (' + keys.map((k) => '`' + k + '`').join(', ') + ') VALUES (' + marks(keys.length) + ')';
-      await pool.query(sql, params);
+      await runner.query(sql, params);
       return Number(cols.no);
     },
 
@@ -139,12 +141,13 @@ function create(pool) {
      * @param {Object<string, unknown>} values 列名 → 值
      * @returns {Promise<object|null>} 更新后的行
      */
-    async update(no, values) {
+    async update(no, values, conn) {
+      const runner = conn || pool;
       const built = buildSet(values || {});
-      if (!built.setSql) return this.findByNo(no);
+      if (!built.setSql) return this.findByNo(no, conn);
       // 触发器兜底：即使有人绕过 service 把 no 塞进来，这里也不会拼进 SQL
-      await pool.query('UPDATE cl_coins SET ' + built.setSql + ' WHERE `no` = ?', built.params.concat([Number(no)]));
-      return this.findByNo(no);
+      await runner.query('UPDATE cl_coins SET ' + built.setSql + ' WHERE `no` = ?', built.params.concat([Number(no)]));
+      return this.findByNo(no, conn);
     },
 
     /**
@@ -158,7 +161,8 @@ function create(pool) {
      * @param {Object<string, unknown>} cols 列名 → 值
      * @returns {Promise<void>} 完成
      */
-    async upsert(cols) {
+    async upsert(cols, conn) {
+      const runner = conn || pool;
       const keys = Object.keys(cols || {});
       if (!keys.length) throw new Error('coin.upsert 需要至少一个字段');
       const params = keys.map((k) => (Array.isArray(cols[k]) ? JSON.stringify(cols[k]) : cols[k]));
@@ -168,7 +172,7 @@ function create(pool) {
         .join(', ');
       const sql = 'INSERT INTO cl_coins (' + keys.map((k) => '`' + k + '`').join(', ') + ') VALUES ('
         + marks(keys.length) + ')' + (updates ? ' ON DUPLICATE KEY UPDATE ' + updates : '');
-      await pool.query(sql, params);
+      await runner.query(sql, params);
     },
 
     /**
@@ -189,8 +193,9 @@ function create(pool) {
      * @param {number} no 业务主键
      * @returns {Promise<number>} 影响行数
      */
-    async remove(no) {
-      const [r] = await pool.query("DELETE FROM cl_coins WHERE `no` = ? AND status = 'draft'", [Number(no)]);
+    async remove(no, conn) {
+      const runner = conn || pool;
+      const [r] = await runner.query("DELETE FROM cl_coins WHERE `no` = ? AND status = 'draft'", [Number(no)]);
       return Number(r.affectedRows || 0);
     },
 

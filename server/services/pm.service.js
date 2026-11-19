@@ -267,7 +267,7 @@ function create(ctx) {
         writeSeed(doc);
       } else {
         await ctx.withTx(async (conn) => {
-          await repos.coins.insert(toDbColumns(next));
+          await repos.coins.insert(toDbColumns(next), conn);
           await repos.pmPieces.replaceAll(conn, next.no, next.pieces);
         });
       }
@@ -295,7 +295,7 @@ function create(ctx) {
         writeSeed(doc);
       } else {
         await ctx.withTx(async (conn) => {
-          await repos.coins.update(no, toDbColumns(check.normalized));
+          await repos.coins.update(no, toDbColumns(check.normalized), conn);
           await repos.pmPieces.replaceAll(conn, no, check.normalized.pieces);
         });
       }
@@ -323,7 +323,7 @@ function create(ctx) {
       } else {
         await ctx.withTx(async (conn) => {
           await repos.pmPieces.replaceAll(conn, no, check.normalized.pieces);
-          await repos.coins.update(no, { set_pieces: check.normalized.setPieces });
+          await repos.coins.update(no, { set_pieces: check.normalized.setPieces }, conn);
         });
       }
       return { ok: true, count: check.normalized.pieces.length };
@@ -349,7 +349,11 @@ function create(ctx) {
         doc.sets = doc.sets.map((s) => Number(s.no) === Number(no) ? Object.assign({}, s, { status: next }) : s);
         writeSeed(doc);
       } else {
-        await repos.coins.update(no, { status: next });
+        // 单条 UPDATE 也放进事务：保证「校验通过 → 状态落库」是原子的，
+        // 且写调用拿到的是事务连接（与 create/update/remove 口径一致）
+        await ctx.withTx(async (conn) => {
+          await repos.coins.update(no, { status: next }, conn);
+        });
       }
       return { ok: true, row: await this.findByNo(no) };
     },
@@ -372,7 +376,7 @@ function create(ctx) {
       } else {
         await ctx.withTx(async (conn) => {
           await repos.pmPieces.removeByCoin(conn, no);
-          await repos.coins.remove(no);
+          await repos.coins.remove(no, conn);
         });
       }
       return { ok: true };

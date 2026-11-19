@@ -139,7 +139,7 @@ function create(ctx) {
       const coins = await repos.coins.listAll();
       let touched = 0;
       await ctx.withTx(async (conn) => {
-        await repos.series.remove(String(key));
+        await repos.series.remove(String(key), conn);
         for (const c of coins) {
           const keys = Array.isArray(c.seriesKeys) ? c.seriesKeys : (c.series ? [c.series] : []);
           if (keys.indexOf(String(key)) < 0) continue;
@@ -148,7 +148,7 @@ function create(ctx) {
             series: c.series === String(key) ? (next[0] || '') : c.series,
             series_keys: next
           };
-          await repos.coins.update(c.no, patch);
+          await repos.coins.update(c.no, patch, conn);
           touched += 1;
         }
       });
@@ -215,7 +215,7 @@ function create(ctx) {
             const next = has ? cur.filter((x) => x !== k) : cur.concat([k]);
             const nextSeries = (c.series === k && !should) ? (next[0] || '')
               : ((!c.series && should) ? k : c.series);
-            await repos.coins.update(id, { series: nextSeries, series_keys: next });
+            await repos.coins.update(id, { series: nextSeries, series_keys: next }, conn);
             changed += 1;
           }
         });

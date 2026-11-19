@@ -42,8 +42,9 @@ function create(pool) {
      * @param {object} row camelCase 行
      * @returns {Promise<void>} 完成
      */
-    async upsert(row) {
-      await pool.query(
+    async upsert(row, conn) {
+      const runner = conn || pool;
+      await runner.query(
         `INSERT INTO cl_series (series_key, name, descr, img, img_from, sort)
          VALUES (?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE name = VALUES(name), descr = VALUES(descr), img = VALUES(img),
@@ -58,8 +59,9 @@ function create(pool) {
      * @param {string} key 系列 key
      * @returns {Promise<number>} 影响行数
      */
-    async remove(key) {
-      const [r] = await pool.query('DELETE FROM cl_series WHERE series_key = ?', [String(key)]);
+    async remove(key, conn) {
+      const runner = conn || pool;
+      const [r] = await runner.query('DELETE FROM cl_series WHERE series_key = ?', [String(key)]);
       return Number(r.affectedRows || 0);
     }
   };
