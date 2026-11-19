@@ -28,16 +28,23 @@ const FILES = ['coins.json', 'descriptions.json', 'series.json', 'images.json', 
 /**
  * 读目标目录里的现有文件（用于保留 updated / note 这类文档级戳）。
  *
+ * 回退链：先看调用方给的输出目录（可能已经有上一轮产物），再看仓库里的
+ * public/data —— `--out` 指向**全新空目录**时，series.json 的 note 与
+ * updated/note 这类「文档级戳」并不在数据库里，必须能从基线取到。
+ * 否则 diff:catalog 会把 note 判成实质差异（QA Step2 实测过这个坑）。
+ *
  * @param {string} dir 目录
  * @param {string} file 文件名
  * @returns {object} 解析结果或空对象
  */
 function readExisting(dir, file) {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
-  } catch (e) {
-    return {};
+  const candidates = [path.join(dir, file), path.join(config.PUBLIC_DIR, 'data', file)];
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(fs.readFileSync(candidate, 'utf8'));
+    } catch (e) { /* 继续找下一个 */ }
   }
+  return {};
 }
 
 /**

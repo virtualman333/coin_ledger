@@ -102,7 +102,7 @@ test('迁移计划：no = i+1、dia 双列、mintage 小数、无 DELETE', () =>
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/--.*$/gm, '')
     .replace(/^\s*\/\/.*$/gm, '');
-  const sqlFiles = ['001_catalog_core.sql', '002_catalog_aux.sql', '003_guards.sql', '004_precious_metal.sql', '005_edge_widen.sql'];
+  const sqlFiles = ['001_catalog_core.sql', '002_catalog_aux.sql', '003_guards.sql', '004_precious_metal.sql', '005_widen_columns.sql'];
   sqlFiles.forEach((f) => {
     const sql = stripComments(fs.readFileSync(path.join(ROOT, 'server', 'migrations', f), 'utf8'));
     assert.equal(/DELETE\s+FROM\s+cl_coins/i.test(sql), false, f + ' 不允许出现 DELETE FROM cl_coins');
@@ -119,14 +119,14 @@ test('迁移计划是幂等的：同一份源数据两次 buildPlan 结果完全
 });
 
 test('005 前向修复：edge 必须放宽到 128（MySQL 5.7 严格模式下 9 条存量超长）', () => {
-  const sql = fs.readFileSync(path.join(ROOT, 'server', 'migrations', '005_edge_widen.sql'), 'utf8');
+  const sql = fs.readFileSync(path.join(ROOT, 'server', 'migrations', '005_widen_columns.sql'), 'utf8');
   assert.match(sql, /ALTER TABLE cl_coins[\s\S]*MODIFY COLUMN edge VARCHAR\(128\)/i);
   assert.match(sql, /no=25\(42\)/);
 });
 
 test('迁移执行器：按 -- @@ 切块，003 的两个触发器各自整段', () => {
   const list = runner.listMigrations();
-  assert.deepEqual(list.map((m) => m.version), ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_edge_widen']);
+  assert.deepEqual(list.map((m) => m.version), ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_widen_columns']);
 
   const guard = list.filter((m) => m.version === '003_guards')[0];
   assert.equal(guard.blocks.length, 4, '003 应为 4 块：2 个 DROP + 2 个 CREATE TRIGGER（视图已故意省略，见文件末尾说明）');
@@ -174,6 +174,25 @@ test('零漂移：export --from-json 的 6 个产物与 public/data 深比较 0 
     assert.equal(result.missing.length, 0, '不应缺文件：' + result.missing.join('；'));
     assert.deepEqual(result.diffs, [], '不应有实质差异');
     assert.ok(result.allowed.length >= 1, 'meta.count / meta.generated 属允许差异');
+  } finally {
+    fs.rmSync(outDir, { recursive: true, force: true });
+  }
+});
+
+test('导出到全新空目录不丢 series note/updated（QA Step2 回归）', async () => {
+  const { createDataSource } = require('../server/services/data-source');
+  const exportJson = require('../tools/export-json');
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cl-export-empty-'));
+  try {
+    const docs = await exportJson.buildDocs(createDataSource({ mode: 'json' }), outDir);
+    const baselineSeries = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'data', 'series.json'), 'utf8'));
+    assert.equal(docs['series.json'].note, baselineSeries.note, 'note 不在数据库里，必须从 public/data 回退');
+    assert.equal(docs['series.json'].updated, baselineSeries.updated);
+
+    // 顺手验证 CLI 的真实 diff 路径：空目录导出 → 与 public/data 比应只有允许差异
+    exportJson.writeDocs(outDir, docs);
+    const result = diffCatalog.diffDirs(outDir, path.join(ROOT, 'public', 'data'), { strictKeyOrder: false });
+    assert.equal(result.diffs.length, 0, '空目录导出不应产生任何实质差异');
   } finally {
     fs.rmSync(outDir, { recursive: true, force: true });
   }
@@ -231,7 +250,7 @@ test('迁移执行器（桩连接）：首次全跑、二次全跳过、checksum
   };
 
   const first = await runner.apply(fakeConn, {});
-  assert.deepEqual(first.applied, ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_edge_widen']);
+  assert.deepEqual(first.applied, ['001_catalog_core', '002_catalog_aux', '003_guards', '004_precious_metal', '005_widen_columns']);
   assert.equal(first.skipped.length, 0);
   assert.equal(first.blocks, 15, '5 个文件共 15 个语句块');
   assert.equal(sent.length, 15, '每块必须整段发送一次（不能按分号再切）');
