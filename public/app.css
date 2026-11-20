@@ -1184,6 +1184,19 @@ html[data-theme="light"] .oc-ok{color:#1a7a52}
 .coin-price.single-price .cf-note-inline{
   grid-column:1/-1;font-size:11px;line-height:1.6;color:var(--dim);font-weight:400;
 }
+/* 推理价计算方式：问号按钮 + 点击弹层（默认收起，点开才显示） */
+.ai-formula-q{
+  justify-self:start;display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;margin-top:-2px;padding:0;border:1px solid var(--line);
+  border-radius:50%;background:transparent;color:var(--dim);font-size:11px;
+  line-height:1;cursor:pointer;vertical-align:middle;
+}
+.ai-formula-q:hover{border-color:var(--gold);color:var(--gold)}
+.ai-formula-modal{max-width:440px}
+.ai-formula-modal .ai-fm-body{
+  margin-top:12px;font-size:12.5px;line-height:1.85;color:var(--text);
+  white-space:pre-wrap;word-break:break-word;
+}
 @media (max-width:820px){
   .coin-price{grid-template-columns:1fr 1fr}
   .coin-price.single-price{grid-template-columns:1fr}

@@ -260,7 +260,7 @@ Page({
       metaText: c.seriesName + ' · ' + c.faceText,
       mintageLabel: c.mintageText ? ('发行 ' + c.mintageText + (c.kind === 'note' ? '张' : '枚')) : '',
       setLabel: '一套 ' + c.setSize + (c.kind === 'note' ? ' 张' : ' 枚'),
-      priceText: '¥' + cat.money(store.setPriceOf(c)),
+      priceText: '¥' + cat.money(cat.aiPriceOf(c) * c.setSize),
     }));
     this.setData({
       rows,

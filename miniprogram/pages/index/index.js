@@ -63,7 +63,7 @@ Page({
       year: c.year,
       imgUrl: c.smallUrl || c.thumbUrl || c.imgUrl,
       faceText: c.faceText,                       // 单件面额，如「20 元/张」
-      priceText: '一套约 ¥' + cat.money(store.setPriceOf(c)),
+      priceText: '推理价 ¥' + cat.money(cat.aiPriceOf(c) * c.setSize),
     }));
     const seriesTop = cat.seriesList
       .map((x) => {

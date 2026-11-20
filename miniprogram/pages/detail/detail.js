@@ -41,6 +41,7 @@ Page({
     coin: null,
     facts: [],
     aiPrice: '',
+    formulaOpen: false,
     same: [],
     peek: null,
     owned: false,
@@ -55,6 +56,11 @@ Page({
     busy: false,
     notFound: false,
     imgFail: false,
+  },
+
+  /** 推理价计算方式：默认收起，点问号展开/收起 */
+  toggleFormula() {
+    this.setData({ formulaOpen: !this.data.formulaOpen });
   },
 
   onLoad(query) {

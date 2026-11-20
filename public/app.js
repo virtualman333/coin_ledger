@@ -439,6 +439,31 @@ function itemFace(d, rolls){
   });
 })();
 
+/* 推理价计算方式：问号点一下弹层显示（长文案不适合 tooltip，且用户要求默认收起） */
+(function bindAiFormula(){
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('[data-ai-formula]');
+    if (!btn) return;
+    e.preventDefault();
+    var mask = document.createElement('div');
+    mask.className = 'pz-modal-mask';
+    mask.innerHTML = '<div class="pz-modal ai-formula-modal" role="dialog" aria-modal="true" aria-label="推理价计算方式">' +
+      '<div class="pz-modal-h"><b>推理价怎么算的</b><button type="button" class="pz-modal-x" aria-label="关闭">×</button></div>' +
+      '<div class="ai-fm-body">' + esc(AI_FORMULA_TEXT) + '</div>' +
+      '</div>';
+    document.body.appendChild(mask);
+    function close(){ if (mask.parentNode) mask.parentNode.removeChild(mask); }
+    mask.addEventListener('click', function(ev){
+      if (ev.target === mask || (ev.target.closest && ev.target.closest('.pz-modal-x'))) close();
+    });
+    document.addEventListener('keydown', function onKey(ev){
+      if (ev.key !== 'Escape') return;
+      close();
+      document.removeEventListener('keydown', onKey);
+    });
+  });
+})();
+
 /* 顶部用户名胶囊：点一下进账户页（手机端顶栏空间不够，账户按钮会被隐藏） */
 (function bindUserChip(){
   var chip = document.getElementById('userChip');
@@ -790,16 +815,16 @@ function renderHoldings(){
  *  现在给出真正可点的下一步：单价最低的 4 枚一点即入，或者去完整清单。 */
 function emptyLedgerHtml(){
   var picks = DB.filter(function(d){
-    return REAL_SET[d.i + 1] && Number(d.est) > 0;
+    return REAL_SET[d.i + 1] && aiPrice(d) > 0;
   }).sort(function(a, b){
-    return (Number(a.est) - Number(b.est)) || (a.i - b.i);
+    return (aiPrice(a) - aiPrice(b)) || (a.i - b.i);
   }).slice(0, 4);
   var cards = picks.map(function(d){
     return '<button class="lt-card" data-empty-add="' + esc(d.name) + '">' +
       '<img src="' + imgSmall(d.i + 1) + '" alt="' + esc(d.name) + '" ' +
         'width="120" height="120" decoding="async">' +
       '<span class="lt-name">' + esc(d.name) + '</span>' +
-      '<span class="lt-meta">' + d.year + ' 年 · 面额 ' + d.face + ' 元 · 约 ' + money(d.est) + '</span>' +
+      '<span class="lt-meta">' + d.year + ' 年 · 面额 ' + d.face + ' 元 · 推理价 ' + money(aiPrice(d)) + '</span>' +
       '<span style="font-size:11px;font-weight:600;color:var(--gold)">＋ 加入我的藏品</span>' +
     '</button>';
   }).join('');
@@ -934,7 +959,7 @@ function buildSeriesList(){
       id: 'single-' + cat, name: label, unit: cat === 'note' ? '张' : '枚',
       total: group.length, members: group.length,
       setFace: group.reduce(function(a, c){ return a + (Number(c.face) || 0); }, 0),
-      setEst: group.reduce(function(a, c){ return a + (Number(c.est) || 0); }, 0),
+      setEst: group.reduce(function(a, c){ return a + aiPrice(c); }, 0),
       ownCount: so.length,
       ownCost: so.reduce(function(a, c){ var h = holdingOf(c.name); return a + (h ? Number(h.cost) || 0 : 0); }, 0),
       ownMarket: so.reduce(function(a, c){ var h = holdingOf(c.name); return a + (h ? Number(h.market) || 0 : 0); }, 0),
@@ -1038,7 +1063,7 @@ function renderSeries(){
       (anon ? '' : '<div class="track"><div class="fill' + (done ? ' done' : '') + '" style="width:' + rate + '%"></div></div>') +
       '<div class="sc-stats">' +
         '<span>' + (x.isSingle ? '合计面额' : '整套发行') + ' <b>' + money(x.setFace) + '</b></span>' +
-        '<span>' + (x.isSingle ? '合计市价' : '整套市价') + ' <b class="gold">' + money(x.setEst) + '</b></span>' +
+        '<span>' + (x.isSingle ? '合计推理价' : '整套推理价') + ' <b class="gold">' + money(x.setEst) + '</b></span>' +
       '</div>' +
       (anon ? ''
         : (x.ownCount
@@ -1381,7 +1406,7 @@ function renderHome(){
         '<img src="' + imgSmall(d.i + 1) + '" alt="' + esc(d.name) + '" ' +
           'width="120" height="120" decoding="async" loading="lazy">' +
         '<span class="lt-name">' + esc(d.name) + '</span>' +
-        '<span class="lt-meta">' + d.year + ' · ' + (SERIES[d.series] || '') + ' · ' + money(d.est) + '</span>' +
+        '<span class="lt-meta">' + d.year + ' · ' + (SERIES[d.series] || '') + ' · 推理价 ' + money(aiPrice(d)) + '</span>' +
       '</button>';
     }).join('');
   }
@@ -1409,7 +1434,7 @@ function renderHome(){
           ? '<div class="track"><div class="fill' + (x.ownCount >= x.total ? ' done' : '') +
             '" style="width:' + rate + '%"></div></div>'
           : '') +
-        '<div class="hs-sub">整套市价 <b>' + money(x.setEst) + '</b></div>' +
+        '<div class="hs-sub">整套推理价 <b>' + money(x.setEst) + '</b></div>' +
       '</button>';
     }).join('');
   }
@@ -1539,7 +1564,7 @@ function renderCoin(i){
         '</div>' +
         '<div class="coin-price single-price">' +
           fact('推理价（单' + unit + '）', money(aiPrice(d)), 'ai') +
-          '<div class="cf-note-inline">' + AI_FORMULA_TEXT + '</div>' +
+          '<button type="button" class="ai-formula-q" data-ai-formula="1" aria-label="推理价计算方式" title="推理价计算方式">?</button>' +
         '</div>' +
         ownHtml +
       '</div>' +
@@ -1616,23 +1641,23 @@ function costStats(){
   DB.forEach(function(d){
     var sp = setPriceOf(d);
     var f = sp.face;
-    var e = sp.est;
+    var e = aiPrice(d) * sp.size;   // 一套推理价（件数由套系决定）
     s.faceOne += d.face;
-    s.estOne  += d.est;
+    s.estOne  += aiPrice(d);        // 单枚推理价
     s.faceRoll += f;
     s.estRoll  += e;
-    if(d.kind === 'note') s.noteOver += (d.est - d.face);
+    if(d.kind === 'note') s.noteOver += (aiPrice(d) - d.face);
     if(!isOwned(d.name)){
       s.gapCount++;
       s.gapFace += f;
       s.gapEst  += e;
     }
   });
-  // 千禧龙钞 + 奥运钞 两张钞的溢价
+  // 千禧龙钞 + 奥运钞 两张钞的溢价（按推理价）
   var a = findDB('迎接新世纪纪念钞（千禧龙钞）');
   var b = findDB('第29届奥运会纪念钞（奥运钞）');
-  s.twoNoteOver = (a.est - a.face) + (b.est - b.face);
-  s.twoNoteEst = a.est + b.est;   // 绕开这两张时要从单枚总数里减掉它们（原来写死 900+2050，千禧龙钞早已不是 900）
+  s.twoNoteOver = (aiPrice(a) - a.face) + (aiPrice(b) - b.face);
+  s.twoNoteEst = aiPrice(a) + aiPrice(b);   // 绕开这两张时要从单枚推理价总数里减掉它们
   s.overOne = s.estOne - s.faceOne;
   return s;
 }
@@ -1658,7 +1683,7 @@ function renderCostGate(s){
   gate.innerHTML =
     '<div class="gate-ico">算</div>' +
     '<h3>全部收齐，要花多少钱</h3>' +
-    '<p>按 2026 年 11 月二级市场参考价、全新原光品相估算。' + DB.length +
+    '<p>按推理价（发行量、材质、年份等公开参数推算）估算。' + DB.length +
       ' 个品种，整卷按 20 枚 / 整刀 20 张、多枚套币按发行套计。</p>' +
     '<div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:20px">' +
       card('单枚口径', '全部 ' + DB.length + ' 个品种 · 各 1 枚 / 1 张', s.estOne, s.faceOne) +
@@ -1763,7 +1788,7 @@ function setStats(){
     var upc = unitPrice(d);
     var boxN = (meta.kind === 'box' && meta.size) ? meta.size : 1;
     s.face += upc.face * boxN;
-    s.est += upc.est * boxN;
+    s.est += aiPrice(d) * boxN;   // 整套推理价（原为参考价）
     s.coins.push(d);
   });
   SET_STATS = m;
@@ -2313,10 +2338,10 @@ function renderTable(){
     var perSet = sp.size;
     var unit = isNote ? '张' : '枚';
     var setFace = sp.face;
-    var setEst = sp.est;
+    var setAi = aiPrice(d) * perSet;
     var setCell = '<b>' + perSet + '</b> <span class="unit">' + unit + '</span>' +
       '<span class="sub"><span class="sface">发行 ' + money(setFace) + '</span>' +
-      '<span class="sest"> · 市价 ' + money(setEst) + '</span></span>';
+      '<span class="sest"> · 推理价 ' + money(setAi) + '</span></span>';
     html += '<tr class="' + (own?'mine':'') + '" data-i="' + d.i + '">' +
       '<td class="y">' + d.year + '</td>' +
       '<td class="nm"><span class="nmtext">' + esc(d.name) + '</span>' +
@@ -2325,14 +2350,14 @@ function renderTable(){
         '<small>' + (d.kind === 'note' ? '纪念钞 · ' : '') + esc(d.material) + '</small></td>' +
       '<td><span class="tag ' + d.series + '">' + SERIES[d.series] + '</span></td>' +
       '<td class="price plain">' + d.face + ' 元/' + (isNote ? '张' : '枚') + '</td>' +
-      '<td class="price">' + money(d.est) + '</td>' +
+      '<td class="price">' + money(aiPrice(d)) + '</td>' +
       '<td class="price plain setcell" title="' +
         (d.reserveLimit > 0
           ? ((isNote ? '整刀 20 张' : '整卷 20 枚') + '＝一套，每人限约 ' + d.reserveLimit + (isNote ? ' 张' : ' 枚') +
-             '；发行价＝单件面额×' + setSizeOf(d) + '，市价＝单件估值×' + setSizeOf(d))
+             '；发行价＝单件面额×' + setSizeOf(d) + '，推理价＝单件推理价×' + setSizeOf(d))
           : (setSizeOf(d) === 20
-            ? ((isNote ? '整刀 20 张' : '整卷 20 枚') + '＝一套；发行价＝单件面额×20，市价＝单件估值×20')
-            : ('一套 ' + setSizeOf(d) + ' ' + (isNote ? '张' : '枚') + '（发行即成套）；发行价＝单件面额×' + setSizeOf(d) + '，市价＝单件估值×' + setSizeOf(d)))) + '">' + setCell + '</td>' +
+            ? ((isNote ? '整刀 20 张' : '整卷 20 枚') + '＝一套；发行价＝单件面额×20，推理价＝单件推理价×20')
+            : ('一套 ' + setSizeOf(d) + ' ' + (isNote ? '张' : '枚') + '（发行即成套）；发行价＝单件面额×' + setSizeOf(d) + '，推理价＝单件推理价×' + setSizeOf(d)))) + '">' + setCell + '</td>' +
       '<td class="mint">' + fmMint(d.mintage) + (d.kind==='note'?'张':'枚') + '</td>' +
       '<td>' + (own
         ? '<span class="own">已藏</span>'
@@ -2465,7 +2490,7 @@ function buildTip(d){
         '<div><span>材质</span><b>' + d.material + '</b></div>' +
         '<div><span>' + sizeLabel(d) + '</span><b>' + sizeText(d) + '</b></div>' +
       '</div>' +
-      '<div class="cprice"><span>参考市价 / 单' + (d.kind==='note'?'张':'枚') + '</span><b>' + money(d.est) + '</b></div>' +
+      '<div class="cprice"><span>推理价 / 单' + (d.kind==='note'?'张':'枚') + '</span><b>' + money(aiPrice(d)) + '</b></div>' +
       '<div class="hint">' + (isReal ? '实物图案 · 中国人民银行发行公告' : '示意图 · 依据面额与发行信息生成') + '</div>' +
     '</div>';
 }
@@ -3143,7 +3168,7 @@ function syncSeo(tab, coin){
     title = d.name + '（' + d.year + ' ' + (isNote ? '纪念钞' : '纪念币') + '）面额 ' + d.face + ' 元 · 发行量 ' + fmMint(d.mintage) + unit + ' | 藏币录';
     desc = d.year + ' 年发行的' + (isNote ? '纪念钞' : '普通纪念币') + '「' + d.name + '」，面额 ' + d.face + ' 元／' + unit +
            '，' + d.material + '，' + sizeLabel(d) + ' ' + sizeText(d).replace(' mm', ' 毫米') + '，发行量 ' + fmMint(d.mintage) + unit +
-           '。单' + unit + '参考市价约 ' + d.est + ' 元，一套（' + sp.size + ' ' + unit + '）约 ' + sp.est + ' 元。';
+           '。单' + unit + '推理价约 ' + aiPrice(d) + ' 元，一套（' + sp.size + ' ' + unit + '）约 ' + (aiPrice(d) * sp.size).toFixed(1) + ' 元。';
   } else {
     var pair = (TAB_SEO[tab] || TAB_SEO.home).map(function(x){
       return x.replace(/{n}/g, DB.length).replace(/{s}/g, Object.keys(SET_META || {}).length);
@@ -3892,7 +3917,7 @@ function initShare(){
     var range = DB.length ? yearRange() : '1984—2026';
     var data = {
       title: '藏币录 · ' + range + ' 纪念币收藏管理与发行清单',
-      text: (DB.length || 135) + ' 个品种的面额、发行量、市场参考价，按套系核算完整度',
+      text: (DB.length || 135) + ' 个品种的面额、发行量、推理价，按套系核算完整度',
       url: url
     };
     if (navigator.share) {

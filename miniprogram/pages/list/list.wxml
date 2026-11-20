@@ -140,7 +140,7 @@
     </view>
     <view class="row-right">
       <text class="row-year">{{item.year}}</text>
-      <text class="row-price">{{item.priceText}}</text>
+      <text class="row-price"><text class="row-price-k">推理价 </text>{{item.priceText}}</text>
     </view>
   </view>
   <view class="empty" wx:if="{{count === 0}}">

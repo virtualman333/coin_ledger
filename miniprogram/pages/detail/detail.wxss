@@ -472,6 +472,66 @@
   line-height: 1.5;
 }
 
+/* 推理价计算方式：问号 + 点击弹层 */
+.ai-q {
+  display: inline-flex;
+  width: 30rpx;
+  height: 30rpx;
+  margin-left: 2rpx;
+  border: 1rpx solid #d8cfbe;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  color: #9a6b1f;
+  font-size: 19rpx;
+  line-height: 1;
+}
+
+.ai-formula-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  padding: 0 40rpx;
+  background: rgba(30, 24, 16, 0.5);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.ai-formula-panel {
+  width: 100%;
+  max-width: 620rpx;
+  padding: 32rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+}
+
+.ai-formula-h {
+  display: flex;
+  margin-bottom: 20rpx;
+  align-items: center;
+  justify-content: space-between;
+  color: #2b2926;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.ai-formula-x {
+  color: #a39c8e;
+  font-size: 40rpx;
+  line-height: 1;
+}
+
+.ai-formula-body {
+  color: #6a6252;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
 .ai-badge {
   padding: 2rpx 10rpx;
   border-radius: 6rpx;

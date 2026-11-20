@@ -239,6 +239,12 @@
   font-weight: 600;
 }
 
+.row-price-k {
+  color: #a39c8e;
+  font-size: 18rpx;
+  font-weight: 400;
+}
+
 /* 年份 / 面额 / 材质 筛选条（可横滑） */
 .filters{
   display:flex;align-items:center;white-space:nowrap;
