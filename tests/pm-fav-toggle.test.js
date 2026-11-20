@@ -123,6 +123,49 @@ test('Web：独立页按钮已收藏时不 disabled，且 togglePmFav 能移出�
   assert.ok(!/reRenderAll\(\)/.test(t), '独立页不该全量重建清单');
 });
 
+test('Web：真实执行 togglePmFav —— 移出后 coll 减少、按钮回到加入态', () => {
+  const vm = require('node:vm');
+  const src = read('public/app.js');
+  // 只抽三个相关函数执行：整份脚本含顶层 DOM 绑定与 boot() 的防抖定时器，会让测试进程挂住
+  const grab = (name, end) => {
+    const a = src.indexOf('function ' + name + '(');
+    assert.ok(a >= 0, '应能找到函数 ' + name);
+    const b = src.indexOf(end, a);
+    assert.ok(b > a, '应能找到函数 ' + name + ' 的结束位置');
+    return src.slice(a, b);
+  };
+  const snippet = [
+    grab('pmIsOwned', '/** 已收藏 →'),
+    grab('togglePmFav', '/** 独立页内的图片放大'),
+    grab('addPmHolding', 'function addHolding(')
+  ].join('\n');
+
+  const ctx = {
+    window: { confirm: () => true },
+    coll: [{ id: 'G19790101', name: '建国30周年金币', category: 'pm' }],
+    isLoggedIn: () => true,
+    saveState: () => {}, renderKPI: () => {}, toast: () => {},
+    rebuildGroupOrder: () => {},
+    reRenderAll: () => { throw new Error('独立页不应触发全量重建'); },
+    console
+  };
+  ctx.globalThis = ctx;
+  vm.createContext(ctx);
+  vm.runInContext(snippet, ctx);
+
+  const btn = { className: 'btn ghost pm-fav-owned', textContent: '✓ 已在藏品 · 点此取消' };
+  assert.equal(ctx.pmIsOwned('G19790101'), true);
+  ctx.togglePmFav('G19790101', { code: 'G19790101', name: '建国30周年金币', thumb: '' }, btn);
+  assert.equal(ctx.pmIsOwned('G19790101'), false, '藏品应从 coll 移出');
+  assert.equal(btn.textContent, '＋ 加入我的藏品', '按钮应回到可加入态');
+  assert.equal(btn.className, 'btn primary');
+
+  // 再点一次可重新加入（light 模式不重建清单）
+  ctx.togglePmFav('G19790101', { code: 'G19790101', name: '建国30周年金币', thumb: '' }, btn);
+  assert.equal(ctx.pmIsOwned('G19790101'), true, '取消后应能立即重新加入');
+  assert.match(btn.textContent, /点此取消/);
+});
+
 test('Web：目录卡片「已收藏」按钮同样可取消，口径与详情页一致', () => {
   const js = read('public/app.js');
   assert.match(js, /pm-add is-owned/);
