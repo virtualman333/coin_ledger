@@ -78,7 +78,7 @@
           <text class="it-limit" wx:if="{{it.limitText}}">{{it.limitText}}</text>
           <view
             class="remind {{reminded[it.key] ? 'on' : ''}}"
-            wx:if="{{it.isUp}}"
+            wx:if="{{it.canRemind}}"
             catchtap="remind"
             data-key="{{it.key}}"
             data-name="{{it.short}}"

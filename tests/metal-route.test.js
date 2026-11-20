@@ -53,6 +53,25 @@ test('/api/metal-price 返回四种金属元/克与汇率', async () => {
   assert.equal(res.stale, false);
 });
 
+test('/api/metal-price 透出缓存小时 hourKey 与 stale', async () => {
+  const quotes = {};
+  ['XAU', 'XAG', 'XPT', 'XPD'].forEach((s) => {
+    quotes[s] = { name: s, usdOz: 1000, cnyPerGram: 214.4, fallback: false };
+  });
+  const app = fakeApp({
+    metalPrice: {
+      TROY_OZ_G: 31.1035,
+      getQuotes: async () => ({
+        quotes, fx: 6.667, fetchedAt: 'now', hourKey: '2026-11-20T09', stale: true
+      }),
+    },
+  });
+  await metalPriceRoutes(app);
+  const res = await call(app._routes['/api/metal-price']);
+  assert.equal(res.hourKey, '2026-11-20T09');
+  assert.equal(res.stale, true);
+});
+
 test('/api/catalog/pm/:code 响应体包含 metalValue（回归：曾漏塞）', async () => {
   const raw = {
     code: 'G19790101', name: '测试金币', material: ['金'], weight: [15.5518], fineness: '91.6',

@@ -211,17 +211,23 @@ function addCoin(coin, unit, qty) {
   return persist();
 }
 
-/** 贵金属入账本：按枚记，不套用普通币的整卷口径，成本/市价留空 */
+/** 贵金属入账本：按枚记，不套用普通币的整卷口径；成本默认按面值 × 数量 */
 function addPm(item) {
   requireLogin();
   const hit = state.holdings.filter((h) => h.category === 'pm' && h.id === item.code)[0];
   if (hit) { const err = new Error('这枚已经在你的藏品里了'); err.duplicate = true; throw err; }
+  // 面值优先取入参 item.face（贵金属详情接口提供），再退回目录同名品种；没有则维持 0
+  const coin = cat.byName[item.name];
+  const face = Number(item && item.face) || (coin ? Number(coin.face) || 0 : 0);
+  const qty = Math.max(1, Number(item && item.rolls) || 1);
   state.holdings.push({
     id: item.code,
     name: item.name,
     category: 'pm',
     thumb: item.thumb || '',
-    unit: 'piece', rolls: 1, cost: 0, market: 0, group: '贵金属',
+    unit: 'piece', rolls: qty,
+    cost: Math.round(face * qty * 100) / 100,
+    market: 0, group: '贵金属',
   });
   return persist();
 }

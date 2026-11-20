@@ -92,3 +92,73 @@ test('空桌面数出 0', () => {
   const r = svc.count(makeImage([], 500, 300));
   assert.equal(r.count, 0, '实际 ' + r.count);
 });
+
+/**
+ * 生成带币面纹理的模拟图：深色桌面 + 金色币，每枚币内部画若干
+ * 暗色图案/阴影小块（会被 Otsu 判成背景，制造「亮岛」）和少量高光小块。
+ * 用来回归「币内纹理被误当成硬币」的严重误检。
+ */
+function makeTexturedCoins(circles, width, height) {
+  const W = width, H = height;
+  const png = new PNG({ width: W, height: H });
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      png.data[i] = 40; png.data[i + 1] = 38; png.data[i + 2] = 35; png.data[i + 3] = 255;
+    }
+  }
+  const put = function (x, y, rgb) {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    png.data[i] = rgb[0]; png.data[i + 1] = rgb[1]; png.data[i + 2] = rgb[2];
+  };
+  circles.forEach(function (c) {
+    for (let y = c.y - c.r; y <= c.y + c.r; y++) {
+      for (let x = c.x - c.r; x <= c.x + c.r; x++) {
+        if ((x - c.x) * (x - c.x) + (y - c.y) * (y - c.y) <= c.r * c.r) put(x, y, [215, 190, 130]);
+      }
+    }
+  });
+  // 币内纹理：暗色图案块 + 高光块，位置固定以便复现
+  const texture = [
+    [-10, -8, 7], [9, -5, 8], [-4, 11, 6], [12, 10, 5],
+    [0, 0, 4], [-14, 4, 5], [5, -14, 5]
+  ];
+  circles.forEach(function (c) {
+    texture.forEach(function (t, k) {
+      const dark = (k % 3 !== 0); // 大部分暗块，少数高光块
+      const rgb = dark ? [55, 52, 48] : [250, 245, 230];
+      for (let y = c.y + t[1] - t[2]; y <= c.y + t[1] + t[2]; y++) {
+        for (let x = c.x + t[0] - t[2]; x <= c.x + t[0] + t[2]; x++) {
+          // 只在币面内部画，不越过边缘
+          if ((x - c.x) * (x - c.x) + (y - c.y) * (y - c.y) > (c.r - 2) * (c.r - 2)) continue;
+          put(x, y, rgb);
+        }
+      }
+    });
+  });
+  return PNG.sync.write(png);
+}
+
+test('币内高光/暗色纹理不再被误检（9 枚仍数出 9）', () => {
+  const circles = grid(9, 3, 30, 22).map(function (c) {
+    return { x: c.x + 40, y: c.y + 30, r: c.r };
+  });
+  const r = svc.count(makeTexturedCoins(circles, 700, 600));
+  assert.equal(r.count, 9, '实际 ' + r.count);
+  // 每个种子都应落在某枚币附近（中心距 < 半径），而不是纹理小块上
+  circles.forEach(function (c) {
+    const near = r.seeds.some(function (s) {
+      return Math.hypot(s.x - c.x, s.y - c.y) < c.r;
+    });
+    assert.ok(near, '硬币(' + c.x + ',' + c.y + ')未被正确圈出');
+  });
+});
+
+test('轻微接触的币带纹理时仍按种子计数，不退化成连通域', () => {
+  const r0 = 26;
+  const circles = [];
+  for (let i = 0; i < 4; i++) circles.push({ x: 100 + i * (2 * r0 + 2), y: 150, r: r0 });
+  const r = svc.count(makeTexturedCoins(circles, 700, 300));
+  assert.equal(r.count, 4, '实际 ' + r.count);
+});

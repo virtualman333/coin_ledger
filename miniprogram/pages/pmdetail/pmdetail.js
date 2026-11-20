@@ -52,7 +52,7 @@ Page({
     this.setData({ busy: true });
     wx.showLoading({ title: '保存中' });
     let task;
-    try { task = store.addPm({ code: it.code, name: it.name, thumb: it.thumbUrl }); }
+    try { task = store.addPm({ code: it.code, name: it.name, thumb: it.thumbUrl, face: it.face }); }
     catch (e) { wx.hideLoading(); this.setData({ busy: false }); wx.showToast({ title: e.message || '加入失败', icon: 'none' }); return; }
     task.then(() => {
       wx.hideLoading(); this.setData({ owned: true, busy: false });

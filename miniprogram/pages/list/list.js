@@ -222,11 +222,26 @@ Page({
     wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(code) });
   },
 
+  /**
+   * 按年份排序（年份容错为数字）：desc 为 true 降序（大年份在前），否则升序。
+   * 同年份时用 code/id 兜底，保证顺序稳定、点击可精确反转。
+   */
+  sortByYear(rows, desc) {
+    const yearNum = (y) => { const n = Number(y); return Number.isFinite(n) ? n : 0; };
+    const key = (r) => String(r && (r.code != null ? r.code : r.id) || '');
+    return (rows || []).slice().sort((a, b) => {
+      const diff = (yearNum(a.year) - yearNum(b.year)) || key(a).localeCompare(key(b));
+      return desc ? -diff : diff;
+    });
+  },
+
   render() {
     const kw = String(this.data.keyword || '').trim().toLowerCase();
     const category = this.data.category || 'coin';
     if (category === 'pm') {
-      // pm 由 loadPmFull 单独维护；render() 不再冲掉已翻到的页码
+      // pm 由 loadPmFull 单独维护分页；此处只对当前已加载的数据按年份排序，
+      // 不重新请求，也不会改动 pmPage/pmPages 等分页状态。
+      this.setData({ pmRows: this.sortByYear(this.data.pmRows, this.data.desc) });
       return;
     }
     const code = this.data.code;
@@ -303,8 +318,10 @@ Page({
     });
   },
 
+  /** 年份排序按钮：切换升/降序并立刻对当前列表生效（箭头由 desc 驱动） */
   toggleSort() {
-    this.setData({ desc: !this.data.desc });
+    const desc = !this.data.desc;
+    this.setData({ desc });
     this.render();
   },
 

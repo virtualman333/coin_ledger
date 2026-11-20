@@ -15,9 +15,15 @@
 const jpeg = require('jpeg-js');
 const { PNG } = require('pngjs');
 
-const MAX_SIDE = 1000;       // 解码后缩放的最大边，控制计算量
-const MIN_RADIUS = 8;        // 小于此半径的亮斑不当作币（像素，缩放后）
-const MAX_RADIUS_RATIO = 0.25; // 单个亮斑半径超过短边这个比例，当成大块背景丢弃
+const MAX_SIDE = 1000;        // 解码后缩放的最大边，控制计算量
+const MIN_RADIUS = 8;         // 最小半径绝对下限（像素，缩放后）
+const MIN_RADIUS_RATIO = 0.028; // 同时按短边取比例下限，避免小半径纹理被当成币
+const MAX_RADIUS_RATIO = 0.25;  // 单个亮斑半径超过短边这个比例，当成大块背景丢弃
+const RING_SAMPLES = 24;      // 环形边界验证的采样点数
+const RING_INNER = 0.80;      // 内环采样半径系数（应落在前景内）
+const RING_OUTER = 1.18;      // 外环采样半径系数（应落在背景里）
+const RADIUS_KEEP_RATIO = 0.45; // 半径小于参考半径该比例的种子丢弃（内部纹理）
+const NMS_FACTOR = 0.9;       // NMS 抑制距离系数（越大越严格合并近邻）
 
 /** 解码 buffer 为 {width,height,data:Uint8Array RGBA}，超大图等比缩小 */
 function decode(buf) {
@@ -127,6 +133,60 @@ function distanceTransform(bin, w, h) {
 }
 
 /**
+ * 填充前景内部被误判为背景的封闭小洞。
+ * 币面图案/阴影常比阈值暗，Otsu 会把它们切成背景，实心币变成「带洞亮岛」，
+ * 距离变换会在每个残留小岛上产生局部极大（即大量内部纹理误检）。
+ * 从图像四边的背景做 flood fill，未被触及的背景即为币内封闭洞，填回前景。
+ * 不改变与图像边缘连通的真实背景，因此不会把相邻币粘在一起。
+ */
+function fillHoles(bin, w, h) {
+  const n = w * h;
+  const visited = new Uint8Array(n);
+  const stack = new Int32Array(n);
+  let sp = 0;
+  const push = function (i) {
+    if (i < 0 || i >= n || bin[i] || visited[i]) return;
+    visited[i] = 1; stack[sp++] = i;
+  };
+  for (let x = 0; x < w; x++) { push(x); push((h - 1) * w + x); }
+  for (let y = 0; y < h; y++) { push(y * w); push(y * w + w - 1); }
+  while (sp > 0) {
+    const i = stack[--sp];
+    const x = i % w;
+    if (x > 0) push(i - 1);
+    if (x < w - 1) push(i + 1);
+    if (i >= w) push(i - w);
+    if (i < n - w) push(i + w);
+  }
+  const out = new Uint8Array(bin);
+  for (let i = 0; i < n; i++) if (!bin[i] && !visited[i]) out[i] = 1;
+  return out;
+}
+
+/**
+ * 环形边界验证：真币中心的内环应落在前景里、外环应落到背景里。
+ * 币内纹理/噪点虽是距离局部极大，但其外环仍在币面内部（前景），据此剔除。
+ * 轻微接触的双币在外环方向可能仍见前景，阈值留有冗余以保留真币。
+ */
+function hasCircularBoundary(bin, w, h, x, y, r) {
+  let inner = 0, outer = 0, total = 0;
+  for (let k = 0; k < RING_SAMPLES; k++) {
+    const a = (k * 2 * Math.PI) / RING_SAMPLES;
+    const cos = Math.cos(a), sin = Math.sin(a);
+    const ix = Math.round(x + r * RING_INNER * cos);
+    const iy = Math.round(y + r * RING_INNER * sin);
+    const ox = Math.round(x + r * RING_OUTER * cos);
+    const oy = Math.round(y + r * RING_OUTER * sin);
+    total++;
+    // 越界按背景处理（相当于离开图像，不构成前景延续）
+    if (ix < 0 || iy < 0 || ix >= w || iy >= h) continue;
+    if (bin[iy * w + ix]) inner++;
+    if (ox >= 0 && oy >= 0 && ox < w && oy < h && !bin[oy * w + ox]) outer++;
+  }
+  return inner / total >= 0.6 && outer / total >= 0.45;
+}
+
+/**
  * 统计硬币：找距离局部极大种子，按半径与最小间距过滤。
  * @param {Buffer} buf 图片 buffer（jpeg/png）
  * @param {object} opt { minRadius, maxRadius, minDistance }
@@ -136,11 +196,15 @@ function count(buf, opt) {
   const t0 = Date.now();
   const o = opt || {};
   const img = decode(buf);
-  const { bin } = binarize(img);
+  const raw = binarize(img).bin;
   const w = img.width, h = img.height;
+  // 先填平币内被误判为背景的暗色图案/阴影，恢复实心圆，避免纹理岛假种子
+  const bin = fillHoles(raw, w, h);
   const D = distanceTransform(bin, w, h);
-  const minR = o.minRadius || MIN_RADIUS;
-  const maxR = o.maxRadius || Math.round(Math.min(w, h) * MAX_RADIUS_RATIO);
+  const shortSide = Math.min(w, h);
+  // 半径下限：用户指定值与「绝对下限 / 短边比例下限」取最大
+  const minR = Math.max(o.minRadius || MIN_RADIUS, MIN_RADIUS, Math.round(shortSide * MIN_RADIUS_RATIO));
+  const maxR = o.maxRadius || Math.round(shortSide * MAX_RADIUS_RATIO);
 
   // 候选：距离 >= minR 的前景点，且在 3x3 邻域内是局部极大（含平台去重）
   const cand = [];
@@ -157,18 +221,21 @@ function count(buf, opt) {
           if (nd > d || (nd === d && (dy < 0 || (dy === 0 && dx < 0)))) { isMax = false; break; }
         }
       }
-      if (isMax) cand.push({ x, y, r: d });
+      if (isMax && hasCircularBoundary(bin, w, h, x, y, d)) cand.push({ x, y, r: d });
     }
   }
-  // 非极大抑制：按半径降序，去掉中心距 < 0.8*(r1+r2) 的近邻（粘连圆的双种子）
+  // 半径一致性：真实币半径彼此接近，远小于参考半径的多为残留内部纹理
   cand.sort((a, b) => b.r - a.r);
+  const refR = cand.length ? cand[Math.floor(cand.length * 0.25)].r : 0;
+  const kept = cand.filter(function (c) { return c.r >= refR * RADIUS_KEEP_RATIO; });
+  // 非极大抑制：按半径降序，去掉中心距 < 0.9*(r1+r2) 的近邻（粘连圆的双种子）
   const seeds = [];
-  for (const c of cand) {
+  for (const c of kept) {
     let dup = false;
     for (const s of seeds) {
       const dx = c.x - s.x, dy = c.y - s.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const thresholdDist = 0.8 * (c.r + s.r) * (o.overlapFactor || 1);
+      const thresholdDist = NMS_FACTOR * (c.r + s.r) * (o.overlapFactor || 1);
       if (dist < thresholdDist) { dup = true; break; }
     }
     if (!dup) seeds.push(c);

@@ -154,7 +154,10 @@ Page({
         const days = d ? Math.round((d - today) / 86400000) : null;
         const isUp = it.status === 'upcoming';
         const rs = reserveState(it.reserve);
+        const cdCls = rs ? ('cd-' + rs.cls) : '';
         const reserveNow = !!(rs && rs.cls === 'now');
+        // 只有待发行、预约未结束、发行日未过的项目才允许提醒
+        const canRemind = isUp && cdCls !== 'cd-end' && days !== null && days >= 0;
         let cdText = rs ? rs.text : '';
         if (!cdText && isUp && days !== null) {
           cdText = days > 0 ? ('还有 ' + days + ' 天') : (days === 0 ? '今天发行' : '已过发行日');
@@ -171,7 +174,8 @@ Page({
           note: it.note || '',
           badgeText,
           reserveNow,
-          cdCls: rs ? ('cd-' + rs.cls) : '',
+          canRemind,
+          cdCls,
           dateText: it.date ? it.date.slice(5).replace(/-/g, '/') : '待定',
           dateFull: it.date || '',
           reserveText: it.reserve ? it.reserve.replace(/-/g, '/') : '',
@@ -246,6 +250,11 @@ Page({
     const key = ds.key;
     const name = ds.name || '纪念币';
     if (!key) return;
+
+    // 渲染层用 canRemind 隐藏按钮，这里再校验一次，防止旧渲染残留绕过
+    const all = (this.data.years || []).reduce((a, y) => a.concat(y.items || []), []);
+    const row = all.filter((x) => x.key === key)[0];
+    if (!row || !row.canRemind) return;
 
     const state = store.getState();
     if (!state.user) {

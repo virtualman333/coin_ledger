@@ -11,7 +11,7 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "check": "node tools/check-syntax.js",
-    "test": "node --test tests/guard.test.js tests/mp-fab.test.js tests/admin-api.test.js tests/visitors-range.test.js tests/visitors-api.test.js tests/mp-visit-auth.test.js tests/mp-holdings-swipe.test.js tests/contract-smoke.test.js tests/catalog-migrate.test.js tests/pm-rules.test.js tests/transaction-conn.test.js tests/db-mode.test.js tests/review-fixes.test.js tests/serial-plaza.test.js tests/metal-price.test.js tests/metal-route.test.js tests/coin-count.test.js tests/mp-series-groups.test.js tests/mp-home-sections.test.js tests/price-wording.test.js tests/mp-share.test.js tests/colshare.test.js",
+    "test": "node --test tests/guard.test.js tests/mp-fab.test.js tests/admin-api.test.js tests/visitors-range.test.js tests/visitors-api.test.js tests/mp-visit-auth.test.js tests/mp-holdings-swipe.test.js tests/contract-smoke.test.js tests/catalog-migrate.test.js tests/pm-rules.test.js tests/transaction-conn.test.js tests/db-mode.test.js tests/review-fixes.test.js tests/serial-plaza.test.js tests/metal-price.test.js tests/metal-route.test.js tests/coin-count.test.js tests/mp-series-groups.test.js tests/mp-home-sections.test.js tests/price-wording.test.js tests/mp-share.test.js tests/colshare.test.js tests/mp-list-sort.test.js tests/mp-plan-remind.test.js tests/mp-holdings-price.test.js",
     "migrate": "node tools/migrate-to-mysql.js",
     "smoke": "node tools/smoke.js",
     "seo:push": "node tools/baidu_push.js",

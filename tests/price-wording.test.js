@@ -56,14 +56,16 @@ test('Web 成本估算/整套市价都改用推理价口径', () => {
   assert.match(html, /按推理价（公开参数推算）估算/);
 });
 
-test('账本字段保留：成本价 cost 与用户估值 market 未改', () => {
+test('账本底层字段保留：成本 cost 与市场估值 market 仍在，小程序不再展示它们', () => {
   const store = read('miniprogram/utils/store.js');
-  assert.match(store, /function priceOf\(coin\)/);          // 用户改价仍在
+  assert.match(store, /function priceOf\(coin\)/);          // 用户改价能力仍在
   assert.match(store, /state\.prices\[String\(coin\.id - 1\)\]/);
+  assert.match(store, /market: cat\.round2\(h\.market\)/);  // 底层字段仍回传，不动后端
   const holdings = read('miniprogram/pages/holdings/holdings.js');
-  assert.match(holdings, /marketText: cat\.money\(h\.market\)/);  // 估值价展示保留
+  // 新口径：小程序「我的藏品」只展示面值 / 推理价 / 成本，估值字段不再露出
+  assert.doesNotMatch(holdings, /marketText: cat\.money\(h\.market\)/);
   const app = read('public/app.js');
-  assert.match(app, /money\(h\.market\)/);                  // Web 详情持仓市值保留
+  assert.match(app, /money\(h\.market\)/);                  // Web 底层估值数值仍在，展示标签已统一
 });
 
 test('小程序：清单页与首页卡片价格用 aiPriceOf，账本市值不参与', () => {

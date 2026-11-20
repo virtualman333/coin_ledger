@@ -11,13 +11,11 @@ Page({
     userName: '',
     syncTip: '',
     version: '',
-    summary: { kinds: 0, rolls: 0, marketText: '0' },
+    summary: { kinds: 0, rolls: 0, faceText: '0', aiText: '0', costText: '0' },
     stats: {
       faceText: '0',
+      aiText: '0',
       costText: '0',
-      marketText: '0',
-      profitText: '0',
-      up: true,
       rolls: 0,
       kinds: 0,
     },
@@ -121,7 +119,7 @@ Page({
       const seriesCode = (coin && coin.series) || '';
       const groupName = (coin && coin.seriesName) || h.group || '独立藏品';
       if (!map[groupName]) {
-        map[groupName] = { name: groupName, code: seriesCode, items: [], sumText: 0 };
+        map[groupName] = { name: groupName, code: seriesCode, items: [], aiSum: 0 };
         groups.push(map[groupName]);
       }
       const rolls = Number(h.rolls) || 0;
@@ -129,12 +127,9 @@ Page({
       const size = coin ? (coin.setSizeBase || coin.setSize) : 20;
       const isPiece = h.unit === 'piece';             // 用户选的是「按单枚/单张」记
       const qty = isPiece ? rolls : rolls * size;     // 件数：枚 / 张
-      const pnl = cat.round2((Number(h.market) || 0) - (Number(h.cost) || 0));
-      // 推理价：单枚理论价 × 这件持仓的件数，和市值对比看溢价/低估
+      // 推理价：单枚理论价 × 这件持仓的件数
       const aiUnit = coin ? cat.aiPriceOf(coin) : 0;
       const aiTotal = cat.round2(aiUnit * qty);
-      const marketNum = Number(h.market) || 0;
-      const aiGap = aiTotal > 0 ? (marketNum - aiTotal) / aiTotal : 0;
       map[groupName].items.push({
         id: h.id,
         coinId: coin ? coin.id : 0,
@@ -149,21 +144,9 @@ Page({
         badgeLabel: isPiece ? (rolls + (coin && coin.kind === 'note' ? ' 张' : ' 枚')) : (rolls + ' 套'),
         faceText: cat.money((coin ? (coin.setFaceBase || coin.setFace) : 0) * rolls),
         costText: cat.money(h.cost),
-        marketText: cat.money(h.market),
         unitCostText: cat.money(Math.round((Number(h.cost) || 0) / (rolls || 1))),
         unitWord: isPiece ? (coin && coin.kind === 'note' ? '张' : '枚') : '套',
-        pnlPct: (Number(h.cost) || 0) > 0
-          ? cat.round2((pnl / Number(h.cost)) * 100)
-          : null,
-        profit: pnl,
-        pnlText: (pnl >= 0 ? '+' : '-') + '¥' + cat.money(Math.abs(pnl)),
         aiText: aiTotal ? cat.money(aiTotal) : '',
-        aiDiffText: !aiTotal
-          ? ''
-          : (Math.abs(aiGap) < 0.05
-            ? '与市价相当'
-            : (aiGap > 0 ? '市价高 ' + Math.round(aiGap * 100) + '%' : '市价低 ' + Math.round(-aiGap * 100) + '%')),
-        pnlCls: pnl >= 0 ? 'up' : 'down',
         // 藏品增强字段
         isNote: !!(coin && coin.kind === 'note') || h.category === 'note',
         serials: Array.isArray(h.serials) ? h.serials : [],
@@ -171,7 +154,7 @@ Page({
         images: Array.isArray(h.images) ? h.images : [],
         luckyTags: [],
       });
-      map[groupName].sumText = cat.round2(map[groupName].sumText + (Number(h.market) || 0));
+      map[groupName].aiSum = cat.round2(map[groupName].aiSum + aiTotal);
     });
     const singlesTotal = cat.coins.filter((c) => !c.set || c.set === 'single').length;
     let collapsed = {};
@@ -181,7 +164,7 @@ Page({
 
     groups.forEach((g) => {
       g.open = !collapsed[g.name];
-      g.sumLabel = cat.money(g.sumText);
+      g.aiText = cat.money(g.aiSum);
       // 分组进度：按「该系列有多少个品种」算，没系列就算独立品种
       g.total = g.code ? cat.inSeries(g.code).length : singlesTotal;
       g.own = g.items.length;
@@ -190,25 +173,33 @@ Page({
     });
     const solo = groups.filter((g) => g.name === '独立藏品');
     const rest = groups.filter((g) => g.name !== '独立藏品');
+    // 推理价合计（全账本口径，和分组金额一致）
+    const aiAllSum = allH.reduce((sum, h) => {
+      const c = cat.byName[h.name];
+      if (!c) return sum;
+      const r = Number(h.rolls) || 0;
+      const baseSize = c.setSizeBase || c.setSize || 20;
+      const q = h.unit === 'piece' ? r : r * baseSize;
+      return sum + cat.aiPriceOf(c) * q;
+    }, 0);
+    const aiAllText = cat.money(cat.round2(aiAllSum));
 
     this.setData({
       loggedIn: !!state.user,
       userName: state.user ? state.user.name : '',
       stats: {
         faceText: cat.money(st.face),
+        aiText: aiAllText,
         costText: cat.money(st.cost),
-        marketText: cat.money(st.market),
-        profitText: cat.signed(st.profit),
-        up: st.profit >= 0,
         rolls: st.rolls,
         kinds: st.kinds,
-        pnlText: (st.profit >= 0 ? '+' : '-') + '¥' + cat.money(Math.abs(st.profit)),
-        pnlPct: st.cost ? cat.round2((st.profit / st.cost) * 100) : 0,
       },
       summary: {
         kinds: st.kinds,
         rolls: st.rolls,
-        marketText: cat.money(st.market),
+        faceText: cat.money(st.face),
+        aiText: aiAllText,
+        costText: cat.money(st.cost),
       },
       groups: rest.concat(solo),
       empty: state.holdings.length === 0,
@@ -236,7 +227,7 @@ Page({
         origRolls: item.rolls,
         unitWord: item.unitWord,
         qtyLabel: item.qtyLabel,
-        marketText: item.marketText,
+        aiText: item.aiText,
         costText: item.costText,
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),
         // 藏品增强：号码 / 形态 / 图片

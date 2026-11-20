@@ -3,12 +3,12 @@
     <view wx:for="{{holdCats}}" wx:key="code" class="hc {{holdCat === item.code ? 'on' : ''}}" data-cat="{{item.code}}" bindtap="switchCat">{{item.name}}</view>
   </view>
   <block wx:if="{{loggedIn}}">
-    <!-- 汇总 -->
+    <!-- 汇总：只展示面值 / 推理价 / 成本 -->
     <view class="hero" wx:if="{{!empty}}">
       <view class="hero-top">
         <view class="hero-left">
-          <text class="hero-k">参考市值</text>
-          <view class="hero-val"><text class="hv-cur">¥</text><text class="hv-num">{{stats.marketText}}</text></view>
+          <text class="hero-k">推理价合计</text>
+          <view class="hero-val"><text class="hv-cur">¥</text><text class="hv-num">{{stats.aiText}}</text></view>
         </view>
         <view class="hero-right">
           <text class="hero-item">{{summary.kinds}} 个品种</text>
@@ -17,23 +17,19 @@
       </view>
       <view class="hero-bottom">
         <view class="hero-cell">
-          <text class="hc-k">面值</text>
+          <text class="hc-k">总面值</text>
           <text class="hc-v">¥{{stats.faceText}}</text>
         </view>
         <view class="hero-cell">
-          <text class="hc-k">成本</text>
+          <text class="hc-k">成本合计</text>
           <text class="hc-v">¥{{stats.costText}}</text>
-        </view>
-        <view class="hero-cell">
-          <text class="hc-k">盈亏</text>
-          <text class="hc-v {{stats.up ? 'up' : 'down'}}">{{stats.pnlText}}<text class="hc-pct" wx:if="{{stats.pnlPct}}"> {{stats.pnlPct}}%</text></text>
         </view>
       </view>
     </view>
 
     <view class="empty-card" wx:if="{{empty}}">
       <text class="empty-title">还没有藏品</text>
-      <text class="empty-sub">去清单里挑几枚加进来，账本会自动算成本和盈亏</text>
+      <text class="empty-sub">去清单里挑几枚加进来，账本会自动汇总面值、推理价与成本</text>
       <view class="empty-btn" hover-class="tap-hover" bindtap="goList">去挑藏品</view>
     </view>
 
@@ -53,7 +49,7 @@
             <text class="gprog">{{group.progLabel}}</text>
           </view>
           <view class="ghead-right">
-            <text class="gsum">¥{{group.sumLabel}}</text>
+            <text class="gsum">推理价 ¥{{group.aiText}}</text>
             <text class="gchev">{{group.open ? '▾' : '▸'}}</text>
           </view>
         </view>
@@ -100,22 +96,14 @@
 
             <view class="hc-main">
               <text class="hc-name">{{item.name}}</text>
-              <text class="hc-sub">{{item.qtyLabel}} · 面值 {{item.faceText}} 元</text>
+              <text class="hc-sub">{{item.qtyLabel}} · 面值 ¥{{item.faceText}}</text>
               <view class="hc-meta">
                 <text>成本 ¥{{item.costText}}</text>
-                <text class="hc-dot">·</text>
-                <text>均价 ¥{{item.unitCostText}}</text>
               </view>
               <view class="hc-ai" wx:if="{{item.aiText}}">
                 <text class="hc-ai-badge">推理价</text>
                 <text class="hc-ai-val">¥{{item.aiText}}</text>
-                <text class="hc-ai-d">{{item.aiDiffText}}</text>
               </view>
-            </view>
-
-            <view class="hc-right">
-              <text class="hc-val">¥{{item.marketText}}</text>
-              <text class="hc-pnl {{item.pnlCls}}">{{item.pnlText}}<text wx:if="{{item.pnlPct !== null}}"> {{item.pnlPct > 0 ? '+' : ''}}{{item.pnlPct}}%</text></text>
             </view>
             </view>
           </view>
@@ -142,7 +130,7 @@
       <image class="sheet-img" src="{{sheet.imgUrl}}" mode="aspectFit" wx:if="{{sheet.imgUrl}}"></image>
       <view class="sheet-info">
         <text class="sheet-name">{{sheet.name}}</text>
-        <text class="sheet-sub">{{sheet.qtyLabel}} · 市值 ¥{{sheet.marketText}}</text>
+        <text class="sheet-sub">{{sheet.qtyLabel}} · 推理价 ¥{{sheet.aiText}}</text>
       </view>
       <text class="sheet-x" bindtap="closeSheet">✕</text>
     </view>
@@ -205,7 +193,7 @@
       </view>
     </view>
 
-    <text class="sheet-tip">改成本只影响你的账本，不会改全站参考价</text>
+    <text class="sheet-tip">改成本只影响你的账本，不会改推理价</text>
 
     <view class="sheet-acts">
       <button class="act ghost" bindtap="shareToPlaza">分享广场</button>

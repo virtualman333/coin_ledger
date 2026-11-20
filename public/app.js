@@ -215,7 +215,7 @@ function sizeText(d){
   return d.dia === '—' || !d.dia ? '—' : d.dia + ' mm';
 }
 
-/** 单件（枚/张）的面额与市价。face 统一按单件存，不再有「对钞折半」的特例 */
+/** 单件（枚/张）的面额与估值。face 统一按单件存，不再有「对钞折半」的特例 */
 function unitPrice(d){
   return { face: Number(d.face) || 0, est: Number(d.est) || 0 };
 }
@@ -225,7 +225,7 @@ function unitPrice(d){
  *  用户口径：「一套」= 一次预约能约到的最大数量，所以 limit 放在最前面。
  */
 /**
- * 藏品卡片里的 推理价：单枚理论价 × 这件持仓的件数，再和账面市价对比。
+ * 藏品卡片里的 推理价：单枚理论价 × 这件持仓的件数。
  * 件数口径跟随持仓单位（按套记就乘每套件数，按枚记本身就是件数）。
  */
 function aiLine(d, c){
@@ -235,12 +235,7 @@ function aiLine(d, c){
   var aiUnit = aiPrice(d);
   var aiTotal = aiUnit * qty;
   if (!aiTotal) return '';
-  var market = Number(c.market) || 0;
-  var gap = (market - aiTotal) / aiTotal;
-  var diff = Math.abs(gap) < 0.05
-    ? '与市价相当'
-    : (gap > 0 ? '市价高 ' + Math.round(gap * 100) + '%' : '市价低 ' + Math.round(-gap * 100) + '%');
-  return '<div class="ai-line"><i>推理价</i><b>' + money(aiTotal) + '</b><span>' + diff + '</span></div>';
+  return '<div class="ai-line"><i>推理价</i><b>' + money(aiTotal) + '</b></div>';
 }
 
 // 推理价（与小程序 catalog.aiPriceOf 同一套系数）
@@ -283,7 +278,7 @@ function setSizeBase(d){
   var meta = SET_META[d.set];
   return (meta && meta.size) ? meta.size : 20;
 }
-/** 一套的面额与市价（清单展示口径） */
+/** 一套的面额与估值（清单展示口径） */
 function setPriceOf(d){
   var up = unitPrice(d), n = setSizeOf(d);
   return { size: n, face: up.face * n, est: up.est * n };
@@ -496,7 +491,7 @@ function itemFace(d, rolls){
   sync();
 })();
 
-/* 清单整行可点：手机上手指点在名称以外的空白处（面额、市价那一行）没反应，
+/* 清单整行可点：手机上手指点在名称以外的空白处（面额、估值那一行）没反应，
    体验很别扭。这里让整行除了按钮/链接都能进详情。 */
 (function(){
   var tb = document.getElementById('tbody');
@@ -623,7 +618,7 @@ function renderKPI(){
     // 只有一项时用它的真实量词（张/卷），多项混在一起才退回中性「份」
     var sepUnit = sepItems.length === 1 ? holdingUnitName(findDB(sepItem.name)) : '份';
     cNote.textContent = (sepItem ? sepItem.name : '独立藏品') + ' · ' + s.rolls + ' ' + sepUnit +
-      ' · 面值 ' + money(s.face) + ' · 市价 ' + money(s.market) +
+      ' · 面值 ' + money(s.face) + ' · 推理价 ' + money(s.market) +
       '，未计入上方 ' + m.rolls + ' 份合计';
   }
 }
@@ -752,7 +747,7 @@ function renderHoldings(){
     html += '<div class="group">';
     html += '<div class="group-head"><span class="bar"></span>' + g +
             '<span class="tot">' + sumRolls + ' ' + groupUnit + ' · 面值 <b>' + money(sumFace) +
-            '</b> · 市价 <b>' + money(sumMarket) + '</b></span></div>';
+            '</b> · 推理价 <b>' + money(sumMarket) + '</b></span></div>';
     html += '<div class="grid">';
 
     items.forEach(function(c){
@@ -792,7 +787,6 @@ function renderHoldings(){
         '</div>' +
         '<div class="nums">' +
           '<div><span>成本</span><input type="number" min="0" step="1" inputmode="numeric" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore value="' + c.cost + '" data-field="cost" data-name="' + c.name + '"></div>' +
-          '<div><span>市价</span><input type="number" min="0" step="1" inputmode="numeric" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore value="' + c.market + '" data-field="market" data-name="' + c.name + '"></div>' +
           '<div><span>单' + unit + '成本</span><b>' + money(c.rolls ? (Number(c.cost)||0)/c.rolls : 0) + '</b></div>' +
         '</div>' +
         '<div class="pnl"><span>浮动</span><b class="' + pnlCls + '" data-pnl="' + c.name + '">' + pnlTxt + '</b></div>' +
@@ -833,7 +827,7 @@ function emptyLedgerHtml(){
     '<h3 style="font-size:16px;font-weight:600;letter-spacing:.01em">你的账本还是空的</h3>' +
     '<p style="margin:8px auto 0;max-width:520px;font-size:12.5px;line-height:1.8;color:var(--dim)">' +
       '点下面任意一枚就能先记上；也可以去「清单」逐个「＋ 加入」。' +
-      '按卷记录数量，成本与市价随时能改，套系进度和盈亏会自动算好。</p>' +
+      '按卷记录数量，成本随时能改，套系进度会自动算好。</p>' +
     (cards
       ? '<div style="margin-top:20px;font-size:11.5px;color:var(--dim);letter-spacing:.02em">先试手：这 4 枚单价最低</div>' +
         '<div class="latest-grid" style="margin-top:10px">' + cards + '</div>'
@@ -907,7 +901,7 @@ function holdingOf(name){
   return null;
 }
 
-/** 按套系聚合出每个系列的统计（品种数、整套面额/市价、已藏情况） */
+/** 按套系聚合出每个系列的统计（品种数、整套面额/推理价、已藏情况） */
 /* 系列名单里去掉「世界文化遗产·」这类系列前缀，只留品种名。
  * 注意「2015年贺岁（羊·二轮首发）」的点在括号里，是品名的一部分，
  * 原来的 /^.*·/ 会把前半句一起吃掉，剩一个「二轮首发）」。 */
@@ -1067,7 +1061,7 @@ function renderSeries(){
       '</div>' +
       (anon ? ''
         : (x.ownCount
-          ? '<div class="sc-own">已藏 ' + x.ownCount + ' 项 · 市值 <b>' + money(x.ownMarket) + '</b></div>'
+          ? '<div class="sc-own">已藏 ' + x.ownCount + ' 项 · 推理价 <b>' + money(x.ownMarket) + '</b></div>'
           : '<div class="sc-own dim">还没有这个系列的藏品</div>')) +
       (miss ? '<div class="sc-miss">' + miss + '</div>' : '') +
     '</button>';
@@ -1499,7 +1493,7 @@ function renderCoin(i){
         '<div class="oc-grid">' +
           '<div><i>数量</i><b>' + (h.rolls || 0) + ' 套</b></div>' +
           '<div><i>成本</i><b>' + money(h.cost) + '</b></div>' +
-          '<div><i>市值</i><b class="gold">' + money(h.market) + '</b></div>' +
+          '<div><i>推理价</i><b class="gold">' + money(h.market) + '</b></div>' +
           '<div><i>浮动</i><b class="' + (pnl >= 0 ? 'up' : 'down') + '">' +
             (pnl >= 0 ? '+' : '−') + money(Math.abs(pnl)) + '</b></div>' +
         '</div>' +
@@ -1515,7 +1509,7 @@ function renderCoin(i){
 
   var gal = galleryOf(d);
   if (!gal.length) gal = [{ src: img, label: '实物图案', kind: 'main' }];
-  var sp = setPriceOf(d);          // 一套的件数 / 面额 / 市价（多枚套币按发行套计）
+  var sp = setPriceOf(d);          // 一套的件数 / 面额 / 估值（多枚套币按发行套计）
   box.innerHTML =
     '<div class="coin-top">' +
       '<button class="btn ghost xs" data-goto="all">← 返回清单</button>' +
@@ -2378,13 +2372,13 @@ function renderTable(){
   hideTip();
 }
 
-/* 清单页顶部的「我的藏品」合计：总面值 / 总市值 / 浮动 */
+/* 清单页顶部的「我的藏品」合计：总面值 / 推理价 / 浮动 */
 function renderListStats(rows){
   var box = document.getElementById('listStats');
   if (!box) return;
 
   if (!isLoggedIn()) {
-    box.innerHTML = '<span class="ls-empty">登录后可在这里看到你藏品的总面值与总市值</span>';
+    box.innerHTML = '<span class="ls-empty">登录后可在这里看到你藏品的总面值与推理价</span>';
     return;
   }
 
@@ -2406,7 +2400,7 @@ function renderListStats(rows){
     '</div>' +
     '<div class="ls-cells">' +
       '<div class="ls-cell"><i>总面值</i><b>' + money(face) + '</b></div>' +
-      '<div class="ls-cell"><i>总市值</i><b class="gold">' + money(market) + '</b></div>' +
+      '<div class="ls-cell"><i>推理价合计</i><b class="gold">' + money(market) + '</b></div>' +
       '<div class="ls-cell"><i>浮动</i><b class="' + pnlCls + '">' +
         (pnl >= 0 ? '+' : '−') + money(Math.abs(pnl)) + '</b></div>' +
     '</div>' +
@@ -2727,9 +2721,9 @@ function findHoldingIdx(name){
 /**
  * 把某个品种加入我的藏品。
  * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
- * 按枚时成本与市价都按单枚面额起算，rolls 表示件数。
+ * 按枚时成本按单枚面额起算，rolls 表示件数。
  */
-/* 贵金属入账本：不参与旧一套的「按卷/市价」口径，按枚记，成本与市价留空由用户自己填 */
+/* 贵金属入账本：不参与旧一套的「按卷/估值」口径，按枚记，成本留空由用户自己填 */
 function addPmHolding(code, name, thumb){
   if (!code || !name) return false;
   for (var i = 0; i < coll.length; i++) {
@@ -3099,7 +3093,7 @@ function reportVisit(tab){
 }   // 概览/收齐成本已并入「我的藏品」
 var TAB_ALIAS = { overview: 'holdings', cost: 'holdings' };  // 旧链接兼容
 // 需要登录才能查看的页签（未登录时连入口都不展示）
-// series 原本也在这里，但系列页展示的是公开数据的套系分组（全套 N 枚、整套市价），
+// series 原本也在这里，但系列页展示的是公开数据的套系分组（全套 N 枚、整套推理价），
 // 未登录时个人进度显示 0 完全可用 —— 首页「全部系列 →」把人送到登录页反而劝退首次来访。
 // cost 同理：三张卡里「整卷收齐」「单枚收齐」只用全站发行数据，跟账本无关，
 // 只有「你要补的」才需要账号。收齐要花多少钱是访客最想知道的一个数，别用登录墙挡住。
@@ -3141,11 +3135,11 @@ function currentCoin(){ return routeParts().coin; }
 var SITE = 'https://coin.virtualman.top';
 var TAB_SEO = {
   home:    ['藏币录 · 1984—2026 纪念币收藏管理与发行清单', '1984—2026 年中国普通纪念币与纪念钞全景档案：{n} 个品种的发行信息、币面实物图、套系进度，以及属于你自己的收藏账本。'],
-  all:     ['全套发行清单 · 1984—2026 普通纪念币与纪念钞 | 藏币录', '按年份排列的 {n} 个普通纪念币、纪念钞品种清单，含面额、发行量、材质与单枚／整套参考市价。'],
+  all:     ['全套发行清单 · 1984—2026 普通纪念币与纪念钞 | 藏币录', '按年份排列的 {n} 个普通纪念币、纪念钞品种清单，含面额、发行量、材质与单枚／整套推理价。'],
   series:  ['按系列看套系进度 | 藏币录', '把 {n} 个品种归入 {s} 个系列，一眼看出每个系列还差哪几枚。'],
-  overview:['收藏概览 | 藏币录', '品种数、套系完成度、成本与盈亏的汇总视图。'],
+  overview:['收藏概览 | 藏币录', '品种数、套系完成度、面值、推理价与成本的汇总视图。'],
   cost:    ['收齐成本估算 | 藏币录', '按单枚与整套两种口径，估算把全套收齐需要多少钱。'],
-  holdings:['我的藏品 | 藏币录', '记录持仓数量、成本与市值，自动算浮动盈亏。'],
+  holdings:['我的藏品 | 藏币录', '记录持仓数量、成本，自动汇总面值与推理价。'],
   plaza:   ['藏品广场 | 藏币录', '晒出你的纪念钞靓号藏品，识别豹子号、连号等花样，和藏友交流。'],
   account: ['账户 | 藏币录', '登录、注册与账户设置。'],
   myfeedback: ['我的反馈 | 藏币录', '查看自己提交的纠错与建议，以及管理员的处理结果与回复。'],

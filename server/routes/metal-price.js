@@ -1,7 +1,7 @@
 'use strict';
 /**
- * 贵金属实时行情公开接口。
- *   GET /api/metal-price          金银铂钯 美元/盎司 + 汇率 + 元/克（缓存 10 分钟）
+ * 贵金属行情公开接口（后端每小时只更新一次，前端拿到的都是本小时缓存）。
+ *   GET /api/metal-price          金银铂钯 美元/盎司 + 汇率 + 元/克（小时级缓存，持久化到 data/metal-price-cache.json）
  *   GET /api/metal-price?force=1  强制刷新（仅供排障，仍受并发合并保护）
  */
 module.exports = async function metalPriceRoutes(app) {
@@ -26,6 +26,7 @@ module.exports = async function metalPriceRoutes(app) {
       fxFrom: 'USD/CNY',
       quotes: quotes,
       fetchedAt: snap.fetchedAt,
+      hourKey: snap.hourKey,
       stale: !!snap.stale
     });
   });
