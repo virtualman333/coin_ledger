@@ -8,9 +8,10 @@
     {{busy ? '识别中…' : (image ? '重新拍照' : '拍照 / 选择图片')}}
   </button>
 
-  <view class="err" wx:if="{{err}}">{{err}}</view>
+  <view class="err" wx:if="{{err}}">{{err}}<text class="retry" bindtap="retry"> 点此重试</text></view>
 
-  <view class="result" wx:if="{{count > 0 || edited}}">
+  <!-- 识别为 0 时也要能手动 +1 修正，否则结果区整块消失 -->
+  <view class="result" wx:if="{{count > 0 || edited || marked}}">
     <view class="result-head">
       <text class="result-k">识别结果</text>
       <text class="result-note" wx:if="{{edited}}">已手动调整</text>

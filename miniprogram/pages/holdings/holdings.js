@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const privacy = require('../../utils/privacy');
 
 Page({
   data: {
@@ -246,8 +247,10 @@ Page({
     });
     // 纪念钞有号码时请求服务端分析花样（后端与 Web 共用同一套规则）
     if (item.isNote && item.serials && item.serials.length) {
+      const sheetId = item.id;
       api.post('/api/serial/analyze-batch', { nos: item.serials }).then((r) => {
-        if (!r || !r.ok || !this.data.sheet) return;
+        // 关掉 A 面板再开 B 时，A 的花样标签不能写进 B
+        if (!r || !r.ok || !this.data.sheet || this.data.sheet.id !== sheetId) return;
         const tags = {};
         (r.items || []).forEach((it) => (it.tags || []).forEach((t) => { tags[t.name] = t.rarity || 1; }));
         const arr = Object.keys(tags).sort((a, b) => tags[b] - tags[a]).map((n) => ({ name: n, rarity: tags[n] }));
@@ -268,30 +271,38 @@ Page({
   addImage() {
     const sheet = this.data.sheet;
     if (!sheet) return;
+    const sheetId = sheet.id;                 // 记录发起时的持仓，防止异步回包写进另一个面板
     if ((sheet.images || []).length >= 3) {
       wx.showToast({ title: '最多 3 张图片', icon: 'none' });
       return;
     }
-    wx.chooseMedia({
-      count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
-      success: (res) => {
-        const file = res.tempFiles && res.tempFiles[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { wx.showToast({ title: '图片不能超过 2MB', icon: 'none' }); return; }
-        wx.showLoading({ title: '上传中', mask: true });
-        wx.getFileSystemManager().readFile({
-          filePath: file.tempFilePath, encoding: 'base64',
-          success: (fr) => {
-            store.uploadImage('data:image/jpeg;base64,' + fr.data).then((r) => {
-              wx.hideLoading();
-              if (!r || !r.ok) throw new Error((r && r.error) || '上传失败');
-              const images = (this.data.sheet.images || []).concat([r.path]);
-              this.setData({ 'sheet.images': images });
-            }).catch((err) => { wx.hideLoading(); wx.showToast({ title: err.message || '上传失败', icon: 'none' }); });
-          },
-          fail: () => { wx.hideLoading(); wx.showToast({ title: '读取图片失败', icon: 'none' }); },
-        });
-      },
+    // 与 feedback/count 一致：调 chooseMedia 前先确认隐私授权
+    privacy.ensure().then((ok) => {
+      if (!ok) { wx.showToast({ title: '需要授权后才能选择图片', icon: 'none' }); return; }
+      wx.chooseMedia({
+        count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
+        success: (res) => {
+          const file = res.tempFiles && res.tempFiles[0];
+          if (!file) return;
+          if (file.size > 2 * 1024 * 1024) { wx.showToast({ title: '图片不能超过 2MB', icon: 'none' }); return; }
+          wx.showLoading({ title: '上传中', mask: true });
+          wx.getFileSystemManager().readFile({
+            filePath: file.tempFilePath, encoding: 'base64',
+            success: (fr) => {
+              store.uploadImage('data:image/jpeg;base64,' + fr.data).then((r) => {
+                wx.hideLoading();
+                if (!r || !r.ok) throw new Error((r && r.error) || '上传失败');
+                // 上传期间用户可能关掉面板或换了另一枚藏品，此时不能把图塞进错的面板
+                const cur = this.data.sheet;
+                if (!cur || cur.id !== sheetId) return;
+                const images = (cur.images || []).concat([r.path]);
+                this.setData({ 'sheet.images': images });
+              }).catch((err) => { wx.hideLoading(); wx.showToast({ title: err.message || '上传失败', icon: 'none' }); });
+            },
+            fail: () => { wx.hideLoading(); wx.showToast({ title: '读取图片失败', icon: 'none' }); },
+          });
+        },
+      });
     });
   },
 
@@ -387,6 +398,8 @@ Page({
   swipeEnd(e) {
     const s = this._swipe;
     this._swipe = null;
+    // 多选模式下左滑不应展开「改成本/改数量」，那两个按钮在多选态是死的
+    if (this.data.selectMode) return;
     const t = e.changedTouches && e.changedTouches[0];
     if (!s || !t || !s.id) return;
     const dx = t.clientX - s.x;

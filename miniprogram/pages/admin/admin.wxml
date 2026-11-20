@@ -282,6 +282,7 @@
       <button class="btn-danger half" bindtap="deleteFb">删除</button>
     </view>
   </view>
+</view>
 
   <!-- 访客统计 -->
   <block wx:if="{{tab === 'visitors'}}">
@@ -374,4 +375,3 @@
       <view class="vdd-foot" bindtap="closeVsDetail">关闭</view>
     </view>
   </view>
-</view>

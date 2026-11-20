@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "发行计划",
+  "enablePullDownRefresh": true,
   "usingComponents": {}
 }

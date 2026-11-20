@@ -64,3 +64,13 @@
 }
 .pz-send{color:#9a6b1f;font-size:26rpx;padding:10rpx 20rpx}
 .pz-more{text-align:center;padding:24rpx;color:#9a6b1f;font-size:26rpx}
+
+/* 加载/失败态：失败不伪装成空广场，给出可点重试 */
+.pz-state{text-align:center;color:#8a8378;padding:80rpx 20rpx;font-size:26rpx}
+.pz-empty.pz-err{color:#b4553f;font-size:26rpx}
+.pz-cmt-login{text-align:center;color:#9a6b1f;font-size:26rpx;min-height:88rpx;line-height:88rpx;margin-top:12rpx}
+
+/* 主操作热区 ≥44px，避免相邻按钮误触 */
+.pz-acts .pz-act{min-height:88rpx;line-height:88rpx;padding:0 8rpx}
+.pz-tab{min-height:72rpx;line-height:52rpx}
+.pz-send{min-height:88rpx;line-height:88rpx;padding:0 24rpx}

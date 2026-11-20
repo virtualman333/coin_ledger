@@ -38,9 +38,19 @@ function request(method, path, data) {
         }
         if (res.statusCode === 401 && token) {
           setToken('');
+          // 惰性 require 避免 api ↔ store 循环依赖；把缓存里的旧登录态一并清掉，
+          // 否则页面仍显示「已登录」但后续请求全 401，用户毫无头绪。
+          try {
+            const store = require('./store');
+            if (store.onSessionExpired) store.onSessionExpired();
+          } catch (e) { /* store 尚未加载时忽略 */ }
         }
-        const err = new Error(body.error || '服务器返回错误（' + res.statusCode + '）');
+        const err = new Error(
+          res.statusCode === 401 ? '登录已过期，请重新登录'
+            : (body.error || '服务器返回错误（' + res.statusCode + '）')
+        );
         err.status = res.statusCode;
+        err.needLogin = res.statusCode === 401;
         reject(err);
       },
       fail(res) {

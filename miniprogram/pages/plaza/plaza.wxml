@@ -10,7 +10,9 @@
   </view>
 
   <view class="pz-list">
-    <view class="pz-empty" wx:if="{{!items.length && !loading}}">广场还空着，来分享第一件藏品吧。</view>
+    <view class="pz-empty pz-err" wx:if="{{loadError}}" bindtap="retry">{{loadError}}</view>
+    <view class="pz-state" wx:elif="{{loading && !items.length}}">正在加载广场…</view>
+    <view class="pz-empty" wx:elif="{{!items.length && !loading && !loadError}}">广场还空着，来分享第一件藏品吧。</view>
 
     <view class="pz-card" wx:for="{{items}}" wx:key="id">
       <!-- 藏品主视觉：占卡片大面积 -->
@@ -31,7 +33,7 @@
         <view class="pz-title">{{item.holdingName}}</view>
         <view class="pz-serials" wx:if="{{item.serials.length}}">号码 {{item.serials[0]}}<text wx:if="{{item.serials.length > 1}}"> 等{{item.serials.length}}张</text></view>
         <view class="pz-tags" wx:if="{{item.tags.length}}">
-          <text class="pz-tag rar{{t.rarity}}" wx:for="{{item.tags}}" wx:for-item="t" wx:key="name">{{t.name || t}}</text>
+          <text class="pz-tag rar{{t.rarity}}" wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this">{{t.name || t}}</text>
         </view>
         <view class="pz-caption" wx:if="{{item.caption}}">{{item.caption}}</view>
       </view>
@@ -39,7 +41,7 @@
       <!-- 分享者信息：弱化到一行 -->
       <view class="pz-author-line">
         <image class="pz-avatar" src="{{item.avatarUrl}}" mode="aspectFill" wx:if="{{item.avatarUrl}}"></image>
-        <view class="pz-avatar ph" wx:else>{{item.author[0]}}</view>
+        <view class="pz-avatar ph" wx:else>{{item.authorInitial || '藏'}}</view>
         <text class="pz-author">{{item.author || '藏友'}}</text>
         <text class="pz-time">{{item.timeText}}</text>
       </view>
@@ -47,7 +49,7 @@
       <view class="pz-acts">
         <text class="pz-act {{item.liked ? 'on' : ''}}" data-id="{{item.id}}" bindtap="toggleLike">♥ {{item.likes}}</text>
         <text class="pz-act" data-id="{{item.id}}" bindtap="toggleComments">评论 {{item.comments}}</text>
-        <text class="pz-act" data-uid="{{item.uid}}" bindtap="toggleFollow">+ 关注</text>
+        <text class="pz-act {{item.following ? 'on' : ''}}" data-uid="{{item.uid}}" bindtap="toggleFollow">{{item.following ? '已关注' : '+ 关注'}}</text>
         <text class="pz-act del" wx:if="{{loggedIn && item.mine}}" data-id="{{item.id}}" bindtap="delShare">删除</text>
       </view>
 
@@ -62,6 +64,7 @@
           <input value="{{commentText[item.id]}}" data-id="{{item.id}}" bindinput="onCommentInput" placeholder="说点什么…" confirm-type="send" bindconfirm="sendComment" />
           <text class="pz-send" data-id="{{item.id}}" bindtap="sendComment">发送</text>
         </view>
+        <view class="pz-cmt-login" wx:else bindtap="goLogin">登录后参与讨论 ›</view>
       </view>
     </view>
 

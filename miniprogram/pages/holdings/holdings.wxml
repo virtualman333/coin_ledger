@@ -65,7 +65,7 @@
             wx:for-index="ii"
             wx:for-item="item"
           >
-            <view class="hswipe-acts">
+            <view class="hswipe-acts" wx:if="{{!selectMode}}">
               <view class="hs-act hs-cost" data-g="{{gi}}" data-i="{{ii}}" data-focus="cost" catchtap="openSheet">改成本</view>
               <view class="hs-act hs-qty" data-g="{{gi}}" data-i="{{ii}}" data-focus="rolls" catchtap="openSheet">改数量</view>
             </view>

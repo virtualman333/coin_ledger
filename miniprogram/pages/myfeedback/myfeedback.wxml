@@ -4,7 +4,9 @@
     <text class="h2">你提交的纠错与建议，处理进展会显示在这里</text>
   </view>
 
-  <view class="empty" wx:if="{{!loading && !items.length}}">还没有提交过反馈</view>
+  <view class="empty err" wx:if="{{err}}" bindtap="load">{{err}}</view>
+  <view class="empty" wx:elif="{{loading && !items.length}}">加载中…</view>
+  <view class="empty" wx:elif="{{!loading && !err && !items.length}}">还没有提交过反馈</view>
 
   <view class="fb" wx:for="{{items}}" wx:key="id">
     <view class="fb-top">

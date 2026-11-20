@@ -502,3 +502,6 @@
   font-size: 24rpx;
   text-align: center;
 }
+
+/* 加载失败：可点的重试入口，与「没有匹配品种」区分开 */
+.pm-empty.pm-error{color:#b4553f;font-size:25rpx;padding:32rpx 20rpx}

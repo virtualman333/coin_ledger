@@ -147,3 +147,12 @@
 /* 状态 */
 .state { padding: 120rpx 40rpx; color: #b3aa9b; font-size: 24rpx; text-align: center; }
 .more { padding: 20rpx 0 40rpx; color: #b3aa9b; font-size: 21rpx; text-align: center; }
+
+/* 失败态：重试 + 回首页按钮（热区 ≥88rpx） */
+.state-err{display:flex;flex-direction:column;align-items:center;gap:24rpx;color:#b4553f;font-size:26rpx}
+.state-acts{display:flex;gap:20rpx;flex-wrap:wrap;justify-content:center}
+.state-btn{
+  min-height:88rpx;line-height:88rpx;padding:0 36rpx;border-radius:14rpx;
+  background:#9a6b1f;color:#fff;font-size:26rpx
+}
+.state-btn.ghost{background:#fff;color:#9a6b1f;border:1rpx solid #d8c9a8}

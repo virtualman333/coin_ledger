@@ -91,7 +91,7 @@ Page({
   },
 
   submit() {
-    if (!this.requireAgree()) return;
+    if (!this.requireAgree('submit')) return;
     if (this.data.busy) return;
     const name = String(this.data.name || '').trim();
     const password = String(this.data.password || '');
@@ -113,7 +113,7 @@ Page({
     api.post(path, { name, password }).then((res) => {
       api.setToken(res.token || '');
       this.setData({ password: '', password2: '' });
-      return store.refresh();
+      return store.refresh({ force: true });
     }).then(() => {
       wx.hideLoading();
       this.setData({ busy: false });
@@ -142,21 +142,30 @@ Page({
   },
 
   /** 未同意隐私政策时拦一下：不收集任何信息，直到用户主动点同意 */
-  requireAgree() {
+  requireAgree(from) {
     if (this.data.agree) return true;
+    this._pendingAction = from || '';      // 记住用户原本想做的动作
     this.setData({ showPolicy: true });     // 直接把协议摊开给用户看
     return false;
   },
 
   closePolicy() {
+    this._pendingAction = '';
     this.setData({ showPolicy: false });
   },
 
-  /** 弹出层里点「同意并继续」：勾上同意，关掉弹层，用户再点登录即可 */
+  /** 弹出层里点「同意并继续」：勾上同意并自动续上刚才那次登录，别让用户再点一遍 */
   agreeFromPolicy() {
+    const pending = this._pendingAction;
+    this._pendingAction = '';
     this.setData({ agree: true, showPolicy: false });
     try { wx.setStorageSync('cl_privacy_agreed', true); } catch (e) { /* ignore */ }
-    wx.showToast({ title: '已同意，可以登录了', icon: 'none' });
+    if (pending === 'submit' || pending === 'wxLogin') {
+      // 等 setData 生效后再触发，避免 requireAgree 又读到旧的 agree
+      setTimeout(() => { if (typeof this[pending] === 'function') this[pending](); }, 60);
+    } else {
+      wx.showToast({ title: '已同意，可以登录了', icon: 'none' });
+    }
   },
 
   noop() {},
@@ -187,14 +196,14 @@ Page({
   },
 
   wxLogin() {
-    if (!this.requireAgree()) return;
+    if (!this.requireAgree('wxLogin')) return;
     if (this.data.wxBusy) return;
     this.setData({ wxBusy: true });
     this.loginCode()
       .then((code) => this.requestWxLogin(code))
       .then((res) => {
         api.setToken(res.token || '');
-        return store.refresh().then(() => res);
+        return store.refresh({ force: true }).then(() => res);
       })
       .then((res) => {
         this.setData({ wxBusy: false });
@@ -288,7 +297,7 @@ Page({
     });
     this.loginCode()
       .then(post)
-      .then(() => store.refresh())
+      .then(() => store.refresh({ force: true }))
       .then(() => {
         this.setData({ wxBusy: false });
         this.render();
@@ -308,7 +317,7 @@ Page({
     if (this.data.busy) return;
     this.setData({ busy: true });
     api.post('/api/auth/password', { newPassword: pw })
-      .then(() => store.refresh())
+      .then(() => store.refresh({ force: true }))
       .then(() => {
         this.setData({ busy: false, password: '' });
         this.render();

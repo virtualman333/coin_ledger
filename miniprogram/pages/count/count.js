@@ -1,5 +1,6 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const privacy = require('../../utils/privacy');
 
 Page({
   data: {
@@ -17,20 +18,30 @@ Page({
     this.setData({ logged: store.isLogin && store.isLogin() });
   },
 
-  /** 拍照 / 相册选图 */
+  /** 拍照 / 相册选图：登录与隐私授权都前置，避免白操作一次选图 */
   chooseImage() {
     if (this.data.busy) return;
-    wx.chooseMedia({
-      count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
-      success: (res) => {
-        const file = res.tempFiles && res.tempFiles[0];
-        if (!file) return;
-        if (file.size > 9 * 1024 * 1024) {
-          wx.showToast({ title: '图片不能超过 9MB', icon: 'none' }); return;
+    if (!(store.isLogin && store.isLogin())) {
+      wx.showModal({
+        title: '需要先登录', content: '拍照数币需要登录后使用。', confirmText: '去登录',
+        success: (r) => { if (r.confirm) wx.navigateTo({ url: '/pages/account/account' }); }
+      });
+      return;
+    }
+    privacy.ensure().then((ok) => {
+      if (!ok) { wx.showToast({ title: '需要授权后才能使用相机/相册', icon: 'none' }); return; }
+      wx.chooseMedia({
+        count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
+        success: (res) => {
+          const file = res.tempFiles && res.tempFiles[0];
+          if (!file) return;
+          if (file.size > 9 * 1024 * 1024) {
+            wx.showToast({ title: '图片不能超过 9MB', icon: 'none' }); return;
+          }
+          this.setData({ image: file.tempFilePath, marked: '', count: 0, edited: false, err: '', ms: 0 });
+          this.run(file.tempFilePath);
         }
-        this.setData({ image: file.tempFilePath, marked: '', count: 0, edited: false, err: '', ms: 0 });
-        this.run(file.tempFilePath);
-      }
+      });
     });
   },
 
@@ -74,6 +85,7 @@ Page({
   },
 
   retry() {
+    if (this.data.busy) return;
     if (this.data.image) this.run(this.data.image);
   },
 

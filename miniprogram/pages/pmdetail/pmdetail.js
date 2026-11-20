@@ -3,12 +3,19 @@ const store = require('../../utils/store');
 const share = require('../../utils/share');
 
 Page({
-  data: { code: '', item: null, loading: true, err: '', owned: false, busy: false },
+  data: { code: '', item: null, loading: true, err: '', owned: false, busy: false, retryable: false },
 
   onLoad(q) {
     const code = String((q && q.code) || '').toUpperCase();
     this.setData({ code, owned: this.isOwned(code) });
-    if (!code) { this.setData({ loading: false, err: '缺少编号' }); return; }
+    if (!code) { this.setData({ loading: false, err: '缺少藏品编号', retryable: false }); return; }
+    this.load();
+  },
+
+  /** 抽成独立方法，失败态可重试而不是把用户困在死页面 */
+  load() {
+    const code = this.data.code;
+    this.setData({ loading: true, err: '', retryable: false });
     api.get('/api/catalog/pm/' + encodeURIComponent(code)).then((res) => {
       if (!res || !res.ok) { this.setData({ loading: false, err: '未找到该品种' }); return; }
       const d = res.item || {};
@@ -38,7 +45,16 @@ Page({
         item: Object.assign({}, d, { facts, announceText: String(d.announce || '').trim(), metalValue: mv }),
         loading: false,
       });
-    }).catch(() => this.setData({ loading: false, err: '详情加载失败' }));
+    }).catch(() => this.setData({ loading: false, err: '详情加载失败，检查网络后重试', retryable: true }));
+  },
+
+  retry() {
+    if (!this.data.code) return;
+    this.load();
+  },
+
+  goHome() {
+    wx.switchTab({ url: '/pages/index/index' });
   },
 
   isOwned(code) {
@@ -48,6 +64,15 @@ Page({
   addFav() {
     const it = this.data.item;
     if (!it || this.data.owned) return;
+    // 与普通币详情页 detail.js 的 addCoin 保持同一登录引导口径
+    if (!store.isLogin()) {
+      wx.showModal({
+        title: '还没登录', content: '登录后才能把藏品记进自己的账本',
+        confirmText: '去登录',
+        success: (r) => { if (r.confirm) wx.navigateTo({ url: '/pages/account/account' }); },
+      });
+      return;
+    }
     if (this.data.busy) return;
     this.setData({ busy: true });
     wx.showLoading({ title: '保存中' });

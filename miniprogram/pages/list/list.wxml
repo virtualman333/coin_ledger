@@ -109,7 +109,8 @@
   </view>
   <view class="pm-loading" wx:if="{{pmLoading}}">加载中…</view>
   <view class="pm-more" wx:if="{{!pmLoading && pmLoaded && pmPage < pmPages}}" bindtap="loadMorePm">加载更多（{{pmPage}}/{{pmPages}}）</view>
-  <view class="pm-empty" wx:if="{{pmLoaded && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词试试</view>
+  <view class="pm-empty pm-error" wx:if="{{pmLoaded && pmError}}" bindtap="retryPmFull">{{pmError}} · 点此重试</view>
+  <view class="pm-empty" wx:elif="{{pmLoaded && !pmError && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词试试</view>
   <view class="pm-end" wx:if="{{pmLoaded && pmRows.length > 0 && pmPage >= pmPages}}">已显示全部 {{pmTotal}} 条</view>
 </view>
 

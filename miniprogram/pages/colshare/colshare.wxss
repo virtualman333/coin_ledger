@@ -19,3 +19,13 @@
 .tags{margin-top:6rpx;font-size:20rpx;color:#9a6b1f;line-height:1.5}
 .qty{flex:0 0 auto;font-size:23rpx;color:#9a6b1f;font-weight:600}
 .foot{margin-top:24rpx;text-align:center;font-size:20rpx;color:#b2aca0}
+
+/* 分享落地页出口：热区 ≥88rpx，让被分享吸引来的新用户能进主界面 */
+.home-bar{
+  margin:32rpx 24rpx 12rpx;min-height:88rpx;line-height:88rpx;text-align:center;
+  border-radius:16rpx;background:#9a6b1f;color:#fff;font-size:28rpx;font-weight:600
+}
+.err .home-btn{
+  margin:28rpx auto 0;min-height:88rpx;line-height:88rpx;width:60%;text-align:center;
+  border-radius:16rpx;background:#9a6b1f;color:#fff;font-size:27rpx
+}

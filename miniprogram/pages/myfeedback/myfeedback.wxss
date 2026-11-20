@@ -15,3 +15,4 @@
 .r-label{display:block;font-size:21rpx;color:#9a6b1f;font-weight:600;margin-bottom:6rpx}
 .r-text{display:block;font-size:26rpx;color:#5a4a2e;line-height:1.7}
 .fb-date{display:block;margin-top:14rpx;font-size:21rpx;color:#b2aca0}
+.empty.err{color:#b4553f}

@@ -56,14 +56,20 @@ function hydrate() {
 }
 
 let inflight = null;
+let refreshSeq = 0;   // 每次 refresh 递增；只有最新一次允许写 state，旧的慢响应一律作废
 
 /** 从服务器拉一次全量状态。
  *  并发调用共用同一个请求；写操作之后要用 refresh({force:true})，
- *  否则可能拿到「写入之前就已发出」的那次响应，导致刚加的藏品不出现。 */
+ *  否则可能拿到「写入之前就已发出」的那次响应，导致刚加的藏品不出现。
+ *  注意：force 会发新请求，但旧请求并不会被取消，所以必须用序号把旧响应作废，
+ *  否则旧响应晚到仍会覆盖 state 与缓存（这正是以前「刚加的藏品消失」的根因）。 */
 function refresh(opts) {
   const force = !!(opts && opts.force);
   if (inflight && !force) return inflight;
-  inflight = api.get('/api/state').then((res) => {
+  const my = ++refreshSeq;
+  const p = api.get('/api/state').then((res) => {
+    // 已被更新的 refresh 取代：丢弃这份旧快照，且不碰 inflight / state / 缓存
+    if (my !== refreshSeq) return state;
     state.user = res.user || null;
     state.isAdmin = !!res.isAdmin;
     state.holdings = Array.isArray(res.holdings) ? res.holdings : [];
@@ -79,12 +85,14 @@ function refresh(opts) {
     inflight = null;
     return state;
   }).catch((err) => {
+    if (my !== refreshSeq) return state;   // 过期请求失败也别污染当前状态
     inflight = null;
     state.synced = false;
     state.error = err.message || '同步失败';
     throw err;
   });
-  return inflight;
+  inflight = p;
+  return p;
 }
 
 function isLogin() {
@@ -149,6 +157,14 @@ function requireLogin() {
   }
 }
 
+/**
+ * 全量 PUT 串行化：多次写操作并发时会各自生成快照，若后发先至，
+ * 旧快照会覆盖新快照导致号码/图片/数量丢失。这里在调用时先冻结 payload，
+ * 再按调用顺序排队发送，保证服务端最终收到的一定是最后一次完整状态。
+ * 失败时标记 unsynced，页面据此提示「未同步」。
+ */
+let persistTail = null;       // 最后一个未决的写；为空时表示当前没有排队
+
 function persist() {
   const payload = state.holdings.map((h) => ({
     id: h.id,
@@ -167,11 +183,27 @@ function persist() {
     serials: Array.isArray(h.serials) ? h.serials : [],
     form: h.form === 'single' || h.form === 'set' ? h.form : '',
     images: Array.isArray(h.images) ? h.images : [],
-  }));
-  return api.put('/api/holdings', { holdings: payload }).then((res) => {
+  }));                                     // 冻结本次快照，绝不在队列里再读 state
+  const put = api.put;                     // 调用时捕获，避免排队期间被替换（测试/热更场景）
+  const prev = persistTail;
+  // 队列为空时同步发起，保持「写操作立即落库」的原有语义；
+  // 已有写在飞才排队，保证服务端收到的是按顺序的完整快照。
+  const run = prev
+    ? prev.then(() => put('/api/holdings', { holdings: payload }))
+    : put('/api/holdings', { holdings: payload });
+  const tail = run.catch(() => {});        // 一次失败不能让后续写全部卡死
+  persistTail = tail;
+  tail.then(() => { if (persistTail === tail) persistTail = null; });
+  return run.then((res) => {
     state.rev = res.rev || state.rev;
+    state.synced = true;
+    state.error = '';
     saveCache();
     return res;
+  }).catch((err) => {
+    state.synced = false;
+    state.error = err.message || '保存失败，尚未同步';
+    throw err;
   });
 }
 
@@ -282,12 +314,28 @@ function uploadImage(dataUrl) {
   return api.post('/api/holding/image', { image: dataUrl });
 }
 
+/**
+ * 会话失效/登出：清干净所有用户相关字段，并作废所有在飞的 refresh。
+ * 以前只清 user/isAdmin/holdings，prices/rev 会串到下一个账号；
+ * 且有 refresh 在飞时其回调会把旧账号数据重新写回 state 与缓存（串号）。
+ */
 function clearUser() {
+  refreshSeq++;            // 让所有在飞 refresh 的回调变成过期响应
+  inflight = null;
   state.user = null;
   state.isAdmin = false;
   state.holdings = [];
+  state.prices = {};
+  state.userCount = 0;
+  state.rev = 0;
   state.synced = false;
-  saveCache();
+  state.error = '';
+  try { wx.removeStorageSync(CACHE_KEY); } catch (e) { /* 缓存不可用时忽略 */ }
+}
+
+/** 登录态失效（401）：与主动登出同一套清理，供 api 层调用 */
+function onSessionExpired() {
+  clearUser();
 }
 
 module.exports = {
@@ -310,4 +358,6 @@ module.exports = {
   patchHolding,
   uploadImage,
   clearUser,
+  onSessionExpired,
+  persist,
 };

@@ -67,8 +67,17 @@
     <text>正在加载系列…</text>
   </view>
 
-  <!-- 空态 -->
-  <view class="state" wx:elif="{{loaded && !rows.length}}">
+  <!-- 失败态 / 参数缺失：给可点出路，别把用户困住 -->
+  <view class="state state-err" wx:elif="{{loaded && loadError}}">
+    <text>{{loadError}}</text>
+    <view class="state-acts">
+      <text class="state-btn" hover-class="tap-hover" bindtap="reload">重新加载</text>
+      <text class="state-btn ghost" hover-class="tap-hover" bindtap="goHome">回到首页</text>
+    </view>
+  </view>
+
+  <!-- 空态：仅在确实加载成功且无成员时显示 -->
+  <view class="state" wx:elif="{{loaded && !loadError && !rows.length}}">
     <text>这个系列暂时没有品种</text>
   </view>
 

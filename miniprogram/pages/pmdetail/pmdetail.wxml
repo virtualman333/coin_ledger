@@ -1,6 +1,12 @@
 <view class="page">
   <view class="loading" wx:if="{{loading}}">加载中…</view>
-  <view class="loading" wx:elif="{{err}}">{{err}}</view>
+  <view class="err-state" wx:elif="{{err}}">
+    <text class="err-text">{{err}}</text>
+    <view class="err-acts">
+      <view class="err-btn" wx:if="{{retryable}}" hover-class="tap-hover" bindtap="retry">重新加载</view>
+      <view class="err-btn ghost" hover-class="tap-hover" bindtap="goHome">回到首页</view>
+    </view>
+  </view>
 
   <block wx:if="{{item}}">
     <view class="title">

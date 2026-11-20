@@ -36,6 +36,7 @@ Page({
       const owner = r.owner || '藏友';
       const items = (Array.isArray(r.items) ? r.items : []).map((it) => ({
         name: it.name || '',
+        nameInitial: String(it.name || '藏').charAt(0),  // WXML 不支持 (expr)[0]，预算好
         year: Number(it.year) || 0,
         category: it.category || 'coin',
         qty: Number(it.qty) || 0,
@@ -59,6 +60,15 @@ Page({
   preview(e) {
     const src = e.currentTarget.dataset.src;
     if (src) wx.previewImage({ urls: [src], current: src });
+  },
+
+  /** 从微信会话/朋友圈打开时页面栈只有一层，switchTab 才能把新用户带回主界面。
+   *  朋友圈单页模式（scene 1154）下 tabBar 不可达，用 reLaunch 兜底。 */
+  goHome() {
+    let scene = 0;
+    try { scene = Number((wx.getLaunchOptionsSync() || {}).scene || 0); } catch (e) { /* 老基础库忽略 */ }
+    if (scene === 1154) wx.reLaunch({ url: '/pages/index/index' });
+    else wx.switchTab({ url: '/pages/index/index' });
   },
 
   onShareAppMessage() {

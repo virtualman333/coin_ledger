@@ -56,6 +56,7 @@ Page({
     desc: true,        // 年份降序
     onlyOwn: false,
     showOnlyOwn: false,
+    loadError: '',
   },
 
   onLoad(query) {
@@ -72,12 +73,22 @@ Page({
       wx.setNavigationBarTitle({
         title: name || (category === 'pm' ? '贵金属项目' : '系列详情'),
       });
+      // 分享卡片/扫码可能丢 code。cat.inSeries('') 会返回全部 137 个品种，
+      // 若继续渲染等于凭空造出一个「包含全站」的系列，必须早退。
+      if (!code) {
+        this.setData({ loading: false, loaded: true, rows: [], series: null, loadError: '缺少系列参数' });
+        return;
+      }
       this.reload();
     });
   },
 
+  goHome() {
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+
   reload() {
-    this.setData({ page: 1, rows: [], loading: true });
+    this.setData({ page: 1, rows: [], loading: true, loadError: '' });
     return this.build(1, false);
   },
 
@@ -136,6 +147,7 @@ Page({
       const s = res.series || {};
       const items = Array.isArray(res.items) ? res.items : [];
       const rows = items.map((it) => ({
+        id: 'pm-' + it.code,     // 与 buildLocal 的 id 口径一致，避免 wx:key 全为 undefined
         code: it.code,
         name: it.name,
         year: it.year,
@@ -164,14 +176,17 @@ Page({
         showOnlyOwn: false,
         loading: false,
         loaded: true,
+        loadError: '',
       });
     }).catch(() => {
+      // 失败不能渲染成「这个系列暂时没有品种」，两者语义完全不同
       this.setData({
         loading: false,
         loaded: true,
         rows: append ? this.data.rows : [],
+        loadError: append ? '' : '系列加载失败',
       });
-      if (!append) wx.showToast({ title: '系列加载失败', icon: 'none' });
+      if (append) wx.showToast({ title: '加载更多失败，上拉重试', icon: 'none' });
     });
   },
 

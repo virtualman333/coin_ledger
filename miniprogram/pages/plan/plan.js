@@ -102,6 +102,12 @@ Page({
     this.loadPlans();
   },
 
+  onPullDownRefresh() {
+    // loadPlans 内含 build() + buildPm()，普通币与贵金属一次刷新到位
+    this.retryPlans();
+    setTimeout(() => wx.stopPullDownRefresh(), 600);
+  },
+
   switchTab(e) {
     const tab = e.currentTarget.dataset.tab;
     if (tab === this.data.tab) return;

@@ -612,3 +612,7 @@
 .avatar-img {
   background: #f6efe0;
 }
+
+/* 勾选同意 / 显示隐藏密码等高频控件热区 ≥44px */
+.ck{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}
+.pwd-eye{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}

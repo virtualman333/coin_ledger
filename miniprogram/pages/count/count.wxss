@@ -27,3 +27,4 @@
 .tips{margin-top:28rpx;padding:24rpx;border-radius:14rpx;background:#faf7f0}
 .tips-h{display:block;margin-bottom:12rpx;font-size:25rpx;font-weight:600;color:#6b6459}
 .tips-i{display:block;font-size:23rpx;line-height:2;color:#9a948a}
+.err .retry{color:#9a6b1f;font-weight:600;margin-left:8rpx}

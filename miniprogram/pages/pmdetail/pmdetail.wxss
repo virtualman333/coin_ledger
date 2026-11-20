@@ -36,3 +36,13 @@
 .mv-v{font-size:38rpx;font-weight:700;color:#9a6b1f}
 .mv-u{font-size:21rpx;color:#8a8378;margin-left:auto}
 .mv-tip{display:block;margin-top:12rpx;font-size:21rpx;line-height:1.6;color:#a0998c}
+
+/* 加载失败态：给可点的重试与回首页出路，别把用户困在死页面 */
+.err-state{padding:80rpx 40rpx;text-align:center}
+.err-text{display:block;font-size:27rpx;line-height:1.6;color:#6a6252;margin-bottom:32rpx}
+.err-acts{display:flex;gap:20rpx;justify-content:center;flex-wrap:wrap}
+.err-btn{
+  min-height:88rpx;line-height:88rpx;padding:0 40rpx;border-radius:14rpx;
+  background:#9a6b1f;color:#fff;font-size:27rpx
+}
+.err-btn.ghost{background:#fff;color:#9a6b1f;border:1rpx solid #d8c9a8}

@@ -32,6 +32,7 @@ Page({
     pmTotal: 0,
     pmLoading: false,
     pmLoaded: false,
+    pmError: '',
     // 视图模式：list=顺序清单（默认）/ series=按系列卡片浏览
     viewMode: 'list',
     seriesCoin: [],
@@ -252,7 +253,7 @@ Page({
         this.setData({
           keyword: '', yearFilter: '', faceFilter: '', matFilter: '', onlyOwn: false,
           hasExtra: false, extraCount: 0, yearIdx: 0, faceIdx: 0, matIdx: 0,
-          pmRows: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmLoaded: false,
+          pmRows: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmLoaded: false, pmError: '',
           filterOpen: false, code: code || '',
           tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
         this.loadPmFull(1, false);
@@ -293,12 +294,18 @@ Page({
         pmTotal: Number(j.total) || 0,
         pmLoading: false,
         pmLoaded: true,
+        pmError: '',
         count: Number(j.total) || 0,
       });
     }).catch(() => {
-      this.setData({ pmLoading: false, pmLoaded: true, pmRows: [], count: 0 });
-      wx.showToast({ title: '贵金属目录加载失败', icon: 'none' });
+      // 失败不等于「没有匹配品种」：以前会把 2823 条库伪装成空结果且无重试入口
+      this.setData({ pmLoading: false, pmLoaded: true, pmRows: [], pmError: '贵金属目录加载失败', count: 0 });
     });
+  },
+
+  retryPmFull() {
+    this.setData({ pmError: '', pmLoaded: false, pmRows: [] });
+    this.loadPmFull(1, false);
   },
 
   loadMorePm() {
