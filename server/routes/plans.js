@@ -7,8 +7,6 @@
  *
  * 数据是只读 JSON，走 json-source 的 mtime 缓存，与 bootstrap 同源。
  */
-const fs = require('fs');
-const path = require('path');
 const config = require('../config');
 const source = require('../repositories/json-source');
 
@@ -31,6 +29,44 @@ module.exports = async function planRoutes(app) {
    *   ?page=1&pageSize=30&year=2026&q=熊猫&project=G202701
    * 只返回展示所需列，不含 raw 公告全文（那条走详情接口）。
    */
+  /** GET /api/catalog/pm/:code —— 单枚完整详情（点开才拉，不进列表传输） */
+  app.get('/api/catalog/pm/:code', async function pmDetail(request, reply) {
+    const code = String(request.params.code || '').toUpperCase();
+    const CDN = 'https://chngc-prod-c2c-cdn.ecgci.com';
+    let raw = null;
+    const rows = await app.db.query('SELECT raw, thumb, thumb_back FROM cl_ecgci_pm WHERE code = ? LIMIT 1', [code]);
+    if (rows[0] && rows[0][0]) {
+      if (rows[0][0].raw) raw = rows[0][0].raw;
+      var thumb = rows[0][0].thumb || '';
+    }
+    if (!raw) return reply.send({ ok: false, error: '未找到该贵金属币' });
+    if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = {}; } }
+    // 原图动辄 2MB+，CDN 支持阿里云 OSS 图片处理，统一压到 600px 宽再给前端
+    const img = (p) => {
+      if (!p) return '';
+      let u = String(p).indexOf('http') === 0 ? String(p) : CDN + (String(p).charAt(0) === '/' ? p : '/' + p);
+      if (u.indexOf('x-oss-process') < 0) u += (u.indexOf('?') > 0 ? '&' : '?') + 'x-oss-process=image/resize,w_600';
+      return u;
+    };
+    reply.send({
+      ok: true,
+      item: {
+        code: raw.code, name: raw.name, projectName: raw.projectName,
+        year: raw.projectYear || raw.year,
+        frontUrl: img(raw.frontPicture), backUrl: img(raw.backPicture),
+        thumbUrl: typeof thumb !== 'undefined' ? thumb : '',
+        thumbBackUrl: rows[0] && rows[0][0] && rows[0][0].thumb_back ? rows[0][0].thumb_back : '',
+        frontDesc: raw.frontPictureDesc || '', backDesc: raw.backPictureDesc || '',
+        announce: raw.projectAnnounceName || raw.description || '',
+        material: raw.material, weight: raw.weight, spec: raw.spec,
+        face: raw.denomination, fineness: raw.fineness, circulation: raw.circulation,
+        quality: raw.quality, craft: raw.craft, castingUnit: raw.castingUnit,
+        designer: raw.designedPersonName, sculptor: raw.sculptor,
+        categories: raw.projectCategoryName, theme: raw.projectTheme, series: raw.projectSeries
+      }
+    });
+  });
+
   app.get('/api/catalog/pm', async function pmPage(request, reply) {
     const q = request.query || {};
     const one = (v) => Array.isArray(v) ? v[0] : v;
@@ -42,10 +78,10 @@ module.exports = async function planRoutes(app) {
     const offset = (page - 1) * pageSize;
     const cols = 'code, project_code AS projectCode, project_name AS projectName, year, name, ' +
       'material, weight_g AS weightG, face, fineness, max_mintage AS maxMintage, quality, ' +
-      'front_picture AS frontPicture, back_picture AS backPicture';
+      'front_picture AS frontPicture, back_picture AS backPicture, thumb, thumb_back AS thumbBack';
 
     let total, items;
-    if (config.isDbDataSource && app.db) {
+    {
       const where = [], params = [];
       if (year) { where.push('year = ?'); params.push(year); }
       if (project) { where.push('project_code = ?'); params.push(project); }
@@ -58,24 +94,6 @@ module.exports = async function planRoutes(app) {
         params.concat([pageSize, offset])
       );
       items = rows[0];
-    } else {
-      // JSON 模式（本地/未导库）：同一份种子文件，字段对齐
-      const doc = JSON.parse(fs.readFileSync(path.join(config.ROOT, 'data', 'seeds', 'pm-ecgci-all.json'), 'utf8'));
-      let list = (doc.items || []).filter((it) => {
-        if (year && String(it.projectYear || it.year || '') !== year) return false;
-        if (project && it.projectCode !== project) return false;
-        if (kw && (it.name || '').indexOf(kw) < 0 && (it.code || '').indexOf(kw) < 0) return false;
-        return true;
-      });
-      total = list.length;
-      items = list.slice(offset, offset + pageSize).map((it) => ({
-        code: it.code, projectCode: it.projectCode, projectName: it.projectName,
-        year: it.projectYear || it.year, name: it.name,
-        material: Array.isArray(it.material) ? it.material.join('/') : it.material,
-        weightG: Array.isArray(it.weight) ? it.weight.join('/') : it.weight,
-        face: it.denomination, fineness: it.fineness, maxMintage: it.circulation,
-        quality: it.quality, frontPicture: it.frontPicture, backPicture: it.backPicture
-      }));
     }
     reply.send({ ok: true, total, page, pageSize, pages: Math.ceil(total / pageSize), items });
   });

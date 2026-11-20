@@ -13,6 +13,7 @@ Page({
     searchFocus: false,
     rows: [],
     category: 'coin',
+    allTabs: [], pmTabs: [],   // 两套完全独立的系列：普通币/纪念钞 vs 贵金属发行项目
     categories: [{ code: 'coin', name: '普通纪念币' }, { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' }],
     count: 0,
     ownedCount: 0,
@@ -38,9 +39,9 @@ Page({
       wx.setStorageSync('cl_pending_series', query.code);
     }
     this.buildFilterOpts();
-    this.setData({
-      tabs: [{ code: '', name: '全部', count: cat.total }].concat(cat.seriesList),
-    });
+    const allTabs = [{ code: '', name: '全部', count: cat.total }].concat(cat.seriesList);
+    this.setData({ allTabs, tabs: allTabs });
+    this.loadPmSeries();
     this.render();
   },
 
@@ -124,12 +125,29 @@ Page({
     this.render();
   },
 
+  /** 贵金属系列 = 发行项目，走独立接口，不混用普通币 series */
+  loadPmSeries() {
+    api.get('/api/series?category=pm').then((res) => {
+      if (!res || !res.ok) return;
+      const pmTabs = [{ code: '', name: '全部项目', count: res.items.reduce((a, it) => a + it.count, 0) }]
+        .concat(res.items.map((it) => ({ code: it.code, name: it.name, count: it.count })));
+      this.setData({ pmTabs });
+      if (this.data.category === 'pm') this.setData({ tabs: pmTabs });
+    }).catch(() => {});
+  },
+
   pickCategory(e) {
     const category = e.currentTarget.dataset.cat || 'coin';
     this.setData({ category }, () => {
       if (category === 'pm') {
-        if (!this.data.pmLoaded) this.loadPmFull(1, false);
+        this.setData({
+          keyword: '', yearFilter: '', faceFilter: '', matFilter: '', onlyOwn: false,
+          hasExtra: false, extraCount: 0, yearIdx: 0, faceIdx: 0, matIdx: 0,
+          pmRows: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmLoaded: false,
+          filterOpen: false, code: '', tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
+        this.loadPmFull(1, false);
       } else {
+        this.setData({ code: '', tabs: this.data.allTabs });
         this.render();
       }
     });
@@ -142,10 +160,12 @@ Page({
     const kw = String(this.data.keyword || '').trim();
     let path = '/api/catalog/pm?page=' + page + '&pageSize=30';
     if (kw) path += '&q=' + encodeURIComponent(kw);
+    if (this.data.code) path += '&project=' + encodeURIComponent(this.data.code);
     api.get(path).then((j) => {
       const items = Array.isArray(j.items) ? j.items : [];
       const rows = items.map((it) => ({
         code: it.code,
+        thumb: (it.thumbBack || it.thumb) ? (api.BASE + (it.thumbBack || it.thumb)) : '',
         codeId: it.code,
         name: it.name,
         year: it.year,
@@ -180,27 +200,18 @@ Page({
     if (this.data.category === 'pm') this.loadMorePm();
   },
 
-  /** 点贵金属卡片：弹出公告事实（无价格、无死链图片） */
+  /** 点贵金属卡片：进详情页（与普通币详情同款布局） */
   goPmDetail(e) {
     const code = e.currentTarget.dataset.code;
-    const it = this.data.pmRows.filter((x) => x.code === code)[0];
-    if (!it) return;
-    wx.showModal({
-      title: it.name,
-      content: '编号：' + it.code + '\n项目：' + (it.projectName || '—') + '\n年份：' + it.year
-        + '\n材质：' + it.metaText + '\n面额：' + it.faceText + '\n成色：' + (it.fineness || '—') + '%'
-        + '\n\n贵金属纪念币无稳定二级市场报价，本站不提供参考估值。',
-      showCancel: false,
-      confirmText: '知道了',
-    });
+    if (!code) return;
+    wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(code) });
   },
 
   render() {
     const kw = String(this.data.keyword || '').trim().toLowerCase();
     const category = this.data.category || 'coin';
     if (category === 'pm') {
-      // pm 模式数据来自分页接口，由 loadPmFull 维护；这里只处理服务端搜索的重新拉取
-      if (this.data.pmLoaded) this.loadPmFull(1, false);
+      // pm 由 loadPmFull 单独维护；render() 不再冲掉已翻到的页码
       return;
     }
     const code = this.data.code;
@@ -270,8 +281,11 @@ Page({
   },
 
   pickTab(e) {
-    this.setData({ code: e.currentTarget.dataset.code });
-    this.render();
+    const code = e.currentTarget.dataset.code || '';
+    this.setData({ code }, () => {
+      if (this.data.category === 'pm') this.loadPmFull(1, false);
+      else this.render();
+    });
   },
 
   toggleSort() {

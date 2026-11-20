@@ -55,6 +55,7 @@ function superadminPassword() {
    --------------------------------------------------------- */
 let SEED = { coins: [], series: {}, defaults: [] };
 let COIN_BY_NAME = new Map();
+let PM_BY_NAME = new Map();  // 贵金属可收藏：名称白名单
 let IMG_SET = [];
 let IMG_REAL = [];   // 有官方实拍图的品种编号
 let GALLERY = {};    // 品种 → 多图（正面 / 背面 / 整套）
@@ -211,7 +212,7 @@ function normalizeHoldings(input) {
   return input.map((h, idx) => {
     if (!h || typeof h !== 'object') throw badRequest(`第 ${idx + 1} 条格式错误`);
     const name = String(h.name || '').trim();
-    if (!COIN_BY_NAME.has(name)) throw badRequest(`未知品种：${name}`);
+    if (!COIN_BY_NAME.has(name) && !PM_BY_NAME.has(name)) throw badRequest(`未知品种：${name}`);
     if (seen.has(name)) throw badRequest(`品种重复：${name}`);
     seen.add(name);
     const rolls = Number(h.rolls);
@@ -227,7 +228,8 @@ function normalizeHoldings(input) {
       cost: Math.round(cost * 100) / 100,
       market: Math.round(market * 100) / 100,
       group: String(h.group || '独立藏品').slice(0, 24),
-      sep: !!h.sep
+      sep: !!h.sep,
+      category: ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin'
     };
   });
 }
@@ -1428,9 +1430,22 @@ function touchGallery() { writeGallery(); }
 /** T03：发行计划服务整份替换后调用，让老 reminders 分支立即看到新计划。 */
 function setPlan(next) { PLAN = next; }
 
+/** 启动时从数据库装载贵金属名称白名单（唯一可收藏的 pm 品种） */
+async function loadPmNames(pool) {
+  try {
+    const [rows] = await pool.query('SELECT code, name FROM cl_ecgci_pm');
+    PM_BY_NAME = new Map(rows.map((r) => [r.name, r]));
+    return PM_BY_NAME.size;
+  } catch (e) {
+    PM_BY_NAME = new Map();
+    return 0;
+  }
+}
+
 module.exports = {
   // 生命周期
   loadSeed: loadSeed,
+  loadPmNames: loadPmNames,
   ensureSuperadmin: ensureSuperadmin,
   START_AT: START_AT,
   VERSION: VERSION,

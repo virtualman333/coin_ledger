@@ -47,6 +47,47 @@ module.exports = async function adminPmRoutes(app) {
     reply.send({ ok: true, items: items, total: items.length });
   });
 
+  /** 大分类总览：普通币/纪念钞/贵金属各自规模（管理端首页卡片用） */
+  app.get('/api/admin/categories', { preHandler: app.requireAdmin }, async function cats(request, reply) {
+    const [coinRows, pmRows, holdRows] = await Promise.all([
+      app.db.query("SELECT kind, COUNT(*) AS c FROM cl_coins WHERE status='published' GROUP BY kind"),
+      app.db.query("SELECT COUNT(*) AS total, SUM(thumb IS NOT NULL AND thumb<>'') AS withThumb, SUM(max_mintage IS NOT NULL) AS withMintage FROM cl_ecgci_pm"),
+      app.db.query('SELECT category, COUNT(*) AS c FROM cl_holdings GROUP BY category')
+    ]);
+    const kinds = {};
+    (coinRows[0] || []).forEach((r) => { kinds[r.kind] = Number(r.c); });
+    const hold = {};
+    (holdRows[0] || []).forEach((r) => { hold[r.category || 'coin'] = Number(r.c); });
+    const pm = (pmRows[0] && pmRows[0][0]) || {};
+    reply.send({
+      ok: true,
+      items: [
+        { code: 'coin', name: '普通纪念币', count: kinds.coin || 0, holdings: hold.coin || 0, unit: '品种' },
+        { code: 'note', name: '纪念钞', count: kinds.note || 0, holdings: hold.note || 0, unit: '品种' },
+        { code: 'pm', name: '贵金属纪念币', count: Number(pm.total) || 0, holdings: hold.pm || 0, unit: '枚',
+          withThumb: Number(pm.withThumb) || 0, withMintage: Number(pm.withMintage) || 0 }
+      ]
+    });
+  });
+
+  /** 贵金属全量库分页（管理端查看/检索，与前台共用同一张表） */
+  app.get('/api/admin/pm-all', { preHandler: app.requireAdmin }, async function pmAll(request, reply) {
+    const q = request.query || {};
+    const one = (v) => Array.isArray(v) ? v[0] : v;
+    const page = Math.max(1, Number(one(q.page)) || 1);
+    const size = Math.max(1, Math.min(100, Number(one(q.size)) || 30));
+    const kw = String(one(q.q) || '').trim();
+    const where = kw ? 'WHERE name LIKE ? OR code LIKE ?' : '';
+    const params = kw ? ['%' + kw + '%', '%' + kw + '%'] : [];
+    const cnt = await app.db.query('SELECT COUNT(*) AS c FROM cl_ecgci_pm ' + where, params);
+    const rows = await app.db.query(
+      'SELECT code, name, project_code AS projectCode, project_name AS projectName, year, material, ' +
+      'face, max_mintage AS circulation, thumb, thumb_back AS thumbBack FROM cl_ecgci_pm ' + where + ' ORDER BY code LIMIT ? OFFSET ?',
+      params.concat([size, (page - 1) * size])
+    );
+    reply.send({ ok: true, total: Number(cnt[0][0].c), page, size, pages: Math.ceil(Number(cnt[0][0].c) / size), items: rows[0] });
+  });
+
   app.post('/api/admin/pm', { preHandler: app.requireAdmin }, async function create(request, reply) {
     const body = await legacy.readBody(request.raw, 2 * 1024 * 1024);
     const r = await svc(app).create(body);

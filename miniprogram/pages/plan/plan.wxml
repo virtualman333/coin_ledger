@@ -17,7 +17,9 @@
     <view class="plan-tab {{tab === 'pm' ? 'on' : ''}}" data-tab="pm" bindtap="switchTab">贵金属纪念币</view>
   </view>
 
+  <view class="plan-err" wx:if="{{plansError}}" bindtap="retryPlans">{{plansError}}</view>
   <block wx:if="{{tab === 'pm'}}">
+    <view class="plan-err" wx:if="{{!pmYears.length && !plansError}}">贵金属发行计划暂不可用，下拉刷新或稍后再试</view>
     <view class="year" wx:for="{{pmYears}}" wx:key="year" wx:for-item="y">
       <view class="year-head">
         <text class="y-num">{{y.year}} 年</text>

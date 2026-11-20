@@ -56,18 +56,10 @@ const SEED_SQL_DIR = path.join(__dirname, 'migrations');
 const PM_SEED_FILE = str('PM_SEED_FILE', path.join(ROOT, 'data', 'seeds', 'precious-metal-2026.json'));
 
 /* ---------------- 存储与目录数据源 ---------------- */
-const STORAGE = str('STORAGE', 'json').toLowerCase() === 'mysql' ? 'mysql' : 'json';
+// 只保留数据库模式：不再提供 JSON 回滚位
+const STORAGE = 'mysql';
 
-/** 只有 db / json 两个合法值；写错时回落 json 并留一条警告（绝不静默切到 db） */
-function normalizeDataSource(raw) {
-  const v = String(raw === undefined || raw === null ? '' : raw).trim().toLowerCase();
-  if (!v) return 'json';
-  if (v === 'db' || v === 'json') return v;
-  return 'json';
-}
-
-const rawDataSource = str('DATA_SOURCE', 'json').toLowerCase();
-const DATA_SOURCE = normalizeDataSource(rawDataSource);
+const DATA_SOURCE = 'db';
 
 /* ---------------- 管理 ---------------- */
 const SUPERADMIN_NAME = str('SUPERADMIN_NAME', 'virtualman');
@@ -140,11 +132,8 @@ function selfCheck() {
   const errors = [];
   const warnings = [];
 
-  if (rawDataSource && DATA_SOURCE !== rawDataSource) {
-    warnings.push('DATA_SOURCE=' + rawDataSource + ' 不是合法值（只认 db / json），已回落 json');
-  }
-  if (DATA_SOURCE === 'db' && !DB.password) {
-    warnings.push('DATA_SOURCE=db 但未设置 MYSQL_PASSWORD —— 若本机 MySQL 需要口令将连接失败');
+  if (!DB.password) {
+    warnings.push('未设置 MYSQL_PASSWORD —— 数据库连接将失败');
   }
   if (!Number.isInteger(PORT) || PORT <= 0 || PORT > 65535) {
     errors.push('PORT 不合法：' + PORT);
@@ -180,7 +169,7 @@ module.exports = {
 
   STORAGE: STORAGE,
   DATA_SOURCE: DATA_SOURCE,
-  isDbDataSource: DATA_SOURCE === 'db',
+  isDbDataSource: true,
 
   SUPERADMIN_NAME: SUPERADMIN_NAME,
   WX_APPID: WX_APPID,

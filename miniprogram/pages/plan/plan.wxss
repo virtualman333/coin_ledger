@@ -271,3 +271,8 @@
   color:#7d766b;font-size:25rpx;line-height:1.4
 }
 .plan-tab.on{background:#fbf1d8;border-color:#d9bd82;color:#9a6b1f;font-weight:600}
+
+.plan-err{
+  margin:20rpx 0;padding:22rpx;border-radius:14rpx;
+  background:#fdf3e6;color:#9a6b1f;font-size:25rpx;text-align:center
+}

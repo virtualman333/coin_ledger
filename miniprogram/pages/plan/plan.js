@@ -59,8 +59,8 @@ Page({
   },
 
   onLoad() {
-    this.build();
-    this.loadPlans();
+    this.build();           // 先本地兜底渲染一次
+    this.loadPlans();       // 接口回来再重绘一次
     this.startTicker();
   },
 
@@ -71,7 +71,9 @@ Page({
       this.setData({ plansFromApi: res });
       this.build();
       this.buildPm();
-    }).catch(() => {});   // 接口不可用时沿用本地 catalog 数据
+    }).catch(() => {
+      this.setData({ plansError: '计划数据加载失败，点此重试' });
+    });
   },
 
   /** 贵金属计划按项目（套）展示，不做预约倒计时 */
@@ -92,6 +94,11 @@ Page({
       })),
     }));
     this.setData({ pmYears });
+  },
+
+  retryPlans() {
+    this.setData({ plansError: '' });
+    this.loadPlans();
   },
 
   switchTab(e) {

@@ -23,14 +23,29 @@ function one(v) {
 }
 
 module.exports = async function catalogRoutes(app) {
-  /** GET /api/series —— 与 legacy 的 {ok,items} 逐字一致 */
+  /** GET /api/series —— 普通币/纪念钞的系列；?category=pm 返回贵金属独立项目 */
   app.get('/api/series', async function seriesList(request, reply) {
+    const q = request.query || {};
+    const cat = Array.isArray(q.category) ? q.category[0] : q.category;
+    if (cat === 'pm') {
+      // 贵金属的「系列」是发行项目（一套），与普通币的 series 完全不是一回事
+      const r = await app.db.query(
+        'SELECT project_code AS code, MAX(project_name) AS name, COUNT(*) AS count ' +
+        'FROM cl_ecgci_pm GROUP BY project_code ORDER BY name'
+      );
+      const rows = r[0];
+      return reply.send({
+        ok: true,
+        category: 'pm',
+        items: rows.map((r) => ({ code: r.code, name: r.name, count: Number(r.count) })),
+      });
+    }
     const svc = seriesService.create({
       dataSource: app.dataSource,
       catalog: app.catalog,
       withTx: app.withTx
     });
-    reply.send({ ok: true, items: await svc.listWithCount() });
+    reply.send({ ok: true, category: 'coin', items: await svc.listWithCount() });
   });
 
   /** GET /api/catalog —— 新增，公开只读 published */

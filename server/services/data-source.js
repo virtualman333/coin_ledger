@@ -14,18 +14,12 @@ const config = require('../config');
 const common = require('../schemas/common');
 const { createRepos } = require('../repositories');
 
-/** 合法取值 */
-const MODES = ['db', 'json'];
+/** 仅数据库模式；json 只读回滚态已移除 */
+const MODES = ['db'];
 
-/**
- * 解析 DATA_SOURCE：非法值回落 json（并让判断方向永远是「安全」的那一侧）。
- *
- * @param {unknown} raw 原始值
- * @returns {'db'|'json'} 模式
- */
-function resolveMode(raw) {
-  const v = String(raw === undefined || raw === null ? '' : raw).trim().toLowerCase();
-  return v === 'db' ? 'db' : 'json';
+/** @returns {'db'} */
+function resolveMode() {
+  return 'db';
 }
 
 /**
@@ -34,7 +28,7 @@ function resolveMode(raw) {
  */
 class DataSource {
   /**
-   * @param {'db'|'json'} mode 模式
+   * @param {'db'} mode 模式
    * @param {object} repos 仓储包（repositories/index.js 的返回值）
    */
   constructor(mode, repos) {

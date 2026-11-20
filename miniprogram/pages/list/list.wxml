@@ -62,7 +62,7 @@
     </view>
   </view>
 
-  <view class="fpanel" wx:if="{{filterOpen}}">
+  <view class="fpanel" wx:if="{{filterOpen && category !== 'pm'}}">
     <view class="frow">
       <picker range="{{yearOpts}}" value="{{yearIdx}}" bindchange="pickYear">
         <view class="fbtn {{yearFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{yearFilter || '年份'}} ▾</view>
@@ -91,7 +91,8 @@
       data-code="{{item.code}}"
       bindtap="goPmDetail"
     >
-      <view class="pm-ph pm-{{item.metalClass}}"><text>{{item.metalChar}}</text></view>
+      <image wx:if="{{item.thumb}}" class="pm-thumb" src="{{item.thumb}}" mode="aspectFill" lazy-load></image>
+      <view wx:else class="pm-ph pm-{{item.metalClass}}"><text>{{item.metalChar}}</text></view>
       <view class="pm-card-b">
         <view class="pm-card-t">{{item.name}}</view>
         <view class="pm-card-m">{{item.metaText}}</view>

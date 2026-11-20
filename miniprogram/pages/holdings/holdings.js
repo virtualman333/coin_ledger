@@ -1,4 +1,5 @@
 const cat = require('../../utils/catalog');
+const api = require('../../utils/api');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 
@@ -21,6 +22,11 @@ Page({
       kinds: 0,
     },
     groups: [],
+    holdCat: 'all',
+    holdCats: [
+      { code: 'all', name: '全部' }, { code: 'coin', name: '普通币' },
+      { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' },
+    ],
     empty: true,
     swipeId: '',        // 左滑展开操作的那张卡片（持仓 id）
   },
@@ -30,6 +36,10 @@ Page({
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
+  },
+
+  switchCat(e) {
+    this.setData({ holdCat: e.currentTarget.dataset.cat }, () => this.render());
   },
 
   onPullDownRefresh() {
@@ -42,9 +52,17 @@ Page({
   render() {
     const state = store.getState();
     const st = store.stats();
+    const allH = store.state.holdings || [];
+    const hs = allH.filter((h) => {
+      if (this.data.holdCat === 'all') return true;
+      if (this.data.holdCat === 'pm') return h.category === 'pm';
+      if (h.category === 'pm') return false;
+      const c = cat.byName[h.name];
+      return this.data.holdCat === 'note' ? (c && c.kind === 'note') : !(c && c.kind === 'note');
+    });
     const groups = [];
     const map = {};
-    state.holdings.forEach((h) => {
+    hs.forEach((h) => {
       const coin = cat.byName[h.name];
       // 分组跟「系列」走（系列主数据里的名字），而不是品种上的历史 group 字段
       const seriesCode = (coin && coin.series) || '';
@@ -67,9 +85,11 @@ Page({
       map[groupName].items.push({
         id: h.id,
         coinId: coin ? coin.id : 0,
+        isPm: h.category === 'pm',
+        pmCode: h.category === 'pm' ? h.id : '',
+        imgUrl: (h.category === 'pm' && h.thumb) ? (String(h.thumb).indexOf('http') === 0 ? h.thumb : api.BASE + h.thumb) : (coin ? (coin.smallUrl || coin.thumbUrl || coin.imgUrl) : ''),
         name: h.name,
         year: coin ? coin.year : '',
-        imgUrl: coin ? (coin.smallUrl || coin.thumbUrl || coin.imgUrl) : '',
         rolls,
         qty,
         qtyLabel: qty + ' ' + (coin && coin.kind === 'note' ? '张' : '枚'),
@@ -308,7 +328,12 @@ Page({
   goDetail(e) {
     // 卡片处于左滑展开状态时，点一下先收起，不跳详情
     if (this.data.swipeId) { this.setData({ swipeId: '' }); return; }
-    const id = e.currentTarget.dataset.id;
+    const ds = e.currentTarget.dataset;
+    if (ds.ispm === '1' || ds.ispm === true) {
+      if (ds.pmcode) wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(ds.pmcode) });
+      return;
+    }
+    const id = ds.id;
     if (!id) return;
     wx.navigateTo({ url: '/pages/detail/detail?id=' + id });
   },

@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+  <view class="loading" wx:elif="{{err}}">{{err}}</view>
+
+  <block wx:if="{{item}}">
+    <view class="title">
+      <text class="h1">{{item.name}}</text>
+      <text class="h2">{{item.projectName}} · {{item.year}}</text>
+    </view>
+
+    <view class="figs">
+      <view class="fig" wx:if="{{item.frontUrl || item.frontDesc}}">
+        <image wx:if="{{item.thumbUrl || item.frontUrl}}" src="{{item.thumbUrl || item.frontUrl}}" mode="aspectFit" data-src="{{item.frontUrl}}" bindtap="preview"></image>
+        <view class="fig-na" wx:else>正面图暂缺</view>
+        <text class="cap"><text class="cap-k">正面</text>{{item.frontDesc}}</text>
+      </view>
+      <view class="fig" wx:if="{{item.backUrl || item.backDesc}}">
+        <image wx:if="{{item.backUrl}}" src="{{item.backUrl}}" mode="aspectFit" data-src="{{item.backUrl}}" bindtap="preview"></image>
+        <view class="fig-na" wx:else>背面图暂缺</view>
+        <text class="cap"><text class="cap-k">背面</text>{{item.backDesc}}</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="card-h">规格参数</text>
+      <view class="facts">
+        <view class="cf" wx:for="{{item.facts}}" wx:key="0"><text class="cf-k">{{item[0]}}</text><text class="cf-v">{{item[1]}}</text></view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{item.announceText}}">
+      <text class="card-h">发行公告</text>
+      <text class="ann">{{item.announceText}}</text>
+    </view>
+
+    <button class="pm-fav" bindtap="addFav" disabled="{{owned}}">{{owned ? '✓ 已在藏品' : '＋ 加入我的藏品'}}</button>
+    <view class="foot">资料来源：中国人民银行发行公告 · 中国金币集团</view>
+    <view class="foot">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。</view>
+  </block>
+</view>

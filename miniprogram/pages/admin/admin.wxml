@@ -48,7 +48,7 @@
   <!-- 模块页顶部 -->
   <view class="mod-head" wx:else>
     <text class="mod-back" bindtap="backHome" hover-class="tap-hover" hover-stay-time="80">‹ 返回</text>
-    <text class="mod-name">{{tab === 'visitors' ? '访客统计' : (tab === 'users' ? '用户管理' : (tab === 'params' ? '参数管理' : (tab === 'images' ? '图片管理' : (tab === 'series' ? '系列管理' : '反馈处理'))))}}</text>
+    <text class="mod-name">{{tab === 'visitors' ? '访客统计' : (tab === 'users' ? '用户管理' : (tab === 'cats' ? '大分类总览' : (tab === 'pmall' ? '贵金属库' : (tab === 'params' ? '参数管理' : (tab === 'images' ? '图片管理' : (tab === 'series' ? '系列管理' : '反馈处理'))))))}}</text>
   </view>
 
   <!-- 用户 -->
@@ -76,6 +76,37 @@
   </block>
 
   <!-- 参数 -->
+  <block wx:if="{{tab === 'cats'}}">
+    <view class="cat-card" wx:for="{{cats}}" wx:key="code">
+      <view class="cc-top">
+        <text class="cc-name">{{item.name}}</text>
+        <text class="cc-count">{{item.count}} {{item.unit}}</text>
+      </view>
+      <view class="cc-sub">我的藏品 {{item.holdings}} 条</view>
+      <view class="cc-bar"><view class="cc-fill" style="width:{{item.code === 'pm' ? 100 : 20}}%"></view></view>
+      <view class="cc-sub" wx:if="{{item.code === 'pm'}}">缩略图 {{item.withThumb}} · 有发行量 {{item.withMintage}}</view>
+    </view>
+  </block>
+
+  <block wx:if="{{tab === 'pmall'}}">
+    <view class="pm-search">
+      <input value="{{pmQ}}" bindinput="onPmQ" bindconfirm="pmSearch" placeholder="搜名称 / 编号" confirm-type="search"></input>
+      <button bindtap="pmSearch">搜索</button>
+    </view>
+    <view class="pm-total">共 {{pmTotal}} 枚 · 第 {{pmPage}}/{{pmPages}} 页</view>
+    <view class="pm-row" wx:for="{{pmAll}}" wx:key="code">
+      <image wx:if="{{item.thumbUrl}}" src="{{item.thumbUrl}}" mode="aspectFill"></image>
+      <view class="pm-r-b">
+        <text class="pm-r-n">{{item.name}}</text>
+        <text class="pm-r-m">{{item.code}} · {{item.year}} · {{item.face}}元 · {{item.circulation}}枚</text>
+      </view>
+    </view>
+    <view class="pm-nav">
+      <button bindtap="pmPrev" disabled="{{pmPage <= 1}}">上一页</button>
+      <button bindtap="pmNext" disabled="{{pmPage >= pmPages}}">下一页</button>
+    </view>
+  </block>
+
   <block wx:if="{{tab === 'params'}}">
     <view class="search">
       <input

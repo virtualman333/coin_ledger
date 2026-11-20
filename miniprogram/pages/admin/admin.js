@@ -15,6 +15,8 @@ Page({
     // 管理首页改成功能入口卡片，比一上来横排五个 tab 清楚
     modules: [
       { group: '内容', cls: 'g-content', items: [
+        { k: 'cats', t: '大分类', d: '品类总览与规模', i: '▤' },
+        { k: 'pmall', t: '贵金属库', d: '全量检索与查看', i: '✦' },
         { k: 'params', t: '参数', d: '品种基础数据', i: '⚙' },
         { k: 'images', t: '图片', d: '实物图与图集', i: '▣' },
         { k: 'series', t: '系列', d: '归类与卡图', i: '❖' },
@@ -29,6 +31,7 @@ Page({
     ],
     viewMode: 'home',
     tab: '',   // 首页为空，只有进模块才指向具体功能
+    cats: [], pmAll: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmQ: '', pmLoading: false,
     vsShowVisitors: false,
     vsClient: 'all',
     vsView: 'ip',
@@ -137,6 +140,8 @@ Page({
   },
 
   loadTab(k) {
+    if (k === 'cats') return this.loadCats();
+    if (k === 'pmall') return this.loadPmAll(1);
     if (k === 'users') return this.loadUsers();
     if (k === 'params' || k === 'images') return this.loadCoins();
     if (k === 'series') return this.loadSeries();
@@ -144,6 +149,33 @@ Page({
     if (k === 'visitors') return this.loadVisitors();
     return Promise.resolve();
   },
+
+  /* ---------------- 大分类总览 ---------------- */
+  loadCats() {
+    return api.get('/api/admin/categories').then((res) => {
+      if (res && res.ok) this.setData({ cats: res.items || [] });
+    }).catch(() => {});
+  },
+
+  /* ---------------- 贵金属全量库 ---------------- */
+  loadPmAll(page) {
+    if (this.data.pmLoading) return Promise.resolve();
+    this.setData({ pmLoading: true });
+    return api.get('/api/admin/pm-all?page=' + page + '&size=30&q=' + encodeURIComponent(this.data.pmQ)).then((res) => {
+      if (!res || !res.ok) return this.setData({ pmLoading: false });
+      this.setData({
+        pmAll: (res.items || []).map((x) => Object.assign({}, x, {
+          thumbUrl: x.thumb ? api.BASE + x.thumb : '',
+        })),
+        pmPage: res.page, pmPages: res.pages, pmTotal: res.total, pmLoading: false,
+      });
+    }).catch(() => this.setData({ pmLoading: false }));
+  },
+
+  onPmQ(e) { this.setData({ pmQ: e.detail.value }); },
+  pmSearch() { this.loadPmAll(1); },
+  pmPrev() { if (this.data.pmPage > 1) this.loadPmAll(this.data.pmPage - 1); },
+  pmNext() { if (this.data.pmPage < this.data.pmPages) this.loadPmAll(this.data.pmPage + 1); },
 
   /* ---------------- 访客统计 ---------------- */
   loadVisitors() {

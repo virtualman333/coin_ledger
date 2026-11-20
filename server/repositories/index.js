@@ -9,21 +9,13 @@
  * 每个仓储都是「无状态工厂」：create(pool) 返回对象；json 版忽略 pool。
  */
 const coinRepo = require('./coin.repo');
-const coinRepoJson = require('./coin.repo.json');
 const descriptionRepo = require('./description.repo');
-const descriptionRepoJson = require('./description.repo.json');
 const seriesRepo = require('./series.repo');
-const seriesRepoJson = require('./series.repo.json');
 const setRepo = require('./set.repo');
-const setRepoJson = require('./set.repo.json');
 const imageRepo = require('./image.repo');
-const imageRepoJson = require('./image.repo.json');
 const planRepo = require('./plan.repo');
-const planRepoJson = require('./plan.repo.json');
 const defaultHoldingsRepo = require('./default-holdings.repo');
-const defaultHoldingsRepoJson = require('./default-holdings.repo.json');
 const pmPieceRepo = require('./pm-piece.repo');
-const pmPieceRepoJson = require('./pm-piece.repo.json');
 
 /**
  * 装配一组仓储。
@@ -34,37 +26,18 @@ const pmPieceRepoJson = require('./pm-piece.repo.json');
  */
 function createRepos(opts) {
   const options = opts || {};
-  const mode = options.mode === 'db' ? 'db' : 'json';
   const pool = options.pool || null;
-
-  if (mode === 'db' && !pool) {
-    throw new Error('DATA_SOURCE=db 时必须提供 mysql 连接池');
-  }
-
-  if (mode === 'db') {
-    return {
-      mode: mode,
-      coins: coinRepo.create(pool),
-      descriptions: descriptionRepo.create(pool),
-      series: seriesRepo.create(pool),
-      sets: setRepo.create(pool),
-      images: imageRepo.create(pool),
-      plan: planRepo.create(pool),
-      defaultHoldings: defaultHoldingsRepo.create(pool),
-      pmPieces: pmPieceRepo.create(pool)
-    };
-  }
-
+  if (!pool) throw new Error('数据库模式必须提供 mysql 连接池');
   return {
-    mode: mode,
-    coins: coinRepoJson.create(),
-    descriptions: descriptionRepoJson.create(),
-    series: seriesRepoJson.create(),
-    sets: setRepoJson.create(),
-    images: imageRepoJson.create(),
-    plan: planRepoJson.create(),
-    defaultHoldings: defaultHoldingsRepoJson.create(),
-    pmPieces: pmPieceRepoJson.create()
+    mode: 'db',
+    coins: coinRepo.create(pool),
+    descriptions: descriptionRepo.create(pool),
+    series: seriesRepo.create(pool),
+    sets: setRepo.create(pool),
+    images: imageRepo.create(pool),
+    plan: planRepo.create(pool),
+    defaultHoldings: defaultHoldingsRepo.create(pool),
+    pmPieces: pmPieceRepo.create(pool)
   };
 }
 

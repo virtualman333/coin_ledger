@@ -201,6 +201,21 @@ function addCoin(coin, unit, qty) {
   return persist();
 }
 
+/** 贵金属入账本：按枚记，不套用普通币的整卷口径，成本/市价留空 */
+function addPm(item) {
+  requireLogin();
+  const hit = state.holdings.filter((h) => h.category === 'pm' && h.id === item.code)[0];
+  if (hit) { const err = new Error('这枚已经在你的藏品里了'); err.duplicate = true; throw err; }
+  state.holdings.push({
+    id: item.code,
+    name: item.name,
+    category: 'pm',
+    thumb: item.thumb || '',
+    unit: 'piece', rolls: 1, cost: 0, market: 0, group: '贵金属',
+  });
+  return persist();
+}
+
 function removeHolding(id) {
   requireLogin();
   state.holdings = state.holdings.filter((h) => h.id !== id);
@@ -254,6 +269,7 @@ module.exports = {
   ownedNames,
   stats,
   addCoin,
+  addPm,
   removeHolding,
   setRolls,
   setCost,

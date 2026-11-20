@@ -59,7 +59,6 @@ function create(ctx) {
    * @returns {Promise<object>} { '1': [{f,k}] }
    */
   async function galleryMap() {
-    if (ds.mode === 'json') return legacy.state().gallery;
     const rows = await repos.images.listAll();
     return catalog.projectLegacyGallery(rows);
   }
@@ -88,17 +87,10 @@ function create(ctx) {
         clean.push({ f: it.f, k: it.k });
       }
 
-      if (ds.mode === 'json') {
-        const g = legacy.state().gallery;
-        if (clean.length) g[id] = clean;
-        else delete g[id];
-        legacy.touchGallery();      // 写文件 + 刷新 galleryVer（7 天缓存破不掉的老坑）
-      } else {
-        await ctx.withTx(async (conn) => {
-          await repos.images.replaceForCoin(conn, Number(id), clean, false);
-          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
-        });
-      }
+      await ctx.withTx(async (conn) => {
+        await repos.images.replaceForCoin(conn, Number(id), clean, false);
+        await repos.images.bumpVersion(conn);   // 破 7 天强缓存的关键一步
+      });
 
       audit.log(actor, 'gallery.update', String(id), clean.length + ' 张图', ip);
       const g = await galleryMap();
@@ -121,9 +113,7 @@ function create(ctx) {
         return { status: 400, body: { ok: false, error: '图片类型不合法' } };
       }
 
-      const coin = ds.mode === 'json'
-        ? legacy.state().seed.coins.filter((c) => Number(c.i) + 1 === id)[0]
-        : await repos.coins.findByNo(id);
+      const coin = await repos.coins.findByNo(id);
       if (!coin) return { status: 404, body: { ok: false, error: '品种不存在' } };
 
       const raw = String(b.data || '');
@@ -150,21 +140,14 @@ function create(ctx) {
       }
 
       const key = String(id);
-      const list = ds.mode === 'json'
-        ? (legacy.state().gallery[key] || []).filter((it) => it.k !== kind)
-        : (await repos.images.listByCoin(id)).filter((it) => it.k !== kind)
-          .map((it) => ({ f: it.filename, k: it.kind }));
+      const list = (await repos.images.listByCoin(id)).filter((it) => it.k !== kind)
+        .map((it) => ({ f: it.filename, k: it.kind }));
       list.push({ f: fname, k: kind });
 
-      if (ds.mode === 'json') {
-        legacy.state().gallery[key] = list;
-        legacy.touchGallery();
-      } else {
-        await ctx.withTx(async (conn) => {
-          await repos.images.replaceForCoin(conn, id, list, false);
-          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
-        });
-      }
+      await ctx.withTx(async (conn) => {
+        await repos.images.replaceForCoin(conn, id, list, false);
+        await repos.images.bumpVersion(conn);   // 破 7 天强缓存的关键一步
+      });
 
       console.log('[admin] 上传图片 ' + fname + '（' + Math.round(buf.length / 1024) + 'KB）');
       audit.log(actor, 'image.upload', fname, kind, ip);
@@ -189,26 +172,17 @@ function create(ctx) {
       if (!hit) return { status: 404, body: { ok: false, error: '没有这张图' } };
 
       const rest = list.filter((it) => it.k !== kind);
-      if (ds.mode === 'json') {
-        if (rest.length) g[id] = rest;
-        else delete g[id];
-      }
-
       try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', hit.f)); } catch (e) { /* 文件可能已不在 */ }
       if (kind === 'main') {
         try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', 'th', hit.f)); } catch (e) { /* 可能没有 */ }
         try { fs.unlinkSync(path.join(PUBLIC_DIR, 'img', 'th', 's', hit.f)); } catch (e) { /* 可能没有 */ }
       }
 
-      if (ds.mode === 'json') {
-        legacy.touchGallery();
-      } else {
-        await ctx.withTx(async (conn) => {
-          await repos.images.replaceForCoin(conn, Number(id),
-            rest.map((it) => ({ f: it.f, k: it.k })), false);
-          await repos.images.bumpVersion(conn);   // db 模式破 7 天强缓存的关键一步
-        });
-      }
+      await ctx.withTx(async (conn) => {
+        await repos.images.replaceForCoin(conn, Number(id),
+          rest.map((it) => ({ f: it.f, k: it.k })), false);
+        await repos.images.bumpVersion(conn);   // 破 7 天强缓存的关键一步
+      });
 
       audit.log(actor, 'image.delete', id + ':' + kind, hit.f, ip);
       return { status: 200, body: { ok: true, images: rest } };

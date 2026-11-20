@@ -65,16 +65,6 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{coin.category === 'precious_metal'}}">
-    <view class="pm-head">贵金属 · 全套 {{coin.pm.setPieces}} 枚</view>
-    <view class="pm-fact">整套面额合计 {{coin.face}} 元 · 总克重 {{coin.pm.setWeightG}} 克</view>
-    <view class="pm-fact">成色 {{coin.pm.purity}} · 发行方式 {{coin.pm.issueMethod}}</view>
-    <view class="pm-fact" wx:if="{{coin.pm.mintageNote}}">{{coin.pm.mintageNote}}</view>
-    <view class="pm-piece" wx:for="{{coin.pm.pieces}}" wx:key="seq">
-      {{item.seq}}. {{item.name}} · {{item.weightG}}克 · {{item.face}}元 · {{item.maxMintage}}枚
-    </view>
-  </view>
-
   <view class="card">
     <view class="facts">
       <view class="fact {{item.wide ? 'fact-wide' : ''}}" wx:for="{{facts}}" wx:key="k">

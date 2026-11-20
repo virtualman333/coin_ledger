@@ -11,8 +11,9 @@
  * commit 把 mutator 串进一条队列，逐个在事务里落库，落库成功才替换内存镜像，
  * 因此并发请求不会互相覆盖，落库失败时内存也不会领先于磁盘/数据库。
  */
-const MODE = String(process.env.STORAGE || '').toLowerCase() === 'mysql' ? 'mysql' : 'json';
-const backend = MODE === 'mysql' ? require('./store-mysql') : require('./store-json');
+// 只保留数据库模式：STORAGE 开关已移除，避免环境变量误配悄悄回退到 JSON 文件
+const MODE = 'mysql';
+const backend = require('./store-mysql');
 
 let doc = null;
 let chain = Promise.resolve();   // commit 串行队列

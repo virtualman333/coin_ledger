@@ -23,7 +23,17 @@ const common = require('../schemas/common');
 const pmSchema = require('../schemas/pm');
 const coinSchema = require('../schemas/coin');
 const source = require('../repositories/json-source');
-const coinRepoJson = require('../repositories/coin.repo.json');
+// 只保留数据库模式：rowFromLegacy 原本来自已删除的 coin.repo.json.js，
+// 这里内联一份等价实现（该函数仅由旧种子读取路径使用，db 模式不会走到）。
+const coinRepoJson = {
+  rowFromLegacy: function (c) {
+    return Object.assign({}, c, {
+      category: 'precious_metal', kind: 'coin',
+      id: Number(c.i) + 1, no: Number(c.i) + 1,
+      status: c.status || 'published',
+    });
+  }
+};
 
 /**
  * 读种子文档（按 mtime 缓存，写完自动失效）。

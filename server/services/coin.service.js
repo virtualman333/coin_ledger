@@ -101,11 +101,9 @@ function create(ctx) {
         catalog.legacyCoins(),
         catalog.legacySeriesMap(await repos.series.listAll(), await repos.coins.listPublished()),
         catalog.legacySetsMap(await repos.sets.listAll()),
-        ds.mode === 'json' ? Promise.resolve(null) : repos.images.listAll()
+        repos.images.listAll()
       ]);
-      const gallery = ds.mode === 'json'
-        ? legacy.state().gallery
-        : catalog.projectLegacyGallery(galleryRows);
+      const gallery = catalog.projectLegacyGallery(galleryRows);
       return { ok: true, coins: coins, series: series, sets: sets, gallery: gallery };
     },
 
@@ -126,27 +124,14 @@ function create(ctx) {
       const done = [];
       const failed = [];
 
-      if (ds.mode === 'json') {
-        const coins = currentSeed().coins;
-        items.forEach((it) => {
-          const id = Number(it && it.id);
-          const coin = coins.filter((c) => Number(c.i) + 1 === id)[0];
-          if (!coin) { failed.push({ id: id, error: '品种不存在' }); return; }
-          const applied = applyBatchPatch(coin, (it && it.patch) || {});
-          if (!Object.keys(applied).length) { failed.push({ id: id, error: '没有可保存的字段' }); return; }
-          done.push({ id: id, applied: applied });
-        });
-        if (done.length) saveSeedFile();
-      } else {
-        for (const it of items) {
-          const id = Number(it && it.id);
-          const row = await repos.coins.findByNo(id);
-          if (!row) { failed.push({ id: id, error: '品种不存在' }); continue; }
-          const coerced = coinSchema.coercePatch((it && it.patch) || {}, ['year', 'face', 'est', 'mintage', 'pieces', 'material', 'dia', 'series', 'setCode', 'kind']);
-          if (!Object.keys(coerced.applied).length) { failed.push({ id: id, error: '没有可保存的字段' }); continue; }
-          await repos.coins.update(id, coerced.values);
-          done.push({ id: id, applied: coerced.applied });
-        }
+      for (const it of items) {
+        const id = Number(it && it.id);
+        const row = await repos.coins.findByNo(id);
+        if (!row) { failed.push({ id: id, error: '品种不存在' }); continue; }
+        const coerced = coinSchema.coercePatch((it && it.patch) || {}, ['year', 'face', 'est', 'mintage', 'pieces', 'material', 'dia', 'series', 'setCode', 'kind']);
+        if (!Object.keys(coerced.applied).length) { failed.push({ id: id, error: '没有可保存的字段' }); continue; }
+        await repos.coins.update(id, coerced.values);
+        done.push({ id: id, applied: coerced.applied });
       }
 
       if (done.length) {
@@ -169,10 +154,7 @@ function create(ctx) {
       const id = Number(b.id);
       const patch = common.isPlainObject(b.patch) ? b.patch : {};
 
-      const row = ds.mode === 'json' ? null : await repos.coins.findByNo(id);
-      const coin = ds.mode === 'json'
-        ? currentSeed().coins.filter((c) => Number(c.i) + 1 === id)[0]
-        : row;
+      const coin = await repos.coins.findByNo(id);
       if (!coin) return { status: 404, body: { ok: false, error: '品种不存在' } };
 
       const applied = {};
@@ -204,17 +186,10 @@ function create(ctx) {
 
       /* seriesKeys 整份替换 */
       if (Array.isArray(patch.seriesKeys)) {
-        let validKeys;
-        if (ds.mode === 'json') {
-          validKeys = patch.seriesKeys
-            .map((k) => String(k).trim())
-            .filter((k) => seriesSvc.load().items.some((s) => s.key === k));
-        } else {
-          const items = await repos.series.listAll();
-          validKeys = patch.seriesKeys
-            .map((k) => String(k).trim())
-            .filter((k) => items.some((s) => s.seriesKey === k));
-        }
+        const items = await repos.series.listAll();
+        const validKeys = patch.seriesKeys
+          .map((k) => String(k).trim())
+          .filter((k) => items.some((s) => s.seriesKey === k));
         target.seriesKeys = Array.from(new Set(validKeys));
         if (!target.seriesKeys.length && target.series) target.seriesKeys = [target.series];
         applied.seriesKeys = target.seriesKeys;
@@ -224,18 +199,14 @@ function create(ctx) {
         return { status: 400, body: { ok: false, error: '没有可保存的字段' } };
       }
 
-      if (ds.mode === 'json') {
-        saveSeedFile();
-      } else {
-        // 列名映射只在 schemas/coin.js 里做；set → set_code，dia 双列规则除外（这里只改文本位）
-        const values = {};
-        Object.keys(applied).forEach((k) => {
-          if (k === 'seriesKeys') values.series_keys = applied[k];
-          else if (k === 'set') values.set_code = applied[k];
-          else if (coinSchema.FIELDS[k]) values[coinSchema.FIELDS[k].col] = applied[k];
-        });
-        await repos.coins.update(id, values);
-      }
+      // 列名映射只在 schemas/coin.js 里做；set → set_code，dia 双列规则除外
+      const values = {};
+      Object.keys(applied).forEach((k) => {
+        if (k === 'seriesKeys') values.series_keys = applied[k];
+        else if (k === 'set') values.set_code = applied[k];
+        else if (coinSchema.FIELDS[k]) values[coinSchema.FIELDS[k].col] = applied[k];
+      });
+      await repos.coins.update(id, values);
 
       console.log('[admin] 修改品种 ' + id + ' ' + target.name + '：' + JSON.stringify(applied));
       audit.log(actor, 'coin.update', String(id), JSON.stringify(applied), ip);

@@ -16,15 +16,6 @@ const fp = require('fastify-plugin');
 const config = require('../config');
 
 module.exports = fp(async function dbPlugin(app) {
-  if (!config.isDbDataSource) {
-    app.decorate('db', null);
-    app.decorate('withTx', async function noTx() {
-      throw new Error('DATA_SOURCE=json 模式下没有可写事务（目录域为只读实现）');
-    });
-    console.log('[db] DATA_SOURCE=json：目录域走 JSON 只读实现，不建立 MySQL 连接池');
-    return;
-  }
-
   const mysql = require('mysql2/promise');
   const pool = mysql.createPool(config.mysqlOptions());
 
@@ -41,7 +32,7 @@ module.exports = fp(async function dbPlugin(app) {
     try { await pool.end(); } catch (closeErr) { /* 连接本就不可用 */ }
     const err = new Error(
       '目录库连接失败（' + config.DB.host + ':' + config.DB.port + '/' + config.DB.database + '）：' + e.message
-      + '。如需回滚到只读模式，把环境变量设为 DATA_SOURCE=json 后重启。'
+      + '。请检查数据库配置与网络。'
     );
     err.status = 503;
     throw err;

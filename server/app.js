@@ -59,10 +59,10 @@ async function buildApp(opts = {}) {
   await app.register(require('./plugins/errors'));
 
   // T03：目录域数据源 + catalog.service 一次装配，所有新路由共享同一实例。
-  // db 模式用 plugins/db 建好的池；json 模式不建池（回滚位必须能独立启动）。
+  // 只用数据库模式：plugins/db 建好的池。
   const { createDataSource } = require('./services/data-source');
   const catalogService = require('./services/catalog.service');
-  const dataSource = createDataSource({ mode: config.DATA_SOURCE, pool: app.db });
+  const dataSource = createDataSource({ mode: 'db', pool: app.db });
   app.decorate('dataSource', dataSource);
   app.decorate('catalog', catalogService.create(dataSource));
 
@@ -115,6 +115,8 @@ async function start() {
   await legacy.ensureSuperadmin();
 
   const app = await buildApp();
+  const pmNames = await legacy.loadPmNames(app.db);
+  console.log('[boot] 贵金属可收藏白名单 ' + pmNames + ' 项');
 
   let closing = false;
   async function shutdown(sig) {
@@ -135,7 +137,7 @@ async function start() {
 
   await app.listen({ port: config.PORT, host: config.HOST });
   console.log(`[ready] 藏币录后端 v${config.VERSION} 监听 http://${config.HOST}:${config.PORT}`);
-  console.log(`[ready] DATA_SOURCE=${config.DATA_SOURCE}（json=只读回滚态 / db=目录以库为准）`);
+  console.log('[ready] DATA_SOURCE=db（仅数据库模式）');
   reminders.start();          // 预约提醒定时器
   return app;
 }
