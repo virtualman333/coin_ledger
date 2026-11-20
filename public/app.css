@@ -995,6 +995,28 @@ html[data-theme="light"] .btn.primary:hover{
 .sc-done{color:#4fbf8b;font-weight:600}
 html[data-theme="light"] .sc-done{color:#1a7a52}
 
+/* 全部系列：按纪念币 / 纪念钞 / 贵金属三大品类分组 */
+.sc-group{grid-column:1/-1;margin-bottom:26px}
+.sc-group:last-child{margin-bottom:0}
+.sc-group-h{
+  display:flex;align-items:center;gap:10px;margin:2px 2px 12px;
+  padding-bottom:8px;border-bottom:1px solid var(--line2)
+}
+.sc-group-h b{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:15px;font-weight:700;color:var(--text)
+}
+.sc-group-h b::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--gold)}
+.g-note .sc-group-h b::before{background:#6aa9ff}
+.g-pm .sc-group-h b::before{background:var(--muted)}
+.sc-group-h span{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.sc-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
+.sc-group-empty{
+  padding:18px;text-align:center;font-size:12.5px;color:var(--dim);
+  border:1px dashed var(--line2);border-radius:12px
+}
+.pm-card .sc-desc{margin-top:8px;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+
 /* 清单页的系列筛选标记 */
 .setfilter{
   display:inline-flex;align-items:center;gap:7px;
@@ -1006,7 +1028,7 @@ html[data-theme="light"] .sc-done{color:#1a7a52}
 .setfilter:hover .x{opacity:1}
 
 @media (max-width:640px){
-  .series-grid{grid-template-columns:1fr}
+  .series-grid,.sc-group-grid{grid-template-columns:1fr}
   .series-summary{gap:14px}
   .series-summary .ss-next{margin-left:0;width:100%;text-align:left}
 }

@@ -858,6 +858,8 @@ function buildSeriesList(){
         market += h ? (Number(h.market) || 0) : 0;
       }
     });
+    // 大品类：成员以纪念钞为主归入 note，否则 coin（普通纪念币）
+    var noteN = st.coins.filter(function(c){ return c.kind === 'note'; }).length;
     list.push({
       id: id, name: meta.name, unit: meta.unit,
       total: meta.total, members: st.members,
@@ -865,27 +867,32 @@ function buildSeriesList(){
       ownCount: owned.length, ownCost: face, ownMarket: market,
       missing: st.coins.filter(function(c){ return !isOwned(c.name); })
                        .map(function(c){ return shortCoinName(c.name); }),
-      isSingle: false
+      isSingle: false,
+      cat: noteN > st.coins.length / 2 ? 'note' : 'coin'
     });
   });
 
-  // 独立发行（无量产系列归属的 26 个品种）
+  // 独立发行（无量产系列归属）：按纪念币 / 纪念钞拆成两张卡
   var singles = DB.filter(function(d){ return !d.set || d.set === 'single'; });
-  if (singles.length) {
-    var so = singles.filter(function(d){ return isOwned(d.name); });
+  function pushSingles(cat, label){
+    var group = singles.filter(function(d){ return (d.kind === 'note') === (cat === 'note'); });
+    if (!group.length) return;
+    var so = group.filter(function(d){ return isOwned(d.name); });
     list.push({
-      id: 'single', name: '独立发行（周年 · 人物 · 航天等）', unit: '枚',
-      total: singles.length, members: singles.length,
-      setFace: singles.reduce(function(a, c){ return a + (Number(c.face) || 0); }, 0),
-      setEst: singles.reduce(function(a, c){ return a + (Number(c.est) || 0); }, 0),
+      id: 'single-' + cat, name: label, unit: cat === 'note' ? '张' : '枚',
+      total: group.length, members: group.length,
+      setFace: group.reduce(function(a, c){ return a + (Number(c.face) || 0); }, 0),
+      setEst: group.reduce(function(a, c){ return a + (Number(c.est) || 0); }, 0),
       ownCount: so.length,
       ownCost: so.reduce(function(a, c){ var h = holdingOf(c.name); return a + (h ? Number(h.cost) || 0 : 0); }, 0),
       ownMarket: so.reduce(function(a, c){ var h = holdingOf(c.name); return a + (h ? Number(h.market) || 0 : 0); }, 0),
-      missing: singles.filter(function(c){ return !isOwned(c.name); })
-                      .map(function(c){ return shortCoinName(c.name); }),
-      isSingle: true
+      missing: group.filter(function(c){ return !isOwned(c.name); })
+                    .map(function(c){ return shortCoinName(c.name); }),
+      isSingle: true, cat: cat
     });
   }
+  pushSingles('coin', '独立发行 · 纪念币（周年 · 人物 · 航天等）');
+  pushSingles('note', '独立发行 · 纪念钞');
 
   list.sort(function(a, b){
     if (a.isSingle !== b.isSingle) return a.isSingle ? 1 : -1;      // 独立发行放最后
@@ -947,8 +954,6 @@ function renderSeries(){
   var box = document.getElementById('seriesBox');
   if (!box) return;
   var list = buildSeriesList();
-  // 未登录访客没有进度可言：不显示「0 / N」和 0% 进度条，改成正面的目录信息。
-  // 21 张卡都写「还没有这个系列的藏品」会让首访者以为站点是自己的空账本。
   var anon = !isLoggedIn();
   var hint = document.getElementById('seriesHint');
   if (hint) {
@@ -959,10 +964,10 @@ function renderSeries(){
       (anon ? ' · 登录后显示你的集齐进度' : '');
   }
 
-  box.innerHTML = list.map(function(x){
+  function cardHtml(x){
     var rate = x.total ? Math.min(100, x.ownCount / x.total * 100) : 0;
     var done = x.ownCount >= x.total;
-    var unit = x.isSingle ? ' 枚' : ' 个品种';
+    var unit = x.isSingle ? (x.cat === 'note' ? ' 张' : ' 枚') : ' 个品种';
     var missNames = shortNames(x.missing.slice(0, 4), x.name);
     var miss = anon
       ? missNames.join(' · ') + (x.missing.length > 4 ? ' 等' : '')
@@ -972,7 +977,8 @@ function renderSeries(){
           (x.missing.length ? '：' + missNames.join(' · ') + (x.missing.length > 4 ? ' 等' : '') : ''));
 
     return '<button class="scard' + (done ? ' done' : '') + (x.isSingle ? ' single' : '') + '"' +
-        ' data-set="' + esc(x.id) + '" data-name="' + esc(x.name) + '">' +
+        ' data-set="' + esc(x.id) + '" data-name="' + esc(x.name) + '"' +
+        ' data-cat="' + (x.cat === 'note' ? 'note' : 'coin') + '">' +
       '<div class="sc-top">' +
         '<span class="sc-name">' + esc(x.name) + '</span>' +
         '<span class="sc-prog">' + (anon ? x.total + unit : x.ownCount + ' / ' + x.total + (x.isSingle ? '' : ' 品种')) + '</span>' +
@@ -988,23 +994,61 @@ function renderSeries(){
           : '<div class="sc-own dim">还没有这个系列的藏品</div>')) +
       (miss ? '<div class="sc-miss">' + miss + '</div>' : '') +
     '</button>';
-  }).join('')
-    // 贵金属卡排最后（等价 sort=200），且只出已上架的套：draft 首屏 0 个
-    + PM_DB.map(function(d){
-        return '<button class="scard pm-card" data-pm-coin="' + d.no + '">' +
-          '<div class="sc-top"><span class="sc-name">贵金属</span>' +
-          '<span class="sc-prog">' + (d.pm ? d.pm.setPieces : d.pieces) + ' 枚</span></div>' +
-          '<div class="sc-desc">' + esc(d.name) + '</div>' +
-          '<div class="sc-own dim">' + esc(d.material || '') + '</div></button>';
-      }).join('');
+  }
+
+  function section(title, cls, cards, count){
+    if (cards === null || cards === undefined) return '';
+    // cards 是拼好的 HTML 字符串，不能用 cards.length 当卡片数（那是字符长度）
+    return '<div class="sc-group ' + cls + '"><div class="sc-group-h"><b>' + title + '</b>' +
+      '<span>' + (Number(count) || 0) + ' 项</span></div><div class="sc-group-grid">' + cards + '</div></div>';
+  }
+
+  var coinList = list.filter(function(x){ return x.cat !== 'note'; });
+  var noteList = list.filter(function(x){ return x.cat === 'note'; });
+  var coinCards = coinList.map(cardHtml).join('');
+  var noteCards = noteList.map(cardHtml).join('');
+
+  // 贵金属系列：来自 /api/series?category=pm（项目=一套），未加载时先提示并在回调里补渲染
+  var pmCards = PM_SERIES.map(function(s){
+    return '<button class="scard pm-card" data-pm-project="' + esc(s.code) + '">' +
+      '<div class="sc-top"><span class="sc-name">' + esc(s.name) + '</span>' +
+      '<span class="sc-prog">' + Number(s.count || 0) + ' 枚</span></div>' +
+      '<div class="sc-desc">' + esc(s.code) + '</div>' +
+      '<div class="sc-own dim">点开看该套全部规格</div></button>';
+  }).join('');
+
+  box.innerHTML =
+    section('纪念币', 'g-coin', coinCards, coinList.length) +
+    section('纪念钞', 'g-note', noteCards, noteList.length) +
+    section('贵金属纪念币', 'g-pm', PM_SERIES_LOADED
+      ? (pmCards || '<div class="sc-group-empty">暂无贵金属项目</div>')
+      : '<div class="sc-group-empty">正在加载贵金属项目…</div>', PM_SERIES.length);
+
+  if (!PM_SERIES_LOADED) {
+    loadPmSeries(function(){ if (document.getElementById('seriesBox') === box) renderSeries(); });
+  }
 
   box.onclick = function(e){
     var card = e.target.closest('.scard');
     if (!card) return;
-    var pmNo = card.getAttribute('data-pm-coin');
-    if (pmNo) { location.href = '/coin/' + pmNo; return; }   // 贵金属卡直达详情
+    var project = card.getAttribute('data-pm-project');
+    if (project) {
+      PM_FULL.project = project; PM_FULL.q = ''; PM_FULL.loaded = false; PM_FULL.page = 0;
+      VIEW_CATEGORY = 'pm';
+      goTab('all');
+      resetPmFull('', project);
+      return;
+    }
     // 从系列页进来时清掉其它筛选条件，避免叠加成空结果
     filterSet = card.getAttribute('data-set');
+    // 切到卡片所属品类视角，否则从贵金属视角点普通系列会筛出空结果
+    VIEW_CATEGORY = card.getAttribute('data-cat') === 'note' ? 'note' : 'coin';
+    var catTabs = document.getElementById('catTabs');
+    if (catTabs) {
+      Array.prototype.forEach.call(catTabs.querySelectorAll('[data-cat]'), function(t){
+        t.className = t.getAttribute('data-cat') === VIEW_CATEGORY ? 'on' : '';
+      });
+    }
     document.getElementById('q').value = '';
     document.getElementById('fSeries').value = '';
     document.getElementById('fYear').value = '';
@@ -1494,11 +1538,17 @@ function renderCoin(i){
 
 /* 清单页的「按系列筛选」状态 */
 var filterSet = '';
+/* 「全部系列」页把独立发行拆成 single-coin / single-note 两张卡，
+ * 这里统一识别，避免筛选把新 id 当普通 set 而筛出空结果。 */
+function filterSetIsSingle(){ return filterSet === 'single' || filterSet.indexOf('single-') === 0; }
+function filterSetSingleKind(){ return filterSet === 'single-note' ? 'note' : (filterSet === 'single-coin' ? 'coin' : ''); }
 function syncSetFilter(){
   var el = document.getElementById('setFilter');
   if (!el) return;
   if (!filterSet) { el.hidden = true; el.innerHTML = ''; return; }
-  var name = filterSet === 'single' ? '独立发行' : ((SET_META[filterSet] && SET_META[filterSet].name) || filterSet);
+  var name = filterSetIsSingle()
+    ? (filterSet === 'single' ? '独立发行' : (filterSet === 'single-note' ? '独立发行 · 纪念钞' : '独立发行 · 纪念币'))
+    : ((SET_META[filterSet] && SET_META[filterSet].name) || filterSet);
   el.hidden = false;
   el.innerHTML = '<span>系列：' + esc(name) + '</span><b class="x" title="清除筛选">×</b>';
   el.onclick = function(){
@@ -1715,7 +1765,11 @@ function baseRows(){
     if(fy && String(d.year) !== fy) return false;
     if(onlyMine && !isOwned(d.name)) return false;
     if(filterSet){
-      if(filterSet === 'single'){ if(d.set && d.set !== 'single') return false; }
+      if(filterSetIsSingle()){
+        if(d.set && d.set !== 'single') return false;
+        var singleKind = filterSetSingleKind();
+        if(singleKind && (d.kind || 'coin') !== singleKind) return false;
+      }
       else if(d.set !== filterSet) return false;
     }
     return true;
@@ -2160,7 +2214,11 @@ function renderTable(){
     if(fy && String(d.year) !== fy) return false;
     if(onlyMine && !isOwned(d.name)) return false;
     if(filterSet){
-      if(filterSet === 'single'){ if(d.set && d.set !== 'single') return false; }
+      if(filterSetIsSingle()){
+        if(d.set && d.set !== 'single') return false;
+        var singleKind = filterSetSingleKind();
+        if(singleKind && (d.kind || 'coin') !== singleKind) return false;
+      }
       else if(d.set !== filterSet) return false;
     }
     // 高级筛选：同维度内取并集，不同维度之间取交集
