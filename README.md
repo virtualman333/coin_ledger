@@ -1066,3 +1066,34 @@ GET https://h5api.m.goofish.com/h5/mtop.taobao.idlemtopsearch.pc.search/1.0/
 - 入口按 `state.isAdmin` 判定，非管理员看不到；直接进页面也会被拦下并返回
 - 鉴权复用同一套 token（`Authorization: Bearer`），与网页共用数据
 - `utils/api.js` 补了 `patch()` / `del()`
+
+
+## Web 端时间与编码排障（2026-11-20）
+
+线上「时间显示不对 / 不是 UTF-8 / 乱码」排查与修复，按数据源分两层处理，后续遇到同类问题照此顺序查：
+
+### 1. 时间显示差 8 小时 / 带 T 原始格式（管理端 console）
+
+- 现象：用户管理、意见反馈、审计日志里的时间显示成 `2026-11-20T02:31` 或比北京时间慢 8 小时
+- 根因：后端存 UTC ISO（`new Date().toISOString()`），前端用 `String(v).replace('T',' ').slice(0,16)` 直接截串，拿到的是 UTC
+- 修复：`admin/src/pages/{Users,Feedback,Audit,Visitors}.vue` 统一改为 `new Date(v)` + `getFullYear/getHours` 按浏览器本地时区显示
+- 线上是 v3.0.x 独立分支（含贵金属板块，本地源码没有），当时用服务器端原地替换打包 JS（`console/assets/*.js`）里的同名函数应急修复，备份在 `/root/coin-console-timefix-20261120/`
+- 验证：`TZ=Asia/Shanghai` 下 `2026-11-20T02:31:47.836Z` 应显示 `2026-11-20 10:31`
+
+### 2. 内容乱码方块（U+FFFD）
+
+- 现象：品种详情「正面图案」出现 `国名???年号`
+- 根因链（关键：**线上 v3.0.x 目录数据来自 MySQL，不是 JSON 文件**）：
+  - `config.js` 中 `DATA_SOURCE=db`、`STORAGE=mysql`，`/api/bootstrap` 由 `catalog.service.js` 查 `cl_coins` 表
+  - 只改 `public/data/coins.json` + 重启服务**无效**，必须同步改库
+- 修复：
+  1. 本地 `public/data/coins.json`（json 回退模式要用）
+  2. MySQL：`UPDATE cl_coins SET obverse=REPLACE(obverse, CONCAT('国名',REPEAT(UNHEX('EFBFBD'),3)), '国名及') WHERE no=32`
+  3. 全库排查命令：`SELECT ... WHERE HEX(col) LIKE '%EFBFBD%'`
+- 缓存坑：`/data/coins.json` 原 `max-age=300` 会让修好的文件延迟 5 分钟生效，已改为 `no-cache`
+
+### 3. 响应头缺 charset（隐患）
+
+- 站点根路径由 nginx 直出，原先 `.js/.css/.json` 的 Content-Type 不带 `charset=utf-8`
+- 修复：`/www/server/panel/vhost/nginx/extension/coin.virtualman.top/charset.conf` 加 `charset utf-8;` + `charset_types`（列出 json/js/css/xml）
+- 验证：`curl -sI https://coin.virtualman.top/app.js` 应返回 `application/javascript; charset=utf-8`
