@@ -159,6 +159,15 @@ test('list 页读取对象 pending：贵金属切品类并带项目 code', () =>
   assert.equal(p.data.code, 'pm1');
 });
 
+test('list 页读取只有品类的 pending：只切品类不定位系列（首页行情卡入口）', () => {
+  setupWx();
+  const p = loadListPage();
+  mem['cl_pending_series'] = { code: '', category: 'pm' };
+  p.onShow();
+  assert.equal(p.data.category, 'pm');
+  assert.equal(p.data.code, '');
+});
+
 test('list 页兼容老的字符串 pending', () => {
   setupWx();
   const p = loadListPage();

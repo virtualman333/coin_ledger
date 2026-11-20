@@ -53,11 +53,12 @@ Page({
     const pending = wx.getStorageSync('cl_pending_series');
     if (pending) {
       wx.removeStorageSync('cl_pending_series');
-      // 新格式：{code, category} —— 从「按系列」页分组跳转，需同时切品类
-      if (pending && typeof pending === 'object' && pending.code) {
+      // 新格式：{code, category} —— 从「按系列」页分组跳转，或首页行情卡进贵金属目录
+      // code 可为空（此时只切品类，定位到全部）
+      if (pending && typeof pending === 'object' && (pending.code || pending.category)) {
         const category = pending.category === 'pm' ? 'pm'
           : (pending.category === 'note' ? 'note' : 'coin');
-        this.applyCategory(category, pending.code);
+        this.applyCategory(category, pending.code || '');
         return;
       }
       // 老格式：纯字符串 code，保持原行为

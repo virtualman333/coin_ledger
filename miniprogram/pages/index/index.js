@@ -1,6 +1,7 @@
 const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const api = require('../../utils/api');
 
 Page({
   data: {
@@ -23,16 +24,23 @@ Page({
     syncTip: '',
     progress: { owned: 0, total: 0, pct: 0, label: '' },
     heroImg: '',
+    // 内容板块：实时行情 + 广场动态，失败时整块隐藏
+    metal: null,
+    feed: [],
   },
 
   onShow() {
     this.render();
+    this.loadMetal();
+    this.loadFeed();
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
   },
 
   onPullDownRefresh() {
+    this.loadMetal();
+    this.loadFeed();
     store.refresh().then(() => {
       this.render();
       wx.stopPullDownRefresh();
@@ -102,6 +110,56 @@ Page({
     });
   },
 
+  /** 首页内容板块：实时金银价（公开接口，失败即隐藏整块） */
+  loadMetal() {
+    return api.get('/api/metal-price').then((r) => {
+      if (!r || !r.ok || !r.quotes) { this.setData({ metal: null }); return; }
+      const au = r.quotes.XAU;
+      const ag = r.quotes.XAG;
+      if (!au || !ag || au.cnyPerGram == null || ag.cnyPerGram == null) {
+        this.setData({ metal: null });
+        return;
+      }
+      this.setData({
+        metal: {
+          gold: fmtPrice(au.cnyPerGram),
+          silver: fmtPrice(ag.cnyPerGram),
+          timeText: hhmm(r.fetchedAt) + ' 更新',
+          stale: !!r.stale,
+        },
+      });
+    }).catch(() => this.setData({ metal: null }));
+  },
+
+  /** 首页内容板块：广场最新晒单（前 3 条，失败即隐藏整块） */
+  loadFeed() {
+    return api.get('/api/shares?sort=new&limit=3').then((r) => {
+      if (!r || !r.ok || !Array.isArray(r.items)) { this.setData({ feed: [] }); return; }
+      const feed = r.items.slice(0, 3).map((s) => ({
+        id: s.id,
+        author: s.author || '藏友',
+        holdingName: s.holdingName || '',
+        serialText: s.serials && s.serials.length ? s.serials[0] : '',
+        tag: (s.tags && s.tags[0] && (s.tags[0].name || s.tags[0])) || '',
+        pic: (s.images && s.images[0])
+          ? (s.images[0].indexOf('http') === 0 ? s.images[0] : api.BASE + s.images[0])
+          : '',
+        timeText: agoText(s.createdAt),
+      }));
+      this.setData({ feed });
+    }).catch(() => this.setData({ feed: [] }));
+  },
+
+  /** 行情卡：进贵金属目录 */
+  goMetal() {
+    wx.setStorageSync('cl_pending_series', { code: '', category: 'pm' });
+    wx.switchTab({ url: '/pages/list/list' });
+  },
+
+  goPlaza() {
+    wx.navigateTo({ url: '/pages/plaza/plaza' });
+  },
+
   goHoldings() {
     wx.navigateTo({ url: '/pages/holdings/holdings' });
   },
@@ -150,3 +208,30 @@ Page({
     wx.switchTab({ url: '/pages/list/list' });
   },
 });
+
+/** 金额保留两位，非数字回退 -- */
+function fmtPrice(n) {
+  const v = Number(n);
+  return isFinite(v) ? v.toFixed(2) : '--';
+}
+
+/** ISO 时间 → 本地 HH:MM（用户此前要求全站用本地时区） */
+function hhmm(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+
+/** 相对时间：刚刚 / N 分钟前 / N 小时前 / N 天前 / M月D日 */
+function agoText(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const diff = Date.now() - d.getTime();
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}

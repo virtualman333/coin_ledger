@@ -76,6 +76,55 @@
     </view>
   </view>
 
+  <!-- 今日金银价（公开行情，失败自动隐藏） -->
+  <block wx:if="{{metal}}">
+    <view class="sec">
+      <text class="sec-title">今日金银价</text>
+      <text class="sec-more" hover-class="tap-hover" bindtap="goMetal">贵金属目录 ›</text>
+    </view>
+    <view class="metal-card" hover-class="tap-hover" bindtap="goMetal">
+      <view class="metal-grid">
+        <view class="metal-item">
+          <text class="metal-k">黄金</text>
+          <text class="metal-v">¥{{metal.gold}}</text>
+          <text class="metal-u">元/克</text>
+        </view>
+        <view class="metal-item">
+          <text class="metal-k">白银</text>
+          <text class="metal-v">¥{{metal.silver}}</text>
+          <text class="metal-u">元/克</text>
+        </view>
+      </view>
+      <view class="metal-foot">
+        <text class="metal-time">{{metal.stale ? '延时行情 · ' : ''}}{{metal.timeText}}</text>
+        <text class="metal-tip">仅材料价值，随行情浮动</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 藏友晒单（广场最新，失败自动隐藏） -->
+  <block wx:if="{{feed.length}}">
+    <view class="sec">
+      <text class="sec-title">藏友晒单</text>
+      <text class="sec-more" hover-class="tap-hover" bindtap="goPlaza">去广场 ›</text>
+    </view>
+    <view class="feed-list">
+      <view class="feed-card" wx:for="{{feed}}" wx:key="id" hover-class="tap-hover" bindtap="goPlaza">
+        <image class="feed-pic" wx:if="{{item.pic}}" src="{{item.pic}}" mode="aspectFill" lazy-load></image>
+        <view class="feed-ph" wx:else><text>藏</text></view>
+        <view class="feed-body">
+          <view class="feed-title">
+            <text class="feed-name">{{item.holdingName}}</text>
+            <text class="feed-tag" wx:if="{{item.tag}}">{{item.tag}}</text>
+          </view>
+          <text class="feed-serial" wx:if="{{item.serialText}}">号码 {{item.serialText}}</text>
+          <text class="feed-meta">{{item.author}} · {{item.timeText}}</text>
+        </view>
+        <text class="feed-arrow">›</text>
+      </view>
+    </view>
+  </block>
+
   <!-- 系列 -->
   <view class="sec">
     <text class="sec-title">按系列</text>
