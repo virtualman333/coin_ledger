@@ -1,146 +1,116 @@
 <template>
   <section>
-    <PageHeader title="贵金属" desc="一「套」一行；套内规格逐枚维护。套级发行量恒为 NULL，逐枚以「枚」为单位，本站不提供参考估值。">
+    <PageHeader title="贵金属" desc="收录发行的贵金属纪念币，逐枚一行。数据来源金币云集全量目录（只读展示，不在本站编辑）。">
       <template #actions>
-        <el-button :loading="loading" @click="reload">刷新</el-button>
-        <el-button type="primary" @click="openNew">＋ 新建一套</el-button>
+        <el-button :loading="loading" @click="reloadAll">刷新</el-button>
       </template>
     </PageHeader>
 
     <div class="cl-stat-grid">
-      <div class="cl-stat"><b>{{ rows.length }}</b><span>套数</span></div>
-      <div class="cl-stat"><b>{{ pieceCount }}</b><span>套内规格</span></div>
-      <div class="cl-stat"><b>{{ draftCount }}</b><span>未上架</span></div>
-      <div class="cl-stat"><b>{{ publishedCount }}</b><span>已上架</span></div>
+      <div class="cl-stat"><b>{{ stats.count }}</b><span>品种（枚）</span></div>
+      <div class="cl-stat"><b>{{ stats.withThumb }}</b><span>有缩略图</span></div>
+      <div class="cl-stat"><b>{{ stats.withMintage }}</b><span>有发行量</span></div>
+      <div class="cl-stat"><b>{{ stats.holdings }}</b><span>我的藏品</span></div>
     </div>
 
     <AsyncState :loading="loading && !rows.length" :error="error" @retry="reload">
       <div class="cl-toolbar">
-        <el-select v-model="filter" style="width:160px" @change="reload">
-          <el-option label="全部状态" value="" />
-          <el-option label="未上架 (draft)" value="draft" />
-          <el-option label="已上架 (published)" value="published" />
-        </el-select>
-        <el-input v-model="kw" placeholder="搜索套名称" clearable style="width:240px" />
+        <el-input
+          v-model="kw" clearable placeholder="搜索名称 / 编号"
+          style="width: 260px" @input="search"
+        />
         <div class="cl-spacer" />
-        <span class="cl-mono">贵金属占比 {{ ratioText }}（红线 ≤10%）</span>
+        <span class="cl-mono">共 {{ total }} 枚</span>
       </div>
 
       <div class="cl-card">
-        <el-table :data="filtered" v-loading="loading" stripe size="small" row-key="no">
-          <el-table-column prop="no" label="编号" width="70" class-name="cl-mono" />
+        <el-table :data="rows" row-key="code" v-loading="loading" stripe size="small">
+          <el-table-column prop="code" label="编号" width="110" class-name="cl-mono" />
+          <el-table-column label="缩略图" width="72">
+            <template #default="{ row }">
+              <img
+                v-if="imgUrl(row.thumb)" class="pm-thumb" :src="imgUrl(row.thumb)"
+                alt="" loading="lazy" referrerpolicy="no-referrer"
+              />
+              <span v-else class="fb-muted">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="名称" min-width="240" show-overflow-tooltip />
+          <el-table-column prop="projectName" label="项目" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.projectName || '—' }}</template>
+          </el-table-column>
           <el-table-column prop="year" label="年份" width="80" />
-          <el-table-column prop="name" label="套名称" min-width="220" show-overflow-tooltip />
-          <el-table-column label="枚数" width="70"><template #default="{ row }">{{ row.set_pieces }}</template></el-table-column>
-          <el-table-column label="总克重" width="100"><template #default="{ row }">{{ row.set_weight_g }} g</template></el-table-column>
-          <el-table-column label="整套面额" width="110"><template #default="{ row }">{{ row.set_face_total }} 元</template></el-table-column>
-          <el-table-column label="状态" width="110">
-            <template #default="{ row }">
-              <el-tag :type="row.status === 'published' ? 'success' : 'info'" size="small">
-                {{ row.status === 'published' ? '已上架' : '未上架' }}
-              </el-tag>
-              <el-tag v-if="!row.verified" type="warning" size="small" style="margin-left:4px">未核验</el-tag>
-            </template>
+          <el-table-column prop="material" label="材质" width="110" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.material || '—' }}</template>
           </el-table-column>
-          <el-table-column label="来源" min-width="160">
-            <template #default="{ row }">
-              <a v-if="row.source_url" :href="row.source_url" target="_blank" rel="noopener">公告链接 ↗</a>
-              <span v-else class="pm-missing">缺公告链接</span>
-            </template>
+          <el-table-column label="面额" width="110">
+            <template #default="{ row }">{{ row.face != null ? row.face + ' 元' : '—' }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="240" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-              <el-button v-if="row.status !== 'published'" link type="success" :loading="busy === row.no" @click="publish(row)">上架</el-button>
-              <el-button v-else link :loading="busy === row.no" @click="unpublish(row)">下架</el-button>
-              <el-button link type="danger" :disabled="row.status === 'published'" @click="remove(row)">删除</el-button>
-            </template>
+          <el-table-column label="发行量" width="120">
+            <template #default="{ row }">{{ row.circulation != null ? Number(row.circulation).toLocaleString() : '—' }}</template>
           </el-table-column>
         </el-table>
+
+        <div class="cl-pager">
+          <el-pagination
+            background layout="total, sizes, prev, pager, next, jumper"
+            :current-page="params.page" :page-size="params.size" :total="total"
+            :page-sizes="[20, 30, 50]"
+            @current-change="onPageChange" @size-change="onSizeChange"
+          />
+        </div>
       </div>
     </AsyncState>
-
-    <PmForm v-model="formVisible" :row="editing" @saved="reload" />
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { onMounted, reactive, ref } from 'vue';
 import PageHeader from '../components/PageHeader.vue';
 import AsyncState from '../components/AsyncState.vue';
-import PmForm from '../components/PmForm.vue';
-import { pmApi } from '../api/endpoints';
-import { errorMessage } from '../api/client';
+import { useTable } from '../composables/useTable';
+import { pmAllApi, categoriesApi } from '../api/endpoints';
 
-const rows = ref([]);
-const loading = ref(false);
-const error = ref(null);
-const filter = ref('');
 const kw = ref('');
-const busy = ref(0);
-const formVisible = ref(false);
-const editing = ref(null);
+const stats = reactive({ count: 0, withThumb: 0, withMintage: 0, holdings: 0 });
 
-const pieceCount = computed(() => rows.value.reduce((a, r) => a + ((r.pieces && r.pieces.length) || r.set_pieces || 0), 0));
-const draftCount = computed(() => rows.value.filter((r) => r.status !== 'published').length);
-const publishedCount = computed(() => rows.value.filter((r) => r.status === 'published').length);
-const ratioText = computed(() => {
-  const pm = rows.value.length;
-  const total = 137 + pm;
-  return ((pm / total) * 100).toFixed(1) + '%';
-});
-const filtered = computed(() => {
-  const q = String(kw.value || '').trim().toLowerCase();
-  return q ? rows.value.filter((r) => String(r.name).toLowerCase().includes(q)) : rows.value;
-});
+const {
+  rows, total, loading, error, params,
+  reload, search, onPageChange, onSizeChange
+} = useTable(
+  (p, signal) => pmAllApi.page({ page: p.page, size: p.size, q: p.q }, signal),
+  { pageSize: 30, debounceMs: 300 }
+);
 
-async function reload() {
-  loading.value = true;
-  error.value = null;
+async function loadStats() {
   try {
-    const r = await pmApi.list(filter.value);
-    rows.value = Array.isArray(r.items) ? r.items : [];
+    const res = await categoriesApi.list();
+    const pm = (Array.isArray(res?.items) ? res.items : []).find((x) => x.code === 'pm') || {};
+    stats.count = Number(pm.count) || 0;
+    stats.withThumb = Number(pm.withThumb) || 0;
+    stats.withMintage = Number(pm.withMintage) || 0;
+    stats.holdings = Number(pm.holdings) || 0;
   } catch (e) {
-    error.value = errorMessage(e);
-  } finally {
-    loading.value = false;
+    // 统计失败不影响主列表
   }
 }
-onMounted(reload);
 
-function openNew() { editing.value = null; formVisible.value = true; }
-function openEdit(row) { editing.value = row; formVisible.value = true; }
-
-async function changeStatus(row, status) {
-  busy.value = row.no;
-  try {
-    const r = await pmApi.status(row.no, status);
-    if (!r.ok) { ElMessage.error(r.error || '操作失败'); return; }
-    ElMessage.success(status === 'published' ? '已上架' : '已下架');
-    await reload();
-  } catch (e) {
-    ElMessage.error(errorMessage(e));
-  } finally {
-    busy.value = 0;
-  }
+// 缩略图可能是 CDN 绝对 URL，也可能是站内路径
+function imgUrl(v) {
+  if (!v) return '';
+  const s = String(v);
+  if (s.indexOf('http') === 0 || s.charAt(0) === '/') return s;
+  return 'https://chngc-prod-c2c-cdn.ecgci.com/' + s;
 }
-function publish(row) { changeStatus(row, 'published'); }
-function unpublish(row) { changeStatus(row, 'draft'); }
 
-async function remove(row) {
-  try {
-    await ElMessageBox.confirm('确认删除「' + row.name + '」？只能删除未上架的套。', '删除确认', { type: 'warning' });
-    const r = await pmApi.remove(row.no);
-    if (!r.ok) { ElMessage.error(r.error || '删除失败'); return; }
-    ElMessage.success('已删除');
-    await reload();
-  } catch (e) {
-    if (e !== 'cancel' && e !== 'close') ElMessage.error(errorMessage(e));
-  }
+function reloadAll() {
+  reload();
+  loadStats();
 }
+onMounted(loadStats);
 </script>
 
 <style scoped>
-.pm-missing { color: #b4791f; }
+.pm-thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 4px; background: #f5f5f5; }
+.fb-muted { color: #909399; }
 </style>

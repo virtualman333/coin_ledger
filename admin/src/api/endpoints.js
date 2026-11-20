@@ -55,14 +55,13 @@ export const imagesApi = {
   gallery: (body) => http.post('/admin/gallery', body)
 };
 
-/** 贵金属（T04）：一「套」一行，套内规格由后端事务整份替换 */
-export const pmApi = {
-  list: (status) => http.get('/admin/pm', status ? { status } : undefined),
-  create: (body) => http.post('/admin/pm', body),
-  update: (no, body) => http.patch('/admin/pm/' + encodeURIComponent(no), body),
-  pieces: (no, pieces) => http.put('/admin/pm/' + encodeURIComponent(no) + '/pieces', { pieces }),
-  status: (no, status) => http.post('/admin/pm/' + encodeURIComponent(no) + '/status', { status }),
-  remove: (no) => http.del('/admin/pm/' + encodeURIComponent(no))
+/** 贵金属：唯一数据源为金币云集全量库 cl_ecgci_pm（只读展示） */
+export const pmAllApi = {
+  page: (params, signal) => http.get('/admin/pm-all', params, signal)
+};
+
+export const categoriesApi = {
+  list: () => http.get('/admin/categories')
 };
 
 export const feedbackApi = {

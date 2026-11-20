@@ -1,17 +1,28 @@
 'use strict';
 /**
- * 贵金属种子导入（T04）
+ * 【2026-11-20 起已废弃】贵金属「精选套」种子导入（T04）
  *
- *   node tools/import-pm-seed.js                 # 默认 dry-run：只校验、不写
- *   node tools/import-pm-seed.js --apply         # db：事务 upsert cl_coins + cl_pm_pieces
- *                                                # json：种子即数据源，仅提示（无需导入）
- *   node tools/import-pm-seed.js --apply --verify # 导入后逐套比对规格行数与求和
- *   node tools/import-pm-seed.js --apply --publish # 显式上架（默认不自动 publish）
+ * 贵金属目录已统一到金币云集全量库 cl_ecgci_pm（2823 枚），
+ * 不再维护 no=138/139/140 的精选套体系。本站只读取、不导入精选套。
+ * 本脚本和种子文件仅为历史测试保留，默认拒绝执行，防止误把废弃数据导回线上。
+ *
+ * 如确需调试历史逻辑（不要对生产库执行）：
+ *   node tools/import-pm-seed.js --legacy-allowed            # dry-run
+ *   node tools/import-pm-seed.js --legacy-allowed --apply    # 仍会写入，慎用
+ *
+ * 历史用法（已停用）：
+ *   --apply / --verify / --publish
  *
  * 幂等：按 no upsert；同 no 名称不一致直接报错，不覆盖人工核验过的数据。
  * 不做任何 DELETE；套内规格用「整份替换」（先删该套，再按 seq 插入）。
  * 所有口径与校验都来自 schemas/pm.js —— 这里不重写规则。
  */
+if (process.argv.indexOf('--legacy-allowed') < 0) {
+  console.error('[deprecated] 贵金属精选套体系已于 2026-11-20 废弃，' +
+    '目录统一走 cl_ecgci_pm 全量库。本脚本默认不执行；' +
+    '如仅作历史调试请显式加 --legacy-allowed（切勿用于生产库）。');
+  process.exit(2);
+}
 const fs = require('fs');
 
 const config = require('../server/config');

@@ -231,21 +231,6 @@ STORAGE=json bash deploy/install.sh
 > `After=mysqld.service`；Supervisor 的启动命令会先等 `127.0.0.1:3306` 就绪再 `exec node`，
 > `startretries=10`，避免重启瞬间数据库未起来就耗尽重试。
 
-### 新环境上线必做：导入贵金属首批种子（2026-11-20）
-
-管理端「贵金属」页读的是 `cl_coins` 里 no=138/139/140 三套精选种子，**不是** `cl_ecgci_pm` 全量库
-（那 2823 条只供公开目录和全量库页使用）。迁移 004 只建表、不灌数据，漏跑导入会导致该页统计全 0、表格空白。
-升级后在服务器执行（幂等，可反复跑）：
-
-```bash
-cd /www/wwwroot/coin-ledger
-set -a; . /etc/coin-ledger.env; set +a
-node tools/import-pm-seed.js --apply --verify
-```
-
-默认导入为 `draft`，公开站点不会显示（`/api/coin/138/139/140` 仍返回 404）；
-确认内容无误后在管理端上架即可，或显式加 `--publish` 一次完成。
-
 ## Web 管理控制台（2026-11-16 起）
 
 前台登录后可见的「管理端」按钮跳转到独立的 Vue 3 + Vite 应用：
