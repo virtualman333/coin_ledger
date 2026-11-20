@@ -225,3 +225,60 @@ test('标注图带序号且为合法 PNG', () => {
   assert.equal(decoded.width, r.width);
   assert.equal(decoded.height, r.height);
 });
+
+/* ------------------------------------------------------------------ *
+ * 真实照片回归（tests/fixtures/count_*.jpg，尺寸与线上 MAX_SIDE=1000 对齐）
+ *
+ * 对应 2026-11-20 用户反馈的 5 张「数得不准」的照片：
+ *   b_ring   带艺术字标题的环形币 → 旧版把标题/说明文字当成硬币，报 18 枚
+ *   c_box    黑底展示盒           → 旧版把空圆孔/反光当成硬币，报 12 枚
+ *   d_grid12 规整 4x3 网格       → 旧版漏掉一枚弱对比度币，报 11 枚
+ *   e_grid16 五行网格 16 枚      → 必须保持不回归
+ *   a_pile   严重重叠的一堆币     → 纯圆形检测只能数出可辨认的币面，不做精确断言
+ * ------------------------------------------------------------------ */
+const fs = require('node:fs');
+const path = require('node:path');
+
+function fixture(name) {
+  return fs.readFileSync(path.join(__dirname, 'fixtures', 'count_' + name + '.jpg'));
+}
+
+test('真实照片：艺术字标题/说明文字不再被当成硬币', () => {
+  const r = svc.count(fixture('b_ring'));
+  assert.ok(r.count >= 9 && r.count <= 12, '实际 ' + r.count);
+  // 标题位于 y<250、底部声明位于 y>800，一个圈都不该落在文字区域
+  r.seeds.forEach(function (s) {
+    assert.ok(s.y >= 250 && s.y <= 800,
+      '圈(' + s.x + ',' + s.y + ')落在了文字区域');
+  });
+});
+
+test('真实照片：黑底展示盒 11 枚，空圆孔与反光不再误检', () => {
+  const r = svc.count(fixture('c_box'));
+  assert.equal(r.count, 11, '实际 ' + r.count);
+});
+
+test('真实照片：4x3 网格 12 枚全部数出（弱对比度币已补检）', () => {
+  const r = svc.count(fixture('d_grid12'));
+  assert.equal(r.count, 12, '实际 ' + r.count);
+});
+
+test('真实照片：五行网格 16 枚保持准确', () => {
+  const r = svc.count(fixture('e_grid16'));
+  assert.equal(r.count, 16, '实际 ' + r.count);
+});
+
+test('真实照片：严重重叠币堆结果保持在合理区间', () => {
+  const r = svc.count(fixture('a_pile'));
+  assert.ok(r.count >= 20 && r.count <= 30, '实际 ' + r.count);
+});
+
+test('强浮雕/纹理币即使圆内灰度方差很大也不被误杀', () => {
+  const circles = grid(9, 3, 30, 22).map(function (c) {
+    return { x: c.x + 40, y: c.y + 30, r: c.r };
+  });
+  const r = svc.count(makeTexturedCoins(circles, 700, 600));
+  assert.equal(r.count, 9, '实际 ' + r.count);
+  assert.ok(r.seeds.some(function (s) { return s.std > 70; }),
+    '该场景本应出现高圆内方差的真币，强证据豁免逻辑可能失效');
+});

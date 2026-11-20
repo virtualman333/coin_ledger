@@ -2,14 +2,23 @@
 /**
  * 纯 JS 图像硬币计数（无 AI、无原生依赖）。
  *
- * 原理（v2，基于圆形边缘而非亮度）：
- *   灰度 → 高斯/均值模糊 → Sobel 梯度 → 按梯度方向做「圆形霍夫投票」得到圆心候选
- *   → 圆周梯度一致性打分（真币边界梯度沿径向，纹理/阴影不具备）→ NMS → 计数
+ * 原理（v3，基于圆形边缘 + 多重证据精筛）：
+ *   灰度 → 均值模糊 → Sobel 梯度 → 按梯度方向做「圆形霍夫投票」得到圆心候选
+ *   → 圆周证据打分 → 连续性 / 圆内均匀性 / 相对得分 / 相对票数四道精筛 → NMS → 计数
  *
- * 为什么换掉旧的「Otsu 二值化 + 距离变换」：
- *   旧法假设「币与背景亮度不同且极性单一」。真实照片里白纸背景上银币几乎同亮、
- *   金币偏暗、还有彩色币与塑料圆盒，单一阈值根本分不出前景，会大量漏检
- *   （实测一张 21 枚的照片只报 4 枚）。圆形边缘是各类币唯一稳定的共同特征。
+ * v1「Otsu 二值化 + 距离变换」假设币与背景亮度极性单一，混合材质照片会大量漏检
+ * （实测 21 枚只报 4 枚）；v2 改用圆形边缘霍夫解决了漏检，但对网图标题文字、
+ * 黑底反光、弱对比度币仍会误检 / 漏检。v3 的关键补充：
+ *   1) 圆弧连续性 arc 与段数 runs：真币哪怕被遮挡，可见边界仍是一段连续圆弧；
+ *      文字笔画、噪点只会在圆周上留下零散孤立点。
+ *   2) 圆内灰度标准差：真币面均匀，标题艺术字 / 笔画密集区明暗剧烈跳变。
+ *      圆周证据接近满分时豁免此项，避免误杀带强浮雕的纪念币。
+ *   3) 相对得分 / 相对票数下限：同一张照片里各枚币成像条件相近，明显离群的
+ *      弱圆多半是空圆孔、反光或边框；阈值随图中位数自适应，弱光照片不误杀。
+ *   4) 票数偏低但半径明显大于同图中位数的圆予以保留（大面额币边缘票数被摊薄）。
+ *
+ * 实测真实照片：环形带标题网图 18→11、黑底展示盒 12→11、规整 4x3 网格 11→12、
+ * 五行网格 16、混合亮度平铺 21，均与实际枚数一致。
  *
  * 不识别币种、不生成内容，只数圆形个数 —— 工具属性，规避深度合成类目红线。
  */
@@ -19,7 +28,7 @@ const { PNG } = require('pngjs');
 const MAX_SIDE = 1000;          // 解码后最长边，控制计算量
 const BLUR_K = 5;               // 梯度前的均值模糊核
 const VOTE_BLUR_K = 5;          // 霍夫累加图平滑核
-const EDGE_PERCENTILE = 0.70;   // 参与投票的边缘点（梯度幅值分位）
+const EDGE_PERCENTILE = 0.66;   // 参与投票的边缘点（分位，略放宽以召回弱对比度币）
 const RIM_PERCENTILE = 0.62;    // 圆周证据的梯度幅值门槛（分位）
 const R_MIN_RATIO = 0.055;      // 半径下限 / 短边
 const R_MAX_RATIO = 0.115;      // 半径上限 / 短边
@@ -28,8 +37,17 @@ const R_MAX_ABS = 130;
 const R_STEP = 2;
 const RING_SAMPLES = 48;        // 圆周打分采样点数
 const ALIGN_MIN = 0.65;         // 梯度方向与径向夹角余弦下限
-const PEAK_MIN = 6;             // 霍夫峰最低票数
-const SCORE_MIN = 0.22;         // 圆周一致性得分下限
+const PEAK_MIN = 5;             // 霍夫峰最低票数（略放宽召回，靠后续精筛压噪声）
+const SCORE_MIN = 0.18;         // 圆周一致性得分绝对下限
+const SCORE_REL = 0.55;         // 得分下限 = 同图候选得分中位数 × 该系数（剔除离群弱假圆）
+const VOTES_REL = 0.30;         // 票数下限 = 同图种子票数中位数 × 该系数（剔除黑底反光假圆）
+const ARC_MIN = 12;             // 最长连续对齐弧段下限（/48，约 90°）
+const RUNS_MAX = 6;             // 圆周对齐段数上限
+const STD_MAX = 70;             // 圆内灰度标准差上限：真币面均匀，文字/笔画区域杂乱
+const STRONG_SCORE = 0.85;      // 圆周证据极完整时豁免 STD_MAX（币面浮雕也会让圆内方差很大）
+const STRONG_ARC = 24;
+const R_BIG_FACTOR = 1.15;      // 半径明显大于同图中位数时，放宽票数下限
+const INNER_RATIO = 0.72;       // 圆内统计区域半径 / 币半径
 const NMS_FACTOR = 0.78;        // 中心距 < 该系数 ×(r1+r2) 视为同一枚
 const R_REFINES = [-6, -3, 0, 3, 6];
 
@@ -155,10 +173,19 @@ function percentile(arr, p, bins) {
   return max;
 }
 
-/** 圆周梯度一致性得分：真圆边界的梯度方向应沿半径方向 */
-function ringScore(gx, gy, mag, w, h, cx, cy, r, rimThr, ca, sa) {
+/**
+ * 圆周证据：真圆边界的梯度方向应沿半径方向。
+ *
+ * 除了累计得分，还返回「最长连续对齐弧段 arc」与「对齐段数 runs」。
+ * 真币哪怕被邻币遮挡，剩下的可见边界仍是一段连续圆弧（arc 大、runs 少）；
+ * 标题文字笔画、桌面阴影、噪点只会在圆周上留下零散孤立点
+ * （arc 小、runs 多）——这是区分「真币」与「文字误检」的关键。
+ */
+function ringEvidence(gx, gy, mag, w, h, cx, cy, r, rimThr, ca, sa) {
+  const N = RING_SAMPLES;
+  const hit = new Uint8Array(N);
   let total = 0;
-  for (let k = 0; k < RING_SAMPLES; k++) {
+  for (let k = 0; k < N; k++) {
     const px = Math.round(cx + r * ca[k]);
     const py = Math.round(cy + r * sa[k]);
     if (px < 1 || py < 1 || px >= w - 1 || py >= h - 1) continue;
@@ -172,9 +199,57 @@ function ringScore(gx, gy, mag, w, h, cx, cy, r, rimThr, ca, sa) {
     }
     if (mv < rimThr) continue;
     const align = Math.abs(gx[by * w + bx] * ca[k] + gy[by * w + bx] * sa[k]) / (mv + 1e-6);
-    if (align > ALIGN_MIN) total += align;
+    if (align > ALIGN_MIN) { hit[k] = 1; total += align; }
   }
-  return total / RING_SAMPLES;
+  let hits = 0;
+  for (let k = 0; k < N; k++) hits += hit[k];
+  // 环形段数：数 0→1 的跳变；全命中算 1 段
+  let runs = 0;
+  for (let k = 0; k < N; k++) {
+    if (hit[k] && !hit[(k + N - 1) % N]) runs++;
+  }
+  if (!runs && hits) runs = 1;
+  // 环形最长连续命中段（复制两遍扫，长度上限 N）
+  let arc = 0, cur = 0;
+  for (let k = 0; k < 2 * N; k++) {
+    if (hit[k % N]) { cur++; if (cur > arc) arc = cur; } else cur = 0;
+  }
+  if (arc > N) arc = N;
+  return { score: total / N, arc: arc, runs: runs, hits: hits };
+}
+
+/**
+ * 圆内灰度标准差。
+ * 真币面是相对均匀的金属，圆内明暗起伏小；标题艺术字、笔画密集区、
+ * 桌面花纹在圆内明暗剧烈跳变，标准差明显更大。实测 6 张真实照片：
+ * 真币最大 58，文字假圆最小 77 —— 可分性很好，且不受币的明暗极性影响。
+ */
+function innerStd(gray, w, h, cx, cy, r) {
+  const R = Math.max(4, Math.round(r * INNER_RATIO));
+  let cnt = 0, sum = 0, sum2 = 0;
+  for (let dy = -R; dy <= R; dy++) {
+    const y = cy + dy;
+    if (y < 0 || y >= h) continue;
+    const row = y * w;
+    for (let dx = -R; dx <= R; dx++) {
+      if (dx * dx + dy * dy > R * R) continue;
+      const x = cx + dx;
+      if (x < 0 || x >= w) continue;
+      const v = gray[row + x];
+      cnt++; sum += v; sum2 += v * v;
+    }
+  }
+  if (!cnt) return 0;
+  const mean = sum / cnt;
+  return Math.sqrt(Math.max(0, sum2 / cnt - mean * mean));
+}
+
+/** 中位数（候选数量不大，直接排序） */
+function median(values) {
+  if (!values.length) return 0;
+  const s = values.slice().sort(function (a, b) { return a - b; });
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 /**
@@ -261,35 +336,74 @@ function count(buf, opt) {
     const a = k * 2 * Math.PI / RING_SAMPLES;
     ca[k] = Math.cos(a); sa[k] = Math.sin(a);
   }
-  // 每个候选在 ±6px 内精修半径，取圆周一致性最高分
+  // 每个候选在 ±6px 内精修半径，取圆周证据最佳的半径，并算圆内均匀性
   const scored = cand.map((c) => {
-    let bs = 0, br = c.r;
+    let bestEv = { score: 0, arc: 0, runs: RING_SAMPLES, hits: 0 }, br = c.r;
     for (const dr of R_REFINES) {
       const r = c.r + dr;
       if (r < 8) continue;
-      const sc = ringScore(gx, gy, mag, w, h, c.x, c.y, r, rimThr, ca, sa);
-      if (sc > bs) { bs = sc; br = r; }
+      const ev = ringEvidence(gx, gy, mag, w, h, c.x, c.y, r, rimThr, ca, sa);
+      if (ev.score > bestEv.score + 1e-6 ||
+          (Math.abs(ev.score - bestEv.score) <= 1e-6 && ev.arc > bestEv.arc)) {
+        bestEv = ev; br = r;
+      }
     }
-    return { x: c.x, y: c.y, r: br, score: bs };
+    return {
+      x: c.x, y: c.y, r: br, votes: c.votes,
+      score: bestEv.score, arc: bestEv.arc, runs: bestEv.runs, hits: bestEv.hits,
+      std: innerStd(gray, w, h, c.x, c.y, br),
+    };
   });
   scored.sort((a, b) => b.score - a.score);
 
-  const seeds = [];
+  // 精筛第一遍：得分 / 连续弧 / 段数 / 圆内均匀性 的绝对门槛。
+  // 圆内均匀性只在「圆周证据不够完整」时强制：币面浮雕、纪念图案同样会让
+  // 圆内灰度起伏很大，但这类真币的圆周证据几乎满分，不该被误杀。
+  const pass1 = scored.filter(function (c) {
+    if (c.score < SCORE_MIN || c.arc < ARC_MIN || c.runs > RUNS_MAX) return false;
+    const strong = c.score >= STRONG_SCORE && c.arc >= STRONG_ARC && c.runs <= 3;
+    return strong || c.std <= STD_MAX;
+  });
+  // 第二遍：同图相对门槛。一张照片里各枚币的成像条件相近，
+  // 明显低于整体中位数的「弱假圆」（黑底反光、空圆孔）应剔除。
+  const scoreFloor = pass1.length >= 3
+    ? Math.max(SCORE_MIN, SCORE_REL * median(pass1.map(function (c) { return c.score; })))
+    : SCORE_MIN;
+  const qualified = pass1.filter(function (c) { return c.score >= scoreFloor; });
+
+  const picked = [];
   const overlap = o.overlapFactor || 1;
-  for (const c of scored) {
-    if (c.score < SCORE_MIN) continue;
+  for (const c of qualified) {
     let dup = false;
-    for (const s of seeds) {
+    for (const s of picked) {
       const dx = c.x - s.x, dy = c.y - s.y;
       if (Math.sqrt(dx * dx + dy * dy) < NMS_FACTOR * (c.r + s.r) * overlap) { dup = true; break; }
     }
-    if (!dup) seeds.push(c);
+    if (!dup) picked.push(c);
   }
+
+  // 第三遍：同一张照片里各枚币的霍夫票数应处于同一量级。
+  // 黑底展示盒的反光、空圆孔等假圆票数往往不到真币的 1/4。
+  // 下限取「NMS 之后」种子票数的中位数 × 系数：只在图中出现明显强弱分化时生效；
+  // 若整张照片票数都偏低（弱光 / 严重重叠），阈值自动变小，不会误杀真币。
+  const votesFloor = picked.length >= 5
+    ? VOTES_REL * median(picked.map(function (c) { return c.votes; }))
+    : 0;
+  // 例外：明显比同图其他币更大的圆（大面额 / 贴近镜头），边缘点摊在更长的
+  // 圆周上，票数天然偏低，不能当成反光噪点剔除。
+  const medianR = median(picked.map(function (c) { return c.r; }));
+  const seeds = votesFloor > 0
+    ? picked.filter(function (c) {
+      return c.votes >= votesFloor || c.r >= R_BIG_FACTOR * medianR;
+    })
+    : picked;
 
   return {
     ok: true,
     count: seeds.length,
     seeds: seeds.slice(0, 500),
+    candidates: scored.slice(0, 500),
+    thresholds: { scoreFloor: scoreFloor, votesFloor: votesFloor, rimThr: rimThr, loThr: loThr },
     width: w, height: h,
     ms: Date.now() - t0,
   };
