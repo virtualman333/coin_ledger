@@ -300,14 +300,19 @@
 }
 
 .sheet-x {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -18rpx -18rpx -18rpx 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  padding: 0 10rpx;
   color: #6b6559;
   font-size: 28rpx;
+}
+.sheet-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 /* admin.wxml 用到了 .loading，但本页与 app.wxss 都没定义，之前是完全没样式的裸文本 */
@@ -569,14 +574,18 @@
 }
 .vdd-title { color: #2b2926; font-size: 28rpx; font-weight: 600; }
 .vdd-x {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -20rpx -16rpx -20rpx 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   color: #6b6559;
   font-size: 28rpx;
+}
+.vdd-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 .vdd-sub { display: block; padding-bottom: 14rpx; color: #6b6559; font-size: 20rpx; }
 .vdd-list { max-height: 56vh; }

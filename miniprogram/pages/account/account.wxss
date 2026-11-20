@@ -310,6 +310,7 @@
 }
 
 .ck {
+  position: relative;
   display: flex;
   width: 34rpx;
   height: 34rpx;
@@ -377,15 +378,20 @@
 }
 
 .policy-close {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -14rpx -16rpx -14rpx 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  padding: 8rpx 12rpx;
   color: #6b6559;
   font-size: 30rpx;
   line-height: 1;
+}
+.policy-close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .policy-body {
@@ -622,6 +628,24 @@
   background: #f6efe0;
 }
 
-/* 勾选同意 / 显示隐藏密码等高频控件热区 ≥44px */
-.ck{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}
-.pwd-eye{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}
+/* 勾选同意 / 显示隐藏密码等高频控件热区 ≥44px。
+   不能直接给 .ck 加 min-width/min-height —— 那是个 34rpx 的方框，
+   一撑就变成 88rpx 的大方块。用伪元素扩热区，视觉尺寸保持不变。 */
+.ck::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
+}
+.pwd-eye::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
+}

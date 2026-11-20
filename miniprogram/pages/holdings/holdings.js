@@ -94,7 +94,13 @@ Page({
   },
 
   switchCat(e) {
-    this.setData({ holdCat: e.currentTarget.dataset.cat }, () => this.render());
+    // 别用 cat 命名：文件顶部的 cat 是 catalog 模块
+    const next = e.currentTarget.dataset.cat;
+    if (next === this.data.holdCat) return;
+    // 切分类时退出多选：否则 selected 里留着看不见的藏品，
+    // 底部「已选 N 件」点分享会把当前分类外的也带出去
+    this.setData({ holdCat: next, selectMode: false, selected: {}, selectedCount: 0, swipeId: '' },
+      () => this.render());
   },
 
   onPullDownRefresh() {
@@ -222,6 +228,8 @@ Page({
       },
       groups: rest.concat(solo),
       empty: state.holdings.length === 0,
+      // 有藏品但当前分类下一条都没有：以前会渲染成「0 个分组」+ 一片空白，像页面坏了
+      catEmpty: state.holdings.length > 0 && hs.length === 0,
       syncTip: state.synced ? '' : (state.error || ''),
     });
   },

@@ -3,21 +3,26 @@
     <view wx:for="{{holdCats}}" wx:key="code" class="hc {{holdCat === item.code ? 'on' : ''}}" data-cat="{{item.code}}" bindtap="switchCat">{{item.name}}</view>
   </view>
   <block wx:if="{{loggedIn}}">
-    <!-- 汇总：只展示面值 / 推理价 / 成本 -->
+    <!-- 汇总：只展示面值 / 推理价 / 成本。贵金属既不算面值也没有推理价，
+         纯贵金属账本上如果照搬这三块，会是一屏 ¥0.00 —— 改成按枚数展示 -->
     <view class="hero" wx:if="{{!empty}}">
       <view class="hero-top">
         <view class="hero-left">
-          <text class="hero-k">推理价合计</text>
-          <view class="hero-val"><text class="hv-cur">¥</text><text class="hv-num">{{stats.aiText}}</text></view>
+          <text class="hero-k">{{summary.kinds ? '推理价合计' : '贵金属藏品'}}</text>
+          <view class="hero-val">
+            <text class="hv-cur" wx:if="{{summary.kinds}}">¥</text>
+            <text class="hv-num">{{summary.kinds ? stats.aiText : summary.pmRolls}}</text>
+            <text class="hv-unit" wx:if="{{!summary.kinds}}">枚</text>
+          </view>
         </view>
         <view class="hero-right">
           <text class="hero-item" wx:if="{{summary.kinds}}">{{summary.kinds}} 个品种</text>
           <text class="hero-item" wx:if="{{summary.rolls}}">{{summary.rolls}} 套</text>
-          <text class="hero-item" wx:if="{{summary.pmKinds}}">{{summary.pmKinds}} 种贵金属 · {{summary.pmRolls}} 枚</text>
+          <text class="hero-item" wx:if="{{summary.pmKinds}}">{{summary.pmKinds}} 种贵金属</text>
         </view>
       </view>
       <view class="hero-bottom">
-        <view class="hero-cell">
+        <view class="hero-cell" wx:if="{{summary.kinds}}">
           <text class="hc-k">总面值</text>
           <text class="hc-v">¥{{stats.faceText}}</text>
         </view>
@@ -35,6 +40,12 @@
     </view>
 
     <block wx:if="{{!empty}}">
+      <view class="cat-empty" wx:if="{{catEmpty}}">
+        <text class="cat-empty-t">这个分类下还没有藏品</text>
+        <text class="cat-empty-s">切到「全部」看看别的</text>
+      </view>
+
+      <block wx:if="{{!catEmpty}}">
       <view class="tools">
         <text class="tools-text">{{selectMode ? '点选要分享的藏品（最多 20 件）' : (groups.length + ' 个分组 · 左滑或长按卡片可改数量与成本')}}</text>
         <view class="tools-acts">
@@ -51,14 +62,15 @@
             <text class="gprog">{{group.progLabel}}</text>
           </view>
           <view class="ghead-right">
-            <text class="gsum" wx:if="{{group.isPm}}">{{group.own}} 枚</text>
-            <text class="gsum" wx:else>推理价 ¥{{group.aiText}}</text>
+            <!-- 贵金属没有推理价：左侧 gprog 已经写了「N 枚」，这里不要再重复一遍 -->
+            <text class="gsum" wx:if="{{!group.isPm}}">推理价 ¥{{group.aiText}}</text>
             <text class="gchev">{{group.open ? '▾' : '▸'}}</text>
           </view>
         </view>
 
         <view class="gwrap" wx:if="{{group.open}}">
-          <view class="gbar"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
+          <!-- 贵金属没有「系列进度」可算，画一条永远空着的进度条只是干扰 -->
+          <view class="gbar" wx:if="{{!group.isPm}}"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
 
           <view
             class="hswipe"
@@ -115,6 +127,7 @@
       </block>
 
       <view class="foot-hint" wx:if="{{!selectMode}}">左滑或长按任意一枚，可以改数量、改成本和移出</view>
+      </block>
     </block>
 
     <!-- 多选分享底部操作栏 -->

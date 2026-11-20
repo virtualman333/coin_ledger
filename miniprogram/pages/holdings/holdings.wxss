@@ -47,6 +47,12 @@
   font-size: 26rpx;
 }
 
+/* 只有贵金属时的量词「枚」，与 ¥ 同尺寸 */
+.hv-unit {
+  margin-left: 6rpx;
+  font-size: 26rpx;
+}
+
 .hv-num {
   font-size: 54rpx;
   font-weight: 700;
@@ -92,6 +98,29 @@
   font-weight: 600;
 }
 
+/* 当前分类下没有藏品（但账本里别处有） */
+.cat-empty {
+  margin-top: 8rpx;
+  padding: 64rpx 40rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  text-align: center;
+}
+
+.cat-empty-t {
+  display: block;
+  color: #2b2926;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.cat-empty-s {
+  display: block;
+  margin-top: 10rpx;
+  color: #6b6559;
+  font-size: 22rpx;
+}
+
 /* ================= 空态 ================= */
 .empty-card {
   padding: 60rpx 40rpx;
@@ -133,6 +162,9 @@
 }
 
 .tools-text {
+  flex: 1;
+  min-width: 0;
+  margin-right: 12rpx;
   color: #6b6559;
   font-size: 21rpx;
 }
@@ -469,9 +501,21 @@
 }
 
 .sheet-x {
+  position: relative;
   padding: 0 8rpx;
   color: #6b6559;
   font-size: 26rpx;
+}
+
+/* 关闭按钮热区：只扩可点范围，✕ 的位置和字号都不动 */
+.sheet-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .sheet-row {
@@ -497,6 +541,7 @@
 }
 
 .step {
+  position: relative;
   display: flex;
   width: 56rpx;
   height: 56rpx;
@@ -615,6 +660,7 @@
 /* 藏品品类筛选 */
 .hold-cats{display:flex;gap:12rpx;padding:16rpx 0 20rpx}
 .hc{
+  position:relative;
   padding:9rpx 26rpx;border-radius:999rpx;border:1rpx solid #e6e0d4;
   background:#fff;color:#6b6559;font-size:24rpx
 }
@@ -635,6 +681,7 @@
 .sr-tag.rar5{color:#b4553f;background:#f8ece7}
 .sr-segs{display:flex;gap:12rpx}
 .sr-seg{
+  position:relative;
   font-size:24rpx;padding:8rpx 26rpx;border-radius:999rpx;
   border:1rpx solid #e6e0d4;color:#6b6559;background:#fff
 }
@@ -651,10 +698,49 @@
   border:1rpx dashed #d9cfba;color:#6b6559;background:#faf8f3
 }
 
-/* 高频操作热区 ≥44px（88rpx），视觉尺寸不变 */
-.tools-btn,.tools-share{min-height:88rpx;line-height:88rpx;padding:0 12rpx}
-.hc{min-height:72rpx;line-height:44rpx}
-.step{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}
-.sheet-x{min-width:88rpx;min-height:88rpx;display:flex;align-items:center;justify-content:center}
-.sr-seg{min-height:80rpx;display:inline-flex;align-items:center;justify-content:center}
-.sr-img-x{min-width:64rpx;min-height:64rpx;line-height:60rpx;text-align:center}
+/* 高频操作热区 ≥44px（88rpx）—— 只扩可点区域，视觉尺寸一律不动。
+   之前这里写成 .hc{min-height:72rpx;line-height:44rpx}、.step{width/height:88rpx} 之类，
+   虽然注释写着「视觉尺寸不变」，实际把品类胶囊拉胖、把步进器 56rpx 的圆撑成 88rpx、
+   把缩略图删除角标从 32rpx 放大一倍，整页看起来就是错版的。 */
+.tools-btn,
+.tools-share {
+  /* 上下 padding 撑出 88rpx 热区，负 margin 抵消占位；横向只留 6rpx，免得把右侧挤爆 */
+  padding: 24rpx 6rpx;
+  margin: -24rpx 0;
+}
+.hc::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 88rpx;
+  margin-top: -44rpx;
+}
+.step::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
+}
+.sr-seg::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 88rpx;
+  margin-top: -44rpx;
+}
+.sr-img-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64rpx;
+  height: 64rpx;
+  margin: -32rpx 0 0 -32rpx;
+}

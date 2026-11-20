@@ -329,14 +329,19 @@
 }
 
 .peek-x {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -14rpx -20rpx 0 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  padding: 0 8rpx;
   color: #6b6559;
   font-size: 28rpx;
+}
+.peek-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .peek-body {
@@ -560,15 +565,19 @@
 }
 
 .ai-formula-x {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -22rpx -22rpx -22rpx 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   color: #6b6559;
   font-size: 40rpx;
   line-height: 1;
+}
+.ai-formula-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .ai-formula-body {

@@ -134,7 +134,16 @@ test('小程序贵金属分组：不显示推理价合计，进度不拿普通�
   assert.match(js, /g\.isPm = g\.items\.length > 0 && g\.items\.every/);
   assert.match(js, /g\.progLabel = g\.own \+ ' 枚'/);
   const wxml = readMp('pages/holdings/holdings.wxml');
-  assert.match(wxml, /wx:if="\{\{group\.isPm\}\}"[\s\S]{0,60}枚/, '分组头部没有贵金属分支');
+  // 贵金属分组头部不能出现「推理价」
+  const gsum = wxml.match(/<text class="gsum"[^>]*>/);
+  assert.ok(gsum, '找不到 .gsum');
+  assert.match(gsum[0], /!group\.isPm/, '贵金属分组仍会写「推理价 ¥0」');
+  // 左侧 gprog 已经写了「N 枚」，右侧不能再重复一遍同样的数字
+  assert.doesNotMatch(wxml, /\{\{group\.own\}\} *枚<\//, '同一个「N 枚」印了两遍');
+  // 进度条对贵金属没有意义，别画一条永远空的
+  const gbar = wxml.match(/<view class="gbar"[^>]*>/);
+  assert.ok(gbar, '找不到 .gbar');
+  assert.match(gbar[0], /!group\.isPm/, '贵金属分组仍会画空进度条');
 });
 
 test('小程序账本统计把贵金属单独计数', () => {

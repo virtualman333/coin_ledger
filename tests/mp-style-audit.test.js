@@ -262,6 +262,55 @@ test('小于 88rpx 的圆形按钮用伪元素扩展热区', () => {
   }
 });
 
+test('扩热区不许改视觉尺寸（只允许伪元素 / padding+负 margin）', () => {
+  // 这些控件本身很小（34~56rpx），一旦用 min-width/min-height 撑到 88rpx，
+  // 勾选框变大方块、步进器圆变大一圈、删除角标盖住缩略图 —— 整页就是错版的。
+  const cases = [
+    ['pages/holdings/holdings.wxss', '.hc', '88rpx'],
+    ['pages/holdings/holdings.wxss', '.step', '88rpx'],
+    ['pages/holdings/holdings.wxss', '.sr-seg', '88rpx'],
+    ['pages/holdings/holdings.wxss', '.sr-img-x', '64rpx'],
+    ['pages/account/account.wxss', '.ck', '88rpx'],
+    ['pages/account/account.wxss', '.pwd-eye', '88rpx'],
+  ];
+  for (const [f, cls, size] of cases) {
+    const s = readFile(path.join(MP, f));
+    const own = s.match(new RegExp('^\\' + cls + '\\s*\\{[^}]*\\}', 'm'));
+    assert.ok(own, f + ' 找不到 ' + cls + ' 的规则');
+    assert.doesNotMatch(
+      own[0],
+      /min-(width|height)\s*:/,
+      f + ' 的 ' + cls + ' 用 min-width/min-height 撑热区，会改变视觉尺寸'
+    );
+    const after = s.match(new RegExp('\\' + cls + '::after\\s*\\{[^}]*\\}'));
+    assert.ok(after, f + ' 的 ' + cls + ' 缺 ::after 热区');
+    assert.match(after[0], new RegExp('(width|height)\\s*:\\s*' + size), cls + ' 的伪元素热区不是 ' + size);
+  }
+});
+
+test('关闭按钮（✕）用伪元素扩热区，不靠放大盒子', () => {
+  const cases = [
+    ['pages/holdings/holdings.wxss', '.sheet-x'],
+    ['pages/detail/detail.wxss', '.peek-x'],
+    ['pages/detail/detail.wxss', '.ai-formula-x'],
+    ['pages/plan/plan.wxss', '.pd-x'],
+    ['pages/admin/admin.wxss', '.sheet-x'],
+    ['pages/admin/admin.wxss', '.vdd-x'],
+    ['pages/account/account.wxss', '.policy-close'],
+  ];
+  for (const [f, cls] of cases) {
+    const s = readFile(path.join(MP, f));
+    const own = s.match(new RegExp('^\\' + cls + '\\s*\\{[^}]*\\}', 'm'));
+    assert.ok(own, f + ' 找不到 ' + cls);
+    // 88rpx 的盒子 + 负 margin 会把 ✕ 顶到贴边、还挤掉标题宽度
+    assert.doesNotMatch(own[0], /width\s*:\s*88rpx/, f + ' 的 ' + cls + ' 靠 88rpx 盒子扩热区，会挤偏布局');
+    assert.ok(
+      new RegExp('\\' + cls + '::after\\s*\\{[^}]*88rpx').test(s),
+      f + ' 的 ' + cls + ' 缺伪元素热区'
+    );
+  }
+});
+
 test('底部固定操作栏不会盖住最后一张卡片', () => {
   const wxss = readFile(path.join(MP, 'pages/holdings/holdings.wxss'));
   assert.match(wxss, /\.pick-spacer\s*\{[^}]*height\s*:/, '缺 .pick-spacer 占位');

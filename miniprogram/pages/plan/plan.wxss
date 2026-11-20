@@ -171,14 +171,19 @@
 }
 
 .pd-x {
-  display: flex;
-  width: 88rpx;
-  height: 88rpx;
-  margin: -18rpx -18rpx -18rpx 0;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  padding: 0 8rpx;
   color: #6b6559;
   font-size: 28rpx;
+}
+.pd-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .pd-state {
