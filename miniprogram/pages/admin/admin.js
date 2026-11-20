@@ -206,8 +206,10 @@ Page({
     const time = (s) => String(s || '').slice(0, 16).replace('T', ' ');
     if (this.data.vsView === 'ip') {
       return (res.ipGroups || []).map((x) => {
-        const both = x.clients.indexOf('mp') >= 0 && x.clients.indexOf('web') >= 0;
-        const mp = x.clients.indexOf('mp') >= 0;
+        // 老数据可能没有 clients 字段；缺字段不能让整张表抛错变空
+        const clients = Array.isArray(x.clients) ? x.clients : [];
+        const both = clients.indexOf('mp') >= 0 && clients.indexOf('web') >= 0;
+        const mp = clients.indexOf('mp') >= 0;
         const ua = String(x.ua || '');
         return {
           key: x.ip,

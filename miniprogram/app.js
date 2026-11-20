@@ -20,7 +20,7 @@ try {
 App({
   globalData: {
     appName: '藏币录',
-    version: '2.8.24',
+    version: '2.8.25',
   },
 
   onLaunch() {
