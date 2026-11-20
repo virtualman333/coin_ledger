@@ -112,12 +112,16 @@ test('服务端：/pm/<code> 返回独立 title/desc/canonical + 静态正文，
   assert.ok(!/参考市价|推理价|约 \d+ 元|盈亏/.test(ssr), 'SSR 正文不能出现价格文字');
 });
 
-test('服务端：查不到币时仍可渲染通用 meta，页面不 500', () => {
+test('服务端：查不到币时仍可渲染通用 meta，页面不 500，且不编造币名/不收录', () => {
   const html = seo.renderPmItemIndex({ tab: 'pm', code: 'UNKNOWN999', pmItem: null });
   assert.ok(html);
   assert.match(html, /UNKNOWN999/);
   assert.match(html, /canonical" href="https:\/\/coin\.virtualman\.top\/pm\/UNKNOWN999"/);
   assert.match(html, /id="ssrCoin"/);
+  assert.match(html, /<meta name="robots" content="noindex,nofollow">/);
+  assert.equal((html.match(/name="robots"/g) || []).length, 1, '不能出现两个冲突的 robots');
+  assert.ok(!/"@type":"Product"/.test(html), '没有真实币名时不输出 Product 结构化数据');
+  assert.ok(!/「UNKNOWN999」/.test(html.slice(html.indexOf('<head>'), html.indexOf('</head>'))), 'meta 不把编号伪装成币名');
 });
 
 test('服务端：现有页面的渲染分流保持不变', () => {

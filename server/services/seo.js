@@ -595,19 +595,24 @@ function renderPmItemIndex(route) {
   const d = route.pmItem || null;
   const path = '/pm/' + code;
   const url = SITE + path;
-  const name = (d && d.name) || code;
+  const name = (d && d.name) || '';
   const year = (d && d.year) || '';
-  const title = name + (year ? '（' + year + ' 贵金属纪念币）' : '') + ' 编号 ' + code + ' · 发行档案 | 藏币录';
+  // 查不到的编号不编造币名，也不让抓取端收录一个空页
+  const title = name
+    ? name + (year ? '（' + year + ' 贵金属纪念币）' : '') + ' 编号 ' + code + ' · 发行档案 | 藏币录'
+    : '贵金属纪念币 ' + code + ' · 藏币录';
   const detail = [
     d && d.projectName ? '属于「' + d.projectName + '」项目' : '',
     d && d.material ? '材质 ' + d.material : '',
     d && d.weight ? '克重 ' + d.weight : '',
     d && d.face != null ? '面额 ' + d.face + ' 元' : ''
   ].filter(Boolean).join('，');
-  const desc = (year ? year + ' 年发行的' : '') + '贵金属纪念币「' + name + '」' + (detail ? '，' + detail : '')
-    + '。发行信息以中国人民银行公告为准，本站不提供参考估值。';
-
-  const product = {
+  const desc = name
+    ? (year ? year + ' 年发行的' : '') + '贵金属纪念币「' + name + '」' + (detail ? '，' + detail : '')
+      + '。发行信息以中国人民银行公告为准，本站不提供参考估值。'
+    : '在藏币录查看贵金属纪念币的发行档案、币面图案与规格，资料以中国人民银行公告为准。';
+  // 查不到具体品种时不要输出 Product 结构化数据（名称为空会被判作弊）
+  const product = name ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: name,
@@ -620,17 +625,17 @@ function renderPmItemIndex(route) {
       { '@type': 'PropertyValue', name: '材质', value: (d && d.material) || '' },
       { '@type': 'PropertyValue', name: '面额', value: d && d.face != null ? d.face + ' 元' : '' }
     ]
-  };
+  } : null;
   const crumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: '首页', item: SITE + '/' },
       { '@type': 'ListItem', position: 2, name: '贵金属', item: SITE + '/all?category=pm' },
-      { '@type': 'ListItem', position: 3, name: name, item: url }
+      { '@type': 'ListItem', position: 3, name: name || code, item: url }
     ]
   };
-  const ld = '<script type="application/ld+json">' + JSON.stringify(product) + '</script>\n'
+  const ld = (product ? '<script type="application/ld+json">' + JSON.stringify(product) + '</script>\n' : '')
     + '<script type="application/ld+json">' + JSON.stringify(crumb) + '</script>\n';
 
   let out = tpl
@@ -640,6 +645,8 @@ function renderPmItemIndex(route) {
     .replace(/(<meta property="og:description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
     .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1' + url + '$2')
     .replace(/(<link rel="canonical" href=")[^"]*(")/, '$1' + url + '$2');
+  // 查不到的编号不应被收录：直接改模板里已有的 robots，而不是追加第二个
+  if (!name) out = out.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1noindex,nofollow$2');
   out = out
     .replace(/(id="coinTotalA">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
     .replace(/(id="coinTotalB">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
