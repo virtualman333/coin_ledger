@@ -1,6 +1,6 @@
 <template>
   <section>
-    <PageHeader title="发行管理" desc="维护央行年度发行计划。改动先在本地暂存，确认后整份保存；保存后网站 /plan 立即生效，小程序需重新打包数据后上传。">
+    <PageHeader title="发行管理" desc="维护央行年度发行计划，普通纪念币（钞）与贵金属纪念币分开管理。改动先在本地暂存，确认后整份保存，保存后网站 /plan 立即生效。">
       <template #actions>
         <el-button :loading="loading" @click="askReload">刷新</el-button>
         <el-button type="primary" :disabled="!dirty" :loading="saving" @click="askSave">
@@ -10,6 +10,10 @@
     </PageHeader>
 
     <div class="cl-toolbar">
+      <el-radio-group :model-value="category" @change="onCategoryChange">
+        <el-radio-button value="coin">普通纪念币（钞）</el-radio-button>
+        <el-radio-button value="pm">贵金属纪念币</el-radio-button>
+      </el-radio-group>
       <el-button @click="openNewYear">＋ 新增年度</el-button>
       <span class="cl-mono">共 {{ yearCount }} 个年度 / {{ itemCount }} 个项目</span>
       <div class="cl-spacer" />
@@ -35,27 +39,44 @@
         </div>
 
         <el-table :data="y.items || []" size="small" stripe>
-          <el-table-column prop="key" label="标识" width="170" class-name="cl-mono" show-overflow-tooltip />
+          <el-table-column prop="key" label="标识" width="150" class-name="cl-mono" show-overflow-tooltip />
           <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="short" label="简称" width="130" show-overflow-tooltip />
-          <el-table-column label="类别" width="90">
-            <template #default="{ row }">{{ row.kind === 'note' ? '纪念钞' : '纪念币' }}</template>
-          </el-table-column>
-          <el-table-column label="状态" width="100">
-            <template #default="{ row }">
-              <el-tag :type="row.status === 'issued' ? 'success' : 'warning'" size="small" effect="plain">
-                {{ row.status === 'issued' ? '已发行' : '待发行' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="date" label="发行日" width="120" class-name="cl-mono" />
-          <el-table-column label="面额" width="80" align="right">
-            <template #default="{ row }">{{ row.face ?? '—' }}</template>
-          </el-table-column>
-          <el-table-column label="发行量(万)" width="110" align="right">
-            <template #default="{ row }">{{ row.mintage ?? '—' }}</template>
-          </el-table-column>
-          <el-table-column prop="reserve" label="预约期" min-width="170" show-overflow-tooltip />
+
+          <!-- 贵金属专属列 -->
+          <template v-if="category === 'pm'">
+            <el-table-column prop="code" label="项目 code" width="110" class-name="cl-mono" show-overflow-tooltip />
+            <el-table-column label="枚数" width="80" align="right">
+              <template #default="{ row }">{{ row.pieces ?? '—' }}</template>
+            </el-table-column>
+            <el-table-column prop="release" label="发行日" width="130" show-overflow-tooltip />
+            <el-table-column label="公告" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">{{ row.announce ? '已录入' : '—' }}</template>
+            </el-table-column>
+          </template>
+
+          <!-- 普通币（钞）专属列 -->
+          <template v-else>
+            <el-table-column prop="short" label="简称" width="130" show-overflow-tooltip />
+            <el-table-column label="类别" width="90">
+              <template #default="{ row }">{{ row.kind === 'note' ? '纪念钞' : '纪念币' }}</template>
+            </el-table-column>
+            <el-table-column label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'issued' ? 'success' : 'warning'" size="small" effect="plain">
+                  {{ row.status === 'issued' ? '已发行' : '待发行' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="date" label="发行日" width="120" class-name="cl-mono" />
+            <el-table-column label="面额" width="80" align="right">
+              <template #default="{ row }">{{ row.face ?? '—' }}</template>
+            </el-table-column>
+            <el-table-column label="发行量(万)" width="110" align="right">
+              <template #default="{ row }">{{ row.mintage ?? '—' }}</template>
+            </el-table-column>
+            <el-table-column prop="reserve" label="预约期" min-width="170" show-overflow-tooltip />
+          </template>
+
           <el-table-column label="操作" width="130" fixed="right">
             <template #default="{ row, $index }">
               <el-button size="small" text type="primary" @click="openEditItem(yi, $index)">编辑</el-button>
@@ -99,13 +120,15 @@
           </el-form-item>
         </template>
 
-        <el-divider content-position="left">发行日程</el-divider>
-        <div v-for="(s, i) in editItem.schedule || []" :key="i" class="pl-sched">
-          <el-input v-model="s.k" placeholder="环节，如 预约" @input="markDirty" />
-          <el-input v-model="s.v" placeholder="时间，如 11-17 22:00 起" @input="markDirty" />
-          <el-button text type="danger" @click="removeSchedule(i)">删除</el-button>
-        </div>
-        <el-button size="small" plain @click="addSchedule">＋ 添加日程</el-button>
+        <template v-if="category === 'coin'">
+          <el-divider content-position="left">发行日程</el-divider>
+          <div v-for="(s, i) in editItem.schedule || []" :key="i" class="pl-sched">
+            <el-input v-model="s.k" placeholder="环节，如 预约" @input="markDirty" />
+            <el-input v-model="s.v" placeholder="时间，如 11-17 22:00 起" @input="markDirty" />
+            <el-button text type="danger" @click="removeSchedule(i)">删除</el-button>
+          </div>
+          <el-button size="small" plain @click="addSchedule">＋ 添加日程</el-button>
+        </template>
       </el-form>
 
       <template #footer>
@@ -120,10 +143,12 @@
         <el-form-item label="年度" required>
           <el-input-number v-model="yearForm.year" :min="1990" :max="2100" :disabled="yearEditing !== null" />
         </el-form-item>
-        <el-form-item label="公布日期"><el-input v-model="yearForm.publishedAt" placeholder="2025-12-08" /></el-form-item>
-        <el-form-item label="发布机构"><el-input v-model="yearForm.publishedBy" placeholder="中国人民银行" /></el-form-item>
-        <el-form-item label="来源链接"><el-input v-model="yearForm.sourceUrl" /></el-form-item>
-        <el-form-item label="来源摘要"><el-input v-model="yearForm.sourceText" type="textarea" :rows="3" /></el-form-item>
+        <template v-if="category === 'coin'">
+          <el-form-item label="公布日期"><el-input v-model="yearForm.publishedAt" placeholder="2025-12-08" /></el-form-item>
+          <el-form-item label="发布机构"><el-input v-model="yearForm.publishedBy" placeholder="中国人民银行" /></el-form-item>
+          <el-form-item label="来源链接"><el-input v-model="yearForm.sourceUrl" /></el-form-item>
+          <el-form-item label="来源摘要"><el-input v-model="yearForm.sourceText" type="textarea" :rows="3" /></el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="yearDialog = false">取消</el-button>
@@ -147,10 +172,10 @@ import { ElMessage } from 'element-plus';
 import PageHeader from '../components/PageHeader.vue';
 import AsyncState from '../components/AsyncState.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import { planApi } from '../api/endpoints';
+import { planApi, planPmApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 
-const FIELD_GROUPS = [
+const COMMON_GROUPS = [
   {
     title: '基本信息',
     fields: [
@@ -197,6 +222,29 @@ const FIELD_GROUPS = [
   }
 ];
 
+const PM_GROUPS = [
+  {
+    title: '基本信息',
+    fields: [
+      { k: 'key', label: '标识 key', required: true },
+      { k: 'name', label: '套名称', required: true },
+      { k: 'code', label: '项目 code' },
+      { k: 'pieces', label: '套内枚数' },
+      { k: 'release', label: '发行日' }
+    ]
+  },
+  {
+    title: '央行公告',
+    fields: [
+      { k: 'announce', label: '公告全文', type: 'textarea' }
+    ]
+  }
+];
+
+// 当前品类：coin=普通纪念币（钞），pm=贵金属纪念币
+const category = ref('coin');
+const FIELD_GROUPS = computed(() => (category.value === 'pm' ? PM_GROUPS : COMMON_GROUPS));
+
 const draft = ref({ years: [] });
 const loading = ref(false);
 const error = ref('');
@@ -229,7 +277,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    const r = await planApi.get();
+    const r = category.value === 'pm' ? await planPmApi.get() : await planApi.get();
     draft.value = clone(r.plan || { years: [] });
     if (!Array.isArray(draft.value.years)) draft.value.years = [];
     dirty.value = false;
@@ -241,6 +289,23 @@ async function load() {
 }
 onMounted(load);
 
+function onCategoryChange(next) {
+  if (next === category.value) return;
+  const apply = async () => {
+    category.value = next;
+    await load();
+    return true;
+  };
+  if (dirty.value) {
+    askConfirm({
+      title: '切换品类', danger: true, dangerText: '当前品类未保存的改动会丢失',
+      message: '当前有未保存的修改，切换品类将丢弃这些改动，确定吗？', confirmLabel: '放弃并切换'
+    }, apply);
+  } else {
+    apply();
+  }
+}
+
 /* ---------- 项目编辑 ---------- */
 const itemDrawer = ref(false);
 const editItem = ref({});
@@ -249,6 +314,9 @@ const editItemIndex = ref(-1);
 const isNewItem = ref(false);
 
 function newItem() {
+  if (category.value === 'pm') {
+    return { key: '', name: '', code: '', pieces: '', release: '', announce: '' };
+  }
   return {
     key: '', name: '', short: '', kind: 'coin', status: 'upcoming',
     date: '', face: '', mintage: '', limit: 20, coinNo: 0,
@@ -282,6 +350,7 @@ function commitItem() {
   const it = editItem.value;
   if (!String(it.key || '').trim()) { ElMessage.warning('请填写项目标识 key'); return; }
   if (!String(it.name || '').trim()) { ElMessage.warning('请填写项目名称'); return; }
+  if (category.value === 'pm' && !String(it.code || '').trim()) it.code = it.key;
   const y = draft.value.years[editYearIndex.value];
   if (!Array.isArray(y.items)) y.items = [];
   if (isNewItem.value) y.items.push(clone(it));
@@ -353,7 +422,7 @@ function askDeleteItem(yi, ii) {
   askConfirm({
     title: '删除发行项目', danger: true, dangerText: '删除后需保存才会写入文件',
     message: `删除「${it.name}」？`, confirmText: it.key, confirmLabel: '删除',
-    effects: ['该项目会从发行计划中移除', '保存后网站 /plan 生效（小程序需重新打包）']
+    effects: ['该项目会从发行计划中移除', '保存后网站 /plan 生效']
   }, async () => {
     draft.value.years[yi].items.splice(ii, 1);
     markDirty();
@@ -375,8 +444,8 @@ function askDeleteYear(yi) {
 }
 function askSave() {
   askConfirm({
-    title: '保存发行计划', message: `将 ${yearCount.value} 个年度 / ${itemCount.value} 个项目写入 public/data/plan.json？`,
-    effects: ['保存后网站 /plan 立即使用新数据（小程序需重新打包）', '操作会记入审计日志'],
+    title: '保存发行计划', message: `将 ${yearCount.value} 个年度 / ${itemCount.value} 个项目写入${category.value === 'pm' ? '贵金属' : '普通'}发行计划？`,
+    effects: ['保存后网站 /plan 立即使用新数据', '操作会记入审计日志'],
     confirmLabel: '保存'
   }, saveAll);
 }
@@ -391,7 +460,8 @@ function askReload() {
 async function saveAll() {
   saving.value = true;
   try {
-    const r = await planApi.save(draft.value);
+    const api = category.value === 'pm' ? planPmApi : planApi;
+    const r = await api.save(draft.value);
     ElMessage.success(`已保存 ${r.years} 个年度 / ${r.items} 个项目`);
     dirty.value = false;
     await load();

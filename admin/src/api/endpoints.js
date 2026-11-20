@@ -48,6 +48,11 @@ export const planApi = {
   save: (plan) => http.put('/admin/plan', { plan })
 };
 
+export const planPmApi = {
+  get: () => http.get('/admin/plan-pm'),
+  save: (plan) => http.put('/admin/plan-pm', { plan })
+};
+
 export const imagesApi = {
   all: () => http.get('/admin/coins'),
   upload: (body) => http.post('/admin/image', body),
