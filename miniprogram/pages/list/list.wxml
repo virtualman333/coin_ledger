@@ -1,5 +1,5 @@
 <view class="head">
-  <view class="search-row">
+  <view class="search-row" wx:if="{{viewMode === 'list'}}">
     <view class="search">
       <!-- 未激活时放一个「假框」：不渲染 input，机型再想自动聚焦也没有对象 -->
       <view
@@ -42,7 +42,13 @@
     >{{item.name}}</view>
   </view>
 
-  <scroll-view class="tabs" scroll-x enable-flex>
+  <!-- 视图模式：顺序清单 / 按系列 -->
+  <view class="view-switch">
+    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
+    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
+  </view>
+
+  <scroll-view class="tabs" scroll-x enable-flex wx:if="{{viewMode === 'list'}}">
     <view
       class="tab {{code === item.code ? 'tab-on' : ''}}"
       wx:for="{{tabs}}"
@@ -55,14 +61,14 @@
     </view>
   </scroll-view>
 
-  <view class="bar">
+  <view class="bar" wx:if="{{viewMode === 'list'}}">
     <text class="bar-text">{{count}} 个品种 · 已收 {{ownedCount}}</text>
     <view class="bar-actions">
       <view class="bar-btn {{desc ? '' : 'asc'}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
     </view>
   </view>
 
-  <view class="fpanel" wx:if="{{filterOpen && category !== 'pm'}}">
+  <view class="fpanel" wx:if="{{viewMode === 'list' && filterOpen && category !== 'pm'}}">
     <view class="frow">
       <picker range="{{yearOpts}}" value="{{yearIdx}}" bindchange="pickYear">
         <view class="fbtn {{yearFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{yearFilter || '年份'}} ▾</view>
@@ -80,7 +86,7 @@
 </view>
 
 <!-- 贵金属全量库（金币云集 2823 条）：卡片网格 + 占位图 + 加载更多 -->
-<view class="pm-full" wx:if="{{category === 'pm'}}">
+<view class="pm-full" wx:if="{{viewMode === 'list' && category === 'pm'}}">
   <view class="pm-bar">贵金属纪念币 · 共 {{pmTotal || '…'}} 条</view>
   <view class="pm-grid">
     <view
@@ -107,7 +113,7 @@
   <view class="pm-end" wx:if="{{pmLoaded && pmRows.length > 0 && pmPage >= pmPages}}">已显示全部 {{pmTotal}} 条</view>
 </view>
 
-<view class="list" wx:if="{{category !== 'pm'}}">
+<view class="list" wx:if="{{viewMode === 'list' && category !== 'pm'}}">
   <view
     class="row"
     wx:for="{{rows}}"
@@ -146,4 +152,48 @@
   <view class="empty" wx:if="{{count === 0}}">
     {{onlyOwn ? '还没有收藏到符合条件的东西，先取消「只看已收」试试' : '没有匹配的品种，换个关键词试试'}}
   </view>
+</view>
+
+<!-- 按系列视图：复用 series 页的卡片分组，点卡片回顺序清单并定位 -->
+<view class="series-view" wx:if="{{viewMode === 'series'}}">
+  <view class="sv-group" wx:if="{{seriesCoin.length}}">
+    <view class="sv-h coin"><text>普通纪念币</text><text class="sv-n">{{seriesCoin.length}} 个系列</text></view>
+    <view class="sv-cards">
+      <view class="sv-card" wx:for="{{seriesCoin}}" wx:key="code" data-cat="coin" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
+        <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+        <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <text class="sv-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sv-group" wx:if="{{seriesNote.length}}">
+    <view class="sv-h note"><text>纪念钞</text><text class="sv-n">{{seriesNote.length}} 个系列</text></view>
+    <view class="sv-cards">
+      <view class="sv-card" wx:for="{{seriesNote}}" wx:key="code" data-cat="note" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
+        <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+        <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <text class="sv-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sv-group" wx:if="{{seriesPm.length}}">
+    <view class="sv-h pm"><text>贵金属纪念币</text><text class="sv-n">{{seriesPm.length}} 个项目</text></view>
+    <view class="sv-cards">
+      <view class="sv-card sv-card-pm" wx:for="{{seriesPm}}" wx:key="code" data-cat="pm" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
+        <view class="sv-body"><text class="sv-name">{{item.name}}</text><text class="sv-meta">{{item.count}} 枚 · 查看目录 ›</text></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sv-empty" wx:if="{{!seriesCoin.length && !seriesNote.length && !seriesPm.length}}">系列数据加载中…</view>
 </view>

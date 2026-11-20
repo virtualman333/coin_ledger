@@ -32,6 +32,12 @@ Page({
     pmTotal: 0,
     pmLoading: false,
     pmLoaded: false,
+    // 视图模式：list=顺序清单（默认）/ series=按系列卡片浏览
+    viewMode: 'list',
+    seriesCoin: [],
+    seriesNote: [],
+    seriesPm: [],
+    seriesPmLoaded: false,
   },
 
   onLoad(query) {
@@ -65,13 +71,59 @@ Page({
       this.setData({ code: pending });
     }
     this.render();
+    if (this.data.viewMode === 'series') this.buildSeriesView();
   },
 
   onPullDownRefresh() {
     store.refresh().then(() => {
       this.render();
+      if (this.data.viewMode === 'series') this.buildSeriesView();
       wx.stopPullDownRefresh();
     }).catch(() => wx.stopPullDownRefresh());
+  },
+
+  /** 按系列视图：普通币/纪念钞从本地目录分组，贵金属项目复用已加载的 pmTabs */
+  buildSeriesView() {
+    const owned = store.ownedNames();
+    const coin = [], note = [];
+    (cat.seriesList || []).forEach((s) => {
+      const members = cat.inSeries(s.code);
+      const own = members.filter((c) => owned[c.name]).length;
+      const noteN = members.filter((c) => c.kind === 'note').length;
+      const row = {
+        code: s.code,
+        name: s.name,
+        count: members.length,
+        own: own,
+        pct: members.length ? Math.round((own / members.length) * 100) : 0,
+        imgUrl: s.img ? api.BASE + '/' + s.img : '',
+      };
+      (noteN > members.length / 2 ? note : coin).push(row);
+    });
+    // pmTabs 第一项是「全部项目」，跳过；其余为发行项目
+    const pm = (this.data.pmTabs || []).slice(1).map((t) => ({
+      code: t.code, name: t.name, count: t.count,
+    }));
+    this.setData({
+      seriesCoin: coin, seriesNote: note, seriesPm: pm,
+      seriesPmLoaded: this.data.pmTabs.length > 0,
+    });
+  },
+
+  /** 顺序清单 / 按系列 两模式切换 */
+  toggleViewMode(e) {
+    const mode = e.currentTarget.dataset.mode === 'series' ? 'series' : 'list';
+    if (mode === this.data.viewMode) return;
+    this.setData({ viewMode: mode });
+    if (mode === 'series') this.buildSeriesView();
+  },
+
+  /** 按系列视图点卡片：回到顺序清单并定位到该品类 + 系列 */
+  goSeriesCard(e) {
+    const ds = e.currentTarget.dataset;
+    const category = ds.cat === 'pm' ? 'pm' : (ds.cat === 'note' ? 'note' : 'coin');
+    this.setData({ viewMode: 'list' });
+    this.applyCategory(category, ds.code || '');
   },
 
   /** 从全量品种里生成三个下拉的选项 */
@@ -142,6 +194,7 @@ Page({
         .concat(res.items.map((it) => ({ code: it.code, name: it.name, count: it.count })));
       this.setData({ pmTabs });
       if (this.data.category === 'pm') this.setData({ tabs: pmTabs });
+      if (this.data.viewMode === 'series') this.buildSeriesView();
     }).catch(() => {});
   },
 
