@@ -1302,6 +1302,12 @@ html[data-theme="light"] .oc-ok{color:#1a7a52}
   font-family:inherit;transition:.16s;display:flex;flex-direction:column;gap:8px
 }
 .lt-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 10px 24px var(--sh-2)}
+/* 访客加过、注册后置顶的「接着记这枚」卡：金色描边 + 角标，和其余试手卡区分 */
+.lt-card.pending{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.lt-pending-tag{
+  align-self:flex-start;font-size:10px;font-weight:600;letter-spacing:.02em;
+  color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:2px 6px
+}
 .lt-card img{
   width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;background:#fff
 }

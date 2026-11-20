@@ -40,6 +40,10 @@ var APP = {
 
 function isLoggedIn(){ return !!(APP.user && APP.user.name); }
 
+/* 访客在公开清单点「+ 加入」想记的那一枚：记下来，注册后落到账本时置顶，
+   避免「点了加入却看不到、注册后又被清掉」的断头路。 */
+var pendingGuestAdd = null;
+
 /* ---------- 数据装配 ---------- */
 function applyPayload(p){
   if (p.series && Object.keys(p.series).length) SERIES = p.series;
@@ -808,13 +812,20 @@ function renderHoldings(){
  *  没有任何清单（滚下去直接是数据说明和页脚），照做的用户只会走到死路。
  *  现在给出真正可点的下一步：单价最低的 4 枚一点即入，或者去完整清单。 */
 function emptyLedgerHtml(){
+  // 访客加过但被引导去登录的那一枚，置顶成一枚「接着记」的卡，别让人注册完重新找。
+  var pending = pendingGuestAdd ? findDB(pendingGuestAdd) : null;
   var picks = DB.filter(function(d){
     return REAL_SET[d.i + 1] && aiPrice(d) > 0;
   }).sort(function(a, b){
     return (aiPrice(a) - aiPrice(b)) || (a.i - b.i);
   }).slice(0, 4);
+  if (pending && REAL_SET[pending.i + 1] && !isOwned(pending.name)) {
+    picks = [pending].concat(picks.filter(function(d){ return d.i !== pending.i; })).slice(0, 4);
+  }
   var cards = picks.map(function(d){
-    return '<button class="lt-card" data-empty-add="' + esc(d.name) + '">' +
+    var isPending = pending && d.i === pending.i;
+    return '<button class="lt-card' + (isPending ? ' pending' : '') + '" data-empty-add="' + esc(d.name) + '">' +
+      (isPending ? '<span class="lt-pending-tag">接着记这枚</span>' : '') +
       '<img src="' + imgSmall(d.i + 1) + '" alt="' + esc(d.name) + '" ' +
         'width="120" height="120" decoding="async">' +
       '<span class="lt-name">' + esc(d.name) + '</span>' +
@@ -829,7 +840,9 @@ function emptyLedgerHtml(){
       '点下面任意一枚就能先记上；也可以去「清单」逐个「＋ 加入」。' +
       '按卷记录数量，成本随时能改，套系进度会自动算好。</p>' +
     (cards
-      ? '<div style="margin-top:20px;font-size:11.5px;color:var(--dim);letter-spacing:.02em">先试手：这 4 枚单价最低</div>' +
+      ? '<div style="margin-top:20px;font-size:11.5px;color:var(--dim);letter-spacing:.02em">' +
+          (pending ? '你刚想记的那枚已置顶，点一下就记上' : '先试手：这 4 枚单价最低') +
+        '</div>' +
         '<div class="latest-grid" style="margin-top:10px">' + cards + '</div>'
       : '') +
     '<div class="gate-actions" style="margin-top:20px">' +
@@ -2848,14 +2861,56 @@ function addHolding(name, unit, qty){
 function requestAddHolding(name, after){
   var d = findDB(name);
   if (!d || isOwned(name)) return;
+  // 访客点「+ 加入」不能假成功：旧逻辑把它塞进本机 coll、弹「已加入」，
+  // 但「我的藏品」入口对访客隐藏、注册后又被空账本覆盖 —— 记了等于没记。
+  // 改成引导去登录，并记住这一枚，注册后落到空账本时置顶让它一点即入。
+  if (!isLoggedIn()) { showGuestAddGuide(name); return; }
   var size = holdingUnitSize(d);
   function done(unit, qty){
     if (addHolding(name, unit, qty)) {
+      if (pendingGuestAdd === name) pendingGuestAdd = null;
       toast('已加入「' + name + '」× ' + qty + (unit === 'piece' ? ' 枚' : ''));
       if (after) after();
     }
   }
   showAddUnitChooser(d, size, done);
+}
+
+/** 访客「+ 加入」的登录引导：说清为什么要登录，并带上刚想记的品种名。
+ *  两个按钮都落到账户页、切到对应表单；品种名存进 pendingGuestAdd，
+ *  注册成功后 emptyLedgerHtml 把它排在快速添加卡第一位。 */
+function showGuestAddGuide(name){
+  pendingGuestAdd = name;
+  var old = document.getElementById('guestAddMask');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  var mask = document.createElement('div');
+  mask.id = 'guestAddMask';
+  mask.className = 'au-mask';
+  mask.innerHTML =
+    '<div class="au-sheet" role="dialog" aria-modal="true" aria-label="登录后记录藏品">' +
+      '<b>记下「' + esc(name) + '」</b>' +
+      '<p>藏品要存进你自己的账本，换设备登录也在。免费注册只要用户名 + 密码。</p>' +
+      '<button type="button" data-guest-go="register">免费注册并记下这枚</button>' +
+      '<button type="button" data-guest-go="login">已有账号，去登录</button>' +
+      '<button type="button" class="au-x" data-guest-go="cancel">再看看</button>' +
+    '</div>';
+  document.body.appendChild(mask);
+  mask.onclick = function(e){
+    var b = e.target.closest('[data-guest-go]');
+    if (!b) return;
+    var act = b.getAttribute('data-guest-go');
+    if (mask.parentNode) mask.parentNode.removeChild(mask);
+    if (act === 'cancel') { if (pendingGuestAdd === name) pendingGuestAdd = null; return; }
+    goTab('account');
+    showAuthMode(act);
+  };
+  document.addEventListener('keydown', function escKey(e){
+    if (e.key === 'Escape') {
+      var m = document.getElementById('guestAddMask');
+      if (m && m.parentNode) m.parentNode.removeChild(m);
+      document.removeEventListener('keydown', escKey);
+    }
+  });
 }
 
 function showAddUnitChooser(d, size, cb){
