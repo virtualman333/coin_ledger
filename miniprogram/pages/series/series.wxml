@@ -12,22 +12,50 @@
     <text class="all-more">›</text>
   </view>
 
-  <view class="cards">
-    <view
-      class="scard"
-      wx:for="{{items}}"
-      wx:key="code"
-      data-code="{{item.code}}"
-      bindtap="goSeries"
-      hover-class="tap-hover"
-    >
-      <image class="scard-img" src="{{item.imgUrl}}" mode="aspectFit" lazy-load wx:if="{{item.imgUrl}}"></image>
-      <view class="scard-ph" wx:else><text>{{item.name}}</text></view>
-      <view class="scard-body">
-        <text class="scard-name">{{item.name}}</text>
-        <text class="scard-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
-        <view class="scard-bar"><view class="scard-fill" style="width:{{item.pct}}%"></view></view>
+  <!-- 纪念币 -->
+  <view class="sc-group" wx:if="{{coinGroup.length}}">
+    <view class="sc-group-h coin"><text>普通纪念币</text><text class="sc-g-n">{{coinGroup.length}} 个系列</text></view>
+    <view class="cards">
+      <view class="scard" wx:for="{{coinGroup}}" wx:key="code" data-code="{{item.code}}" data-cat="coin" bindtap="goSeries" hover-class="tap-hover">
+        <image class="scard-img" src="{{item.imgUrl}}" mode="aspectFit" lazy-load wx:if="{{item.imgUrl}}"></image>
+        <view class="scard-ph" wx:else><text>{{item.name}}</text></view>
+        <view class="scard-body">
+          <text class="scard-name">{{item.name}}</text>
+          <text class="scard-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="scard-bar"><view class="scard-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
       </view>
     </view>
+  </view>
+
+  <!-- 纪念钞 -->
+  <view class="sc-group" wx:if="{{noteGroup.length}}">
+    <view class="sc-group-h note"><text>纪念钞</text><text class="sc-g-n">{{noteGroup.length}} 个系列</text></view>
+    <view class="cards">
+      <view class="scard" wx:for="{{noteGroup}}" wx:key="code" data-code="{{item.code}}" data-cat="note" bindtap="goSeries" hover-class="tap-hover">
+        <image class="scard-img" src="{{item.imgUrl}}" mode="aspectFit" lazy-load wx:if="{{item.imgUrl}}"></image>
+        <view class="scard-ph" wx:else><text>{{item.name}}</text></view>
+        <view class="scard-body">
+          <text class="scard-name">{{item.name}}</text>
+          <text class="scard-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="scard-bar"><view class="scard-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 贵金属 -->
+  <view class="sc-group">
+    <view class="sc-group-h pm"><text>贵金属纪念币</text><text class="sc-g-n">{{pmLoaded ? pmGroup.length + ' 个项目' : '加载中…'}}</text></view>
+    <view class="cards" wx:if="{{pmLoaded && pmGroup.length}}">
+      <view class="scard scard-pm" wx:for="{{pmGroup}}" wx:key="code" data-code="{{item.code}}" data-cat="pm" bindtap="goSeries" hover-class="tap-hover">
+        <view class="scard-body">
+          <text class="scard-name">{{item.name}}</text>
+          <text class="scard-meta">{{item.count}} 枚 · 查看目录 ›</text>
+        </view>
+      </view>
+    </view>
+    <view class="sc-empty" wx:elif="{{pmLoaded}}">暂无贵金属项目</view>
+    <view class="sc-empty" wx:else>正在加载贵金属项目…</view>
   </view>
 </view>

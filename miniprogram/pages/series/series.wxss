@@ -122,3 +122,51 @@
   border-radius: 999rpx;
   background: linear-gradient(90deg, #b98f43, #d9b364);
 }
+
+/* 三大品类分组 */
+.sc-group {
+  margin-top: 24rpx;
+}
+
+.sc-group-h {
+  display: flex;
+  margin: 6rpx 4rpx 14rpx;
+  padding-left: 16rpx;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 8rpx solid #b98f43;
+  color: #2b2926;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.sc-group-h.note {
+  border-left-color: #5b86a8;
+}
+
+.sc-group-h.pm {
+  border-left-color: #8c6b3f;
+}
+
+.sc-g-n {
+  color: #b3aa9b;
+  font-size: 20rpx;
+  font-weight: 400;
+}
+
+.sc-empty {
+  padding: 28rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #b3aa9b;
+  font-size: 23rpx;
+  text-align: center;
+}
+
+.scard-pm .scard-body {
+  display: flex;
+  min-height: 96rpx;
+  padding: 26rpx 20rpx;
+  flex-direction: column;
+  justify-content: center;
+}

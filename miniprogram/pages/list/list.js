@@ -53,6 +53,14 @@ Page({
     const pending = wx.getStorageSync('cl_pending_series');
     if (pending) {
       wx.removeStorageSync('cl_pending_series');
+      // 新格式：{code, category} —— 从「按系列」页分组跳转，需同时切品类
+      if (pending && typeof pending === 'object' && pending.code) {
+        const category = pending.category === 'pm' ? 'pm'
+          : (pending.category === 'note' ? 'note' : 'coin');
+        this.applyCategory(category, pending.code);
+        return;
+      }
+      // 老格式：纯字符串 code，保持原行为
       this.setData({ code: pending });
     }
     this.render();
@@ -138,16 +146,22 @@ Page({
 
   pickCategory(e) {
     const category = e.currentTarget.dataset.cat || 'coin';
+    this.applyCategory(category, '');
+  },
+
+  /** 切换品类并可选定位到某个系列 code（从「按系列」页分组跳转用） */
+  applyCategory(category, code) {
     this.setData({ category }, () => {
       if (category === 'pm') {
         this.setData({
           keyword: '', yearFilter: '', faceFilter: '', matFilter: '', onlyOwn: false,
           hasExtra: false, extraCount: 0, yearIdx: 0, faceIdx: 0, matIdx: 0,
           pmRows: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmLoaded: false,
-          filterOpen: false, code: '', tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
+          filterOpen: false, code: code || '',
+          tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
         this.loadPmFull(1, false);
       } else {
-        this.setData({ code: '', tabs: this.data.allTabs });
+        this.setData({ code: code || '', tabs: this.data.allTabs, category });
         this.render();
       }
     });
