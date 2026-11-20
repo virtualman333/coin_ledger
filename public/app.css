@@ -5,6 +5,8 @@
   --bg:#0a0c10;
   --panel:#141a22;
   --panel2:#1a212b;
+  --card:#141a22;          /* 卡片/弹窗表面；等价于 --panel，勿用未定义变量导致背景透明 */
+  --sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
   --line:rgba(212,175,55,.16);
   --line2:rgba(255,255,255,.07);
   --gold:#e8c877;
@@ -605,6 +607,8 @@ html[data-theme="light"]{
   --bg:#f7f4ed;
   --panel:#fffdf8;
   --panel2:#fffdf8;
+  --card:#fffdf8;          /* 卡片/弹窗表面；与浅色 --panel 一致 */
+  --sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
   --line:rgba(150,110,35,.24);
   --line2:rgba(40,32,16,.10);
   --gold:#9a6f24;
