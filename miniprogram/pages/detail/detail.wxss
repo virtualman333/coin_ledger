@@ -450,7 +450,7 @@
   font-size: 18rpx;
 }
 
-/* AI 推理价：只在详情页出现 */
+/* 推理价：只在详情页出现 */
 .ai-row {
   margin-top: 18rpx;
   padding: 14rpx 16rpx;

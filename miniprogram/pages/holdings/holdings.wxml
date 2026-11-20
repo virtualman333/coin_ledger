@@ -104,7 +104,7 @@
                 <text>均价 ¥{{item.unitCostText}}</text>
               </view>
               <view class="hc-ai" wx:if="{{item.aiText}}">
-                <text class="hc-ai-badge">AI</text>
+                <text class="hc-ai-badge">推理价</text>
                 <text class="hc-ai-val">¥{{item.aiText}}</text>
                 <text class="hc-ai-d">{{item.aiDiffText}}</text>
               </view>

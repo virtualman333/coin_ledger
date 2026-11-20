@@ -50,14 +50,7 @@
           <text class="tag title-own" wx:if="{{owned}}">已收</text>
         </view>
       </view>
-      <view class="price-badge" wx:if="{{unitPrice && coin.hasPrice}}">
-        <view class="pb-main">
-          <text class="pb-cur">¥</text><text class="pb-num">{{unitPrice}}</text>
-          <text class="pb-unit">/{{unitLabel}}</text>
-        </view>
-        <text class="pb-set" wx:if="{{setPrice}}">一套{{setSizeText}} ≈ ¥{{setPrice}}</text>
-        <text class="pb-tip">参考价</text>
-      </view>
+      <!-- 参考价徽章已下掉；推理价统一在下方参数卡内展示并公开计算方式 -->
     </view>
     <view class="set-line" wx:if="{{setInfo && coin.hasPrice}}">
       <text class="set-name">{{setInfo.name}}</text>
@@ -74,12 +67,10 @@
     </view>
     <view class="ai-row" wx:if="{{aiPrice}}">
       <view class="ai-main">
-        <text class="ai-badge">AI</text>
         <text class="ai-label">推理价</text>
         <text class="ai-value">¥{{aiPrice}}</text>
-        <text class="ai-diff">{{aiDiffText}}</text>
       </view>
-      <text class="ai-tip">按发行量 · 材质 · 年代推算，面值已按年化 2.5% 通胀折算</text>
+      <text class="ai-tip">计算方式：用发行量、材质、发行年份三项公开参数，按对数回归模型推算 ln(价) = 12.605 − 2.2721·ln(量) + 0.1102·ln(量)² + 0.3325·ln(1+年数) + 材质系数 + 钞券系数；量按万枚/万张计，年数 = 今年 − 发行年，材质与钞券系数取固定值。结果不低于面值按年化 2.5% 折算至今的购买力。模型由在册品种拟合而成（R²≈0.83），不含题材溢价，仅供参考。</text>
     </view>
     <text class="fact-note" wx:if="{{specNote}}">{{specNote}}</text>
   </view>

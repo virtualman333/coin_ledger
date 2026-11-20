@@ -40,9 +40,7 @@ Page({
     id: 0,
     coin: null,
     facts: [],
-    priceRows: [],
     aiPrice: '',
-    aiDiffText: '',
     same: [],
     peek: null,
     owned: false,
@@ -76,7 +74,6 @@ Page({
     }
     const state = store.getState();
     const holding = store.findHolding(coin.name);
-    const unitNow = cat.round2(store.priceOf(coin));
     const same = cat.coins
       .filter((c) => c.series === coin.series && c.id !== coin.id)
       .slice(0, 8)
@@ -126,28 +123,8 @@ Page({
           ? [{ k: '一套面值', v: cat.money(coin.setFace) + ' 元 · ' + coin.setSize + (coin.kind === 'note' ? ' 张' : ' 枚') }]
           : []),
       specNote: coin.specFrom ? '* 该品种央行公告未公布厚度与重量，这里按同系列同规格推定' : '',
-      // 3D 展示：需要正、反两张干净图
-      // AI 推理价（只用发行量/材质/年代/面值算，不含题材溢价）
+      // 推理价（只用发行量/材质/年代/面值算，不含题材溢价）；参考价不再展示
       aiPrice: cat.money(cat.aiPriceOf(coin)),
-      aiDiffText: (function () {
-        const ai = cat.aiPriceOf(coin);
-        if (!ai || !unitNow) return '';
-        const d = (unitNow - ai) / ai;
-        if (Math.abs(d) < 0.05) return '与参考价基本一致';
-        return d > 0
-          ? '参考价高 ' + Math.round(d * 100) + '%'
-          : '参考价低 ' + Math.round(-d * 100) + '%';
-      })(),
-      // 价格不再占一整块：单枚价放标题右侧，一套相关收进 facts
-      unitPrice: cat.money(unitNow),
-      unitLabel: coin.kind === 'note' ? '张' : '枚',
-      setPrice: coin.setSize > 1 ? cat.money(store.setPriceOf(coin)) : '',
-      setSizeText: coin.setSize + (coin.kind === 'note' ? ' 张' : ' 枚'),
-      priceRows: [
-        { k: '单' + (coin.kind === 'note' ? '张' : '枚') + '参考价', v: cat.money(unitNow) },
-        { k: '一套面值', v: cat.money(coin.setFace) },
-        { k: '一套参考价（' + coin.setSize + ' ' + (coin.kind === 'note' ? '张' : '枚') + '）', v: cat.money(store.setPriceOf(coin)) },
-      ],
       owned: !!holding,
       holding: holding || null,
       same,

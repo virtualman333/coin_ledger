@@ -1180,8 +1180,13 @@ html[data-theme="light"] .oc-ok{color:#1a7a52}
 .coin-price .cf i{font-style:normal;font-size:10.5px;color:var(--dim);letter-spacing:.04em}
 .coin-price .cf b{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
 .coin-price .cf b.gold{color:var(--gold)}
+.coin-price.single-price{grid-template-columns:1fr;gap:6px}
+.coin-price.single-price .cf-note-inline{
+  grid-column:1/-1;font-size:11px;line-height:1.6;color:var(--dim);font-weight:400;
+}
 @media (max-width:820px){
   .coin-price{grid-template-columns:1fr 1fr}
+  .coin-price.single-price{grid-template-columns:1fr}
 }
 
 /* 藏品卡名称可点 */

@@ -77,7 +77,7 @@ Page({
       const isPiece = h.unit === 'piece';             // 用户选的是「按单枚/单张」记
       const qty = isPiece ? rolls : rolls * size;     // 件数：枚 / 张
       const pnl = cat.round2((Number(h.market) || 0) - (Number(h.cost) || 0));
-      // AI 推理价：单枚理论价 × 这件持仓的件数，和市值对比看溢价/低估
+      // 推理价：单枚理论价 × 这件持仓的件数，和市值对比看溢价/低估
       const aiUnit = coin ? cat.aiPriceOf(coin) : 0;
       const aiTotal = cat.round2(aiUnit * qty);
       const marketNum = Number(h.market) || 0;

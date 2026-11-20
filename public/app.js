@@ -225,7 +225,7 @@ function unitPrice(d){
  *  用户口径：「一套」= 一次预约能约到的最大数量，所以 limit 放在最前面。
  */
 /**
- * 藏品卡片里的 AI 推理价：单枚理论价 × 这件持仓的件数，再和账面市价对比。
+ * 藏品卡片里的 推理价：单枚理论价 × 这件持仓的件数，再和账面市价对比。
  * 件数口径跟随持仓单位（按套记就乘每套件数，按枚记本身就是件数）。
  */
 function aiLine(d, c){
@@ -240,19 +240,10 @@ function aiLine(d, c){
   var diff = Math.abs(gap) < 0.05
     ? '与市价相当'
     : (gap > 0 ? '市价高 ' + Math.round(gap * 100) + '%' : '市价低 ' + Math.round(-gap * 100) + '%');
-  return '<div class="ai-line"><i>AI</i><b>' + money(aiTotal) + '</b><span>' + diff + '</span></div>';
+  return '<div class="ai-line"><i>推理价</i><b>' + money(aiTotal) + '</b><span>' + diff + '</span></div>';
 }
 
-/** AI 推理价与参考价的偏离说明 */
-function aiDiffOf(d){
-  var ai = aiPrice(d);
-  if (!ai || !d.est) return '';
-  var k = (Number(d.est) - ai) / ai;
-  if (Math.abs(k) < 0.05) return '与参考价基本一致';
-  return k > 0 ? '参考价高 ' + Math.round(k * 100) + '%' : '参考价低 ' + Math.round(-k * 100) + '%';
-}
-
-// AI 推理价（与小程序 catalog.aiPriceOf 同一套系数）
+// 推理价（与小程序 catalog.aiPriceOf 同一套系数）
 var AI_MAT = {
   '双色铜合金': 0.8456, '钢芯镀镍': 0.0384, '紫铜合金': 0.8331, '铜镍合金': 1.4898,
   '纸质': 1.1127, '塑料': 0.7390, '铜锌合金': 1.7983, '镍包钢': -1.3443
@@ -273,6 +264,8 @@ function aiPrice(d){
   if (!isFinite(p) || p < floor) p = floor;
   return Math.round(p * 10) / 10;
 }
+/** 推理价计算方式，公开给用户在详情页查看（口径与 aiPrice 一致） */
+var AI_FORMULA_TEXT = '计算方式：用发行量、材质、发行年份三项公开参数，按对数回归模型推算 ln(价) = 12.605 − 2.2721·ln(量) + 0.1102·ln(量)² + 0.3325·ln(1+年数) + 材质系数 + 钞券系数；量按万枚/万张计，年数=今年−发行年，材质与钞券系数取固定值。结果不低于面值按年化 2.5% 折算至今的购买力。模型由在册品种拟合而成（R²≈0.83），不含题材溢价，仅供参考。';
 
 function setSizeOf(d){
   if (!d) return 20;
@@ -1544,11 +1537,9 @@ function renderCoin(i){
             ? '<div class="cf-note">* 该品种央行公告未公布厚度与重量，这里按同系列同规格推定</div>'
             : '') +
         '</div>' +
-        '<div class="coin-price">' +
-          fact('单' + unit + '参考价', money(d.est)) +
-          fact('一套（' + sp.size + ' ' + unit + '）发行价', money(sp.face)) +
-          fact('一套（' + sp.size + ' ' + unit + '）参考价', money(sp.est), 'gold') +
-          fact('AI 推理价（单' + unit + '）', money(aiPrice(d)), 'ai', aiDiffOf(d)) +
+        '<div class="coin-price single-price">' +
+          fact('推理价（单' + unit + '）', money(aiPrice(d)), 'ai') +
+          '<div class="cf-note-inline">' + AI_FORMULA_TEXT + '</div>' +
         '</div>' +
         ownHtml +
       '</div>' +

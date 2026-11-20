@@ -575,7 +575,7 @@
   text-align: center;
 }
 
-/* 卡片里的 AI 推理价 */
+/* 卡片里的推理价 */
 .hc-ai {
   display: flex;
   margin-top: 8rpx;
