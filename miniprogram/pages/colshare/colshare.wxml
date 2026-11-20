@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+  <view class="err" wx:elif="{{err}}">{{err}}</view>
+
+  <block wx:else>
+    <view class="head">
+      <view class="owner">{{owner}}的收藏</view>
+      <view class="sub">{{kinds}} 个品种 · {{total}} 枚/张<text wx:if="{{timeText}}"> · {{timeText}}分享</text></view>
+      <button class="share-btn" open-type="share" hover-class="tap-hover">分享给朋友</button>
+    </view>
+
+    <view class="tip">仅展示藏品品种与数量，不含成本、盈亏等账本信息</view>
+
+    <view class="empty" wx:if="{{!items.length}}">这份收藏还是空的</view>
+    <view class="list" wx:else>
+      <view class="row" wx:for="{{items}}" wx:key="name">
+        <image class="thumb" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" data-src="{{item.imgUrl}}" bindtap="preview"></image>
+        <view class="thumb-ph" wx:else>{{item.name[0]}}</view>
+        <view class="info">
+          <view class="name">{{item.name}}</view>
+          <view class="meta">{{item.year ? item.year + ' 年 · ' : ''}}{{item.seriesName || '独立藏品'}}</view>
+          <view class="tags" wx:if="{{item.tagText}}">{{item.tagText}}</view>
+        </view>
+        <view class="qty">{{item.qtyLabel}}</view>
+      </view>
+    </view>
+
+    <view class="foot">藏币录 · 中国纪念币图鉴与收藏记录</view>
+  </block>
+</view>

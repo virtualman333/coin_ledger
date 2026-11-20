@@ -40,7 +40,10 @@
     <block wx:if="{{!empty}}">
       <view class="tools">
         <text class="tools-text">{{groups.length}} 个分组 · 左滑或长按卡片可改数量与成本</text>
-        <text class="tools-btn" hover-class="tap-hover" bindtap="toggleAll">{{allOpen ? '收起' : '展开'}}</text>
+        <view class="tools-acts">
+          <button class="tools-share" open-type="share" hover-class="tap-hover">分享我的收藏</button>
+          <text class="tools-btn" hover-class="tap-hover" bindtap="toggleAll">{{allOpen ? '收起' : '展开'}}</text>
+        </view>
       </view>
 
       <block wx:for="{{groups}}" wx:key="name" wx:for-item="group" wx:for-index="gi">

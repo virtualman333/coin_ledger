@@ -29,13 +29,66 @@ Page({
     ],
     empty: true,
     swipeId: '',        // 左滑展开操作的那张卡片（持仓 id）
+    shareCode: '',      // 收藏快照分享码（进页面时预生成）
+  },
+
+  onLoad(q) {
+    // 朋友圈分享打开的是当前页，带 code 时转到只读快照页，别让人看到自己的空账本
+    const code = String((q && q.code) || '').slice(0, 32);
+    if (code) {
+      wx.redirectTo({ url: '/pages/colshare/colshare?code=' + encodeURIComponent(code) });
+      return;
+    }
   },
 
   onShow() {
     this.render();
-    store.refresh().then(() => this.render()).catch((err) => {
+    this.prepareShare();
+    store.refresh().then(() => {
+      this.render();
+      this.prepareShare();
+    }).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
+  },
+
+  /** 预生成只读快照：分享回调是同步的，必须提前拿到分享码 */
+  prepareShare() {
+    if (!store.isLogin()) return;
+    const hs = store.getState().holdings || [];
+    if (!hs.length) return;
+    const sig = hs.map((h) => [h.id, h.rolls, h.unit, h.category, h.name].join(':')).join('|');
+    if (this.data.shareCode && sig === this._shareSig) return;
+    if (this._shareBusy) return;
+    this._shareSig = sig;
+    this._shareBusy = true;
+
+    const items = hs.map((h) => {
+      const c = cat.byName[h.name];
+      const size = c ? (c.setSizeBase || c.setSize) : 20;
+      const rolls = Number(h.rolls) || 0;
+      const qty = h.unit === 'piece' ? rolls : rolls * size;
+      let imgUrl = '';
+      if (h.category === 'pm' && h.thumb) {
+        imgUrl = String(h.thumb).indexOf('http') === 0 ? h.thumb : api.BASE + h.thumb;
+      } else if (c) {
+        imgUrl = c.smallUrl || c.thumbUrl || c.imgUrl || '';
+      }
+      return {
+        name: h.name,
+        year: c ? c.year : 0,
+        category: h.category === 'pm' ? 'pm' : ((c && c.kind === 'note') ? 'note' : 'coin'),
+        qty,
+        qtyLabel: qty + ' ' + ((c && c.kind === 'note') ? '张' : '枚'),
+        seriesName: (c && c.seriesName) || h.group || '',
+        imgUrl,
+      };
+    });
+
+    return api.post('/api/colshare', { items }).then((r) => {
+      this._shareBusy = false;
+      if (r && r.ok && r.code) this.setData({ shareCode: r.code });
+    }).catch(() => { this._shareBusy = false; });
   },
 
   switchCat(e) {
@@ -467,10 +520,22 @@ Page({
   },
 
   onShareAppMessage() {
-    return share.appMessage('mine');
+    const d = this.data;
+    if (!d.shareCode) return share.appMessage('mine');
+    return {
+      title: '我的藏品 · ' + d.summary.kinds + ' 个品种，来看看都有哪些（藏币录）',
+      path: '/pages/colshare/colshare?code=' + encodeURIComponent(d.shareCode),
+      imageUrl: share.COVER,
+    };
   },
 
   onShareTimeline() {
-    return share.timeline('mine');
+    const d = this.data;
+    if (!d.shareCode) return share.timeline('mine');
+    return {
+      title: '我的藏品 · ' + d.summary.kinds + ' 个品种（藏币录）',
+      query: 'code=' + encodeURIComponent(d.shareCode),
+      imageUrl: share.COVER,
+    };
   },
 });

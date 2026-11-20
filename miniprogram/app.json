@@ -17,7 +17,8 @@
     "pages/admin/admin",
     "pages/admin-user/admin-user",
     "pages/more/more",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/colshare/colshare"
   ],
   "window": {
     "navigationBarTitleText": "藏币录",

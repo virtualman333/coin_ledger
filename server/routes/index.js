@@ -18,6 +18,7 @@ const coinCountRoutes = require('./coin-count');
 const planRoutes = require('./plans');
 const seoRoutes = require('./seo');
 const plazaRoutes = require('./plaza');
+const colshareRoutes = require('./colshare');
 const adminRoutes = require('./admin');
 const legacyRoutes = require('./legacy');
 
@@ -36,6 +37,7 @@ module.exports = async function registerAll(app) {
   await app.register(planRoutes);
   await app.register(seoRoutes);
   await app.register(plazaRoutes);
+  await app.register(colshareRoutes);
   await app.register(adminRoutes);
   await app.register(legacyRoutes);
 };
