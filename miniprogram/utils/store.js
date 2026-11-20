@@ -163,6 +163,10 @@ function persist() {
     category: h.category,
     thumb: h.thumb,
     unit: h.unit,
+    // 藏品增强（migration 008）：号码 / 整套单个 / 图片，必须一起回传否则保存后丢失
+    serials: Array.isArray(h.serials) ? h.serials : [],
+    form: h.form === 'single' || h.form === 'set' ? h.form : '',
+    images: Array.isArray(h.images) ? h.images : [],
   }));
   return api.put('/api/holdings', { holdings: payload }).then((res) => {
     state.rev = res.rev || state.rev;
@@ -254,6 +258,24 @@ function setRolls(id, rolls) {
   return persist();
 }
 
+/** 局部更新藏品的可选字段（号码/形态/图片），白名单收敛后落库 */
+function patchHolding(id, patch) {
+  requireLogin();
+  const target = state.holdings.filter((h) => h.id === id)[0];
+  if (!target) return Promise.resolve(null);
+  const p = patch || {};
+  if (Array.isArray(p.serials)) target.serials = p.serials.slice(0, 200).map((s) => String(s || '').trim()).filter(Boolean);
+  if (p.form === 'single' || p.form === 'set' || p.form === '') target.form = p.form;
+  if (Array.isArray(p.images)) target.images = p.images.slice(0, 3);
+  return persist();
+}
+
+/** 上传藏品图片（base64），返回 /collection/xxx 路径 */
+function uploadImage(dataUrl) {
+  requireLogin();
+  return api.post('/api/holding/image', { image: dataUrl });
+}
+
 function clearUser() {
   state.user = null;
   state.isAdmin = false;
@@ -279,5 +301,7 @@ module.exports = {
   removeHolding,
   setRolls,
   setCost,
+  patchHolding,
+  uploadImage,
   clearUser,
 };

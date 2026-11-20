@@ -84,6 +84,10 @@ Page({
     wx.navigateTo({ url: '/pages/holdings/holdings' });
   },
 
+  goPlaza() {
+    wx.navigateTo({ url: '/pages/plaza/plaza' });
+  },
+
   goMyFeedback() {
     wx.navigateTo({ url: '/pages/myfeedback/myfeedback' });
   },

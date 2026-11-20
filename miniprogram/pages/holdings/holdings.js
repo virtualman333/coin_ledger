@@ -111,6 +111,12 @@ Page({
             ? '与市价相当'
             : (aiGap > 0 ? '市价高 ' + Math.round(aiGap * 100) + '%' : '市价低 ' + Math.round(-aiGap * 100) + '%')),
         pnlCls: pnl >= 0 ? 'up' : 'down',
+        // 藏品增强字段
+        isNote: !!(coin && coin.kind === 'note') || h.category === 'note',
+        serials: Array.isArray(h.serials) ? h.serials : [],
+        form: h.form || '',
+        images: Array.isArray(h.images) ? h.images : [],
+        luckyTags: [],
       });
       map[groupName].sumText = cat.round2(map[groupName].sumText + (Number(h.market) || 0));
     });
@@ -180,8 +186,89 @@ Page({
         marketText: item.marketText,
         costText: item.costText,
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),
+        // 藏品增强：号码 / 形态 / 图片
+        isNote: !!(item.isNote),
+        serialsText: (item.serials || []).join('\n'),
+        luckyTags: item.luckyTags || [],
+        form: item.form || '',
+        images: item.images || [],
         // 左滑「改成本」直接聚焦输入框；「改数量」聚焦步进器
         focus: ds.focus || '',
+      },
+    });
+    // 纪念钞有号码时请求服务端分析花样（后端与 Web 共用同一套规则）
+    if (item.isNote && item.serials && item.serials.length) {
+      api.post('/api/serial/analyze-batch', { nos: item.serials }).then((r) => {
+        if (!r || !r.ok || !this.data.sheet) return;
+        const tags = {};
+        (r.items || []).forEach((it) => (it.tags || []).forEach((t) => { tags[t.name] = t.rarity || 1; }));
+        const arr = Object.keys(tags).sort((a, b) => tags[b] - tags[a]).map((n) => ({ name: n, rarity: tags[n] }));
+        this.setData({ 'sheet.luckyTags': arr });
+      }).catch(() => {});
+    }
+  },
+
+  onSheetSerials(e) {
+    this.setData({ 'sheet.serialsText': e.detail.value });
+  },
+
+  setForm(e) {
+    const form = e.currentTarget.dataset.form || '';
+    this.setData({ 'sheet.form': form });
+  },
+
+  addImage() {
+    const sheet = this.data.sheet;
+    if (!sheet) return;
+    if ((sheet.images || []).length >= 3) {
+      wx.showToast({ title: '最多 3 张图片', icon: 'none' });
+      return;
+    }
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { wx.showToast({ title: '图片不能超过 2MB', icon: 'none' }); return; }
+        wx.showLoading({ title: '上传中', mask: true });
+        wx.getFileSystemManager().readFile({
+          filePath: file.tempFilePath, encoding: 'base64',
+          success: (fr) => {
+            store.uploadImage('data:image/jpeg;base64,' + fr.data).then((r) => {
+              wx.hideLoading();
+              if (!r || !r.ok) throw new Error((r && r.error) || '上传失败');
+              const images = (this.data.sheet.images || []).concat([r.path]);
+              this.setData({ 'sheet.images': images });
+            }).catch((err) => { wx.hideLoading(); wx.showToast({ title: err.message || '上传失败', icon: 'none' }); });
+          },
+          fail: () => { wx.hideLoading(); wx.showToast({ title: '读取图片失败', icon: 'none' }); },
+        });
+      },
+    });
+  },
+
+  delImage(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const images = (this.data.sheet.images || []).slice();
+    images.splice(idx, 1);
+    this.setData({ 'sheet.images': images });
+  },
+
+  shareToPlaza() {
+    const sheet = this.data.sheet;
+    if (!sheet) return;
+    const serials = (sheet.serialsText || '').split(/[\n,，\s]+/).filter(Boolean).slice(0, 200);
+    wx.showModal({
+      title: '分享到藏品广场',
+      content: '把「' + sheet.name + '」' + (serials.length ? '（' + serials.length + ' 个号码）' : '') + ' 分享到广场？',
+      success: (res) => {
+        if (!res.confirm) return;
+        api.post('/api/shares', {
+          holdingName: sheet.name, serials, images: sheet.images || [], form: sheet.form || '', caption: '',
+        }).then((r) => {
+          if (!r || !r.ok) throw new Error((r && r.error) || '分享失败');
+          wx.showToast({ title: '已分享', icon: 'success' });
+        }).catch((err) => wx.showToast({ title: err.message || '分享失败', icon: 'none' }));
       },
     });
   },
@@ -231,9 +318,11 @@ Page({
     const sheet = this.data.sheet;
     if (!sheet) return;
     const unit = Number(sheet.unitCost) || 0;
+    const serials = (sheet.serialsText || '').split(/[\n,，\s]+/).map((s) => s.trim()).filter(Boolean).slice(0, 200);
     const tasks = [];
     if (sheet.rolls !== sheet.origRolls) tasks.push(store.setRolls(sheet.id, sheet.rolls));
     tasks.push(store.setCost(sheet.id, unit));
+    tasks.push(store.patchHolding(sheet.id, { serials, form: sheet.form || '', images: sheet.images || [] }));
     wx.showLoading({ title: '保存中', mask: true });
     Promise.all(tasks)
       .then(() => store.refresh({ force: true }))

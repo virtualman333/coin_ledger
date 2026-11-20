@@ -1,0 +1,64 @@
+<view class="plaza">
+  <view class="pz-tabs">
+    <text class="pz-tab {{!follow && sort === 'new' ? 'on' : ''}}" data-sort="new" bindtap="switchTab">最新</text>
+    <text class="pz-tab {{!follow && sort === 'hot' ? 'on' : ''}}" data-sort="hot" bindtap="switchTab">最热</text>
+    <text class="pz-tab {{follow ? 'on' : ''}}" data-follow="1" bindtap="switchTab">我关注的</text>
+  </view>
+
+  <view class="pz-share-bar" bindtap="goShare">
+    <text>＋ 分享我的藏品到广场</text>
+  </view>
+
+  <view class="pz-list">
+    <view class="pz-empty" wx:if="{{!items.length && !loading}}">广场还空着，来分享第一件藏品吧。</view>
+
+    <view class="pz-card" wx:for="{{items}}" wx:key="id">
+      <view class="pz-head">
+        <image class="pz-avatar" src="{{item.avatarUrl}}" mode="aspectFill" wx:if="{{item.avatarUrl}}"></image>
+        <view class="pz-avatar ph" wx:else>{{item.author[0]}}</view>
+        <text class="pz-author">{{item.author || '藏友'}}</text>
+        <text class="pz-time">{{item.timeText}}</text>
+      </view>
+
+      <view class="pz-pics" wx:if="{{item.pics.length}}">
+        <image
+          wx:for="{{item.pics}}" wx:for-item="pic" wx:key="*this"
+          src="{{pic}}" mode="aspectFill" data-cur="{{pic}}" data-urls="{{item.pics}}" bindtap="previewImage"
+        ></image>
+      </view>
+
+      <view class="pz-body">
+        <view class="pz-title">{{item.holdingName}}
+          <text class="pz-form" wx:if="{{item.form === 'single'}}">单个</text>
+          <text class="pz-form" wx:elif="{{item.form === 'set'}}">整套</text>
+        </view>
+        <view class="pz-serials" wx:if="{{item.serials.length}}">{{item.serials[0]}}<text wx:if="{{item.serials.length > 1}}"> 等{{item.serials.length}}张</text></view>
+        <view class="pz-tags" wx:if="{{item.tags.length}}">
+          <text class="pz-tag rar{{t.rarity}}" wx:for="{{item.tags}}" wx:for-item="t" wx:key="name">{{t.name || t}}</text>
+        </view>
+        <view class="pz-caption" wx:if="{{item.caption}}">{{item.caption}}</view>
+      </view>
+
+      <view class="pz-acts">
+        <text class="pz-act {{item.liked ? 'on' : ''}}" data-id="{{item.id}}" bindtap="toggleLike">♥ {{item.likes}}</text>
+        <text class="pz-act" data-id="{{item.id}}" bindtap="toggleComments">评论 {{item.comments}}</text>
+        <text class="pz-act" data-uid="{{item.uid}}" bindtap="toggleFollow">+ 关注</text>
+        <text class="pz-act del" wx:if="{{loggedIn && item.mine}}" data-id="{{item.id}}" bindtap="delShare">删除</text>
+      </view>
+
+      <view class="pz-comments" wx:if="{{cmts[item.id] && cmts[item.id].open}}">
+        <view class="pz-cmt" wx:for="{{cmts[item.id].list}}" wx:for-item="c" wx:key="id">
+          <text class="pz-cmt-author">{{c.author || '藏友'}}</text>
+          <text class="pz-cmt-text">{{c.text}}</text>
+          <text class="pz-cmt-time">{{c.timeText}}</text>
+        </view>
+        <view class="pz-cmt-form" wx:if="{{loggedIn}}">
+          <input value="{{commentText[item.id]}}" data-id="{{item.id}}" bindinput="onCommentInput" placeholder="说点什么…" confirm-type="send" bindconfirm="sendComment" />
+          <text class="pz-send" data-id="{{item.id}}" bindtap="sendComment">发送</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="pz-more" wx:if="{{items.length >= 20 && !noMore}}" bindtap="loadMore">{{loading ? '加载中…' : '加载更多'}}</view>
+  </view>
+</view>

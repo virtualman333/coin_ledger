@@ -87,7 +87,39 @@ const DDL = [
      day CHAR(10) NOT NULL,
      hits INT NOT NULL DEFAULT 0,
      PRIMARY KEY (day)
-   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按天匿名访问计数'`
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按天匿名访问计数'`,
+
+  `CREATE TABLE IF NOT EXISTS cl_share (
+     id VARCHAR(24) NOT NULL,
+     uid VARCHAR(16) NOT NULL,
+     holding_name VARCHAR(64) NOT NULL COMMENT '关联藏品品种名',
+     serials TEXT NULL COMMENT '分享的号码 JSON 数组',
+     images TEXT NULL COMMENT '图片路径 JSON 数组',
+     form VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'single|set',
+     caption VARCHAR(280) NOT NULL DEFAULT '' COMMENT '分享文案',
+     tags TEXT NULL COMMENT '号码花样标签 JSON 数组',
+     likes INT NOT NULL DEFAULT 0,
+     comments INT NOT NULL DEFAULT 0,
+     created_at DATETIME(3) NOT NULL,
+     PRIMARY KEY (id), KEY idx_share_time (created_at), KEY idx_share_uid (uid)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-分享帖子'`,
+
+  `CREATE TABLE IF NOT EXISTS cl_share_like (
+     share_id VARCHAR(24) NOT NULL, uid VARCHAR(16) NOT NULL, created_at DATETIME(3) NOT NULL,
+     PRIMARY KEY (share_id, uid), KEY idx_like_uid (uid)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-点赞'`,
+
+  `CREATE TABLE IF NOT EXISTS cl_share_comment (
+     id VARCHAR(24) NOT NULL, share_id VARCHAR(24) NOT NULL, uid VARCHAR(16) NOT NULL,
+     text VARCHAR(280) NOT NULL, created_at DATETIME(3) NOT NULL,
+     PRIMARY KEY (id), KEY idx_comment_share (share_id, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-评论'`,
+
+  `CREATE TABLE IF NOT EXISTS cl_follow (
+     uid VARCHAR(16) NOT NULL COMMENT '关注者', target_uid VARCHAR(16) NOT NULL COMMENT '被关注者',
+     created_at DATETIME(3) NOT NULL,
+     PRIMARY KEY (uid, target_uid), KEY idx_follow_target (target_uid)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-关注'`
 ];
 
 function nowISO() { return new Date().toISOString(); }
@@ -105,6 +137,15 @@ function iso(v) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+/** 安全解析存库的 JSON 数组字段，坏数据降级为空数组 */
+function parseArr(v) {
+  if (!v) return [];
+  try {
+    const j = JSON.parse(v);
+    return Array.isArray(j) ? j : [];
+  } catch (e) { return []; }
+}
+
 function placeholders(n) {
   return new Array(n).fill('?').join(',');
 }
@@ -120,6 +161,10 @@ async function ensureSchema() {
   await ensureColumn('cl_users', 'is_test', 'TINYINT(1) NOT NULL DEFAULT 0');
   await ensureColumn('cl_users', 'nickname', 'VARCHAR(32) NULL');
   await ensureColumn('cl_users', 'avatar', 'VARCHAR(64) NULL');
+  // 藏品增强（migration 008）：号码 / 形态 / 图片，缺省不影响既有藏品
+  await ensureColumn('cl_holdings', 'serials', 'TEXT NULL');
+  await ensureColumn('cl_holdings', 'form', "VARCHAR(8) NOT NULL DEFAULT ''");
+  await ensureColumn('cl_holdings', 'images', 'TEXT NULL');
   const [idx] = await pool.query(
     "SELECT COUNT(*) AS n FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cl_users' AND index_name = 'idx_wx'"
   );
@@ -150,7 +195,7 @@ async function loadDoc() {
     'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar FROM cl_users ORDER BY created_at, id'
   );
   const [holdRows] = await pool.query(
-    'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit FROM cl_holdings ORDER BY uid, ord'
+    'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit, serials, form, images FROM cl_holdings ORDER BY uid, ord'
   );
   const [priceRows] = await pool.query('SELECT coin_i, est FROM cl_prices ORDER BY coin_i');
   const [visitRows] = await pool.query('SELECT day, hits FROM cl_visits ORDER BY day');
@@ -169,7 +214,11 @@ async function loadDoc() {
       category: r.category || 'coin',
       // 贵金属/按单枚记的展示元数据（migration 007）；老行是空串，等价于没有
       thumb: r.thumb || '',
-      unit: r.unit || ''
+      unit: r.unit || '',
+      // 藏品增强（migration 008）：号码 / 形态 / 图片
+      serials: parseArr(r.serials),
+      form: r.form === 'single' || r.form === 'set' ? r.form : '',
+      images: parseArr(r.images)
     });
   });
 
@@ -271,10 +320,14 @@ async function syncHoldings(conn, doc) {
       String(h.group || '独立藏品').slice(0, 32), h.sep ? 1 : 0,
       ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin',
       String(h.thumb || '').slice(0, 512),
-      String(h.unit || '').slice(0, 8)
+      String(h.unit || '').slice(0, 8),
+      // 藏品增强（migration 008）
+      JSON.stringify(Array.isArray(h.serials) ? h.serials.slice(0, 200) : []),
+      h.form === 'single' || h.form === 'set' ? h.form : '',
+      JSON.stringify(Array.isArray(h.images) ? h.images.slice(0, 3) : [])
     ]);
     await conn.query(
-      'INSERT INTO cl_holdings (uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit) VALUES ?',
+      'INSERT INTO cl_holdings (uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit, serials, form, images) VALUES ?',
       [rows]
     );
   }

@@ -610,3 +610,34 @@
   background:#fff;color:#7d766b;font-size:24rpx
 }
 .hc.on{background:#fbf1d8;border-color:#d9bd82;color:#9a6b1f;font-weight:600}
+
+/* 藏品增强：号码 / 花样 / 形态 / 图片 */
+.ex-row{align-items:flex-start;padding-top:10px}
+.sr-textarea{
+  flex:1;min-height:48rpx;line-height:1.5;font-size:26rpx;
+  padding:10rpx 16rpx;border-radius:12rpx;background:var(--surf-2,#1a1f27);
+  color:var(--text,#e9edf3);box-sizing:border-box
+}
+.sr-tags{display:flex;flex-wrap:wrap;gap:8rpx}
+.sr-tag{font-size:20rpx;padding:4rpx 14rpx;border-radius:999rpx;background:rgba(255,255,255,.05);color:#8b94a3}
+.sr-tag.rar2{color:#e8c877}
+.sr-tag.rar3{color:#6aa9ff}
+.sr-tag.rar4{color:#c792ff}
+.sr-tag.rar5{color:#ff7b9c}
+.sr-segs{display:flex;gap:12rpx}
+.sr-seg{
+  font-size:24rpx;padding:8rpx 26rpx;border-radius:999rpx;
+  border:1rpx solid rgba(255,255,255,.12);color:#8b94a3
+}
+.sr-seg.on{color:#e8c877;border-color:#e8c877;background:rgba(232,200,119,.1)}
+.sr-imgs{display:flex;flex-wrap:wrap;gap:12rpx}
+.sr-img,.sr-img-add{position:relative;width:92rpx;height:92rpx;border-radius:12rpx;overflow:visible}
+.sr-img image{width:92rpx;height:92rpx;border-radius:12rpx}
+.sr-img-x{
+  position:absolute;top:-10rpx;right:-10rpx;width:32rpx;height:32rpx;line-height:28rpx;text-align:center;
+  border-radius:50%;background:#141a22;border:1rpx solid rgba(255,255,255,.2);color:#8b94a3;font-size:24rpx
+}
+.sr-img-add{
+  display:flex;align-items:center;justify-content:center;font-size:40rpx;
+  border:1rpx dashed rgba(255,255,255,.25);color:#616b7a
+}

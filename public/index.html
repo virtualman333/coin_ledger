@@ -119,6 +119,7 @@
       <button class="tab" data-tab="all" data-short="清单" role="tab" aria-selected="false" aria-controls="pane-all">全套清单</button>
       <button class="tab" data-tab="series" data-short="系列" role="tab" aria-selected="false" aria-controls="pane-series">全部系列</button>
       <button class="tab" data-tab="holdings" data-short="藏品" role="tab" aria-selected="false" aria-controls="pane-holdings">我的藏品</button>
+      <button class="tab" data-tab="plaza" data-short="广场" role="tab" aria-selected="false" aria-controls="pane-plaza">藏品广场</button>
     </div>
   </div>
 </nav>
@@ -300,6 +301,22 @@
       <div class="cost-grid" id="costBox"></div>
       <div class="concl" id="conclBox"></div>
     </div>
+  </section>
+
+  <!-- ============ 藏品广场 ============ -->
+  <section class="pane" role="tabpanel" id="pane-plaza">
+    <div class="sec-head">
+      <h2>藏品广场</h2>
+      <span class="muted">晒出你的靓号藏品，和藏友交流</span>
+      <span class="spacer"></span>
+      <button class="btn primary" id="plazaNew">分享我的藏品</button>
+    </div>
+    <div class="plaza-tabs" id="plazaTabs">
+      <button data-sort="new" class="on">最新</button>
+      <button data-sort="hot">最热</button>
+      <button data-follow="1">我关注的</button>
+    </div>
+    <div class="plaza-grid" id="plazaBox"><div class="muted" style="padding:30px">正在加载广场…</div></div>
   </section>
 
   <!-- ============ 收齐成本 ============ -->
@@ -519,7 +536,8 @@
      真人从搜索结果点进来会被误封。诱饵改放在 robots.txt 的 Disallow 里。 -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/app.js?v=3.0.61"></script>
+<script src="/serial.js?v=3.0.62"></script>
+<script src="/app.js?v=3.0.62"></script>
   <button type="button" class="to-top" id="toTop" aria-label="回到顶部" tabindex="-1">↑</button>
 
 <!-- 小程序引导：桌面端悬浮，点开看码 -->

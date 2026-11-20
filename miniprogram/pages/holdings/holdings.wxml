@@ -169,9 +169,43 @@
       </view>
     </view>
 
+    <!-- 藏品增强：纪念钞号码 + 花样 -->
+    <view class="sheet-row ex-row" wx:if="{{sheet.isNote}}">
+      <text class="sr-k">号码</text>
+      <textarea class="sr-textarea" value="{{sheet.serialsText}}" bindinput="onSheetSerials" placeholder="输入冠字号码，多个换行" auto-height maxlength="-1"></textarea>
+    </view>
+    <view class="sheet-row ex-row" wx:if="{{sheet.isNote && sheet.luckyTags.length}}">
+      <text class="sr-k">花样</text>
+      <view class="sr-tags">
+        <text class="sr-tag rar{{item.rarity}}" wx:for="{{sheet.luckyTags}}" wx:key="name">{{item.name}}</text>
+      </view>
+    </view>
+
+    <!-- 整套 / 单个 -->
+    <view class="sheet-row ex-row">
+      <text class="sr-k">形态</text>
+      <view class="sr-segs">
+        <text class="sr-seg {{sheet.form !== 'single' ? 'on' : ''}}" data-form="" bindtap="setForm">整套</text>
+        <text class="sr-seg {{sheet.form === 'single' ? 'on' : ''}}" data-form="single" bindtap="setForm">单个</text>
+      </view>
+    </view>
+
+    <!-- 我的图片（最多 3 张） -->
+    <view class="sheet-row ex-row">
+      <text class="sr-k">图片</text>
+      <view class="sr-imgs">
+        <view class="sr-img" wx:for="{{sheet.images}}" wx:key="*this">
+          <image src="{{item}}" mode="aspectFill" data-idx="{{index}}" bindtap="delImage"></image>
+          <text class="sr-img-x">×</text>
+        </view>
+        <view class="sr-img-add" wx:if="{{sheet.images.length < 3}}" bindtap="addImage">+</view>
+      </view>
+    </view>
+
     <text class="sheet-tip">改成本只影响你的账本，不会改全站参考价</text>
 
     <view class="sheet-acts">
+      <button class="act ghost" bindtap="shareToPlaza">分享广场</button>
       <button class="act ghost" bindtap="sheetRemove">移出藏品</button>
       <button class="act primary" bindtap="saveSheet">保存</button>
     </view>

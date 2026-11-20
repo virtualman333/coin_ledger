@@ -15,6 +15,7 @@ const bootstrapRoutes = require('./bootstrap');
 const catalogRoutes = require('./catalog');
 const planRoutes = require('./plans');
 const seoRoutes = require('./seo');
+const plazaRoutes = require('./plaza');
 const adminRoutes = require('./admin');
 const legacyRoutes = require('./legacy');
 
@@ -30,6 +31,7 @@ module.exports = async function registerAll(app) {
   await app.register(catalogRoutes);
   await app.register(planRoutes);
   await app.register(seoRoutes);
+  await app.register(plazaRoutes);
   await app.register(adminRoutes);
   await app.register(legacyRoutes);
 };

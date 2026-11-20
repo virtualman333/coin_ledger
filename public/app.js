@@ -623,6 +623,64 @@ function setHoldCat(cat){
   renderHoldings();
 }
 
+/** 藏品增强区：纪念钞号码+花样、整套/单个标记、自有图片、分享到广场 */
+function luckyTagsHtml(serials){
+  if (!window.SerialAnalyze || !serials || !serials.length) return '';
+  var tagMap = {};
+  serials.forEach(function(no){
+    var r = window.SerialAnalyze.analyze(no);
+    r.tags.forEach(function(t){ tagMap[t.name] = Math.max(tagMap[t.name] || 0, t.rarity); });
+  });
+  var names = Object.keys(tagMap).sort(function(a, b){ return tagMap[b] - tagMap[a]; });
+  if (!names.length) return '';
+  return '<div class="hx-tags">' + names.map(function(n){
+    return '<span class="hx-tag rar' + Math.min(5, tagMap[n]) + '">' + esc(n) + '</span>';
+  }).join('') + '</div>';
+}
+
+function holdingExtraHtml(c, d){
+  var isNote = d && d.kind === 'note' || c.category === 'note';
+  var serials = Array.isArray(c.serials) ? c.serials : [];
+  var images = Array.isArray(c.images) ? c.images : [];
+  var form = c.form === 'set' || c.form === 'single' ? c.form : '';
+  var html = '<div class="hx">';
+
+  // 号码：纪念钞主打，其它藏品也可录（贵金属按编号意义不大，隐藏号码输入）
+  if (isNote) {
+    html += '<div class="hx-row hx-serial">' +
+      '<span class="hx-label">号码</span>' +
+      '<textarea class="hx-serial-input" rows="1" placeholder="输入冠字号码，多个换行，如 J12345678" ' +
+        'data-field-ex="serials" data-name="' + esc(c.name) + '">' + esc(serials.join('\n')) + '</textarea>' +
+      '</div>';
+    html += '<div class="hx-row hx-lucky" data-lucky="' + esc(c.name) + '">' +
+      '<span class="hx-label">花样</span>' + (luckyTagsHtml(serials) || '<span class="hx-muted">普通号</span>') + '</div>';
+  }
+
+  // 整套 / 单个标记
+  html += '<div class="hx-row hx-form">' +
+    '<span class="hx-label">形态</span>' +
+    '<button type="button" class="hx-seg' + (form !== 'single' ? ' on' : '') + '" data-ex-act="form-set" data-name="' + esc(c.name) + '">整套</button>' +
+    '<button type="button" class="hx-seg' + (form === 'single' ? ' on' : '') + '" data-ex-act="form-single" data-name="' + esc(c.name) + '">单个</button>' +
+    '</div>';
+
+  // 自有图片（最多 3 张）
+  html += '<div class="hx-row hx-imgs"><span class="hx-label">图片</span><div class="hx-thumbs" data-imgs="' + esc(c.name) + '">';
+  images.slice(0, 3).forEach(function(p, i){
+    html += '<span class="hx-thumb"><img src="' + esc(p) + '" alt="我的藏品图" loading="lazy">' +
+      '<b data-ex-act="img-del" data-name="' + esc(c.name) + '" data-idx="' + i + '" title="删除">×</b></span>';
+  });
+  if (images.length < 3) {
+    html += '<label class="hx-add" title="上传我的图片（≤2MB）">+' +
+      '<input type="file" accept="image/jpeg,image/png,image/webp" data-ex-file="' + esc(c.name) + '" hidden></label>';
+  }
+  html += '</div></div>';
+
+  // 分享到广场
+  html += '<button type="button" class="hx-share" data-ex-act="share" data-name="' + esc(c.name) + '">分享到藏品广场 →</button>';
+  html += '</div>';
+  return html;
+}
+
 function renderHoldings(){
   var box = document.getElementById('holdingsBox');
   var html = '';
@@ -720,6 +778,7 @@ function renderHoldings(){
           '<div><span>单' + unit + '成本</span><b>' + money(c.rolls ? (Number(c.cost)||0)/c.rolls : 0) + '</b></div>' +
         '</div>' +
         '<div class="pnl"><span>浮动</span><b class="' + pnlCls + '" data-pnl="' + c.name + '">' + pnlTxt + '</b></div>' +
+        holdingExtraHtml(c, d) +
         aiLine(d, c) +
         '<button class="del" data-act="del" data-name="' + c.name + '">移除</button>' +
       '</div>';
@@ -2520,6 +2579,26 @@ function reRenderAll(){
 document.getElementById('holdingsBox').addEventListener('click', function(e){
   var nmEl = e.target.closest('.name[data-coin]');
   if (nmEl) { goCoin(parseInt(nmEl.getAttribute('data-coin'), 10)); return; }
+
+  /* ---- 藏品增强交互 ---- */
+  var ex = e.target.closest('[data-ex-act]');
+  if (ex) {
+    var exAct = ex.getAttribute('data-ex-act');
+    var exName = ex.getAttribute('data-name');
+    var exIdx = findHoldingIdx(exName);
+    if (exIdx >= 0) {
+      if (exAct === 'form-set' || exAct === 'form-single') {
+        coll[exIdx].form = exAct === 'form-single' ? 'single' : '';
+        saveState(); renderHoldings(); return;
+      }
+      if (exAct === 'img-del') {
+        var ii = Number(ex.getAttribute('data-idx'));
+        if (Array.isArray(coll[exIdx].images)) coll[exIdx].images.splice(ii, 1);
+        saveState(); renderHoldings(); return;
+      }
+      if (exAct === 'share') { openShareDialog(exName); return; }
+    }
+  }
   var btn = e.target.closest('button[data-act]');
   if(!btn) return;
   var name = btn.getAttribute('data-name');
@@ -2576,6 +2655,49 @@ document.getElementById('holdingsBox').addEventListener('input', function(e){
     pnlEl.className = p>=0 ? 'gain' : 'loss';
   }
 });
+
+/* 号码输入：textarea 输入即存 + 即时刷新花样标签 */
+document.getElementById('holdingsBox').addEventListener('input', function(e){
+  var ta = e.target;
+  if (ta.tagName !== 'TEXTAREA' || ta.getAttribute('data-field-ex') !== 'serials') return;
+  var name = ta.getAttribute('data-name');
+  var nos = ta.value.split(/[\n,，\s]+/).map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 200);
+  var idx = findHoldingIdx(name);
+  if (idx < 0) return;
+  coll[idx].serials = nos;
+  saveState();
+  var lucky = document.querySelector('[data-lucky="' + name + '"]');
+  if (lucky) lucky.innerHTML = '<span class="hx-label">花样</span>' + (luckyTagsHtml(nos) || '<span class="hx-muted">普通号</span>');
+});
+
+/* 图片上传：走 /api/holding/image，base64 落盘，成功后回写 holding */
+document.getElementById('holdingsBox').addEventListener('change', function(e){
+  var inp = e.target;
+  if (inp.tagName !== 'INPUT' || !inp.getAttribute('data-ex-file')) return;
+  var name = inp.getAttribute('data-ex-file');
+  var file = inp.files && inp.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { if (window.toast) toast('图片不能超过 2MB'); return; }
+  var reader = new FileReader();
+  reader.onload = function(){
+    api('/api/holding/image', { method: 'POST', body: { image: reader.result } }).then(function(r){
+      if (!r || !r.ok) throw new Error((r && r.error) || '上传失败');
+      var idx = findHoldingIdx(name);
+      if (idx < 0) return;
+      if (!Array.isArray(coll[idx].images)) coll[idx].images = [];
+      if (coll[idx].images.length >= 3) { if (window.toast) toast('最多 3 张图片'); return; }
+      coll[idx].images.push(r.path);
+      saveState(); renderHoldings();
+    }).catch(function(err){ if (window.toast) toast(err.message || '上传失败'); });
+  };
+  reader.readAsDataURL(file);
+  inp.value = '';
+});
+
+function findHoldingIdx(name){
+  for (var i = 0; i < coll.length; i++) if (coll[i].name === name) return i;
+  return -1;
+}
 
 /**
  * 把某个品种加入我的藏品。
@@ -2919,7 +3041,7 @@ function fmtDateTime(v){
 /* =========================================================
    12. 页签切换
    ========================================================= */
-var TABS = ['home','plan','all','series','holdings','account','admin','myfeedback','sitemap'];
+var TABS = ['home','plan','all','series','holdings','plaza','account','admin','myfeedback','sitemap'];
 
 /* 访客记录：会话 ID 存在 sessionStorage（关掉标签页算新访客） */
 function visitSid(){
@@ -2991,6 +3113,7 @@ var TAB_SEO = {
   overview:['收藏概览 | 藏币录', '品种数、套系完成度、成本与盈亏的汇总视图。'],
   cost:    ['收齐成本估算 | 藏币录', '按单枚与整套两种口径，估算把全套收齐需要多少钱。'],
   holdings:['我的藏品 | 藏币录', '记录持仓数量、成本与市值，自动算浮动盈亏。'],
+  plaza:   ['藏品广场 | 藏币录', '晒出你的纪念钞靓号藏品，识别豹子号、连号等花样，和藏友交流。'],
   account: ['账户 | 藏币录', '登录、注册与账户设置。'],
   myfeedback: ['我的反馈 | 藏币录', '查看自己提交的纠错与建议，以及管理员的处理结果与回复。'],
   sitemap: ['站点地图 | 藏币录', '藏币录全部页面与 136 个纪念币/纪念钞品种的索引，按系列分类。'],
@@ -3465,6 +3588,7 @@ function goTab(name, opts){
   if (name === 'all') { loadPlansOnce(ensureCategoryTabs); ensureCategoryTabs(); syncSetFilter(); }
   if (name === 'account') renderProfile();
   if (name === 'home') renderHome();
+  if (name === 'plaza') loadPlaza();
 }
 
 /* 单个品种详情页 */
@@ -4072,3 +4196,237 @@ function initMpInline(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMpInline);
 else initMpInline();
+
+/* =========================================================
+   藏品广场（plaza）：分享 / 点赞 / 评论 / 关注
+   数据来自 /api/shares 等接口，公开可读，写操作需登录。
+   ========================================================= */
+var PLAZA = { sort: 'new', follow: false, items: [], offset: 0, loading: false };
+
+function loadPlaza(append){
+  var box = document.getElementById('plazaBox');
+  if (!box) return;
+  if (!append) { PLAZA.offset = 0; PLAZA.items = []; box.innerHTML = '<div class="muted" style="padding:30px">正在加载广场…</div>'; }
+  if (PLAZA.loading) return;
+  PLAZA.loading = true;
+  var qs = '?sort=' + encodeURIComponent(PLAZA.sort) + '&limit=20&offset=' + PLAZA.offset +
+    (PLAZA.follow ? '&follow=1' : '');
+  api('/api/shares' + qs).then(function(r){
+    PLAZA.loading = false;
+    if (!r || !r.ok) { box.innerHTML = '<div class="muted" style="padding:30px">' + ((r && r.error) || '加载失败') + '</div>'; return; }
+    var items = Array.isArray(r.items) ? r.items : [];
+    if (append) PLAZA.items = PLAZA.items.concat(items); else PLAZA.items = items;
+    PLAZA.offset += items.length;
+    renderPlaza();
+  }).catch(function(err){
+    PLAZA.loading = false;
+    box.innerHTML = '<div class="muted" style="padding:30px">加载失败：' + esc(err.message || '') + '</div>';
+  });
+}
+
+function plazaTagChips(tags){
+  if (!Array.isArray(tags) || !tags.length) return '';
+  return '<div class="pz-tags">' + tags.slice(0, 6).map(function(t){
+    var nm = typeof t === 'string' ? t : t.name;
+    var rar = typeof t === 'object' ? (t.rarity || 1) : 1;
+    return '<span class="pz-tag rar' + Math.min(5, rar) + '">' + esc(nm) + '</span>';
+  }).join('') + '</div>';
+}
+
+function renderPlaza(){
+  var box = document.getElementById('plazaBox');
+  if (!box) return;
+  if (!PLAZA.items.length) {
+    box.innerHTML = '<div class="pz-empty">广场还空着，来分享第一件藏品吧。</div>';
+    return;
+  }
+  var html = PLAZA.items.map(function(s){
+    var imgs = Array.isArray(s.images) ? s.images : [];
+    var pics = imgs.slice(0, 3).map(function(p){
+      return '<img src="' + esc(p) + '" alt="藏品图片" loading="lazy">';
+    }).join('');
+    var serials = Array.isArray(s.serials) ? s.serials : [];
+    var serialTxt = serials.length ? serials.slice(0, 4).join(' · ') + (serials.length > 4 ? ' 等' + serials.length + '张' : '') : '';
+    var mine = isLoggedIn() && APP.user && s.uid === APP.user.id;
+    return '<article class="pz-card" data-share="' + esc(s.id) + '">' +
+      '<div class="pz-head">' +
+        (s.avatar ? '<img class="pz-avatar" src="' + esc(s.avatar) + '" alt="">' : '<span class="pz-avatar ph">' + esc((s.author || '藏')[0]) + '</span>') +
+        '<span class="pz-author">' + esc(s.author || '藏友') + '</span>' +
+        '<span class="pz-time">' + esc(plazaTime(s.createdAt)) + '</span>' +
+      '</div>' +
+      (pics ? '<div class="pz-pics">' + pics + '</div>' : '') +
+      '<div class="pz-body">' +
+        '<div class="pz-title">' + esc(s.holdingName) + (s.form === 'single' ? ' <span class="pz-form">单个</span>' : (s.form === 'set' ? ' <span class="pz-form">整套</span>' : '')) + '</div>' +
+        (serialTxt ? '<div class="pz-serials">' + esc(serialTxt) + '</div>' : '') +
+        plazaTagChips(s.tags) +
+        (s.caption ? '<div class="pz-caption">' + esc(s.caption) + '</div>' : '') +
+      '</div>' +
+      '<div class="pz-actions">' +
+        '<button class="pz-like' + (s.liked ? ' on' : '') + '" data-pz-act="like" data-id="' + esc(s.id) + '">♥ ' + (Number(s.likes) || 0) + '</button>' +
+        '<button class="pz-comment" data-pz-act="comments" data-id="' + esc(s.id) + '">评论 ' + (Number(s.comments) || 0) + '</button>' +
+        '<button class="pz-follow" data-pz-act="follow" data-uid="' + esc(s.uid) + '" data-name="' + esc(s.author || '藏友') + '">+ 关注</button>' +
+        (mine ? '<button class="pz-del" data-pz-act="del" data-id="' + esc(s.id) + '">删除</button>' : '') +
+      '</div>' +
+      '<div class="pz-comments" id="cmts-' + esc(s.id) + '" hidden></div>' +
+    '</article>';
+  }).join('');
+  if (PLAZA.items.length >= 20) html += '<button class="pz-more" id="plazaMore">加载更多</button>';
+  box.innerHTML = html;
+}
+
+function plazaTime(iso){
+  if (!iso) return '';
+  var t = new Date(iso);
+  if (isNaN(t.getTime())) return '';
+  var diff = Date.now() - t.getTime();
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
+  return (t.getMonth() + 1) + '月' + t.getDate() + '日';
+}
+
+/* 广场交互（事件委托） */
+(function initPlazaEvents(){
+  var tabs = document.getElementById('plazaTabs');
+  if (tabs) tabs.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    Array.prototype.forEach.call(tabs.querySelectorAll('button'), function(x){ x.className = ''; });
+    b.className = 'on';
+    if (b.getAttribute('data-follow')) {
+      if (!isLoggedIn()) { toast('登录后才能看关注动态'); return; }
+      PLAZA.follow = true; PLAZA.sort = 'new';
+    } else {
+      PLAZA.follow = false; PLAZA.sort = b.getAttribute('data-sort') || 'new';
+    }
+    loadPlaza();
+  });
+  var nb = document.getElementById('plazaNew');
+  if (nb) nb.addEventListener('click', function(){
+    if (!isLoggedIn()) { toast('请先登录再分享'); return; }
+    openShareDialog();
+  });
+
+  var box = document.getElementById('plazaBox');
+  if (!box) return;
+  box.addEventListener('click', function(e){
+    if (e.target.id === 'plazaMore') { loadPlaza(true); return; }
+    var b = e.target.closest('button[data-pz-act]'); if (!b) return;
+    var act = b.getAttribute('data-pz-act');
+    var id = b.getAttribute('data-id');
+    if (act === 'like') {
+      if (!isLoggedIn()) { toast('请先登录再点赞'); return; }
+      api('/api/shares/' + encodeURIComponent(id) + '/like', { method: 'POST', body: {} }).then(function(r){
+        if (!r || !r.ok) { toast((r && r.error) || '操作失败'); return; }
+        var it = PLAZA.items.filter(function(x){ return x.id === id; })[0];
+        if (it) { it.liked = r.liked; it.likes = Math.max(0, (Number(it.likes) || 0) + (r.liked ? 1 : -1)); renderPlaza(); }
+      });
+    } else if (act === 'comments') {
+      var cbox = document.getElementById('cmts-' + id);
+      if (!cbox) return;
+      if (!cbox.hidden) { cbox.hidden = true; return; }
+      cbox.hidden = false; cbox.innerHTML = '正在加载评论…';
+      loadComments(id, cbox);
+    } else if (act === 'follow') {
+      if (!isLoggedIn()) { toast('请先登录再关注'); return; }
+      var uid = b.getAttribute('data-uid');
+      api('/api/follow/' + encodeURIComponent(uid), { method: 'POST', body: {} }).then(function(r){
+        if (!r || !r.ok) { toast((r && r.error) || '操作失败'); return; }
+        b.textContent = r.following ? '已关注' : '+ 关注';
+        b.className = 'pz-follow' + (r.following ? ' on' : '');
+      });
+    } else if (act === 'del') {
+      if (!confirm('确定删除这条分享？')) return;
+      api('/api/shares/' + encodeURIComponent(id), { method: 'DELETE' }).then(function(r){
+        if (!r || !r.ok) { toast((r && r.error) || '删除失败'); return; }
+        PLAZA.items = PLAZA.items.filter(function(x){ return x.id !== id; });
+        renderPlaza();
+      });
+    }
+  });
+  box.addEventListener('submit', function(e){
+    var f = e.target;
+    if (!f.classList.contains('pz-cmt-form')) return;
+    e.preventDefault();
+    var id = f.getAttribute('data-id');
+    var inp = f.querySelector('input');
+    var text = (inp.value || '').trim();
+    if (!text) return;
+    if (!isLoggedIn()) { toast('请先登录再评论'); return; }
+    api('/api/shares/' + encodeURIComponent(id) + '/comments', { method: 'POST', body: { text: text } }).then(function(r){
+      if (!r || !r.ok) { toast((r && r.error) || '评论失败'); return; }
+      inp.value = '';
+      var it = PLAZA.items.filter(function(x){ return x.id === id; })[0];
+      if (it) it.comments = (Number(it.comments) || 0) + 1;
+      var cbox = document.getElementById('cmts-' + id);
+      if (cbox) loadComments(id, cbox);
+      renderPlaza();
+    });
+  });
+})();
+
+function loadComments(id, cbox){
+  api('/api/shares/' + encodeURIComponent(id) + '/comments').then(function(r){
+    if (!r || !r.ok) { cbox.innerHTML = '<div class="muted">评论加载失败</div>'; return; }
+    var items = Array.isArray(r.items) ? r.items : [];
+    var html = items.length ? items.map(function(c){
+      return '<div class="pz-cmt"><b>' + esc(c.author || '藏友') + '</b> ' + esc(c.text) +
+        '<span class="pz-time">' + esc(plazaTime(c.createdAt)) + '</span></div>';
+    }).join('') : '<div class="muted" style="font-size:12px">还没有评论</div>';
+    html += '<form class="pz-cmt-form" data-id="' + esc(id) + '"><input placeholder="说点什么…" maxlength="280" autocomplete="off"><button type="submit">发送</button></form>';
+    cbox.innerHTML = html;
+  });
+}
+
+/* 分享对话框：从我的藏品选一件，带出号码/标签，写文案后发布 */
+function openShareDialog(presetName){
+  if (!isLoggedIn()) { toast('请先登录再分享'); return; }
+  var opts = coll.map(function(c){
+    var sel = presetName && c.name === presetName ? ' selected' : '';
+    return '<option value="' + esc(c.name) + '"' + sel + '>' + esc(c.name) + '</option>';
+  }).join('');
+  var overlay = document.createElement('div');
+  overlay.className = 'pz-modal-mask';
+  overlay.innerHTML = '<div class="pz-modal">' +
+    '<div class="pz-modal-h"><b>分享藏品到广场</b><button type="button" class="pz-modal-x">×</button></div>' +
+    '<label>选择藏品<select id="pzSel">' + opts + '</select></label>' +
+    '<label>形态<select id="pzForm"><option value="">不限</option><option value="set">整套</option><option value="single">单个</option></select></label>' +
+    '<div class="pz-preview" id="pzPreview"></div>' +
+    '<label>分享文案<textarea id="pzCaption" rows="3" maxlength="280" placeholder="晒晒你的靓号和收藏心得…"></textarea></label>' +
+    '<div class="pz-modal-f"><button type="button" class="btn" id="pzCancel">取消</button>' +
+    '<button type="button" class="btn primary" id="pzSubmit">发布分享</button></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  function close(){ overlay.remove(); }
+  overlay.querySelector('.pz-modal-x').onclick = close;
+  document.getElementById('pzCancel').onclick = close;
+  var sel = document.getElementById('pzSel');
+  var preview = document.getElementById('pzPreview');
+  function refreshPreview(){
+    var h = findHoldingIdx(sel.value);
+    if (h < 0) { preview.innerHTML = ''; return; }
+    var c = coll[h];
+    preview.innerHTML = luckyTagsHtml(c.serials || []) || '<span class="hx-muted">这件藏品暂无号码花样</span>';
+    var pf = document.getElementById('pzForm');
+    if (c.form === 'single' || c.form === 'set') pf.value = c.form;
+  }
+  sel.onchange = refreshPreview; refreshPreview();
+  document.getElementById('pzSubmit').onclick = function(){
+    var h = findHoldingIdx(sel.value);
+    if (h < 0) { toast('请选择藏品'); return; }
+    var c = coll[h];
+    var body = {
+      holdingName: c.name,
+      serials: Array.isArray(c.serials) ? c.serials : [],
+      images: Array.isArray(c.images) ? c.images : [],
+      form: document.getElementById('pzForm').value || c.form || '',
+      caption: document.getElementById('pzCaption').value.trim()
+    };
+    var btn = this; btn.disabled = true; btn.textContent = '发布中…';
+    api('/api/shares', { method: 'POST', body: body }).then(function(r){
+      if (!r || !r.ok) { toast((r && r.error) || '发布失败'); btn.disabled = false; btn.textContent = '发布分享'; return; }
+      close(); toast('已分享到广场');
+      if (currentTab() === 'plaza') loadPlaza();
+    });
+  };
+}

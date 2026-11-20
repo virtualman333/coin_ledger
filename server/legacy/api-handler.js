@@ -205,6 +205,32 @@ function buildBootstrap(req) {
 const MAX_HOLDINGS = 300;
 function badRequest(msg) { const e = new Error(msg); e.status = 400; return e; }
 
+/** 号码数组白名单：只留字符串、去空白、去重、最多 200 张 */
+function normSerials(v) {
+  if (!Array.isArray(v)) return [];
+  const out = [], seen = new Set();
+  for (const s of v) {
+    const no = String(s == null ? '' : s).trim().slice(0, 24);
+    if (!no || seen.has(no)) continue;
+    seen.add(no); out.push(no);
+    if (out.length >= 200) break;
+  }
+  return out;
+}
+
+/** 图片数组白名单：只留 /collection/ 相对路径，最多 3 张 */
+function normImages(v) {
+  if (!Array.isArray(v)) return [];
+  const out = [], seen = new Set();
+  for (const s of v) {
+    const p = String(s == null ? '' : s).trim();
+    if (!/^\/collection\/[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/i.test(p) || seen.has(p)) continue;
+    seen.add(p); out.push(p);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
 function normalizeHoldings(input) {
   if (!Array.isArray(input)) throw badRequest('holdings 必须是数组');
   if (input.length > MAX_HOLDINGS) throw badRequest(`持仓条目不能超过 ${MAX_HOLDINGS}`);
@@ -233,7 +259,11 @@ function normalizeHoldings(input) {
       // 贵金属缩略图与「按单枚记」口径（migration 007）。
       // thumb 允许相对路径或 http(s) URL，限制长度即可；unit 白名单 piece，其余按套处理。
       thumb: String(h.thumb || '').slice(0, 512),
-      unit: h.unit === 'piece' ? 'piece' : ''
+      unit: h.unit === 'piece' ? 'piece' : '',
+      // 藏品增强（migration 008）：号码数组 / 整套单个 / 图片数组
+      serials: normSerials(h.serials),
+      form: h.form === 'single' || h.form === 'set' ? h.form : '',
+      images: normImages(h.images)
     };
   });
 }
