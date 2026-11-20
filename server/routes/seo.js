@@ -38,6 +38,46 @@ module.exports = async function seoRoutes(app) {
     });
   });
 
+  /**
+   * GET /pm/:code —— 贵金属单枚独立页（全量库 2823 条）。
+   * 查库拿公告事实注入页面级 meta 与静态正文；查不到也让前端渲染可读空态。
+   * 数据库连接异常不能把整页打成 500，降级为无 pmItem 的通用 meta。
+   */
+  app.get('/pm/:code', async function pmItemPageHandler(request, reply) {
+    const code = String(request.params.code || '').toUpperCase();
+    if (!/^[A-Za-z0-9_-]{1,32}$/.test(code)) {
+      reply.hijack();
+      reply.raw.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('404 Not Found');
+      return;
+    }
+    let pmItem = null;
+    try {
+      const rows = await app.db.query(
+        'SELECT raw, name, project_name, year, material, weight_g, face, max_mintage, quality FROM cl_ecgci_pm WHERE code = ? LIMIT 1',
+        [code]);
+      const r = rows && rows[0] && rows[0][0];
+      if (r) {
+        let raw = r.raw || {};
+        if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = {}; } }
+        pmItem = {
+          name: raw.name || r.name || code,
+          projectName: raw.projectName || r.project_name || '',
+          year: raw.projectYear || raw.year || r.year || '',
+          material: raw.material || r.material || '',
+          weight: raw.weight || r.weight_g || '',
+          face: raw.denomination != null ? raw.denomination : r.face,
+          fineness: raw.fineness || '',
+          circulation: raw.circulation || r.max_mintage || '',
+          quality: raw.quality || r.quality || '',
+          castingUnit: raw.castingUnit || '',
+          announce: raw.projectAnnounceName || raw.description || ''
+        };
+      }
+    } catch (e) { /* 数据库不可用时降级，页面仍可打开 */ }
+    reply.hijack();
+    seo.sendPmItemIndex(reply.raw, { tab: 'pm', code: code, pmItem: pmItem });
+  });
+
   app.get('/coin/:no', async function coinPageHandler(request, reply) {
     const no = Number(request.params.no);
 

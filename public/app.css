@@ -2937,3 +2937,39 @@ html[data-theme="light"] .pz-modal-mask{background:rgba(0,0,0,.35)}
   .pz-cover{height:180px}
   .pz-pick-list{grid-template-columns:1fr}
 }
+
+/* ============ 贵金属单枚独立页 /pm/<code> ============ */
+.pm-crumb{font-size:12px;color:var(--dim);margin-left:auto}
+.pm-crumb b{color:var(--text);font-weight:600}
+.pm-page-loading{padding:60px 20px;text-align:center;color:var(--dim);font-size:14px}
+.pm-page{
+  max-width:860px;margin:0 auto;padding:24px 26px 30px;border-radius:16px;
+  background:var(--card);border:1px solid var(--line);box-shadow:0 2px 14px rgba(0,0,0,.05)
+}
+.pm-page-h{display:flex;gap:18px;align-items:center;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.pm-page-h .pm-ph{width:96px;flex:0 0 96px;border-radius:12px}
+.pm-page-h .pm-ph span{font-size:38px}
+.pm-page-h h1{margin:0 0 8px;font-size:21px;line-height:1.45;color:var(--text);font-weight:700}
+.pm-page-h p{margin:0;font-size:12.5px;color:var(--dim);line-height:1.7}
+.pm-page .pm-modal-facts{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 20px;margin-bottom:22px}
+.pm-page .pm-modal-facts .cf i{font-size:11px}
+.pm-page .pm-modal-facts .cf b{font-size:13.5px}
+.pm-page .pm-figs{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:0 0 20px}
+.pm-page .pm-fig img{max-height:280px}
+.pm-page .pm-more-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 20px;margin-bottom:18px}
+.pm-page .pm-more-facts .cf{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.pm-page .pm-more-facts .cf i{font-style:normal;font-size:11px;color:var(--dim)}
+.pm-page .pm-more-facts .cf b{font-size:13px;color:var(--text);font-weight:600}
+.pm-page .pm-detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 12px}
+.pm-page .pm-src{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim)}
+.pm-page-error{max-width:640px;margin:40px auto;padding:36px 28px;text-align:center;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.pm-page-error h1{font-size:20px;margin:0 0 10px;color:var(--text)}
+.pm-page-error p{font-size:13px;color:var(--dim);margin:0 0 22px}
+.pm-err-acts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+@media (max-width:640px){
+  .pm-page{padding:16px 14px 22px}
+  .pm-page-h{gap:12px}
+  .pm-page-h .pm-ph{width:72px;flex:0 0 72px}
+  .pm-page-h h1{font-size:17px}
+  .pm-crumb{display:none}
+}
