@@ -177,3 +177,28 @@ test('list 页兼容老的字符串 pending', () => {
   assert.equal(p.data.code, 's9');
   assert.equal(p.data.category, 'coin');
 });
+
+test('系列页默认只展示普通纪念币一类', () => {
+  setupWx();
+  const p = loadSeriesPage();
+  assert.equal(p.data.activeCat, 'coin');
+  p.switchCat({ currentTarget: { dataset: { cat: 'note' } } });
+  assert.equal(p.data.activeCat, 'note');
+  p.switchCat({ currentTarget: { dataset: { cat: 'pm' } } });
+  assert.equal(p.data.activeCat, 'pm');
+  // 重复点同一个不产生变化
+  p.switchCat({ currentTarget: { dataset: { cat: 'pm' } } });
+  assert.equal(p.data.activeCat, 'pm');
+});
+
+test('WXML 三组分组都带 activeCat 条件，一次只显示一类', () => {
+  const fs = require('fs');
+  const wxml = fs.readFileSync(mp('pages/series/series.wxml'), 'utf8');
+  assert.ok(wxml.includes("activeCat === 'coin' && coinGroup.length"));
+  assert.ok(wxml.includes("activeCat === 'note' && noteGroup.length"));
+  assert.ok(wxml.includes("activeCat === 'pm'"));
+  // 不再有无条件整组展开
+  assert.ok(!wxml.includes('<view class="sc-group" wx:if="{{coinGroup.length}}">'));
+  assert.ok(wxml.includes('cat-tabs'));
+  assert.ok(wxml.includes('bindtap="switchCat"'));
+});

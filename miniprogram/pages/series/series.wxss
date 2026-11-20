@@ -48,6 +48,49 @@
   font-size: 34rpx;
 }
 
+/* 大品类切换 */
+.cat-tabs {
+  display: flex;
+  margin-bottom: 8rpx;
+  padding: 6rpx;
+  border-radius: 14rpx;
+  background: #efe9dc;
+}
+
+.cat-tab {
+  flex: 1;
+  display: flex;
+  padding: 14rpx 6rpx;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  border-radius: 10rpx;
+  color: #8a8378;
+  font-size: 23rpx;
+}
+
+.cat-tab.on {
+  background: #ffffff;
+  color: #9a6b1f;
+  font-weight: 600;
+  box-shadow: 0 2rpx 10rpx rgba(74, 55, 20, 0.08);
+}
+
+.ct-n {
+  min-width: 30rpx;
+  padding: 2rpx 8rpx;
+  border-radius: 999rpx;
+  background: rgba(154, 107, 31, 0.1);
+  color: #9a6b1f;
+  font-size: 19rpx;
+  text-align: center;
+}
+
+.cat-tab:not(.on) .ct-n {
+  background: rgba(138, 131, 120, 0.12);
+  color: #9a948a;
+}
+
 /* 系列卡 */
 .cards {
   display: flex;

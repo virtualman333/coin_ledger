@@ -8,7 +8,8 @@ Page({
     items: [],
     total: 0,
     count: 0,
-    // 三大品类分组
+    // 三大品类分组（按 tab 一次只展示一类）
+    activeCat: 'coin',
     coinGroup: [],
     noteGroup: [],
     pmGroup: [],
@@ -63,6 +64,12 @@ Page({
       }));
       this.setData({ pmLoaded: true, pmGroup: pm });
     }).catch(() => this.setData({ pmLoaded: true, pmGroup: [] }));
+  },
+
+  switchCat(e) {
+    const catCode = e.currentTarget.dataset.cat || 'coin';
+    if (catCode === this.data.activeCat) return;
+    this.setData({ activeCat: catCode });
   },
 
   goSeries(e) {
