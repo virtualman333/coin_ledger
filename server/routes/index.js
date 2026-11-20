@@ -13,6 +13,7 @@
 const healthRoutes = require('./health');
 const bootstrapRoutes = require('./bootstrap');
 const catalogRoutes = require('./catalog');
+const metalPriceRoutes = require('./metal-price');
 const planRoutes = require('./plans');
 const seoRoutes = require('./seo');
 const plazaRoutes = require('./plaza');
@@ -29,6 +30,7 @@ module.exports = async function registerAll(app) {
   await app.register(healthRoutes);
   await app.register(bootstrapRoutes);
   await app.register(catalogRoutes);
+  await app.register(metalPriceRoutes);
   await app.register(planRoutes);
   await app.register(seoRoutes);
   await app.register(plazaRoutes);

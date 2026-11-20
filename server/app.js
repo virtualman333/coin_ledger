@@ -62,9 +62,11 @@ async function buildApp(opts = {}) {
   // 只用数据库模式：plugins/db 建好的池。
   const { createDataSource } = require('./services/data-source');
   const catalogService = require('./services/catalog.service');
+  const metalPriceService = require('./services/metal-price.service');
   const dataSource = createDataSource({ mode: 'db', pool: app.db });
   app.decorate('dataSource', dataSource);
   app.decorate('catalog', catalogService.create(dataSource));
+  app.decorate('metalPrice', metalPriceService.create());
 
   // /api/* 永不缓存 + nosniff（legacy sendJSON 两个头都设过，原生路由在这里兜底）
   app.addHook('onSend', async function apiHeaders(request, reply, payload) {

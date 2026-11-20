@@ -23,3 +23,11 @@
   border:0;background:#9a6b1f;color:#fff;font-size:28rpx;font-weight:600
 }
 .pm-fav[disabled]{background:#e6e0d4;color:#9a948a}
+
+/* 贵金属克重价：按实时金银价 × 成色净重 */
+.mv-box{margin-bottom:16rpx;padding:22rpx;border-radius:16rpx;background:#fbf6ec;border:1rpx solid #eadfc6}
+.mv-row{display:flex;align-items:baseline;gap:12rpx;flex-wrap:wrap}
+.mv-k{font-size:24rpx;color:#8a8378}
+.mv-v{font-size:38rpx;font-weight:700;color:#9a6b1f}
+.mv-u{font-size:21rpx;color:#8a8378;margin-left:auto}
+.mv-tip{display:block;margin-top:12rpx;font-size:21rpx;line-height:1.6;color:#a0998c}

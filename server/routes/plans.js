@@ -34,13 +34,20 @@ module.exports = async function planRoutes(app) {
     const code = String(request.params.code || '').toUpperCase();
     const CDN = 'https://chngc-prod-c2c-cdn.ecgci.com';
     let raw = null;
-    const rows = await app.db.query('SELECT raw, thumb, thumb_back FROM cl_ecgci_pm WHERE code = ? LIMIT 1', [code]);
+    const rows = await app.db.query('SELECT raw, thumb, thumb_back, weight_g FROM cl_ecgci_pm WHERE code = ? LIMIT 1', [code]);
     if (rows[0] && rows[0][0]) {
       if (rows[0][0].raw) raw = rows[0][0].raw;
       var thumb = rows[0][0].thumb || '';
     }
     if (!raw) return reply.send({ ok: false, error: '未找到该贵金属币' });
     if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = {}; } }
+    // 克重价：按实时金银价 × 克重 × 成色算材料价值（失败时不影响详情主体）
+    let metalValue = null;
+    try {
+      await app.metalPrice.getQuotes();
+      const w = (rows[0] && rows[0][0] && rows[0][0].weight_g) || raw.weight || '';
+      metalValue = app.metalPrice.valueOf(raw.material, w, raw.fineness);
+    } catch (e) { metalValue = null; }
     // 原图动辄 2MB+，CDN 支持阿里云 OSS 图片处理，统一压到 600px 宽再给前端
     const img = (p) => {
       if (!p) return '';

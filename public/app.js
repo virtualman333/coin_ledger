@@ -2107,6 +2107,15 @@ function showPmCard(code){
       var d = j.item || {};
       var rich = mask.querySelector('#pmRich');
       if (!rich) return;
+      // 克重价：按实时金银价 × 成色净重，插到规格区（详情接口已算好）
+      var factsBox = mask.querySelector('#pmFacts');
+      var mvHtml = metalValueHtml(d.metalValue);
+      if (factsBox && mvHtml) {
+        var mvWrap = document.createElement('div');
+        mvWrap.className = 'pm-mv-wrap';
+        mvWrap.innerHTML = mvHtml;
+        factsBox.appendChild(mvWrap);
+      }
 
       var figs = '';
       [['正面', d.frontUrl, d.frontDesc], ['背面', d.backUrl, d.backDesc]].forEach(function(pair){
@@ -2981,6 +2990,14 @@ function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
   });
+}
+
+/** 贵金属克重价展示块：按实时金银价 × 成色净重算材料价值 */
+function metalValueHtml(mv){
+  if (!mv || mv.value == null || !(mv.pureGram > 0)) return '';
+  var tip = '按今日' + esc(mv.name) + ' ¥' + mv.cnyPerGram + '/克 × 净重 ' + mv.pureGram + ' 克（' + mv.grossGram + ' 克 × 成色 ' + mv.fineness + '%）';
+  return '<div class="mv-box"><div class="mv-row"><i>克重价</i><b>≈ ¥' + money(mv.value) + '</b><span>' + esc(mv.name) + ' ¥' + mv.cnyPerGram + '/克</span></div>'
+    + '<div class="mv-tip">' + tip + '。仅材料价值，不含铸造成本与纪念溢价，随行情浮动，仅供参考。</div></div>';
 }
 
 /* ---------------------------------------------------------

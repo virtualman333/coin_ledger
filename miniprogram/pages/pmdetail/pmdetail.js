@@ -23,8 +23,18 @@ Page({
         ['设计', d.designer], ['雕刻', d.sculptor],
         ['题材', join(d.theme)], ['系列', join(d.series)]
       ].filter((x) => x[1]);
+      // 克重价（后端按实时金银价 × 成色净重算好）
+      let mv = null;
+      if (d.metalValue && d.metalValue.value != null) {
+        mv = Object.assign({}, d.metalValue, {
+          valueText: '≈ ¥' + d.metalValue.value,
+          tip: '按今日' + d.metalValue.name + ' ¥' + d.metalValue.cnyPerGram + '/克 × 净重 '
+            + d.metalValue.pureGram + ' 克（' + d.metalValue.grossGram + ' 克 × 成色 '
+            + d.metalValue.fineness + '%）。仅材料价值，不含铸造成本与纪念溢价，随行情浮动，仅供参考。'
+        });
+      }
       this.setData({
-        item: Object.assign({}, d, { facts, announceText: String(d.announce || '').trim() }),
+        item: Object.assign({}, d, { facts, announceText: String(d.announce || '').trim(), metalValue: mv }),
         loading: false,
       });
     }).catch(() => this.setData({ loading: false, err: '详情加载失败' }));
