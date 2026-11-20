@@ -229,7 +229,11 @@ function normalizeHoldings(input) {
       market: Math.round(market * 100) / 100,
       group: String(h.group || '独立藏品').slice(0, 24),
       sep: !!h.sep,
-      category: ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin'
+      category: ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin',
+      // 贵金属缩略图与「按单枚记」口径（migration 007）。
+      // thumb 允许相对路径或 http(s) URL，限制长度即可；unit 白名单 piece，其余按套处理。
+      thumb: String(h.thumb || '').slice(0, 512),
+      unit: h.unit === 'piece' ? 'piece' : ''
     };
   });
 }

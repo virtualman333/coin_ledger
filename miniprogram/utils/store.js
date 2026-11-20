@@ -157,6 +157,12 @@ function persist() {
     cost: cat.round2(h.cost),
     market: cat.round2(h.market),
     group: h.group,
+    // 这三个字段必须一起回传，否则贵金属藏品服务端刷新后会退化成普通币：
+    // category 决定「我的藏品-贵金属」页签与 isOwned 去重，thumb 是缩略图，
+    // unit='piece' 决定按单枚而非按套记。服务端 migration 007 已存这三列。
+    category: h.category,
+    thumb: h.thumb,
+    unit: h.unit,
   }));
   return api.put('/api/holdings', { holdings: payload }).then((res) => {
     state.rev = res.rev || state.rev;

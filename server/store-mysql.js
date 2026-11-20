@@ -150,7 +150,7 @@ async function loadDoc() {
     'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar FROM cl_users ORDER BY created_at, id'
   );
   const [holdRows] = await pool.query(
-    'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category FROM cl_holdings ORDER BY uid, ord'
+    'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit FROM cl_holdings ORDER BY uid, ord'
   );
   const [priceRows] = await pool.query('SELECT coin_i, est FROM cl_prices ORDER BY coin_i');
   const [visitRows] = await pool.query('SELECT day, hits FROM cl_visits ORDER BY day');
@@ -166,7 +166,10 @@ async function loadDoc() {
       market: Number(r.market) || 0,
       group: r.grp || '独立藏品',
       sep: !!r.sep,
-      category: r.category || 'coin'
+      category: r.category || 'coin',
+      // 贵金属/按单枚记的展示元数据（migration 007）；老行是空串，等价于没有
+      thumb: r.thumb || '',
+      unit: r.unit || ''
     });
   });
 
@@ -266,10 +269,12 @@ async function syncHoldings(conn, doc) {
       Math.round(Number(h.rolls) || 0),
       Number(h.cost) || 0, Number(h.market) || 0,
       String(h.group || '独立藏品').slice(0, 32), h.sep ? 1 : 0,
-      ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin'
+      ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin',
+      String(h.thumb || '').slice(0, 512),
+      String(h.unit || '').slice(0, 8)
     ]);
     await conn.query(
-      'INSERT INTO cl_holdings (uid, ord, id, name, rolls, cost, market, grp, sep, category) VALUES ?',
+      'INSERT INTO cl_holdings (uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit) VALUES ?',
       [rows]
     );
   }

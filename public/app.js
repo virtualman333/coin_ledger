@@ -2861,7 +2861,7 @@ function fmtDateTime(v){
 /* =========================================================
    12. 页签切换
    ========================================================= */
-var TABS = ['home','plan','all','series','holdings','account','admin'];
+var TABS = ['home','plan','all','series','holdings','account','admin','myfeedback','sitemap'];
 
 /* 访客记录：会话 ID 存在 sessionStorage（关掉标签页算新访客） */
 function visitSid(){

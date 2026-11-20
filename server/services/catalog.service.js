@@ -419,11 +419,15 @@ class CatalogService {
    * 单品种完整出参（含描述、多图、规格明细）。贵金属额外带 pieces。
    *
    * @param {number} no 品种编号
+   * @param {{publishedOnly?: boolean}} [opts] publishedOnly=true 时未上架(draft)按不存在处理
    * @returns {Promise<object|null>} 详情或 null
    */
-  async detail(no) {
+  async detail(no, opts) {
     const row = await this.repos.coins.findByNo(no);
     if (!row) return null;
+    // 公开接口只允许已上架品种：draft（含未上架的贵金属套）必须等同不存在。
+    // 页面路由 seo.js 已有同样闸门，这里补上 API 侧，避免绕过页面直调接口。
+    if (opts && opts.publishedOnly && row.status !== 'published') return null;
     const descRow = await this.repos.descriptions.findByNo(no);
     const imageRows = await this.repos.images.listByCoin(no);
     const pieces = row.category === 'precious_metal' ? await this.repos.pmPieces.listByCoin(no) : [];

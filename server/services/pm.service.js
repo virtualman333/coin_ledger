@@ -268,20 +268,28 @@ function create(ctx) {
       const p = payload && typeof payload === 'object' ? payload : {};
       const check = pmSchema.validateSet(p, { exists: false });
       if (!check.ok) return { ok: false, error: check.errors[0].error, field: check.errors[0].field };
-      const next = Object.assign({}, check.normalized, { no: await this.nextNo(), status: 'draft', sourceText: check.normalized.sourceText || '' });
 
       if (ds.mode === 'json') {
+        const next = Object.assign({}, check.normalized, { no: await this.nextNo(), status: 'draft', sourceText: check.normalized.sourceText || '' });
         const doc = readSeed();
-        const seedSet = toSeedSet(next);
-        doc.sets.push(seedSet);
+        doc.sets.push(toSeedSet(next));
         writeSeed(doc);
-      } else {
-        await ctx.withTx(async (conn) => {
-          await repos.coins.insert(toDbColumns(next), conn);
-          await repos.pmPieces.replaceAll(conn, next.no, next.pieces);
-        });
+        return { ok: true, row: await this.findByNo(next.no) };
       }
-      return { ok: true, row: await this.findByNo(next.no) };
+
+      // db：算号与写入必须同一个事务连接 —— FOR UPDATE 锁住 MAX(no) 区间直到 commit，
+      // 否则两个并发 create 会拿到同一个 no，第二个撞 uk_no 报 500。
+      let assignedNo = 0;
+      await ctx.withTx(async (conn) => {
+        const maxNo = await repos.coins.nextNo(conn);
+        assignedNo = Math.max(common.LEGACY_NO_MAX + 1, maxNo);
+        const next = Object.assign({}, check.normalized, {
+          no: assignedNo, status: 'draft', sourceText: check.normalized.sourceText || ''
+        });
+        await repos.coins.insert(toDbColumns(next), conn);
+        await repos.pmPieces.replaceAll(conn, assignedNo, next.pieces);
+      });
+      return { ok: true, row: await this.findByNo(assignedNo) };
     },
 
     /**
@@ -305,7 +313,11 @@ function create(ctx) {
         writeSeed(doc);
       } else {
         await ctx.withTx(async (conn) => {
-          await repos.coins.update(no, toDbColumns(check.normalized), conn);
+          // 上架状态只能由 setStatus() 改：它跑 forPublish 闸门（verified + source_url）。
+          // update() 只做 exists 校验，若让 payload.status 落到库里就能绕过闸门，
+          // 所以这里强制沿用 current.status（与上面 json 分支口径一致）。
+          const cols = toDbColumns(Object.assign({}, check.normalized, { status: current.status }));
+          await repos.coins.update(no, cols, conn);
           await repos.pmPieces.replaceAll(conn, no, check.normalized.pieces);
         });
       }

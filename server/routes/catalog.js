@@ -70,7 +70,8 @@ module.exports = async function catalogRoutes(app) {
       reply.code(400).send({ ok: false, error: '品种编号不合法' });
       return;
     }
-    const detail = await app.catalog.detail(no);
+    // 公开详情：未上架(draft)品种按 404 处理，禁止绕过上架闸门直取内容
+    const detail = await app.catalog.detail(no, { publishedOnly: true });
     if (!detail) {
       reply.code(404).send({ ok: false, error: '品种不存在' });
       return;
