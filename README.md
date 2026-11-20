@@ -223,6 +223,13 @@ STORAGE=json bash deploy/install.sh
 > `/www/wwwlogs/coin-ledger-supervisor.log`，面板里可直接启停 / 重启 / 看日志。
 > `deploy/install.sh` 仍用于首次部署与回滚，但**升级时不要再执行**，否则会重新启用 systemd
 > 单元，与 Supervisor 同时抢 3100 端口。回滚脚本见服务器 `/root/coin-ledger-rollback-systemd.sh`。
+>
+> **重启自愈（2026-11-20 加固）**：服务以 `www` 运行，`/etc/coin-ledger.env` 必须是
+> `root:www` + `640`；若被改成 `600`，`www` 读不到 `MYSQL_PASSWORD`，进程启动即退出。
+> 已做三层保护：`deploy/install.sh` 生成 env 时直接设 640；supervisord 的 systemd drop-in
+> `/etc/systemd/system/supervisord.service.d/coin-ledger-env.conf` 在启动前强制修正权限并
+> `After=mysqld.service`；Supervisor 的启动命令会先等 `127.0.0.1:3306` 就绪再 `exec node`，
+> `startretries=10`，避免重启瞬间数据库未起来就耗尽重试。
 
 ## Web 管理控制台（2026-11-16 起）
 

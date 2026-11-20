@@ -112,8 +112,11 @@ SUPERADMIN_PASSWORD=$GEN_PW
 SESSION_SECRET=$GEN_SK
 COIN_DATA_DIR=$APP_DIR/data
 EOF
-  chmod 600 "$ENV_FILE"
-  log "已生成 $ENV_FILE"
+  # 服务以 $APP_USER 运行，必须组可读：600 时 www 读不到 env，
+  # 启动会因为缺 MYSQL_PASSWORD 直接退出（2026-11-20 线上踩过）
+  chown root:"$APP_USER" "$ENV_FILE"
+  chmod 640 "$ENV_FILE"
+  log "已生成 $ENV_FILE（root:$APP_USER 640）"
   echo
   echo "  ┌──────────────────────────────────────────────┐"
   echo "  │ 访问口令（请立即保存）：$GEN_PW"
