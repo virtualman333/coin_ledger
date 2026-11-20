@@ -69,7 +69,8 @@ module.exports = async function planRoutes(app) {
         face: raw.denomination, fineness: raw.fineness, circulation: raw.circulation,
         quality: raw.quality, craft: raw.craft, castingUnit: raw.castingUnit,
         designer: raw.designedPersonName, sculptor: raw.sculptor,
-        categories: raw.projectCategoryName, theme: raw.projectTheme, series: raw.projectSeries
+        categories: raw.projectCategoryName, theme: raw.projectTheme, series: raw.projectSeries,
+        metalValue: metalValue
       }
     });
   });
