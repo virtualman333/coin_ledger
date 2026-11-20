@@ -100,10 +100,20 @@ Page({
       };
       (noteN > members.length / 2 ? note : coin).push(row);
     });
-    // pmTabs 第一项是「全部项目」，跳过；其余为发行项目
-    const pm = (this.data.pmTabs || []).slice(1).map((t) => ({
-      code: t.code, name: t.name, count: t.count,
-    }));
+    // pmTabs 第一项是「全部项目」，跳过；其余为发行项目。
+    // 富字段（年份跨度/材质/封面）由 /api/series?category=pm 返回，loadPmSeries 里合并进 pmTabs。
+    const pm = (this.data.pmTabs || []).slice(1).map((t) => {
+      const mats = Array.isArray(t.materials) ? t.materials.filter(Boolean) : [];
+      const yf = String(t.yearFrom || ''), yt = String(t.yearTo || '');
+      return {
+        code: t.code,
+        name: t.name,
+        count: t.count,
+        yearText: yf && yt ? (yf === yt ? yf + ' 年' : yf + '—' + yt) : '',
+        matText: mats.slice(0, 4).join(' · '),
+        thumb: t.thumb ? (String(t.thumb).indexOf('http') === 0 ? t.thumb : api.BASE + t.thumb) : '',
+      };
+    });
     this.setData({
       seriesCoin: coin, seriesNote: note, seriesPm: pm,
       seriesPmLoaded: this.data.pmTabs.length > 0,
@@ -191,7 +201,15 @@ Page({
     api.get('/api/series?category=pm').then((res) => {
       if (!res || !res.ok) return;
       const pmTabs = [{ code: '', name: '全部项目', count: res.items.reduce((a, it) => a + it.count, 0) }]
-        .concat(res.items.map((it) => ({ code: it.code, name: it.name, count: it.count })));
+        .concat(res.items.map((it) => ({
+          code: it.code,
+          name: it.name,
+          count: it.count,
+          yearFrom: it.yearFrom || '',
+          yearTo: it.yearTo || '',
+          materials: Array.isArray(it.materials) ? it.materials : [],
+          thumb: it.thumb || '',
+        })));
       this.setData({ pmTabs });
       if (this.data.category === 'pm') this.setData({ tabs: pmTabs });
       if (this.data.viewMode === 'series') this.buildSeriesView();
@@ -200,6 +218,11 @@ Page({
 
   pickCategory(e) {
     const category = e.currentTarget.dataset.cat || 'coin';
+    if (this.data.viewMode === 'series') {
+      // 按系列模式：只切当前展示的品类分组，不触碰顺序清单的筛选/分页状态
+      this.setData({ category });
+      return;
+    }
     this.applyCategory(category, '');
   },
 

@@ -28,16 +28,31 @@ module.exports = async function catalogRoutes(app) {
     const q = request.query || {};
     const cat = Array.isArray(q.category) ? q.category[0] : q.category;
     if (cat === 'pm') {
-      // 贵金属的「系列」是发行项目（一套），与普通币的 series 完全不是一回事
+      // 贵金属的「系列」是发行项目（一套），与普通币的 series 完全不是一回事。
+      // 附带年份跨度、材质与代表图，供小程序/网页的项目卡片展示。
       const r = await app.db.query(
-        'SELECT project_code AS code, MAX(project_name) AS name, COUNT(*) AS count ' +
+        'SELECT project_code AS code, MAX(project_name) AS name, COUNT(*) AS count, ' +
+        'MIN(year) AS yearFrom, MAX(year) AS yearTo, ' +
+        'GROUP_CONCAT(DISTINCT material) AS materials, ' +
+        'COALESCE(MAX(thumb), \'\') AS thumb ' +
         'FROM cl_ecgci_pm GROUP BY project_code ORDER BY name'
       );
       const rows = r[0];
       return reply.send({
         ok: true,
         category: 'pm',
-        items: rows.map((r) => ({ code: r.code, name: r.name, count: Number(r.count) })),
+        items: rows.map((r) => {
+          const mats = String(r.materials || '').split(',').filter(Boolean);
+          return {
+            code: r.code,
+            name: r.name,
+            count: Number(r.count),
+            yearFrom: String(r.yearFrom || ''),
+            yearTo: String(r.yearTo || ''),
+            materials: mats,
+            thumb: r.thumb || '',
+          };
+        }),
       });
     }
     const svc = seriesService.create({

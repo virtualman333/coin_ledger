@@ -32,6 +32,12 @@
     </view>
   </view>
 
+  <!-- 视图模式：顺序清单 / 按系列 -->
+  <view class="view-switch">
+    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
+    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
+  </view>
+
   <view class="cat-tabs">
     <view
       class="cat-tab {{category === item.code ? 'on' : ''}}"
@@ -40,12 +46,6 @@
       data-cat="{{item.code}}"
       bindtap="pickCategory"
     >{{item.name}}</view>
-  </view>
-
-  <!-- 视图模式：顺序清单 / 按系列 -->
-  <view class="view-switch">
-    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
-    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
   </view>
 
   <scroll-view class="tabs" scroll-x enable-flex wx:if="{{viewMode === 'list'}}">
@@ -154,46 +154,87 @@
   </view>
 </view>
 
-<!-- 按系列视图：复用 series 页的卡片分组，点卡片回顺序清单并定位 -->
+<!-- 按系列视图：跟随顶部品类 tab，一次只展示一类，点卡片回顺序清单并定位 -->
 <view class="series-view" wx:if="{{viewMode === 'series'}}">
-  <view class="sv-group" wx:if="{{seriesCoin.length}}">
-    <view class="sv-h coin"><text>普通纪念币</text><text class="sv-n">{{seriesCoin.length}} 个系列</text></view>
-    <view class="sv-cards">
-      <view class="sv-card" wx:for="{{seriesCoin}}" wx:key="code" data-cat="coin" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
-        <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
-        <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+
+  <!-- 普通纪念币 -->
+  <block wx:if="{{category === 'coin'}}">
+    <view class="sv-intro">
+      <text class="sv-intro-t">普通纪念币</text>
+      <text class="sv-intro-s">按系列整理 · 点开查看该系列全部品种</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesCoin.length}}">
+      <view class="sv-card" wx:for="{{seriesCoin}}" wx:key="code" data-cat="coin" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+          <text class="sv-badge">{{item.count}} 枚</text>
+        </view>
         <view class="sv-body">
           <text class="sv-name">{{item.name}}</text>
-          <text class="sv-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="sv-foot">
+            <text class="sv-own" wx:if="{{item.own}}">已藏 {{item.own}} / {{item.count}}</text>
+            <text class="sv-own sv-own-none" wx:else>还没收藏</text>
+            <text class="sv-arrow">›</text>
+          </view>
           <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
         </view>
       </view>
     </view>
-  </view>
+    <view class="sv-empty" wx:else>普通纪念币系列加载中…</view>
+  </block>
 
-  <view class="sv-group" wx:if="{{seriesNote.length}}">
-    <view class="sv-h note"><text>纪念钞</text><text class="sv-n">{{seriesNote.length}} 个系列</text></view>
-    <view class="sv-cards">
-      <view class="sv-card" wx:for="{{seriesNote}}" wx:key="code" data-cat="note" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
-        <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
-        <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+  <!-- 纪念钞 -->
+  <block wx:elif="{{category === 'note'}}">
+    <view class="sv-intro note">
+      <text class="sv-intro-t">纪念钞</text>
+      <text class="sv-intro-s">按系列整理 · 点开查看该系列全部品种</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesNote.length}}">
+      <view class="sv-card" wx:for="{{seriesNote}}" wx:key="code" data-cat="note" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+          <text class="sv-badge">{{item.count}} 张</text>
+        </view>
         <view class="sv-body">
           <text class="sv-name">{{item.name}}</text>
-          <text class="sv-meta">{{item.count}} 个 · 已藏 {{item.own}}</text>
+          <view class="sv-foot">
+            <text class="sv-own" wx:if="{{item.own}}">已藏 {{item.own}} / {{item.count}}</text>
+            <text class="sv-own sv-own-none" wx:else>还没收藏</text>
+            <text class="sv-arrow">›</text>
+          </view>
           <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
         </view>
       </view>
     </view>
-  </view>
+    <view class="sv-empty" wx:else>纪念钞系列加载中…</view>
+  </block>
 
-  <view class="sv-group" wx:if="{{seriesPm.length}}">
-    <view class="sv-h pm"><text>贵金属纪念币</text><text class="sv-n">{{seriesPm.length}} 个项目</text></view>
-    <view class="sv-cards">
-      <view class="sv-card sv-card-pm" wx:for="{{seriesPm}}" wx:key="code" data-cat="pm" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="tap-hover">
-        <view class="sv-body"><text class="sv-name">{{item.name}}</text><text class="sv-meta">{{item.count}} 枚 · 查看目录 ›</text></view>
+  <!-- 贵金属：封面 + 年份跨度 + 材质标签 + 枚数 -->
+  <block wx:elif="{{category === 'pm'}}">
+    <view class="sv-intro pm">
+      <text class="sv-intro-t">贵金属纪念币</text>
+      <text class="sv-intro-s">按发行项目整理 · 共 {{seriesPm.length}} 个项目</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesPm.length}}">
+      <view class="sv-card sv-card-pm" wx:for="{{seriesPm}}" wx:key="code" data-cat="pm" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.thumb}}" src="{{item.thumb}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph sv-ph-pm" wx:else><text>贵金属</text></view>
+          <text class="sv-badge">{{item.count}} 枚</text>
+        </view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <view class="sv-tags" wx:if="{{item.yearText || item.matText}}">
+            <text class="sv-tag" wx:if="{{item.yearText}}">{{item.yearText}}</text>
+            <text class="sv-tag sv-tag-mat" wx:if="{{item.matText}}">{{item.matText}}</text>
+          </view>
+          <view class="sv-foot"><text class="sv-own">查看目录</text><text class="sv-arrow">›</text></view>
+        </view>
       </view>
     </view>
-  </view>
-
-  <view class="sv-empty" wx:if="{{!seriesCoin.length && !seriesNote.length && !seriesPm.length}}">系列数据加载中…</view>
+    <view class="sv-empty" wx:elif="{{seriesPmLoaded}}">暂无贵金属项目</view>
+    <view class="sv-empty" wx:else>贵金属项目加载中…</view>
+  </block>
 </view>

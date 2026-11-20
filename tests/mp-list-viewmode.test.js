@@ -78,7 +78,11 @@ function loadListPage() {
   inst.data.allTabs = [{ code: '', name: '全部' }];
   inst.data.pmTabs = [
     { code: '', name: '全部项目' },
-    { code: 'pm1', name: '熊猫金币', count: 8 },
+    {
+      code: 'pm1', name: '熊猫金币', count: 8,
+      yearFrom: '1982', yearTo: '2024', materials: ['金', '银'],
+      thumb: '/img/pm/480/G19820101.jpg',
+    },
   ];
   return inst;
 }
@@ -95,8 +99,13 @@ test('默认顺序清单，切到按系列构建三组分册', () => {
   assert.equal(p.data.seriesCoin[0].pct, 100);
   assert.equal(p.data.seriesNote.length, 1);
   assert.equal(p.data.seriesNote[0].code, 's2');
-  // 贵金属跳过「全部项目」
-  assert.deepEqual(p.data.seriesPm, [{ code: 'pm1', name: '熊猫金币', count: 8 }]);
+  // 贵金属跳过「全部项目」，并带年份跨度/材质/封面
+  assert.equal(p.data.seriesPm.length, 1);
+  const pm = p.data.seriesPm[0];
+  assert.equal(pm.code, 'pm1');
+  assert.equal(pm.yearText, '1982—2024');
+  assert.equal(pm.matText, '金 · 银');
+  assert.equal(pm.thumb, 'https://example.test/img/pm/480/G19820101.jpg');
   assert.equal(p.data.seriesPmLoaded, true);
 });
 
@@ -125,7 +134,22 @@ test('点系列卡片回到顺序清单并定位品类与系列', async () => {
   assert.equal(p.data.code, 'pm1');
 });
 
-test('WXML：有视图切换栏，列表与按系列两区互斥显示', () => {
+test('按系列模式下顶部品类 tab 切换生效，且不动顺序清单状态', () => {
+  setupWx();
+  const p = loadListPage();
+  p.toggleViewMode({ currentTarget: { dataset: { mode: 'series' } } });
+  p.data.code = 's1';
+  p.data.yearFilter = '2020';
+  p.pickCategory({ currentTarget: { dataset: { cat: 'pm' } } });
+  assert.equal(p.data.category, 'pm', '品类应切到贵金属');
+  assert.equal(p.data.code, 's1', '不应改动顺序清单的系列定位');
+  assert.equal(p.data.yearFilter, '2020', '不应改动顺序清单的筛选');
+  assert.equal(p.data.viewMode, 'series', '仍停留在按系列视图');
+  p.pickCategory({ currentTarget: { dataset: { cat: 'note' } } });
+  assert.equal(p.data.category, 'note');
+});
+
+test('WXML：视图切换 + 品类分组 + 贵金属富信息', () => {
   const wxml = fs.readFileSync(path.join(MP, 'pages/list/list.wxml'), 'utf8');
   assert.match(wxml, /bindtap="toggleViewMode"/);
   assert.ok(wxml.includes('data-mode="list"'));
@@ -133,5 +157,13 @@ test('WXML：有视图切换栏，列表与按系列两区互斥显示', () => {
   assert.ok(wxml.includes('class="pm-full" wx:if="{{viewMode === \'list\''));
   assert.ok(wxml.includes('class="list" wx:if="{{viewMode === \'list\''));
   assert.ok(wxml.includes('class="series-view" wx:if="{{viewMode === \'series\'}}"'));
+  // 三组按当前品类分别显示（bug 修复点）
+  assert.ok(wxml.includes("category === 'coin'"));
+  assert.ok(wxml.includes("category === 'note'"));
+  assert.ok(wxml.includes("category === 'pm'"));
   assert.match(wxml, /bindtap="goSeriesCard"/);
+  // 贵金属年份/材质/封面
+  assert.ok(wxml.includes('{{item.yearText}}'));
+  assert.ok(wxml.includes('{{item.matText}}'));
+  assert.ok(wxml.includes('src="{{item.thumb}}"'));
 });
