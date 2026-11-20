@@ -12,7 +12,7 @@
 const seo = require('../services/seo');
 
 /** SPA tab（与 seo.SPA_TABS 同源，不在这里另写一份） */
-const TABS = ['home', 'plan', 'overview', 'series', 'holdings', 'cost', 'all', 'sitemap', 'account', 'admin'];
+const TABS = ['home', 'plan', 'overview', 'series', 'holdings', 'plaza', 'cost', 'all', 'sitemap', 'account', 'admin'];
 
 /**
  * hijack 后直接写原始响应（seo.sendIndex 内部写的是 ServerResponse）。
