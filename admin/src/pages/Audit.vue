@@ -98,9 +98,14 @@ const {
   reload, search, onPageChange, onSizeChange
 } = useTable(loader, { pageSize: 20 });
 
-// ISO 时间简单格式化为 YYYY-MM-DD HH:mm，不引入 dayjs 等依赖
+// 后端存 UTC ISO，直接截串会差 8 小时；按浏览器本地时区显示
 function fmtTime(v) {
-  return v ? String(v).replace('T', ' ').slice(0, 16) : '—';
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).replace('T', ' ').slice(0, 16);
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+    + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
 function dash(v) {

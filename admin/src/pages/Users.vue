@@ -221,7 +221,15 @@ onMounted(async () => {
 });
 
 /* ---------- 展示辅助 ---------- */
-function fmt(v) { return v ? String(v).replace('T', ' ').slice(0, 16) : '—'; }
+// 后端存 UTC ISO，直接截串会差 8 小时；按浏览器本地时区显示
+function fmt(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).replace('T', ' ').slice(0, 16);
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+    + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
 function money(v) { return '¥' + (Number(v) || 0).toFixed(0); }
 function isMe(row) { return !!meId.value && row.id === meId.value; }
 function statusOf(u) {

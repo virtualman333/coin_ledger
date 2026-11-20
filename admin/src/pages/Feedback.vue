@@ -147,8 +147,14 @@ function onStatusChange() {
 }
 
 /* ---------- 展示辅助 ---------- */
+// 后端存 UTC ISO，直接截串会差 8 小时；按浏览器本地时区显示
 function fmtTime(v) {
-  return String(v || '').replace('T', ' ').slice(0, 16) || '—';
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).replace('T', ' ').slice(0, 16);
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+    + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 // 链接一律以 / 开头（应用挂在 /console/），相对路径会 404
 function imgUrl(file) {
