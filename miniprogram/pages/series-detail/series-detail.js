@@ -12,6 +12,28 @@ function absoluteImg(p) {
 }
 
 /**
+ * URL 参数容错解码。
+ * 本页是全项目唯一通过 URL 传中文标题的页面：各入口统一 encodeURIComponent(name)，
+ * 但小程序不同基础库 / 分享卡片 / 扫码进入时，onLoad 拿到的可能是已解过一次的中文、
+ * 也可能是 %E4%B8%80... 形式的编码串，甚至分享链路的双重编码串。
+ * 只在检测到合法 %XX 序列时解码（最多两层），遇到非法序列原样返回，
+ * 避免误伤本身含 % 的标题（如「100% 纯银」）。
+ */
+function safeDecode(s) {
+  if (typeof s !== 'string' || !s) return '';
+  let out = s;
+  for (let i = 0; i < 2; i++) {
+    if (!/%[0-9a-fA-F]{2}/.test(out)) break;
+    try {
+      const d = decodeURIComponent(out);
+      if (d === out) break;
+      out = d;
+    } catch (e) { break; }
+  }
+  return out;
+}
+
+/**
  * 独立「系列详情页」：只展示某一系列下的全部品种。
  * 入参 ?category=coin|note|pm&code=<系列key|贵金属project_code>&name=<标题>
  * - 普通币 / 纪念钞：用内置目录（离线可用，图片/推理价齐全），与全套清单口径一致
@@ -39,13 +61,16 @@ Page({
   onLoad(query) {
     const q = query || {};
     const category = q.category === 'pm' ? 'pm' : (q.category === 'note' ? 'note' : 'coin');
+    // 各入口统一 encodeURIComponent(name)；不同进入方式拿到的可能是编码串或已解码中文，统一在此兜底解码
+    const code = safeDecode(q.code);
+    const name = safeDecode(q.name);
     this.setData({
       category: category,
-      code: q.code || '',
-      name: q.name || '',
+      code: code,
+      name: name,
     }, () => {
       wx.setNavigationBarTitle({
-        title: q.name || (category === 'pm' ? '贵金属项目' : '系列详情'),
+        title: name || (category === 'pm' ? '贵金属项目' : '系列详情'),
       });
       this.reload();
     });

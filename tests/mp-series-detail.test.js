@@ -119,6 +119,40 @@ test('note 系列详情页：category 由入参决定', async () => {
   assert.equal(p.data.rows[0].name, '钞A');
 });
 
+test('系列标题乱码：URL 参数被 encodeURIComponent 编码时正确解码（导航栏 + hero 一致）', async () => {
+  setupWx();
+  let navTitle = '';
+  global.wx.setNavigationBarTitle = (o) => { navTitle = o.title; };
+  const p = loadDetailPage();
+  // 模拟本地 navigateTo：入口对中文 name / code 做了 encodeURIComponent
+  p.onLoad({ category: 'coin', code: encodeURIComponent('s1'), name: encodeURIComponent('一轮生肖贺岁') });
+  assert.equal(p.data.name, '一轮生肖贺岁', 'hero 标题应解码为正确中文');
+  assert.equal(p.data.code, 's1');
+  assert.equal(p.data.series.name, '一轮生肖贺岁');
+  assert.equal(navTitle, '一轮生肖贺岁', '导航栏标题不应是 %E4%B8%80... 编码串');
+});
+
+test('系列标题乱码：分享链路双重编码的 name 也能解回中文', async () => {
+  setupWx();
+  let navTitle = '';
+  global.wx.setNavigationBarTitle = (o) => { navTitle = o.title; };
+  const p = loadDetailPage();
+  const twice = encodeURIComponent(encodeURIComponent('世界文化与自然双重遗产'));
+  p.onLoad({ category: 'coin', code: 'WH', name: twice });
+  assert.equal(p.data.name, '世界文化与自然双重遗产');
+  assert.equal(navTitle, '世界文化与自然双重遗产');
+});
+
+test('系列标题：已解码的中文保持原样，含 % 字面量不被误伤', async () => {
+  setupWx();
+  const p = loadDetailPage();
+  p.onLoad({ category: 'coin', code: 's1', name: '100% 纯银纪念系列' });
+  assert.equal(p.data.name, '100% 纯银纪念系列');
+  // 非法 % 序列不应抛错
+  p.onLoad({ category: 'coin', code: 's1', name: '50%off 系列%ZZ' });
+  assert.equal(p.data.name, '50%off 系列%ZZ');
+});
+
 test('pm 系列详情页：走 /api/series/detail 聚合接口并展示富信息', async () => {
   setupWx();
   const p = loadDetailPage({
