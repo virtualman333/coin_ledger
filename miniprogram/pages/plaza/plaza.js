@@ -64,6 +64,7 @@ Page({
       items.forEach((s) => {
         s.mine = !!(me && s.uid === me.id);
         s.pics = (s.images || []).slice(0, 3).map((p) => p.indexOf('http') === 0 ? p : BASE + p);
+        s.picsMore = s.pics.length > 1 ? ('+' + (s.pics.length - 1)) : '';
         s.avatarUrl = s.avatar ? (s.avatar.indexOf('http') === 0 ? s.avatar : BASE + s.avatar) : '';
         s.timeText = timeText(s.createdAt);
       });

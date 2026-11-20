@@ -16,7 +16,7 @@
       <!-- 藏品主视觉：占卡片大面积 -->
       <view class="pz-cover" wx:if="{{item.pics.length}}" data-cur="{{item.pics[0]}}" data-urls="{{item.pics}}" bindtap="previewImage">
         <image class="pz-cover-img" src="{{item.pics[0]}}" mode="aspectFit"></image>
-        <view class="pz-cover-more" wx:if="{{item.pics.length > 1}}">+{{item.pics.length - 1}}</view>
+        <view class="pz-cover-more" wx:if="{{item.pics.length > 1}}">{{item.picsMore}}</view>
         <text class="pz-form" wx:if="{{item.form === 'single'}}">单个</text>
         <text class="pz-form" wx:elif="{{item.form === 'set'}}">整套</text>
       </view>
@@ -29,7 +29,7 @@
       <!-- 藏品信息：名称 / 号码 / 花样，是主角 -->
       <view class="pz-body">
         <view class="pz-title">{{item.holdingName}}</view>
-        <view class="pz-serials" wx:if="{{item.serials.length}}">号码 {{item.serials[0}}<text wx:if="{{item.serials.length > 1}}"> 等{{item.serials.length}}张</text>}}</view>
+        <view class="pz-serials" wx:if="{{item.serials.length}}">号码 {{item.serials[0]}}<text wx:if="{{item.serials.length > 1}}"> 等{{item.serials.length}}张</text></view>
         <view class="pz-tags" wx:if="{{item.tags.length}}">
           <text class="pz-tag rar{{t.rarity}}" wx:for="{{item.tags}}" wx:for-item="t" wx:key="name">{{t.name || t}}</text>
         </view>
