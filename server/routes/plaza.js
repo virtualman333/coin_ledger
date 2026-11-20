@@ -129,16 +129,11 @@ module.exports = async function plazaRoutes(app) {
   });
 
   /* ---------------- 发帖 ---------------- */
-  app.post('/api/shares', { preHandler: app.requireLogin }, async function (request, reply) {
-    const me = request.user;
-    const b = await legacy.readBody(request.raw, 512 * 1024);
+  // 单件与批量共用同一套字段清洗 / 审核 / 标签重算，避免两处口径漂移。
+  function cleanShareItem(b, me) {
     const holdingName = String(b.holdingName || '').trim().slice(0, 64);
-    if (!holdingName) return reply.code(400).send({ ok: false, error: '请选择要分享的藏品' });
+    if (!holdingName) return { error: '请选择要分享的藏品' };
     const caption = String(b.caption || '').trim().slice(0, 280);
-    if (caption) {
-      const chk = await wxsec.checkText(caption, me.wxOpenid || '');
-      if (chk && chk.ok === false) return reply.code(400).send({ ok: false, error: '文案内容不合适，改一改吧' });
-    }
     const serials = (Array.isArray(b.serials) ? b.serials : []).slice(0, 200).map((s) => String(s || '').trim().slice(0, 24)).filter(Boolean);
     const images = (Array.isArray(b.images) ? b.images : []).slice(0, 3)
       .map((s) => String(s || '').trim())
@@ -151,12 +146,59 @@ module.exports = async function plazaRoutes(app) {
         if (!tags.some((x) => x.name === t.name)) tags.push({ name: t.name, rarity: t.rarity });
       });
     });
+    return { holdingName, caption, serials, images, form, tags };
+  }
+  async function checkCaption(caption, me) {
+    if (!caption) return null;
+    const chk = await wxsec.checkText(caption, me.wxOpenid || '');
+    return (chk && chk.ok === false) ? '文案内容不合适，改一改吧' : null;
+  }
+  async function insertShare(clean, me) {
     const id = newId();
     await app.db.query(
       'INSERT INTO cl_share (id, uid, holding_name, serials, images, form, caption, tags, likes, comments, created_at) VALUES (?,?,?,?,?,?,?,?,0,0,NOW(3))',
-      [id, me.id, holdingName, JSON.stringify(serials), JSON.stringify(images), form, caption, JSON.stringify(tags)]
+      [id, me.id, clean.holdingName, JSON.stringify(clean.serials), JSON.stringify(clean.images), clean.form, clean.caption, JSON.stringify(clean.tags)]
     );
+    return id;
+  }
+
+  app.post('/api/shares', { preHandler: app.requireLogin }, async function (request, reply) {
+    const me = request.user;
+    const b = await legacy.readBody(request.raw, 512 * 1024);
+    const clean = cleanShareItem(b, me);
+    if (clean.error) return reply.code(400).send({ ok: false, error: clean.error });
+    const bad = await checkCaption(clean.caption, me);
+    if (bad) return reply.code(400).send({ ok: false, error: bad });
+    const id = await insertShare(clean, me);
     reply.send({ ok: true, id });
+  });
+
+  /**
+   * POST /api/shares/batch —— 多选藏品一次性分享（每件生成一条独立帖子，广场里就是一张张卡片）。
+   * body: { items: [{holdingName, serials, images, form, caption}, ...], caption? }
+   * 单帖 caption 优先，未填时回退到公共 caption；最多 20 件，逐件审核，全部校验通过后才落库。
+   */
+  app.post('/api/shares/batch', { preHandler: app.requireLogin }, async function (request, reply) {
+    const me = request.user;
+    const b = await legacy.readBody(request.raw, 1024 * 1024);
+    const rawItems = Array.isArray(b.items) ? b.items.slice(0, 20) : [];
+    if (!rawItems.length) return reply.code(400).send({ ok: false, error: '请先选择要分享的藏品' });
+    const globalCaption = String(b.caption || '').trim().slice(0, 280);
+    const cleans = [];
+    for (const raw of rawItems) {
+      const clean = cleanShareItem(raw, me);
+      if (clean.error) return reply.code(400).send({ ok: false, error: clean.error });
+      if (!clean.caption && globalCaption) clean.caption = globalCaption;
+      cleans.push(clean);
+    }
+    // 审核放在所有字段校验之后，避免垃圾请求消耗内容安全额度
+    for (const clean of cleans) {
+      const bad = await checkCaption(clean.caption, me);
+      if (bad) return reply.code(400).send({ ok: false, error: bad });
+    }
+    const ids = [];
+    for (const clean of cleans) ids.push(await insertShare(clean, me));
+    reply.send({ ok: true, ids, count: ids.length });
   });
 
   app.delete('/api/shares/:id', { preHandler: app.requireLogin }, async function (request, reply) {
@@ -194,6 +236,7 @@ module.exports = async function plazaRoutes(app) {
   /* ---------------- 评论 ---------------- */
   app.get('/api/shares/:id/comments', async function (request, reply) {
     const id = String(request.params.id || '').slice(0, 24);
+    const me = app.currentUser(request.raw);
     const [rows] = await app.db.query(
       'SELECT c.*, u.nickname, u.avatar, u.name AS uname FROM cl_share_comment c ' +
       'JOIN cl_users u ON u.id = c.uid WHERE c.share_id = ? ORDER BY c.created_at LIMIT 200', [id]);
@@ -202,7 +245,8 @@ module.exports = async function plazaRoutes(app) {
       items: rows.map((r) => ({
         id: r.id, uid: r.uid, author: r.nickname || r.uname,
         avatar: r.avatar ? '/avatar/' + r.avatar : '',
-        text: r.text, createdAt: toISO(r.created_at)
+        text: r.text, createdAt: toISO(r.created_at),
+        mine: !!(me && r.uid === me.id)
       }))
     });
   });

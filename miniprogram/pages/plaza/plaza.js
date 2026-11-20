@@ -101,23 +101,55 @@ Page({
   toggleComments(e) {
     const id = e.currentTarget.dataset.id;
     const cmts = Object.assign({}, this.data.cmts);
-    const cur = cmts[id] || { open: false, list: [] };
-    if (cur.open) {
-      cur.open = false;
-      this.setData({ cmts });
-    } else {
-      cur.open = true;
-      this.setData({ cmts });
-      this.loadComments(id);
-    }
+    // 修复：无论首次还是再次点击，都必须把状态写回 cmts[id]，否则首次展开后状态丢失
+    const cur = Object.assign({ open: false, list: [] }, cmts[id] || {});
+    cur.open = !cur.open;
+    cmts[id] = cur;
+    this.setData({ cmts });
+    if (cur.open && !(cur.list || []).length) this.loadComments(id);
   },
 
   loadComments(id) {
-    api.get('/api/shares/' + encodeURIComponent(id) + '/comments').then((r) => {
+    return api.get('/api/shares/' + encodeURIComponent(id) + '/comments').then((r) => {
       const cmts = Object.assign({}, this.data.cmts);
-      cmts[id] = { open: true, list: (r && r.ok && Array.isArray(r.items)) ? r.items : [] };
-      (cmts[id].list || []).forEach((c) => { c.timeText = timeText(c.createdAt); });
+      const cur = Object.assign({ open: true, list: [] }, cmts[id] || {});
+      cur.list = (r && r.ok && Array.isArray(r.items)) ? r.items : [];
+      cur.list.forEach((c) => { c.timeText = timeText(c.createdAt); });
+      cmts[id] = cur;
       this.setData({ cmts });
+    }).catch(() => {
+      const cmts = Object.assign({}, this.data.cmts);
+      const cur = Object.assign({ open: true, list: [] }, cmts[id] || {});
+      cur.list = [];
+      cmts[id] = cur;
+      this.setData({ cmts });
+    });
+  },
+
+  /** 删除自己的评论（后端按 uid 校验，前端只显示自己的删除入口） */
+  delComment(e) {
+    const ds = e.currentTarget.dataset;
+    const id = ds.id;
+    const cid = ds.cid;
+    if (!id || !cid) return;
+    wx.showModal({
+      title: '删除评论', content: '确定删除这条评论？',
+      success: (res) => {
+        if (!res.confirm) return;
+        api.del('/api/shares/' + encodeURIComponent(id) + '/comments/' + encodeURIComponent(cid)).then((r) => {
+          if (!r || !r.ok) { wx.showToast({ title: (r && r.error) || '删除失败', icon: 'none' }); return; }
+          const cmts = Object.assign({}, this.data.cmts);
+          const cur = Object.assign({ open: true, list: [] }, cmts[id] || {});
+          cur.list = (cur.list || []).filter((c) => c.id !== cid);
+          cmts[id] = cur;
+          const items = this.data.items.map((s) => {
+            if (s.id !== id) return s;
+            return Object.assign({}, s, { comments: Math.max(0, (Number(s.comments) || 0) - 1) });
+          });
+          this.setData({ cmts, items });
+          wx.showToast({ title: '已删除', icon: 'success' });
+        }).catch((err) => wx.showToast({ title: (err && err.message) || '删除失败', icon: 'none' }));
+      },
     });
   },
 
@@ -162,9 +194,9 @@ Page({
 
   goShare() {
     if (!store.isLogin()) { wx.showToast({ title: '请先登录', icon: 'none' }); return; }
-    // 到我的藏品长按卡片，在编辑面板里点「分享广场」
+    // 到我的藏品页：点「多选分享」进入勾选模式，可一次分享多件
     wx.navigateTo({ url: '/pages/holdings/holdings' });
-    setTimeout(() => wx.showToast({ title: '长按藏品 → 分享广场', icon: 'none', duration: 2500 }), 500);
+    setTimeout(() => wx.showToast({ title: '点「多选分享」勾选藏品', icon: 'none', duration: 2500 }), 500);
   },
 
   previewImage(e) {

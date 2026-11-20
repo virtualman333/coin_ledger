@@ -11,35 +11,53 @@
 }
 .pz-empty{text-align:center;color:#8a8378;padding:80rpx 20rpx;font-size:26rpx}
 .pz-list{display:flex;flex-direction:column;gap:24rpx}
-.pz-card{background:#fff;border-radius:18rpx;padding:24rpx;box-shadow:0 4rpx 18rpx rgba(60,44,20,.05)}
-.pz-head{display:flex;align-items:center;gap:14rpx}
-.pz-avatar{width:60rpx;height:60rpx;border-radius:50%}
-.pz-avatar.ph{
-  display:flex;align-items:center;justify-content:center;background:#faf3e2;color:#9a6b1f;font-size:26rpx
+
+/* 藏品卡片：藏品本身是主角 */
+.pz-card{background:#fff;border-radius:20rpx;overflow:hidden;box-shadow:0 4rpx 20rpx rgba(60,44,20,.06)}
+.pz-cover{
+  position:relative;width:100%;height:400rpx;background:linear-gradient(160deg,#faf3e2,#f0e7d2);
+  display:flex;align-items:center;justify-content:center;overflow:hidden
 }
-.pz-author{font-size:28rpx;font-weight:500;color:#241f16}
-.pz-time{font-size:22rpx;color:#a0998a;margin-left:auto}
-.pz-pics{display:flex;gap:10rpx;margin-top:18rpx;overflow-x:auto}
-.pz-pics image{width:180rpx;height:180rpx;flex:0 0 180rpx;border-radius:14rpx}
-.pz-body{margin-top:16rpx}
-.pz-title{font-size:30rpx;font-weight:500;color:#241f16}
-.pz-form{font-size:20rpx;color:#a0998a;border:1rpx solid #e8e2d5;border-radius:6rpx;padding:2rpx 10rpx;margin-left:10rpx}
-.pz-serials{font-size:24rpx;color:#6a6252;margin-top:8rpx;word-break:break-all}
-.pz-tags{display:flex;flex-wrap:wrap;gap:10rpx;margin-top:12rpx}
+.pz-cover.ph{background:linear-gradient(160deg,#efe8da,#e6dcc6)}
+.pz-cover-img{width:100%;height:100%}
+.pz-cover-ph-name{font-size:40rpx;font-weight:600;color:#9a6b1f;letter-spacing:2rpx;padding:0 40rpx;text-align:center}
+.pz-cover-more{
+  position:absolute;right:16rpx;top:16rpx;background:rgba(36,31,22,.62);color:#fff;
+  font-size:24rpx;padding:6rpx 18rpx;border-radius:999rpx
+}
+.pz-cover .pz-form{position:absolute;left:16rpx;top:16rpx}
+.pz-form{font-size:20rpx;color:#9a6b1f;background:#fff;border-radius:8rpx;padding:4rpx 14rpx}
+
+.pz-body{padding:22rpx 24rpx 6rpx}
+.pz-title{font-size:32rpx;font-weight:600;color:#241f16;line-height:1.4}
+.pz-serials{font-size:25rpx;color:#6a6252;margin-top:10rpx;word-break:break-all}
+.pz-tags{display:flex;flex-wrap:wrap;gap:10rpx;margin-top:14rpx}
 .pz-tag{font-size:22rpx;padding:4rpx 16rpx;border-radius:999rpx;background:#f6f4ef;color:#8a8378}
 .pz-tag.rar2{color:#9a6b1f;background:#faf3e2}
 .pz-tag.rar3{color:#2f6eb0;background:#eaf2fb}
 .pz-tag.rar4{color:#8a4fc0;background:#f3eafa}
 .pz-tag.rar5{color:#c0456b;background:#fbeaf0}
-.pz-caption{font-size:26rpx;color:#6a6252;line-height:1.6;margin-top:12rpx}
-.pz-acts{display:flex;gap:28rpx;margin-top:20rpx;padding-top:18rpx;border-top:1rpx solid #efe9dc}
+.pz-caption{font-size:26rpx;color:#6a6252;line-height:1.6;margin-top:14rpx}
+
+/* 分享者：弱化的单行信息 */
+.pz-author-line{display:flex;align-items:center;gap:12rpx;padding:14rpx 24rpx 0}
+.pz-avatar{width:44rpx;height:44rpx;border-radius:50%}
+.pz-avatar.ph{
+  display:flex;align-items:center;justify-content:center;background:#faf3e2;color:#9a6b1f;font-size:22rpx
+}
+.pz-author{font-size:25rpx;color:#6a6252}
+.pz-time{font-size:22rpx;color:#a0998a;margin-left:auto}
+
+.pz-acts{display:flex;gap:32rpx;margin-top:12rpx;padding:18rpx 24rpx}
 .pz-act{font-size:26rpx;color:#8a8378}
 .pz-act.on{color:#c0456b}
 .pz-act.del{margin-left:auto;color:#c0392b}
-.pz-comments{margin-top:16rpx;padding-top:16rpx;border-top:1rpx dashed #e8e2d5}
-.pz-cmt{font-size:25rpx;line-height:1.6;color:#6a6252;margin-bottom:10rpx}
-.pz-cmt-author{color:#241f16;font-weight:500;margin-right:10rpx}
-.pz-cmt-time{color:#a0998a;font-size:22rpx;margin-left:12rpx}
+
+.pz-comments{margin:0 24rpx 22rpx;padding-top:16rpx;border-top:1rpx dashed #e8e2d5}
+.pz-cmt{font-size:25rpx;line-height:1.6;color:#6a6252;margin-bottom:12rpx;display:flex;flex-wrap:wrap;align-items:baseline;gap:8rpx}
+.pz-cmt-author{color:#241f16;font-weight:500}
+.pz-cmt-time{color:#a0998a;font-size:22rpx}
+.pz-cmt-del{color:#c0392b;font-size:23rpx;margin-left:auto}
 .pz-cmt-form{display:flex;gap:14rpx;align-items:center;margin-top:14rpx}
 .pz-cmt-form input{
   flex:1;background:#f6f4ef;border-radius:10rpx;padding:14rpx 18rpx;font-size:25rpx;color:#241f16

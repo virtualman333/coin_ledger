@@ -28,6 +28,9 @@ Page({
     empty: true,
     swipeId: '',        // 左滑展开操作的那张卡片（持仓 id）
     shareCode: '',      // 收藏快照分享码（进页面时预生成）
+    selectMode: false,  // 多选分享模式：点卡片改为勾选
+    selected: {},       // 持仓 id -> true
+    selectedCount: 0,
   },
 
   onLoad(q) {
@@ -207,8 +210,9 @@ Page({
     });
   },
 
-  /** 长按卡片 / 左滑点操作 → 底部编辑面板 */
+  /** 长按卡片 / 左滑点操作 → 底部编辑面板；多选模式下长按 = 勾选 */
   openSheet(e) {
+    if (this.data.selectMode) { this.toggleSelect(e); return; }
     const ds = e.currentTarget.dataset;
     const gi = Number(ds.g);
     const ii = Number(ds.i);
@@ -313,6 +317,62 @@ Page({
           if (!r || !r.ok) throw new Error((r && r.error) || '分享失败');
           wx.showToast({ title: '已分享', icon: 'success' });
         }).catch((err) => wx.showToast({ title: err.message || '分享失败', icon: 'none' }));
+      },
+    });
+  },
+
+  /* ---------------- 多选分享（长按进入，勾选后一次分享多件） ---------------- */
+  toggleSelectMode() {
+    if (!store.isLogin()) { wx.showToast({ title: '请先登录', icon: 'none' }); return; }
+    if (this.data.selectMode) { this.exitSelectMode(); return; }
+    this.setData({ selectMode: true, selected: {}, selectedCount: 0, swipeId: '', sheet: null });
+  },
+
+  exitSelectMode() {
+    this.setData({ selectMode: false, selected: {}, selectedCount: 0 });
+  },
+
+  /** 多选模式下点卡片 = 勾选；普通模式仍进详情（见 goDetail / openSheet 分流） */
+  toggleSelect(e) {
+    const id = String((e.currentTarget.dataset && e.currentTarget.dataset.hold) || '');
+    if (!id) return;
+    const selected = Object.assign({}, this.data.selected);
+    if (selected[id]) delete selected[id]; else selected[id] = true;
+    this.setData({ selected, selectedCount: Object.keys(selected).length });
+  },
+
+  selectAll() {
+    const all = {};
+    (this.data.groups || []).forEach((g) => (g.items || []).forEach((it) => { all[it.id] = true; }));
+    this.setData({ selected: all, selectedCount: Object.keys(all).length });
+  },
+
+  /** 把选中的持仓映射为批量分享 items（与单件口径一致：名称+号码+图片+形态） */
+  batchShareToPlaza() {
+    const ids = Object.keys(this.data.selected || {});
+    if (!ids.length) { wx.showToast({ title: '请先勾选藏品', icon: 'none' }); return; }
+    const hs = store.getState().holdings || [];
+    const items = hs.filter((h) => ids.indexOf(String(h.id)) >= 0).map((h) => ({
+      holdingName: h.name,
+      serials: Array.isArray(h.serials) ? h.serials.slice(0, 200) : [],
+      images: Array.isArray(h.images) ? h.images.slice(0, 3) : [],
+      form: h.form || '',
+      caption: '',
+    })).filter((it) => !!it.holdingName);
+    if (!items.length) { wx.showToast({ title: '选中的藏品已不存在', icon: 'none' }); return; }
+    if (items.length > 20) { wx.showToast({ title: '一次最多分享 20 件', icon: 'none' }); return; }
+    wx.showModal({
+      title: '分享到藏品广场',
+      content: '把选中的 ' + items.length + ' 件藏品分享到广场？每件会成为一张卡片。',
+      success: (res) => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '分享中', mask: true });
+        api.post('/api/shares/batch', { items }).then((r) => {
+          wx.hideLoading();
+          if (!r || !r.ok) throw new Error((r && r.error) || '分享失败');
+          this.exitSelectMode();
+          wx.showToast({ title: '已分享 ' + (r.count || items.length) + ' 件', icon: 'success' });
+        }).catch((err) => { wx.hideLoading(); wx.showToast({ title: err.message || '分享失败', icon: 'none' }); });
       },
     });
   },
@@ -459,6 +519,8 @@ Page({
   },
 
   goDetail(e) {
+    // 多选模式：点卡片 = 勾选，不跳详情
+    if (this.data.selectMode) { this.toggleSelect(e); return; }
     // 卡片处于左滑展开状态时，点一下先收起，不跳详情
     if (this.data.swipeId) { this.setData({ swipeId: '' }); return; }
     const ds = e.currentTarget.dataset;

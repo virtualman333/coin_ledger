@@ -4269,24 +4269,27 @@ function renderPlaza(){
   }
   var html = PLAZA.items.map(function(s){
     var imgs = Array.isArray(s.images) ? s.images : [];
-    var pics = imgs.slice(0, 3).map(function(p){
-      return '<img src="' + esc(p) + '" alt="藏品图片" loading="lazy">';
-    }).join('');
+    var cover = imgs.length
+      ? '<div class="pz-cover"><img src="' + esc(imgs[0]) + '" alt="藏品图片" loading="lazy">' +
+        (imgs.length > 1 ? '<span class="pz-cover-more">+' + (imgs.length - 1) + '</span>' : '') +
+        (s.form === 'single' ? '<span class="pz-form">单个</span>' : (s.form === 'set' ? '<span class="pz-form">整套</span>' : '')) + '</div>'
+      : '<div class="pz-cover ph"><span class="pz-cover-ph-name">' + esc(s.holdingName) + '</span>' +
+        (s.form === 'single' ? '<span class="pz-form">单个</span>' : (s.form === 'set' ? '<span class="pz-form">整套</span>' : '')) + '</div>';
     var serials = Array.isArray(s.serials) ? s.serials : [];
-    var serialTxt = serials.length ? serials.slice(0, 4).join(' · ') + (serials.length > 4 ? ' 等' + serials.length + '张' : '') : '';
+    var serialTxt = serials.length ? '号码 ' + serials.slice(0, 4).join(' · ') + (serials.length > 4 ? ' 等' + serials.length + '张' : '') : '';
     var mine = isLoggedIn() && APP.user && s.uid === APP.user.id;
     return '<article class="pz-card" data-share="' + esc(s.id) + '">' +
-      '<div class="pz-head">' +
-        (s.avatar ? '<img class="pz-avatar" src="' + esc(s.avatar) + '" alt="">' : '<span class="pz-avatar ph">' + esc((s.author || '藏')[0]) + '</span>') +
-        '<span class="pz-author">' + esc(s.author || '藏友') + '</span>' +
-        '<span class="pz-time">' + esc(plazaTime(s.createdAt)) + '</span>' +
-      '</div>' +
-      (pics ? '<div class="pz-pics">' + pics + '</div>' : '') +
+      cover +
       '<div class="pz-body">' +
-        '<div class="pz-title">' + esc(s.holdingName) + (s.form === 'single' ? ' <span class="pz-form">单个</span>' : (s.form === 'set' ? ' <span class="pz-form">整套</span>' : '')) + '</div>' +
+        '<div class="pz-title">' + esc(s.holdingName) + '</div>' +
         (serialTxt ? '<div class="pz-serials">' + esc(serialTxt) + '</div>' : '') +
         plazaTagChips(s.tags) +
         (s.caption ? '<div class="pz-caption">' + esc(s.caption) + '</div>' : '') +
+      '</div>' +
+      '<div class="pz-author-line">' +
+        (s.avatar ? '<img class="pz-avatar" src="' + esc(s.avatar) + '" alt="">' : '<span class="pz-avatar ph">' + esc((s.author || '藏')[0]) + '</span>') +
+        '<span class="pz-author">' + esc(s.author || '藏友') + '</span>' +
+        '<span class="pz-time">' + esc(plazaTime(s.createdAt)) + '</span>' +
       '</div>' +
       '<div class="pz-actions">' +
         '<button class="pz-like' + (s.liked ? ' on' : '') + '" data-pz-act="like" data-id="' + esc(s.id) + '">♥ ' + (Number(s.likes) || 0) + '</button>' +
@@ -4338,6 +4341,25 @@ function plazaTime(iso){
   if (!box) return;
   box.addEventListener('click', function(e){
     if (e.target.id === 'plazaMore') { loadPlaza(true); return; }
+    // 删除自己的评论：按钮在评论区内部，没有 data-pz-act，必须先于下面的 return 处理
+    var cd = e.target.closest('button[data-pz-cd]');
+    if (cd) {
+      var cid = cd.getAttribute('data-pz-cd');
+      var sid = cd.getAttribute('data-id');
+      if (!confirm('确定删除这条评论？')) return;
+      api('/api/shares/' + encodeURIComponent(sid) + '/comments/' + encodeURIComponent(cid), { method: 'DELETE' }).then(function(r){
+        if (!r || !r.ok) { toast((r && r.error) || '删除失败'); return; }
+        var it = PLAZA.items.filter(function(x){ return x.id === sid; })[0];
+        if (it) it.comments = Math.max(0, (Number(it.comments) || 0) - 1);
+        // 局部更新：评论区保持展开、按钮数字同步，不重建整页（重建会冲掉评论区——这是评论消失 bug 的根因）
+        var cntBtn = box.querySelector('button[data-pz-act="comments"][data-id="' + sid + '"]');
+        if (cntBtn) cntBtn.textContent = '评论 ' + (Number(it && it.comments) || 0);
+        var cmtBox = document.getElementById('cmts-' + sid);
+        if (cmtBox && !cmtBox.hidden) loadComments(sid, cmtBox);
+        toast('已删除');
+      });
+      return;
+    }
     var b = e.target.closest('button[data-pz-act]'); if (!b) return;
     var act = b.getAttribute('data-pz-act');
     var id = b.getAttribute('data-id');
@@ -4385,9 +4407,11 @@ function plazaTime(iso){
       inp.value = '';
       var it = PLAZA.items.filter(function(x){ return x.id === id; })[0];
       if (it) it.comments = (Number(it.comments) || 0) + 1;
+      // 不调用 renderPlaza()：它会重建整页 DOM，把刚展开的评论区连同输入框一起冲掉（评论 bug 根因）
+      var cntBtn = box.querySelector('button[data-pz-act="comments"][data-id="' + id + '"]');
+      if (cntBtn) cntBtn.textContent = '评论 ' + (Number(it && it.comments) || 0);
       var cbox = document.getElementById('cmts-' + id);
       if (cbox) loadComments(id, cbox);
-      renderPlaza();
     });
   });
 })();
@@ -4396,63 +4420,83 @@ function loadComments(id, cbox){
   api('/api/shares/' + encodeURIComponent(id) + '/comments').then(function(r){
     if (!r || !r.ok) { cbox.innerHTML = '<div class="muted">评论加载失败</div>'; return; }
     var items = Array.isArray(r.items) ? r.items : [];
+    var me = APP.user && APP.user.id;
     var html = items.length ? items.map(function(c){
+      var mine = c.mine === true || (me && c.uid === me);
       return '<div class="pz-cmt"><b>' + esc(c.author || '藏友') + '</b> ' + esc(c.text) +
-        '<span class="pz-time">' + esc(plazaTime(c.createdAt)) + '</span></div>';
+        '<span class="pz-time">' + esc(plazaTime(c.createdAt)) + '</span>' +
+        (mine ? '<button type="button" class="pz-cmt-del" data-pz-cd="' + esc(c.id) + '" data-id="' + esc(id) + '">删除</button>' : '') +
+        '</div>';
     }).join('') : '<div class="muted" style="font-size:12px">还没有评论</div>';
     html += '<form class="pz-cmt-form" data-id="' + esc(id) + '"><input placeholder="说点什么…" maxlength="280" autocomplete="off"><button type="submit">发送</button></form>';
     cbox.innerHTML = html;
   });
 }
 
-/* 分享对话框：从我的藏品选一件，带出号码/标签，写文案后发布 */
+/* 分享对话框：从我的藏品多选（最多 20 件），每件成为一张卡片，写文案后一次发布 */
 function openShareDialog(presetName){
   if (!isLoggedIn()) { toast('请先登录再分享'); return; }
-  var opts = coll.map(function(c){
-    var sel = presetName && c.name === presetName ? ' selected' : '';
-    return '<option value="' + esc(c.name) + '"' + sel + '>' + esc(c.name) + '</option>';
+  if (!coll.length) { toast('还没有藏品，先去清单里挑几枚'); return; }
+  var rows = coll.map(function(c, i){
+    var checked = presetName && c.name === presetName ? ' checked' : '';
+    var pics = Array.isArray(c.images) && c.images.length
+      ? '<img src="' + esc(c.images[0]) + '" alt="" loading="lazy">' : '';
+    var serials = Array.isArray(c.serials) ? c.serials : [];
+    var note = serials.length ? (serials.length + ' 个号码') : (c.form === 'set' ? '整套' : (c.form === 'single' ? '单个' : '藏品'));
+    return '<label class="pz-pick"><input type="checkbox" class="pz-pick-cb" data-i="' + i + '"' + checked + '>' +
+      pics + '<span class="pz-pick-name">' + esc(c.name) + '</span><span class="pz-pick-note">' + esc(note) + '</span></label>';
   }).join('');
   var overlay = document.createElement('div');
   overlay.className = 'pz-modal-mask';
-  overlay.innerHTML = '<div class="pz-modal">' +
-    '<div class="pz-modal-h"><b>分享藏品到广场</b><button type="button" class="pz-modal-x">×</button></div>' +
-    '<label>选择藏品<select id="pzSel">' + opts + '</select></label>' +
-    '<label>形态<select id="pzForm"><option value="">不限</option><option value="set">整套</option><option value="single">单个</option></select></label>' +
-    '<div class="pz-preview" id="pzPreview"></div>' +
-    '<label>分享文案<textarea id="pzCaption" rows="3" maxlength="280" placeholder="晒晒你的靓号和收藏心得…"></textarea></label>' +
+  overlay.innerHTML = '<div class="pz-modal pz-modal-multi">' +
+    '<div class="pz-modal-h"><b>分享藏品到广场（可多选）</b><button type="button" class="pz-modal-x">×</button></div>' +
+    '<div class="pz-pick-bar"><button type="button" class="pz-pick-all" id="pzPickAll">全选</button>' +
+      '<span class="pz-pick-count" id="pzPickCount">已选 0 件</span></div>' +
+    '<div class="pz-pick-list">' + rows + '</div>' +
+    '<label>分享文案（可选，应用于所选藏品）<textarea id="pzCaption" rows="2" maxlength="280" placeholder="晒晒你的靓号和收藏心得…"></textarea></label>' +
     '<div class="pz-modal-f"><button type="button" class="btn" id="pzCancel">取消</button>' +
     '<button type="button" class="btn primary" id="pzSubmit">发布分享</button></div>' +
     '</div>';
   document.body.appendChild(overlay);
   function close(){ overlay.remove(); }
+  function refreshCount(){
+    var n = overlay.querySelectorAll('.pz-pick-cb:checked').length;
+    overlay.querySelector('#pzPickCount').textContent = '已选 ' + n + ' 件';
+  }
   overlay.querySelector('.pz-modal-x').onclick = close;
   document.getElementById('pzCancel').onclick = close;
-  var sel = document.getElementById('pzSel');
-  var preview = document.getElementById('pzPreview');
-  function refreshPreview(){
-    var h = findHoldingIdx(sel.value);
-    if (h < 0) { preview.innerHTML = ''; return; }
-    var c = coll[h];
-    preview.innerHTML = luckyTagsHtml(c.serials || []) || '<span class="hx-muted">这件藏品暂无号码花样</span>';
-    var pf = document.getElementById('pzForm');
-    if (c.form === 'single' || c.form === 'set') pf.value = c.form;
-  }
-  sel.onchange = refreshPreview; refreshPreview();
+  overlay.querySelector('#pzPickAll').onclick = function(){
+    var cbs = overlay.querySelectorAll('.pz-pick-cb');
+    var allChecked = Array.prototype.every.call(cbs, function(x){ return x.checked; });
+    Array.prototype.forEach.call(cbs, function(x){ x.checked = !allChecked; });
+    refreshCount();
+  };
+  Array.prototype.forEach.call(overlay.querySelectorAll('.pz-pick-cb'), function(cb){
+    cb.addEventListener('change', function(){
+      if (overlay.querySelectorAll('.pz-pick-cb:checked').length > 20) {
+        cb.checked = false; toast('一次最多分享 20 件');
+      }
+      refreshCount();
+    });
+  });
+  refreshCount();
   document.getElementById('pzSubmit').onclick = function(){
-    var h = findHoldingIdx(sel.value);
-    if (h < 0) { toast('请选择藏品'); return; }
-    var c = coll[h];
-    var body = {
-      holdingName: c.name,
-      serials: Array.isArray(c.serials) ? c.serials : [],
-      images: Array.isArray(c.images) ? c.images : [],
-      form: document.getElementById('pzForm').value || c.form || '',
-      caption: document.getElementById('pzCaption').value.trim()
-    };
+    var cbs = overlay.querySelectorAll('.pz-pick-cb:checked');
+    if (!cbs.length) { toast('请勾选至少一件藏品'); return; }
+    var caption = overlay.querySelector('#pzCaption').value.trim();
+    var items = Array.prototype.map.call(cbs, function(cb){
+      var c = coll[Number(cb.getAttribute('data-i'))];
+      return {
+        holdingName: c.name,
+        serials: Array.isArray(c.serials) ? c.serials : [],
+        images: Array.isArray(c.images) ? c.images : [],
+        form: c.form || ''
+      };
+    });
     var btn = this; btn.disabled = true; btn.textContent = '发布中…';
-    api('/api/shares', { method: 'POST', body: body }).then(function(r){
+    api('/api/shares/batch', { method: 'POST', body: { items: items, caption: caption } }).then(function(r){
       if (!r || !r.ok) { toast((r && r.error) || '发布失败'); btn.disabled = false; btn.textContent = '发布分享'; return; }
-      close(); toast('已分享到广场');
+      close(); toast('已分享 ' + (r.count || items.length) + ' 件到广场');
       if (currentTab() === 'plaza') loadPlaza();
     });
   };
