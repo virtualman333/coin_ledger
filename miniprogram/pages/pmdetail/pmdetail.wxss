@@ -46,3 +46,6 @@
   background:#9a6b1f;color:#fff;font-size:27rpx
 }
 .err-btn.ghost{background:#fff;color:#9a6b1f;border:1rpx solid #d8c9a8}
+
+/* 已收藏态：仍可点击（点击=取消收藏），用描边弱化主色而不是灰化禁用 */
+.pm-fav.is-owned{background:#fff;color:#9a6b1f;border:1rpx solid #d8c9a8}

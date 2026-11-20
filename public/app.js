@@ -2047,8 +2047,8 @@ function renderPmFull(){
       + '<div class="pm-card-f">面额 ' + (it.face != null ? it.face + ' 元' : '—')
       + ' · 成色 ' + (it.fineness ? esc(it.fineness) + '%' : '—') + '</div>'
       + '<div class="pm-card-c">' + esc(it.code) + '</div>'
-      + '<button type="button" class="pm-add" data-addpm="' + esc(it.code) + '"' + (owned ? ' disabled' : '') + '>' +
-        (owned ? '✓ 已收藏' : '＋ 收藏') + '</button></div></div>';
+      + '<button type="button" class="pm-add' + (owned ? ' is-owned' : '') + '" data-addpm="' + esc(it.code) + '">' +
+        (owned ? '✓ 已收藏 · 取消' : '＋ 收藏') + '</button></div></div>';
   }).join('');
   var more = (PM_FULL.page < PM_FULL.pages)
     ? '<button type="button" id="pmMore" class="pm-more">加载更多（' + PM_FULL.page + '/' + PM_FULL.pages + '）</button>'
@@ -2069,8 +2069,21 @@ function renderPmFull(){
       e.stopPropagation();
       var code = a.getAttribute('data-addpm');
       var hit = PM_FULL.items.filter(function(x){ return x.code === code; })[0];
-      if (hit && addPmHolding(hit.code, hit.name, hit.thumb)) {
-        a.textContent = '✓ 已收藏'; a.disabled = true;
+      var it = hit || { code: code, name: code, thumb: '' };
+      if (pmIsOwned(code)) {
+        if (!window.confirm('把「' + (it.name || code) + '」从我的藏品里移出？')) return;
+        for (var k = 0; k < coll.length; k++) {
+          if (coll[k].category === 'pm' && coll[k].id === code) { coll.splice(k, 1); break; }
+        }
+        reRenderAll();
+        a.className = 'pm-add'; a.textContent = '＋ 收藏';
+        toast('已移出藏品');
+      } else {
+        if (!isLoggedIn()) { toast('请先登录再加入藏品'); return; }
+        if (addPmHolding(it.code, it.name, it.thumb)) {
+          a.className = 'pm-add is-owned'; a.textContent = '✓ 已收藏 · 取消';
+          toast('已加入藏品');
+        }
       }
       return;
     }
@@ -2167,8 +2180,8 @@ function renderPmDetail(code){
         + (more.length ? '<div class="pm-more-facts">' + more.map(function(x){ return fact(x[0], x[1]); }).join('') + '</div>' : '')
         + annHtml
         + '<div class="pm-detail-actions">'
-        + '<button type="button" class="btn primary" data-pmfav="' + esc(code) + '"' + (isOwned ? ' disabled' : '') + '>'
-        + (isOwned ? '✓ 已在藏品' : '＋ 加入我的藏品') + '</button>'
+        + '<button type="button" class="btn ' + (isOwned ? 'ghost pm-fav-owned' : 'primary') + '" data-pmfav="' + esc(code) + '">'
+        + (isOwned ? '✓ 已在藏品 · 点此取消' : '＋ 加入我的藏品') + '</button>'
         + '<button type="button" class="btn ghost" data-pmcopy="' + SITE + pathOf('pm', code) + '">复制本页链接</button>'
         + '</div>'
         + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。</p>'
@@ -2191,16 +2204,43 @@ function renderPmDetailError(code, msg){
   bindPmPageActions(box, code, { name: code, thumb: '' });
 }
 
-/** 独立页内的图片放大 / 加入藏品 / 重试 / 复制链接 */
+/** 当前贵金属是否已在我的藏品（与 addPmHolding 的判定同口径） */
+function pmIsOwned(code){
+  return coll.some(function(c){ return c.category === 'pm' && c.id === code; });
+}
+
+/** 已收藏 → 从账本移出（二次确认）；未收藏 → 加入。按钮即时切换，不刷新整页 */
+function togglePmFav(code, it, btn){
+  var owned = pmIsOwned(code);
+  if (owned) {
+    if (!window.confirm('把「' + (it.name || code) + '」从我的藏品里移出？')) return;
+    for (var i = 0; i < coll.length; i++) {
+      if (coll[i].category === 'pm' && coll[i].id === code) { coll.splice(i, 1); break; }
+    }
+    // 独立页只需持久化并更新本页按钮；不跑 reRenderAll（它会重建清单、
+    // 在 pm 分类下还会额外请求贵金属目录，纯浪费且可能把卡片区插回 pane-all）
+    saveState();
+    renderKPI();
+    btn.className = 'btn primary';
+    btn.textContent = '＋ 加入我的藏品';
+    toast('已移出藏品');
+    return;
+  }
+  if (!isLoggedIn()) { toast('请先登录再加入藏品'); return; }
+  if (addPmHolding(code, it.name, it.thumb, { light: true })) {
+    btn.className = 'btn ghost pm-fav-owned';
+    btn.textContent = '✓ 已在藏品 · 点此取消';
+    toast('已加入藏品');
+  }
+}
+
+/** 独立页内的图片放大 / 加入或取消藏品 / 重试 / 复制链接 */
 function bindPmPageActions(box, code, it){
   box.onclick = function(e){
     var big = e.target.closest('[data-pmimg]');
     if (big) { window.open(big.getAttribute('data-pmimg'), '_blank', 'noopener'); return; }
     var fav = e.target.closest('[data-pmfav]');
-    if (fav) {
-      if (addPmHolding(code, it.name, it.thumb)) { fav.textContent = '✓ 已在藏品'; fav.disabled = true; }
-      return;
-    }
+    if (fav) { togglePmFav(code, it, fav); return; }
     var cp = e.target.closest('[data-pmcopy]');
     if (cp) {
       var url = cp.getAttribute('data-pmcopy');
@@ -2767,7 +2807,7 @@ function findHoldingIdx(name){
  * 按枚时成本按单枚面额起算，rolls 表示件数。
  */
 /* 贵金属入账本：不参与旧一套的「按卷/估值」口径，按枚记，成本留空由用户自己填 */
-function addPmHolding(code, name, thumb){
+function addPmHolding(code, name, thumb, opts){
   if (!code || !name) return false;
   for (var i = 0; i < coll.length; i++) {
     if (coll[i].category === 'pm' && coll[i].id === code) return false;
@@ -2777,7 +2817,8 @@ function addPmHolding(code, name, thumb){
     rolls: 1, unit: 'piece', cost: 0, market: 0, group: '贵金属'
   });
   rebuildGroupOrder();
-  reRenderAll();
+  // 独立页传 {light:true}：只持久化 + 更新统计，不重建清单
+  if (opts && opts.light) { saveState(); renderKPI(); } else reRenderAll();
   return true;
 }
 

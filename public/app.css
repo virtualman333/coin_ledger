@@ -2973,3 +2973,6 @@ html[data-theme="light"] .pz-modal-mask{background:rgba(0,0,0,.35)}
   .pm-page-h h1{font-size:17px}
   .pm-crumb{display:none}
 }
+
+/* 贵金属：已收藏态可点击（点击=取消收藏），不再灰化禁用 */
+.pm-add.is-owned{background:var(--gold-soft);color:var(--gold);border-color:var(--gold);cursor:pointer}

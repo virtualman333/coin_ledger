@@ -48,6 +48,11 @@ Page({
     }).catch(() => this.setData({ loading: false, err: '详情加载失败，检查网络后重试', retryable: true }));
   },
 
+  /** 从「我的藏品」移出后再返回本页，按钮状态要跟着更新 */
+  onShow() {
+    if (this.data.code) this.setData({ owned: this.isOwned(this.data.code) });
+  },
+
   retry() {
     if (!this.data.code) return;
     this.load();
@@ -59,6 +64,42 @@ Page({
 
   isOwned(code) {
     return (store.state.holdings || []).some((h) => h.category === 'pm' && h.id === code);
+  },
+
+  /** 已收藏时点按钮 = 取消收藏（二次确认），否则加入；与普通币详情页 removeCoin 同口径 */
+  toggleFav() {
+    if (this.data.owned) this.removeFav();
+    else this.addFav();
+  },
+
+  removeFav() {
+    const it = this.data.item;
+    if (!it || !this.data.owned || this.data.busy) return;
+    const code = this.data.code || it.code;
+    wx.showModal({
+      title: '移出藏品',
+      content: '把「' + (it.name || code) + '」从我的藏品里移出？',
+      confirmText: '移出',
+      confirmColor: '#c0392b',
+      success: (res) => {
+        if (!res.confirm) return;
+        this.setData({ busy: true });
+        wx.showLoading({ title: '处理中', mask: true });
+        let task;
+        try { task = store.removeHolding(code); }
+        catch (e) { wx.hideLoading(); this.setData({ busy: false }); wx.showToast({ title: e.message || '操作失败', icon: 'none' }); return; }
+        task.then(() => store.refresh({ force: true })).then(() => {
+          wx.hideLoading();
+          this.setData({ owned: false, busy: false });
+          wx.showToast({ title: '已移出', icon: 'success' });
+        }).catch((err) => {
+          wx.hideLoading();
+          // 以服务端为准重新判定，避免本地显示「已移出」但账本里还在
+          this.setData({ owned: this.isOwned(code), busy: false });
+          wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' });
+        });
+      },
+    });
   },
 
   addFav() {
@@ -79,8 +120,9 @@ Page({
     let task;
     try { task = store.addPm({ code: it.code, name: it.name, thumb: it.thumbUrl, face: it.face }); }
     catch (e) { wx.hideLoading(); this.setData({ busy: false }); wx.showToast({ title: e.message || '加入失败', icon: 'none' }); return; }
-    task.then(() => {
-      wx.hideLoading(); this.setData({ owned: true, busy: false });
+    task.then(() => store.refresh({ force: true })).then(() => {
+      wx.hideLoading();
+      this.setData({ owned: this.isOwned(it.code), busy: false });
       wx.showToast({ title: '已加入藏品', icon: 'success' });
     }).catch((e) => {
       wx.hideLoading(); this.setData({ busy: false });
