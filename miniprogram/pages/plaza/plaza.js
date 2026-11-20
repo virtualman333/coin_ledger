@@ -1,5 +1,6 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const share = require('../../utils/share');
 
 const BASE = api.BASE;
 
@@ -170,6 +171,14 @@ Page({
     const urls = e.currentTarget.dataset.urls || [];
     const cur = e.currentTarget.dataset.cur || '';
     wx.previewImage({ urls, current: cur });
+  },
+
+  onShareAppMessage() {
+    return share.appMessage('plaza');
+  },
+
+  onShareTimeline() {
+    return share.timeline('plaza');
   },
 });
 

@@ -1,6 +1,7 @@
 const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const share = require('../../utils/share');
 
 Page({
   data: {
@@ -75,5 +76,13 @@ Page({
   goAll() {
     wx.removeStorageSync('cl_pending_series');
     wx.switchTab({ url: '/pages/list/list' });
+  },
+
+  onShareAppMessage() {
+    return share.appMessage('series');
+  },
+
+  onShareTimeline() {
+    return share.timeline('series');
   },
 });

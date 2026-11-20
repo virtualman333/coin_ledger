@@ -21,6 +21,21 @@ const PAGES = {
     path: '/pages/mine/mine',
     query: '',
   },
+  plan: {
+    title: '纪念币发行计划：下一枚什么时候发',
+    path: '/pages/plan/plan',
+    query: '',
+  },
+  series: {
+    title: '藏币录 · 按系列看纪念币、纪念钞、贵金属',
+    path: '/pages/series/series',
+    query: '',
+  },
+  plaza: {
+    title: '藏币录 · 藏友晒单广场，看看大家的靓号藏品',
+    path: '/pages/plaza/plaza',
+    query: '',
+  },
 };
 
 /** 转发给朋友 */
@@ -54,10 +69,35 @@ function coinTimeline(coin) {
   };
 }
 
+/** 贵金属单品的分享：标题带编号与项目，落地到 pmdetail?code=XXX */
+function pmMessage(item) {
+  if (!item) return appMessage('home');
+  var title = item.name || item.code;
+  if (item.projectName) title += '｜' + item.projectName;
+  return {
+    title: title,
+    path: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(item.code),
+    imageUrl: item.thumbUrl || COVER,
+  };
+}
+
+function pmTimeline(item) {
+  if (!item) return timeline('home');
+  var title = item.name || item.code;
+  if (item.projectName) title += '｜' + item.projectName;
+  return {
+    title: title,
+    query: 'code=' + encodeURIComponent(item.code),
+    imageUrl: item.thumbUrl || COVER,
+  };
+}
+
 module.exports = {
   COVER,
   appMessage,
   timeline,
   coinMessage,
   coinTimeline,
+  pmMessage,
+  pmTimeline,
 };

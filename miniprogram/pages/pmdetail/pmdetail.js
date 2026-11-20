@@ -1,5 +1,6 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const share = require('../../utils/share');
 
 Page({
   data: { code: '', item: null, loading: true, err: '', owned: false, busy: false },
@@ -65,5 +66,13 @@ Page({
   preview(e) {
     const src = e.currentTarget.dataset.src;
     if (src) wx.previewImage({ urls: [src], current: src });
+  },
+
+  onShareAppMessage() {
+    return share.pmMessage(this.data.item || { code: this.data.code });
+  },
+
+  onShareTimeline() {
+    return share.pmTimeline(this.data.item || { code: this.data.code });
   },
 });

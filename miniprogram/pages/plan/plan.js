@@ -1,6 +1,7 @@
 const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const share = require('../../utils/share');
 
 // 订阅消息模板（日程提醒）。后台改模板时要同步这里
 const TMPL_ID = 'VbGee94SWDa5DUBkHx2Kii8Dp0OobE1PneOJg9Id_ao';
@@ -313,9 +314,10 @@ Page({
   },
 
   onShareAppMessage() {
-    return {
-      title: '纪念币发行计划：下一枚什么时候发',
-      path: '/pages/plan/plan',
-    };
+    return share.appMessage('plan');
+  },
+
+  onShareTimeline() {
+    return share.timeline('plan');
   },
 });

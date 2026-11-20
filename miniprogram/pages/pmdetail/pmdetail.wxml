@@ -39,6 +39,7 @@
     </view>
 
     <button class="pm-fav" bindtap="addFav" disabled="{{owned}}">{{owned ? '✓ 已在藏品' : '＋ 加入我的藏品'}}</button>
+    <button class="pm-share" open-type="share" hover-class="tap-hover">分享给朋友</button>
     <view class="foot">资料来源：中国人民银行发行公告 · 中国金币集团</view>
     <view class="foot">克重价按实时金银价与成色净重估算，仅材料价值；贵金属纪念币无稳定二级市场报价，本站不提供市场估值。</view>
   </block>
