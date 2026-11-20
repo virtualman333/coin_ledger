@@ -88,6 +88,10 @@ Page({
     wx.navigateTo({ url: '/pages/plaza/plaza' });
   },
 
+  goCount() {
+    wx.navigateTo({ url: '/pages/count/count' });
+  },
+
   goMyFeedback() {
     wx.navigateTo({ url: '/pages/myfeedback/myfeedback' });
   },

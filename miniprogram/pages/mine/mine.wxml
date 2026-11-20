@@ -48,6 +48,11 @@
         <text class="menu-v">晒靓号 · 和藏友交流</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" hover-class="tap-hover" bindtap="goCount">
+        <text class="menu-k">拍照数币</text>
+        <text class="menu-v">拍张照自动数硬币数量</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" hover-class="tap-hover" bindtap="goAccount">
         <text class="menu-k">账户与安全</text>
         <text class="menu-v">{{displayName}}</text>
