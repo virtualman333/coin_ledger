@@ -162,3 +162,66 @@ test('轻微接触的币带纹理时仍按种子计数，不退化成连通域',
   const r = svc.count(makeTexturedCoins(circles, 700, 300));
   assert.equal(r.count, 4, '实际 ' + r.count);
 });
+
+/**
+ * 回归：真实平铺照片的「混合亮度」场景。
+ * 白纸背景上银币几乎与背景同亮、金币偏暗、还有彩色币与塑料圆盒边缘，
+ * 旧的「Otsu 二值化 + 距离变换」因假设单一亮度极性会大量漏检
+ * （实测 21 枚只报 4 枚）。新算法基于圆形边缘，必须全部数出。
+ */
+function makeMixedCoins(circles, W, H) {
+  const png = new PNG({ width: W, height: H });
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      png.data[i] = 238; png.data[i + 1] = 236; png.data[i + 2] = 231; png.data[i + 3] = 255;
+    }
+  }
+  const put = function (x, y, c) {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2];
+  };
+  const faces = [[224, 224, 222], [206, 176, 96], [150, 70, 78]];
+  circles.forEach(function (c, idx) {
+    const face = faces[idx % 3];
+    for (let y = c.y - c.r - 3; y <= c.y + c.r + 3; y++) {
+      for (let x = c.x - c.r - 3; x <= c.x + c.r + 3; x++) {
+        const d = Math.hypot(x - c.x, y - c.y);
+        if (d > c.r + 3) continue;
+        if (d > c.r - 3) { put(x, y, [168, 166, 160]); continue; }
+        const k = Math.sin((x - c.x) * 0.13 + (y - c.y) * 0.09) * 14
+          + Math.sin((x - c.x) * 0.31) * 8;
+        put(x, y, face.map(function (v) { return Math.max(0, Math.min(255, Math.round(v + k))); }));
+      }
+    }
+  });
+  return PNG.sync.write(png);
+}
+
+test('白纸背景 + 金银彩色混合币 20 枚全部数出（旧二值化算法会漏检）', () => {
+  const W = 760, H = 660, circles = [];
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 5; col++) {
+      circles.push({ x: 90 + col * 145, y: 95 + row * 155, r: 48 });
+    }
+  }
+  const r = svc.count(makeMixedCoins(circles, W, H));
+  assert.equal(r.count, 20, '实际 ' + r.count);
+  // 每个圈都应落在某枚币中心附近，而不是噪声上
+  circles.forEach(function (c) {
+    const near = r.seeds.some(function (s) { return Math.hypot(s.x - c.x, s.y - c.y) < c.r; });
+    assert.ok(near, '混合亮度币(' + c.x + ',' + c.y + ')未被圈出');
+  });
+});
+
+test('标注图带序号且为合法 PNG', () => {
+  const buf = makeImage([{ x: 120, y: 120, r: 40 }, { x: 300, y: 120, r: 40 }], 440, 260);
+  const r = svc.count(buf);
+  const png = svc.annotate(r, buf);
+  assert.ok(png.length > 0);
+  assert.equal(png[0], 0x89); assert.equal(png[1], 0x50); // PNG 魔数
+  const decoded = PNG.sync.read(png);
+  assert.equal(decoded.width, r.width);
+  assert.equal(decoded.height, r.height);
+});

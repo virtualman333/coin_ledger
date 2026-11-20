@@ -2,33 +2,40 @@
 /**
  * 纯 JS 图像硬币计数（无 AI、无原生依赖）。
  *
- * 原理：读像素 → 灰度 → 背景归一化阈值二值化 → chamfer 距离变换 →
- *       找距离局部极大值（每个亮圆内部一个种子）→ 半径/间距过滤 → 计数。
+ * 原理（v2，基于圆形边缘而非亮度）：
+ *   灰度 → 高斯/均值模糊 → Sobel 梯度 → 按梯度方向做「圆形霍夫投票」得到圆心候选
+ *   → 圆周梯度一致性打分（真币边界梯度沿径向，纹理/阴影不具备）→ NMS → 计数
  *
- * 为什么用「距离局部极大」而不是连通域：一堆币常互相接触/轻微重叠，
- * 连通域会粘成一块；而每个圆内部各有一个「离背景最远」的中心点，
- * 用种子数统计对粘连更鲁棒。
+ * 为什么换掉旧的「Otsu 二值化 + 距离变换」：
+ *   旧法假设「币与背景亮度不同且极性单一」。真实照片里白纸背景上银币几乎同亮、
+ *   金币偏暗、还有彩色币与塑料圆盒，单一阈值根本分不出前景，会大量漏检
+ *   （实测一张 21 枚的照片只报 4 枚）。圆形边缘是各类币唯一稳定的共同特征。
  *
- * 不依赖图片内容识别（哪枚币），只数「圆形亮斑」的个数 —— 这是工具属性，
- * 不涉及 AI 生成/问答，规避个人主体小程序的深度合成类目红线。
+ * 不识别币种、不生成内容，只数圆形个数 —— 工具属性，规避深度合成类目红线。
  */
 const jpeg = require('jpeg-js');
 const { PNG } = require('pngjs');
 
-const MAX_SIDE = 1000;        // 解码后缩放的最大边，控制计算量
-const MIN_RADIUS = 8;         // 最小半径绝对下限（像素，缩放后）
-const MIN_RADIUS_RATIO = 0.028; // 同时按短边取比例下限，避免小半径纹理被当成币
-const MAX_RADIUS_RATIO = 0.25;  // 单个亮斑半径超过短边这个比例，当成大块背景丢弃
-const RING_SAMPLES = 24;      // 环形边界验证的采样点数
-const RING_INNER = 0.80;      // 内环采样半径系数（应落在前景内）
-const RING_OUTER = 1.18;      // 外环采样半径系数（应落在背景里）
-const RADIUS_KEEP_RATIO = 0.45; // 半径小于参考半径该比例的种子丢弃（内部纹理）
-const NMS_FACTOR = 0.9;       // NMS 抑制距离系数（越大越严格合并近邻）
+const MAX_SIDE = 1000;          // 解码后最长边，控制计算量
+const BLUR_K = 5;               // 梯度前的均值模糊核
+const VOTE_BLUR_K = 5;          // 霍夫累加图平滑核
+const EDGE_PERCENTILE = 0.70;   // 参与投票的边缘点（梯度幅值分位）
+const RIM_PERCENTILE = 0.62;    // 圆周证据的梯度幅值门槛（分位）
+const R_MIN_RATIO = 0.055;      // 半径下限 / 短边
+const R_MAX_RATIO = 0.115;      // 半径上限 / 短边
+const R_MIN_ABS = 20;
+const R_MAX_ABS = 130;
+const R_STEP = 2;
+const RING_SAMPLES = 48;        // 圆周打分采样点数
+const ALIGN_MIN = 0.65;         // 梯度方向与径向夹角余弦下限
+const PEAK_MIN = 6;             // 霍夫峰最低票数
+const SCORE_MIN = 0.22;         // 圆周一致性得分下限
+const NMS_FACTOR = 0.78;        // 中心距 < 该系数 ×(r1+r2) 视为同一枚
+const R_REFINES = [-6, -3, 0, 3, 6];
 
 /** 解码 buffer 为 {width,height,data:Uint8Array RGBA}，超大图等比缩小 */
 function decode(buf) {
   let img;
-  // 先读头部判断格式，避免 jpeg-js 对 png 报错
   if (buf[0] === 0x89 && buf[1] === 0x50) {
     img = PNG.sync.read(buf);
   } else {
@@ -53,7 +60,319 @@ function decode(buf) {
   return { width: w, height: h, data: out };
 }
 
-/** 灰度 + 直方图自动阈值（Otsu），亮币暗背景或暗币亮背景都能处理 */
+/** RGBA → 灰度 Float32Array */
+function toGray(img) {
+  const n = img.width * img.height;
+  const gray = new Float32Array(n);
+  const d = img.data;
+  for (let i = 0; i < n; i++) {
+    const p = i * 4;
+    gray[i] = (d[p] * 77 + d[p + 1] * 150 + d[p + 2] * 29) / 256;
+  }
+  return gray;
+}
+
+/**
+ * 可分离均值模糊（边界 clamp），O(w*h) 而非 O(w*h*k²)。
+ * 复用 tmp/dst 避免每轮分配大数组。
+ */
+function boxBlur(src, w, h, k, tmp, dst) {
+  const r = k >> 1;
+  const inv = 1 / k;
+  // 横向滑动和
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    let sum = 0;
+    for (let t = -r; t <= r; t++) {
+      const x = t < 0 ? 0 : (t >= w ? w - 1 : t);
+      sum += src[row + x];
+    }
+    for (let x = 0; x < w; x++) {
+      tmp[row + x] = sum * inv;
+      const outX = x - r < 0 ? 0 : x - r;
+      const inX = x + r + 1 >= w ? w - 1 : x + r + 1;
+      sum += src[row + inX] - src[row + outX];
+    }
+  }
+  // 纵向滑动和
+  for (let x = 0; x < w; x++) {
+    let sum = 0;
+    for (let t = -r; t <= r; t++) {
+      const y = t < 0 ? 0 : (t >= h ? h - 1 : t);
+      sum += tmp[y * w + x];
+    }
+    for (let y = 0; y < h; y++) {
+      dst[y * w + x] = sum * inv;
+      const outY = y - r < 0 ? 0 : y - r;
+      const inY = y + r + 1 >= h ? h - 1 : y + r + 1;
+      sum += tmp[inY * w + x] - tmp[outY * w + x];
+    }
+  }
+  return dst;
+}
+
+/** Sobel 梯度：返回 gx/gy/mag（Float32Array） */
+function sobel(gray, w, h) {
+  const gx = new Float32Array(w * h);
+  const gy = new Float32Array(w * h);
+  const mag = new Float32Array(w * h);
+  const at = (x, y) => gray[(y < 0 ? 0 : (y >= h ? h - 1 : y)) * w + (x < 0 ? 0 : (x >= w ? w - 1 : x))];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      // 3x3 Sobel（边界由 at 做 clamp）
+      const tl = at(x - 1, y - 1), tc = at(x, y - 1), tr = at(x + 1, y - 1);
+      const ml = at(x - 1, y), mr = at(x + 1, y);
+      const bl = at(x - 1, y + 1), bc = at(x, y + 1), br = at(x + 1, y + 1);
+      const sx = (tr + 2 * mr + br) - (tl + 2 * ml + bl);
+      const sy = (bl + 2 * bc + br) - (tl + 2 * tc + tr);
+      gx[i] = sx; gy[i] = sy;
+      mag[i] = Math.sqrt(sx * sx + sy * sy);
+    }
+  }
+  return { gx, gy, mag };
+}
+
+/** 直方图近似分位数（避免对百万级浮点数组排序） */
+function percentile(arr, p, bins) {
+  const B = bins || 2048;
+  let max = 0;
+  for (let i = 0; i < arr.length; i++) if (arr[i] > max) max = arr[i];
+  if (max <= 0) return 0;
+  const hist = new Uint32Array(B + 1);
+  const scale = B / max;
+  for (let i = 0; i < arr.length; i++) {
+    let b = (arr[i] * scale) | 0;
+    if (b > B) b = B;
+    hist[b]++;
+  }
+  const target = arr.length * p;
+  let acc = 0;
+  for (let b = 0; b <= B; b++) {
+    acc += hist[b];
+    if (acc >= target) return b / scale;
+  }
+  return max;
+}
+
+/** 圆周梯度一致性得分：真圆边界的梯度方向应沿半径方向 */
+function ringScore(gx, gy, mag, w, h, cx, cy, r, rimThr, ca, sa) {
+  let total = 0;
+  for (let k = 0; k < RING_SAMPLES; k++) {
+    const px = Math.round(cx + r * ca[k]);
+    const py = Math.round(cy + r * sa[k]);
+    if (px < 1 || py < 1 || px >= w - 1 || py >= h - 1) continue;
+    // 3x3 邻域取梯度最强的点（容忍 1~2px 的半径误差）
+    let mv = 0, bx = px, by = py;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const v = mag[(py + dy) * w + px + dx];
+        if (v > mv) { mv = v; bx = px + dx; by = py + dy; }
+      }
+    }
+    if (mv < rimThr) continue;
+    const align = Math.abs(gx[by * w + bx] * ca[k] + gy[by * w + bx] * sa[k]) / (mv + 1e-6);
+    if (align > ALIGN_MIN) total += align;
+  }
+  return total / RING_SAMPLES;
+}
+
+/**
+ * 统计硬币。
+ * @param {Buffer} buf 图片 buffer（jpeg/png）
+ * @param {object} opt { minRadius, maxRadius, overlapFactor } 可选覆盖
+ * @returns {object} { ok, count, seeds, width, height, ms }
+ */
+function count(buf, opt) {
+  const t0 = Date.now();
+  const o = opt || {};
+  const img = decode(buf);
+  const w = img.width, h = img.height, n = w * h;
+  const short = Math.min(w, h);
+
+  const gray = toGray(img);
+  const tmp = new Float32Array(n);
+  const smooth = new Float32Array(n);
+  boxBlur(gray, w, h, BLUR_K, tmp, smooth);
+  const { gx, gy, mag } = sobel(smooth, w, h);
+
+  const loThr = percentile(mag, EDGE_PERCENTILE);
+  const rimThr = percentile(mag, RIM_PERCENTILE);
+  // 收集边缘点：坐标 + 单位梯度方向
+  const xs = [], ys = [], ux = [], uy = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      const m = mag[i];
+      if (m < loThr || m <= 0) continue;
+      xs.push(x); ys.push(y);
+      ux.push(gx[i] / m); uy.push(gy[i] / m);
+    }
+  }
+  const edgeN = xs.length;
+
+  const rmin = Math.max(R_MIN_ABS, Math.round(short * (o.minRadius ? 0 : R_MIN_RATIO)));
+  const rmax = Math.min(R_MAX_ABS, Math.round(short * R_MAX_RATIO));
+  const radii = [];
+  for (let r = (o.minRadius || rmin); r <= (o.maxRadius || rmax); r += R_STEP) radii.push(r);
+  if (!radii.length) radii.push(Math.round((rmin + rmax) / 2));
+
+  // 圆形霍夫投票：每个边缘点沿 ±梯度方向在各半径处给圆心投票
+  const acc = new Float32Array(n);
+  const accSmooth = new Float32Array(n);
+  const best = new Float32Array(n);
+  const bestR = new Float32Array(n);
+  for (const r of radii) {
+    acc.fill(0);
+    for (let e = 0; e < edgeN; e++) {
+      let cx = Math.round(xs[e] + r * ux[e]);
+      let cy = Math.round(ys[e] + r * uy[e]);
+      if (cx >= 0 && cy >= 0 && cx < w && cy < h) acc[cy * w + cx] += 1;
+      cx = Math.round(xs[e] - r * ux[e]);
+      cy = Math.round(ys[e] - r * uy[e]);
+      if (cx >= 0 && cy >= 0 && cx < w && cy < h) acc[cy * w + cx] += 1;
+    }
+    boxBlur(acc, w, h, VOTE_BLUR_K, tmp, accSmooth);
+    for (let i = 0; i < n; i++) {
+      if (accSmooth[i] > best[i]) { best[i] = accSmooth[i]; bestR[i] = r; }
+    }
+  }
+
+  // 候选：8 邻域局部极大（>= 让平台只保留一个方向不至于全丢）
+  const cand = [];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const v = best[i];
+      if (v <= PEAK_MIN) continue;
+      let isMax = true;
+      for (let dy = -1; dy <= 1 && isMax; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          if (best[i + dy * w + dx] > v) { isMax = false; break; }
+        }
+      }
+      if (isMax) cand.push({ x, y, r: bestR[i], votes: v });
+    }
+  }
+
+  const ca = new Float32Array(RING_SAMPLES), sa = new Float32Array(RING_SAMPLES);
+  for (let k = 0; k < RING_SAMPLES; k++) {
+    const a = k * 2 * Math.PI / RING_SAMPLES;
+    ca[k] = Math.cos(a); sa[k] = Math.sin(a);
+  }
+  // 每个候选在 ±6px 内精修半径，取圆周一致性最高分
+  const scored = cand.map((c) => {
+    let bs = 0, br = c.r;
+    for (const dr of R_REFINES) {
+      const r = c.r + dr;
+      if (r < 8) continue;
+      const sc = ringScore(gx, gy, mag, w, h, c.x, c.y, r, rimThr, ca, sa);
+      if (sc > bs) { bs = sc; br = r; }
+    }
+    return { x: c.x, y: c.y, r: br, score: bs };
+  });
+  scored.sort((a, b) => b.score - a.score);
+
+  const seeds = [];
+  const overlap = o.overlapFactor || 1;
+  for (const c of scored) {
+    if (c.score < SCORE_MIN) continue;
+    let dup = false;
+    for (const s of seeds) {
+      const dx = c.x - s.x, dy = c.y - s.y;
+      if (Math.sqrt(dx * dx + dy * dy) < NMS_FACTOR * (c.r + s.r) * overlap) { dup = true; break; }
+    }
+    if (!dup) seeds.push(c);
+  }
+
+  return {
+    ok: true,
+    count: seeds.length,
+    seeds: seeds.slice(0, 500),
+    width: w, height: h,
+    ms: Date.now() - t0,
+  };
+}
+
+/** 3x5 点阵数字，用于在标注图上标序号 */
+const DIGITS = {
+  0: ['111', '101', '101', '101', '111'],
+  1: ['010', '110', '010', '010', '111'],
+  2: ['111', '001', '111', '100', '111'],
+  3: ['111', '001', '111', '001', '111'],
+  4: ['101', '101', '111', '001', '001'],
+  5: ['111', '100', '111', '001', '111'],
+  6: ['111', '100', '111', '101', '111'],
+  7: ['111', '001', '010', '010', '010'],
+  8: ['111', '101', '111', '101', '111'],
+  9: ['111', '101', '111', '001', '111'],
+};
+
+function drawNumber(data, w, h, num, cx, cy, scale) {
+  const s = String(num);
+  const cellW = 3 * scale, cellH = 5 * scale, gap = scale;
+  const totalW = s.length * cellW + (s.length - 1) * gap;
+  const x0 = Math.round(cx - totalW / 2);
+  const y0 = Math.round(cy - cellH / 2);
+  for (let si = 0; si < s.length; si++) {
+    const rows = DIGITS[s[si]];
+    if (!rows) continue;
+    for (let ry = 0; ry < 5; ry++) {
+      for (let rx = 0; rx < 3; rx++) {
+        if (rows[ry][rx] !== '1') continue;
+        const bx = x0 + si * (cellW + gap) + rx * scale;
+        const by = y0 + ry * scale;
+        for (let dy = 0; dy < scale; dy++) {
+          for (let dx = 0; dx < scale; dx++) {
+            const px = bx + dx, py = by + dy;
+            if (px < 0 || py < 0 || px >= w || py >= h) continue;
+            const i = (py * w + px) * 4;
+            data[i] = 255; data[i + 1] = 255; data[i + 2] = 255; data[i + 3] = 255;
+          }
+        }
+      }
+    }
+  }
+}
+
+/** 在结果上画圈 + 序号生成标注图（PNG buffer），方便用户逐枚核对 */
+function annotate(r, buf) {
+  const img = decode(buf);
+  const w = img.width, h = img.height;
+  const png = new PNG({ width: w, height: h });
+  for (let i = 0; i < png.data.length; i++) png.data[i] = img.data[i];
+  const C = [255, 60, 60];
+  r.seeds.forEach(function (s, idx) {
+    const rr = Math.max(4, Math.round(s.r));
+    // 红色圆环
+    for (let a = 0; a < 360; a += 2) {
+      const rad = a * Math.PI / 180;
+      for (let t = -1; t <= 1; t++) {
+        const x = Math.round(s.x + (rr + t) * Math.cos(rad));
+        const y = Math.round(s.y + (rr + t) * Math.sin(rad));
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = (y * w + x) * 4;
+        png.data[i] = C[0]; png.data[i + 1] = C[1]; png.data[i + 2] = C[2]; png.data[i + 3] = 255;
+      }
+    }
+    // 中心序号底盘 + 白色数字
+    const badge = 13;
+    for (let dy = -badge; dy <= badge; dy++) {
+      for (let dx = -badge; dx <= badge; dx++) {
+        if (dx * dx + dy * dy > badge * badge) continue;
+        const x = s.x + dx, y = s.y + dy;
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = (y * w + x) * 4;
+        png.data[i] = 190; png.data[i + 1] = 45; png.data[i + 2] = 45; png.data[i + 3] = 255;
+      }
+    }
+    drawNumber(png.data, w, h, idx + 1, s.x, s.y, 3);
+  });
+  return PNG.sync.write(png);
+}
+
+/* 兼容导出：旧版二值化/距离变换工具，count() 已不再使用，保留供外部脚本引用 */
 function binarize(img) {
   const { width: w, height: h, data } = img;
   const n = w * h;
@@ -64,215 +383,54 @@ function binarize(img) {
     const g = (data[p] * 77 + data[p + 1] * 150 + data[p + 2] * 29) >> 8;
     gray[i] = g; hist[g]++;
   }
-  // Otsu
   let total = 0, sum = 0;
   for (let t = 0; t < 256; t++) { total += hist[t]; sum += t * hist[t]; }
   let sumB = 0, wB = 0, best = 0, thr = 128;
   for (let t = 0; t < 256; t++) {
-    wB += hist[t];
-    if (!wB) continue;
-    const wF = total - wB;
-    if (!wF) break;
+    wB += hist[t]; if (!wB) continue;
+    const wF = total - wB; if (!wF) break;
     sumB += t * hist[t];
     const mB = sumB / wB, mF = (sum - sumB) / wF;
     const between = wB * wF * (mB - mF) * (mB - mF);
     if (between > best) { best = between; thr = t; }
   }
-  // 判断币是亮还是暗：比较高于阈值/低于阈值两类的像素占比。
-  // 桌面上的币通常比背景亮（金属反光），取亮的一极作为前景。
   let bright = 0;
   for (let i = 0; i < n; i++) if (gray[i] > thr) bright++;
-  const brightRatio = bright / n;
-  const fgIsBright = brightRatio <= 0.5; // 前景（币）占少数的一极
+  const fgIsBright = bright / n <= 0.5;
   const bin = new Uint8Array(n);
-  for (let i = 0; i < n; i++) {
-    const isBright = gray[i] > thr;
-    bin[i] = (isBright === fgIsBright) ? 1 : 0;
-  }
+  for (let i = 0; i < n; i++) bin[i] = ((gray[i] > thr) === fgIsBright) ? 1 : 0;
   return { bin, gray, thr, fgIsBright };
 }
 
-/** chamfer 距离变换（两遍扫描，3-4 近似欧氏），返回每个前景点到最近背景的距离 */
 function distanceTransform(bin, w, h) {
   const n = w * h;
   const D = new Float32Array(n);
   const BIG = 1e9;
   for (let i = 0; i < n; i++) D[i] = bin[i] ? BIG : 0;
   const d1 = 1, d2 = 1.4142;
-  // 左上 -> 右下
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (!bin[i]) continue;
-      let v = D[i];
-      if (x > 0) v = Math.min(v, D[i - 1] + d1);
-      if (y > 0) {
-        v = Math.min(v, D[i - w] + d1);
-        if (x > 0) v = Math.min(v, D[i - w - 1] + d2);
-        if (x < w - 1) v = Math.min(v, D[i - w + 1] + d2);
-      }
-      D[i] = v;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x; if (!bin[i]) continue;
+    let v = D[i];
+    if (x > 0) v = Math.min(v, D[i - 1] + d1);
+    if (y > 0) {
+      v = Math.min(v, D[i - w] + d1);
+      if (x > 0) v = Math.min(v, D[i - w - 1] + d2);
+      if (x < w - 1) v = Math.min(v, D[i - w + 1] + d2);
     }
+    D[i] = v;
   }
-  // 右下 -> 左上
-  for (let y = h - 1; y >= 0; y--) {
-    for (let x = w - 1; x >= 0; x--) {
-      const i = y * w + x;
-      if (!bin[i]) continue;
-      let v = D[i];
-      if (x < w - 1) v = Math.min(v, D[i + 1] + d1);
-      if (y < h - 1) {
-        v = Math.min(v, D[i + w] + d1);
-        if (x > 0) v = Math.min(v, D[i + w - 1] + d2);
-        if (x < w - 1) v = Math.min(v, D[i + w + 1] + d2);
-      }
-      D[i] = v;
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+    const i = y * w + x; if (!bin[i]) continue;
+    let v = D[i];
+    if (x < w - 1) v = Math.min(v, D[i + 1] + d1);
+    if (y < h - 1) {
+      v = Math.min(v, D[i + w] + d1);
+      if (x > 0) v = Math.min(v, D[i + w - 1] + d2);
+      if (x < w - 1) v = Math.min(v, D[i + w + 1] + d2);
     }
+    D[i] = v;
   }
   return D;
-}
-
-/**
- * 填充前景内部被误判为背景的封闭小洞。
- * 币面图案/阴影常比阈值暗，Otsu 会把它们切成背景，实心币变成「带洞亮岛」，
- * 距离变换会在每个残留小岛上产生局部极大（即大量内部纹理误检）。
- * 从图像四边的背景做 flood fill，未被触及的背景即为币内封闭洞，填回前景。
- * 不改变与图像边缘连通的真实背景，因此不会把相邻币粘在一起。
- */
-function fillHoles(bin, w, h) {
-  const n = w * h;
-  const visited = new Uint8Array(n);
-  const stack = new Int32Array(n);
-  let sp = 0;
-  const push = function (i) {
-    if (i < 0 || i >= n || bin[i] || visited[i]) return;
-    visited[i] = 1; stack[sp++] = i;
-  };
-  for (let x = 0; x < w; x++) { push(x); push((h - 1) * w + x); }
-  for (let y = 0; y < h; y++) { push(y * w); push(y * w + w - 1); }
-  while (sp > 0) {
-    const i = stack[--sp];
-    const x = i % w;
-    if (x > 0) push(i - 1);
-    if (x < w - 1) push(i + 1);
-    if (i >= w) push(i - w);
-    if (i < n - w) push(i + w);
-  }
-  const out = new Uint8Array(bin);
-  for (let i = 0; i < n; i++) if (!bin[i] && !visited[i]) out[i] = 1;
-  return out;
-}
-
-/**
- * 环形边界验证：真币中心的内环应落在前景里、外环应落到背景里。
- * 币内纹理/噪点虽是距离局部极大，但其外环仍在币面内部（前景），据此剔除。
- * 轻微接触的双币在外环方向可能仍见前景，阈值留有冗余以保留真币。
- */
-function hasCircularBoundary(bin, w, h, x, y, r) {
-  let inner = 0, outer = 0, total = 0;
-  for (let k = 0; k < RING_SAMPLES; k++) {
-    const a = (k * 2 * Math.PI) / RING_SAMPLES;
-    const cos = Math.cos(a), sin = Math.sin(a);
-    const ix = Math.round(x + r * RING_INNER * cos);
-    const iy = Math.round(y + r * RING_INNER * sin);
-    const ox = Math.round(x + r * RING_OUTER * cos);
-    const oy = Math.round(y + r * RING_OUTER * sin);
-    total++;
-    // 越界按背景处理（相当于离开图像，不构成前景延续）
-    if (ix < 0 || iy < 0 || ix >= w || iy >= h) continue;
-    if (bin[iy * w + ix]) inner++;
-    if (ox >= 0 && oy >= 0 && ox < w && oy < h && !bin[oy * w + ox]) outer++;
-  }
-  return inner / total >= 0.6 && outer / total >= 0.45;
-}
-
-/**
- * 统计硬币：找距离局部极大种子，按半径与最小间距过滤。
- * @param {Buffer} buf 图片 buffer（jpeg/png）
- * @param {object} opt { minRadius, maxRadius, minDistance }
- * @returns {object} { ok, count, seeds, width, height, threshold, ms }
- */
-function count(buf, opt) {
-  const t0 = Date.now();
-  const o = opt || {};
-  const img = decode(buf);
-  const raw = binarize(img).bin;
-  const w = img.width, h = img.height;
-  // 先填平币内被误判为背景的暗色图案/阴影，恢复实心圆，避免纹理岛假种子
-  const bin = fillHoles(raw, w, h);
-  const D = distanceTransform(bin, w, h);
-  const shortSide = Math.min(w, h);
-  // 半径下限：用户指定值与「绝对下限 / 短边比例下限」取最大
-  const minR = Math.max(o.minRadius || MIN_RADIUS, MIN_RADIUS, Math.round(shortSide * MIN_RADIUS_RATIO));
-  const maxR = o.maxRadius || Math.round(shortSide * MAX_RADIUS_RATIO);
-
-  // 候选：距离 >= minR 的前景点，且在 3x3 邻域内是局部极大（含平台去重）
-  const cand = [];
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const i = y * w + x;
-      const d = D[i];
-      if (d < minR || d > maxR) continue;
-      let isMax = true;
-      for (let dy = -1; dy <= 1 && isMax; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          const nd = D[i + dy * w + dx];
-          if (nd > d || (nd === d && (dy < 0 || (dy === 0 && dx < 0)))) { isMax = false; break; }
-        }
-      }
-      if (isMax && hasCircularBoundary(bin, w, h, x, y, d)) cand.push({ x, y, r: d });
-    }
-  }
-  // 半径一致性：真实币半径彼此接近，远小于参考半径的多为残留内部纹理
-  cand.sort((a, b) => b.r - a.r);
-  const refR = cand.length ? cand[Math.floor(cand.length * 0.25)].r : 0;
-  const kept = cand.filter(function (c) { return c.r >= refR * RADIUS_KEEP_RATIO; });
-  // 非极大抑制：按半径降序，去掉中心距 < 0.9*(r1+r2) 的近邻（粘连圆的双种子）
-  const seeds = [];
-  for (const c of kept) {
-    let dup = false;
-    for (const s of seeds) {
-      const dx = c.x - s.x, dy = c.y - s.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const thresholdDist = NMS_FACTOR * (c.r + s.r) * (o.overlapFactor || 1);
-      if (dist < thresholdDist) { dup = true; break; }
-    }
-    if (!dup) seeds.push(c);
-  }
-  return {
-    ok: true,
-    count: seeds.length,
-    seeds: seeds.slice(0, 500),
-    width: w, height: h,
-    ms: Date.now() - t0
-  };
-}
-
-/**
- * 在结果上画圈生成标注图（PNG buffer），方便用户核对/手动改数量。
- * @param {object} r count() 的返回
- * @param {Buffer} buf 原图
- */
-function annotate(r, buf) {
-  const img = decode(buf);
-  const png = new PNG({ width: img.width, height: img.height });
-  // 原图（缩放到与 seeds 同坐标系）
-  for (let i = 0; i < png.data.length; i++) png.data[i] = img.data[i];
-  r.seeds.forEach(function (s) {
-    const rr = Math.max(4, Math.round(s.r * 1.15));
-    for (let a = 0; a < 360; a += 3) {
-      const rad = a * Math.PI / 180;
-      for (let t = -1; t <= 1; t++) {
-        const x = Math.round(s.x + (rr + t) * Math.cos(rad));
-        const y = Math.round(s.y + (rr + t) * Math.sin(rad));
-        if (x < 0 || y < 0 || x >= img.width || y >= img.height) continue;
-        const i = (y * img.width + x) * 4;
-        png.data[i] = 255; png.data[i + 1] = 60; png.data[i + 2] = 60; png.data[i + 3] = 255;
-      }
-    }
-  });
-  return PNG.sync.write(png);
 }
 
 module.exports = { count, decode, binarize, distanceTransform, annotate, MAX_SIDE };
