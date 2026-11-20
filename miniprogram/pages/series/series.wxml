@@ -67,9 +67,17 @@
     <view class="sc-group-h pm"><text>贵金属纪念币</text><text class="sc-g-n">{{pmLoaded ? pmGroup.length + ' 个项目' : '加载中…'}}</text></view>
     <view class="cards" wx:if="{{pmLoaded && pmGroup.length}}">
       <view class="scard scard-pm" wx:for="{{pmGroup}}" wx:key="code" data-code="{{item.code}}" data-cat="pm" bindtap="goSeries" hover-class="tap-hover">
+        <view class="scard-media">
+          <image class="scard-img" wx:if="{{item.thumb}}" src="{{item.thumb}}" mode="aspectFit" lazy-load></image>
+          <view class="scard-ph" wx:else><text>贵金属</text></view>
+          <text class="scard-badge">{{item.count}} 枚</text>
+        </view>
         <view class="scard-body">
           <text class="scard-name">{{item.name}}</text>
-          <text class="scard-meta">{{item.count}} 枚 · 查看目录 ›</text>
+          <view class="scard-tags" wx:if="{{item.yearText || item.matText}}">
+            <text class="scard-tag" wx:if="{{item.yearText}}">{{item.yearText}}</text>
+            <text class="scard-tag" wx:if="{{item.matText}}">{{item.matText}}</text>
+          </view>
         </view>
       </view>
     </view>

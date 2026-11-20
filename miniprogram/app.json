@@ -14,6 +14,7 @@
     "pages/feedback/feedback",
     "pages/myfeedback/myfeedback",
     "pages/series/series",
+    "pages/series-detail/series-detail",
     "pages/admin/admin",
     "pages/admin-user/admin-user",
     "pages/more/more",

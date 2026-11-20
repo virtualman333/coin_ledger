@@ -118,20 +118,16 @@ test('重复点同一模式不重复构建', () => {
   assert.equal(p.data.seriesCoin.length, 0, '重复点不应重建');
 });
 
-test('点系列卡片回到顺序清单并定位品类与系列', async () => {
+test('点系列卡片打开独立详情页（不再跳回顺序清单）', () => {
   setupWx();
   const p = loadListPage();
   p.toggleViewMode({ currentTarget: { dataset: { mode: 'series' } } });
-  // 纪念钞卡片
+  // 纪念钞卡片：应 navigateTo 到 series-detail，当前视图不变
   p.goSeriesCard({ currentTarget: { dataset: { cat: 'note', code: 's2' } } });
-  assert.equal(p.data.viewMode, 'list');
-  assert.equal(p.data.category, 'note');
-  assert.equal(p.data.code, 's2');
-  // 贵金属卡片走 pm 分支（loadPmFull 异步，这里只断言切了模式与品类）
-  p.toggleViewMode({ currentTarget: { dataset: { mode: 'series' } } });
+  assert.equal(p.data.viewMode, 'series', '不应跳回顺序清单');
+  // 贵金属卡片：同样打开独立详情页，category=pm
   p.goSeriesCard({ currentTarget: { dataset: { cat: 'pm', code: 'pm1' } } });
-  assert.equal(p.data.category, 'pm');
-  assert.equal(p.data.code, 'pm1');
+  assert.equal(p.data.viewMode, 'series');
 });
 
 test('按系列模式下顶部品类 tab 切换生效，且不动顺序清单状态', () => {

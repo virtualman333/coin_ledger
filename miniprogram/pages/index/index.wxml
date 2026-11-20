@@ -137,6 +137,8 @@
       wx:key="code"
       hover-class="tap-hover"
       data-code="{{item.code}}"
+      data-cat="{{item.cat}}"
+      data-name="{{item.name}}"
       bindtap="goSeries"
     >
       <text class="series-name">{{item.name}}</text>

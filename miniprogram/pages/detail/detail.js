@@ -308,18 +308,18 @@ Page({
     this.setData({ peek: null });
   },
 
-  /** 弹窗里点「查看详情」才真正切换品种（redirectTo：同层替换，避免页面栈堆积） */
+  /** 弹窗里点「查看详情」新开详情页（navigateTo 保留返回栈，可逐层退回上一枚） */
   goPeek() {
     const p = this.data.peek;
     if (!p) return;
     this.setData({ peek: null });
-    wx.redirectTo({ url: '/pages/detail/detail?id=' + p.id });
+    wx.navigateTo({ url: '/pages/detail/detail?id=' + p.id });
   },
 
   noop() {},
 
   goCoin(e) {
-    wx.redirectTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id });
+    wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id });
   },
 
   onShareAppMessage() {

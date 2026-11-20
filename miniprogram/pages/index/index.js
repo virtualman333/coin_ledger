@@ -67,11 +67,14 @@ Page({
     }));
     const seriesTop = cat.seriesList
       .map((x) => {
-        const list = cat.coins.filter((c) => c.series === x.code);
+        const list = cat.coins.filter((c) => (c.seriesKeys || [c.series]).indexOf(x.code) >= 0);
         const own = list.filter((c) => owned[c.name]).length;
+        const noteN = list.filter((c) => c.kind === 'note').length;
         return {
           code: x.code,
           name: x.name,
+          // 成员以纪念钞为主归 note，与系列页/清单页口径一致
+          cat: noteN > list.length / 2 ? 'note' : 'coin',
           count: x.count,
           own,
           pct: x.count ? Math.round((own / x.count) * 100) : 0,
@@ -203,9 +206,15 @@ Page({
   },
 
   goSeries(e) {
-    // switchTab 的 success 回调里目标页可能还没就绪，用一次性标记传递，由清单页 onShow 取走
-    wx.setStorageSync('cl_pending_series', e.currentTarget.dataset.code);
-    wx.switchTab({ url: '/pages/list/list' });
+    // 首页系列卡片：打开独立系列详情页（修复老格式 storage 不带 category 导致筛选错位的 bug）
+    const ds = e.currentTarget.dataset;
+    const code = ds.code || '';
+    const category = ds.cat || 'coin';
+    wx.navigateTo({
+      url: '/pages/series-detail/series-detail?category=' + category
+        + '&code=' + encodeURIComponent(code)
+        + '&name=' + encodeURIComponent(ds.name || ''),
+    });
   },
 });
 

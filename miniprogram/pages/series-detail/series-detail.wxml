@@ -1,0 +1,79 @@
+<view class="page">
+  <!-- 系列封面 hero -->
+  <view class="hero" wx:if="{{series}}">
+    <image class="hero-bg" wx:if="{{series.img}}" src="{{series.img}}" mode="aspectFill"></image>
+    <view class="hero-mask"></view>
+    <view class="hero-inner">
+      <text class="hero-name">{{series.name}}</text>
+      <text class="hero-desc" wx:if="{{series.desc}}">{{series.desc}}</text>
+      <view class="hero-tags" wx:if="{{series.yearText || series.matText}}">
+        <text class="hero-tag" wx:if="{{series.yearText}}">{{series.yearText}}</text>
+        <text class="hero-tag" wx:if="{{series.matText}}">{{series.matText}}</text>
+      </view>
+      <view class="hero-progress" wx:if="{{category !== 'pm'}}">
+        <view class="hp-bar"><view class="hp-fill" style="width:{{series.pct}}%"></view></view>
+        <text class="hp-text">已藏 {{series.own}} / {{series.count}}</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hs-num">{{series.count}}</text><text class="hs-unit">个品种</text>
+        <text class="hs-price" wx:if="{{totalPrice}}">推理价合计 {{totalPrice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 工具行：排序 / 只看已藏 / 分享 -->
+  <view class="tools" wx:if="{{loaded && rows.length}}">
+    <view class="tool" hover-class="tap-hover" bindtap="toggleSort">
+      <text>年份{{desc ? '↓' : '↑'}}</text>
+    </view>
+    <view class="tool {{onlyOwn ? 'on' : ''}}" wx:if="{{showOnlyOwn}}" hover-class="tap-hover" bindtap="toggleOwn">
+      <text>只看已藏{{onlyOwn ? ' ✓' : ''}}</text>
+    </view>
+    <button class="tool share-tool" open-type="share" hover-class="tap-hover">分享系列</button>
+  </view>
+
+  <!-- 品种列表 -->
+  <view class="list" wx:if="{{loaded && rows.length}}">
+    <view
+      class="row"
+      wx:for="{{rows}}"
+      wx:key="id"
+      wx:if="{{!onlyOwn || item.owned}}"
+      hover-class="tap-hover"
+      data-id="{{item.id}}"
+      data-code="{{item.code}}"
+      bindtap="goDetail"
+    >
+      <view class="row-media">
+        <image class="row-img" wx:if="{{item.imgUrl && !item.imgFail}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load binderror="imgErr" data-id="{{item.id}}" data-code="{{item.code}}"></image>
+        <view class="row-ph" wx:else><text>{{item.name}}</text></view>
+        <text class="own-dot" wx:if="{{item.owned}}">已藏</text>
+      </view>
+      <view class="row-body">
+        <text class="row-name">{{item.name}}</text>
+        <text class="row-meta" wx:if="{{item.faceText}}">面值 {{item.faceText}}</text>
+        <text class="row-meta" wx:elif="{{item.metaText}}">{{item.metaText}}</text>
+        <text class="row-sub" wx:if="{{item.setLabel}}">{{item.setLabel}}</text>
+      </view>
+      <view class="row-right">
+        <text class="row-price" wx:if="{{item.priceText}}">{{item.priceText}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="state" wx:if="{{loading}}">
+    <text>正在加载系列…</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="state" wx:elif="{{loaded && !rows.length}}">
+    <text>这个系列暂时没有品种</text>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="more" wx:if="{{loaded && page < pages}}">
+    <text>{{loadingMore ? '加载中…' : '上拉加载更多'}}</text>
+  </view>
+</view>

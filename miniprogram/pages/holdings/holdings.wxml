@@ -163,7 +163,7 @@
     <!-- 藏品增强：纪念钞号码 + 花样 -->
     <view class="sheet-row ex-row" wx:if="{{sheet.isNote}}">
       <text class="sr-k">号码</text>
-      <textarea class="sr-textarea" value="{{sheet.serialsText}}" bindinput="onSheetSerials" placeholder="输入冠字号码，多个换行" auto-height maxlength="-1"></textarea>
+      <textarea class="sr-textarea" value="{{sheet.serialsText}}" bindinput="onSheetSerials" placeholder="输入冠字号码，多个换行" placeholder-class="ph" auto-height maxlength="-1"></textarea>
     </view>
     <view class="sheet-row ex-row" wx:if="{{sheet.isNote && sheet.luckyTags.length}}">
       <text class="sr-k">花样</text>

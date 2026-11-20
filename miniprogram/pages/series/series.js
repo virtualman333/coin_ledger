@@ -57,11 +57,18 @@ Page({
         this.setData({ pmLoaded: true, pmGroup: [] });
         return;
       }
-      const pm = res.items.map((it) => ({
-        code: it.code,
-        name: it.name,
-        count: it.count,
-      }));
+      const pm = res.items.map((it) => {
+        const mats = Array.isArray(it.materials) ? it.materials.filter(Boolean) : [];
+        const yf = String(it.yearFrom || ''), yt = String(it.yearTo || '');
+        return {
+          code: it.code,
+          name: it.name,
+          count: it.count,
+          yearText: yf && yt ? (yf === yt ? (yf + ' 年') : (yf + '—' + yt)) : '',
+          matText: mats.slice(0, 4).join(' · '),
+          thumb: it.thumb ? (String(it.thumb).indexOf('http') === 0 ? it.thumb : api.BASE + it.thumb) : '',
+        };
+      });
       this.setData({ pmLoaded: true, pmGroup: pm });
     }).catch(() => this.setData({ pmLoaded: true, pmGroup: [] }));
   },
@@ -73,11 +80,22 @@ Page({
   },
 
   goSeries(e) {
-    const code = e.currentTarget.dataset.code;
-    const category = e.currentTarget.dataset.cat || 'coin';
-    // 同时传品类 + 系列，list 页会切到对应品类再定位系列
-    wx.setStorageSync('cl_pending_series', { code, category });
-    wx.switchTab({ url: '/pages/list/list' });
+    const ds = e.currentTarget.dataset;
+    const code = ds.code || '';
+    const category = ds.cat || 'coin';
+    // 打开独立系列详情页：只展示这一系列的品种，保留返回栈（不再 switchTab 跳回清单）
+    let name = '';
+    const pool = category === 'pm' ? this.data.pmGroup
+      : (category === 'note' ? this.data.noteGroup : this.data.coinGroup);
+    if (Array.isArray(pool)) {
+      const hit = pool.filter((s) => s.code === code)[0];
+      if (hit) name = hit.name || '';
+    }
+    wx.navigateTo({
+      url: '/pages/series-detail/series-detail?category=' + category
+        + '&code=' + encodeURIComponent(code)
+        + '&name=' + encodeURIComponent(name),
+    });
   },
 
   goAll() {

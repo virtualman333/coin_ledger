@@ -67,8 +67,15 @@ Page({
         this.applyCategory(category, pending.code || '');
         return;
       }
-      // 老格式：纯字符串 code，保持原行为
-      this.setData({ code: pending });
+      // 老格式：纯字符串 code（历史分享链接 ?code= 产生）。推断品类并回到顺序清单，
+      // 避免在「按系列」视图下 render 了列表却仍显示系列卡片，看起来像没反应。
+      const codeStr = String(pending);
+      let guess = 'coin';
+      const members = cat.inSeries(codeStr);
+      if (members.length && members.filter((c) => cat.categoryOf(c) === 'commemorative_note').length > members.length / 2) {
+        guess = 'note';
+      }
+      this.setData({ code: codeStr, category: guess, viewMode: 'list' });
     }
     this.render();
     if (this.data.viewMode === 'series') this.buildSeriesView();
@@ -128,12 +135,24 @@ Page({
     if (mode === 'series') this.buildSeriesView();
   },
 
-  /** 按系列视图点卡片：回到顺序清单并定位到该品类 + 系列 */
+  /** 按系列视图点卡片：打开独立系列详情页，只展示该系列品种（不再跳回顺序清单） */
   goSeriesCard(e) {
     const ds = e.currentTarget.dataset;
     const category = ds.cat === 'pm' ? 'pm' : (ds.cat === 'note' ? 'note' : 'coin');
-    this.setData({ viewMode: 'list' });
-    this.applyCategory(category, ds.code || '');
+    const code = ds.code || '';
+    // 从已构建的分组里取系列名，作为详情页标题（免去重复请求）
+    let name = ds.name || '';
+    const pool = category === 'pm' ? this.data.seriesPm
+      : (category === 'note' ? this.data.seriesNote : this.data.seriesCoin);
+    if (!name && Array.isArray(pool)) {
+      const hit = pool.filter((s) => s.code === code)[0];
+      if (hit) name = hit.name;
+    }
+    wx.navigateTo({
+      url: '/pages/series-detail/series-detail?category=' + category
+        + '&code=' + encodeURIComponent(code)
+        + '&name=' + encodeURIComponent(name),
+    });
   },
 
   /** 从全量品种里生成三个下拉的选项 */
@@ -418,10 +437,19 @@ Page({
   },
 
   onShareAppMessage(e) {
-    // 从列表转发时，带上当前筛选条件，好友打开就是同一批品种
+    // 定位到某系列时，直接分享到独立系列详情页（好友打开只看到这一系列，不再是清单筛选态）
     const code = this.data.code;
-    const extra = code ? { title: '藏币录 · ' + cat.seriesName(code) + ' 系列', path: '/pages/list/list?code=' + code } : null;
-    return share.appMessage('list', extra || undefined);
+    if (code) {
+      const name = cat.seriesName(code);
+      return {
+        title: '藏币录 · ' + (name || '系列') + '（' + this.data.count + ' 个品种）',
+        path: '/pages/series-detail/series-detail?category=' + this.data.category
+          + '&code=' + encodeURIComponent(code)
+          + '&name=' + encodeURIComponent(name || ''),
+        imageUrl: share.COVER,
+      };
+    }
+    return share.appMessage('list');
   },
 
   onShareTimeline() {

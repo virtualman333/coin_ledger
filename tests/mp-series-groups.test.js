@@ -89,6 +89,7 @@ function loadListPage() {
     total: 0,
     seriesList: [],
     coins: [],
+    inSeries: () => [],
     categoryOf: () => 'commemorative_coin',
     seriesName: () => '',
     money: (n) => String(n),
@@ -125,19 +126,27 @@ test('系列按成员分成普通纪念币与纪念钞两组', () => {
   assert.equal(p.data.noteGroup[0].cat, 'note');
 });
 
-test('贵金属分组从公开接口加载', async () => {
+test('贵金属分组从公开接口加载（带年份/材质/封面富信息）', async () => {
   setupWx();
   const p = loadSeriesPage();
   await p.loadPmSeries();
   assert.equal(p.data.pmLoaded, true);
-  assert.deepEqual(p.data.pmGroup, [{ code: 'pm1', name: '熊猫金币', count: 3 }]);
+  assert.equal(p.data.pmGroup.length, 1);
+  assert.equal(p.data.pmGroup[0].code, 'pm1');
+  assert.equal(p.data.pmGroup[0].name, '熊猫金币');
+  assert.equal(p.data.pmGroup[0].count, 3);
+  // 接口只给基础字段时，富字段应安全降级为空串
+  assert.equal(p.data.pmGroup[0].yearText, '');
+  assert.equal(p.data.pmGroup[0].matText, '');
+  assert.equal(p.data.pmGroup[0].thumb, '');
 });
 
-test('点分组卡片写入带品类的 pending', () => {
+test('点分组卡片打开独立系列详情页', () => {
   setupWx();
   const p = loadSeriesPage();
   p.goSeries({ currentTarget: { dataset: { code: 's2', cat: 'note' } } });
-  assert.deepEqual(mem['cl_pending_series'], { code: 's2', category: 'note' });
+  // series.goSeries 现改为 navigateTo 到 series-detail，不再写 storage / switchTab
+  assert.ok(!mem['cl_pending_series'], '不应再写 cl_pending_series');
 });
 
 test('list 页读取对象 pending：先切到纪念钞再定位系列', () => {
