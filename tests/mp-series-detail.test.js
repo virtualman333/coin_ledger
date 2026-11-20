@@ -155,16 +155,21 @@ test('系列标题：已解码的中文保持原样，含 % 字面量不被误�
 
 test('pm 系列详情页：走 /api/series/detail 聚合接口并展示富信息', async () => {
   setupWx();
+  const paths = [];
   const p = loadDetailPage({
-    get: (path) => Promise.resolve({
-      ok: true,
-      series: { code: 'pm1', name: '熊猫金币', count: 2, yearFrom: '1982', yearTo: '2024', materials: ['金', '银'], thumb: '/img/pm/1.jpg' },
-      total: 2, page: 1, pages: 1,
-      items: [
-        { code: 'C1', name: '熊猫金币1', year: 1982, material: '金', weightG: 8, face: 500, thumb: '/img/pm/1.jpg' },
-        { code: 'C2', name: '熊猫金币2', year: 2024, material: '银', weightG: 30, face: 10, thumb: '' },
-      ],
-    }),
+    get: (path) => {
+      paths.push(path);
+      // 真实接口已按 sort 排好序，直接返回服务端顺序（年份降序）
+      return Promise.resolve({
+        ok: true,
+        series: { code: 'pm1', name: '熊猫金币', count: 2, yearFrom: '1982', yearTo: '2024', materials: ['金', '银'], thumb: '/img/pm/1.jpg' },
+        total: 2, page: 1, pages: 1,
+        items: [
+          { code: 'C2', name: '熊猫金币2', year: 2024, material: '银', weightG: 30, face: 10, thumb: '' },
+          { code: 'C1', name: '熊猫金币1', year: 1982, material: '金', weightG: 8, face: 500, thumb: '/img/pm/1.jpg' },
+        ],
+      });
+    },
   });
   p.onLoad({ category: 'pm', code: 'pm1', name: '熊猫金币' });
   await p.reload();
@@ -172,10 +177,34 @@ test('pm 系列详情页：走 /api/series/detail 聚合接口并展示富信息
   assert.equal(p.data.series.matText, '金 · 银');
   assert.equal(p.data.series.img, 'https://example.test/img/pm/1.jpg');
   assert.equal(p.data.rows.length, 2);
-  // 年份降序
+  // 排序交给服务端：请求里必须带 sort，返回什么顺序就展示什么顺序
+  assert.match(paths[paths.length - 1], /sort=year_desc/);
   assert.equal(p.data.rows[0].year, 2024);
   assert.equal(p.data.rows[1].year, 1982);
   assert.equal(p.data.rows[0].metaText, '银 · 30 克');
+});
+
+test('pm 系列详情页：切排序回第一页重查，不只排已加载那一页', async () => {
+  setupWx();
+  const paths = [];
+  const p = loadDetailPage({
+    get: (path) => {
+      paths.push(path);
+      return Promise.resolve({
+        ok: true,
+        series: { code: 'pm1', name: '熊猫金币', count: 1, yearFrom: '2024', yearTo: '2024', materials: ['金'], thumb: '' },
+        total: 1, page: 1, pages: 1,
+        items: [{ code: 'C2', name: '熊猫金币2', year: 2024, material: '金', weightG: 30, face: 10, thumb: '' }],
+      });
+    },
+  });
+  p.onLoad({ category: 'pm', code: 'pm1', name: '熊猫金币' });
+  await p.reload();
+  const before = paths.length;
+  p.toggleSort();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.ok(paths.length > before, '应重新请求接口');
+  assert.match(paths[paths.length - 1], /sort=year_asc/);
 });
 
 test('详情页分享落地到 series-detail（带 category+code+name）', () => {

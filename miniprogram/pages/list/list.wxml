@@ -61,14 +61,15 @@
     </view>
   </scroll-view>
 
-  <view class="bar" wx:if="{{viewMode === 'list'}}">
+  <!-- 普通币这一行显示本地 catalog 的计数；贵金属走自己的 .pm-bar，避免两套数字打架 -->
+  <view class="bar" wx:if="{{viewMode === 'list' && category !== 'pm'}}">
     <text class="bar-text">{{count}} 个品种 · 已收 {{ownedCount}}</text>
     <view class="bar-actions">
-      <view class="bar-btn {{desc ? '' : 'asc'}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
+      <view class="bar-btn {{desc ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
     </view>
   </view>
 
-  <view class="fpanel" wx:if="{{viewMode === 'list' && filterOpen && category !== 'pm'}}">
+  <view class="fpanel" wx:if="{{viewMode === 'list' && filterOpen}}">
     <view class="frow">
       <picker range="{{yearOpts}}" value="{{yearIdx}}" bindchange="pickYear">
         <view class="fbtn {{yearFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{yearFilter || '年份'}} ▾</view>
@@ -79,7 +80,8 @@
       <picker range="{{matOpts}}" value="{{matIdx}}" bindchange="pickMat">
         <view class="fbtn {{matFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{matFilter || '材质'}} ▾</view>
       </picker>
-      <view class="fbtn {{onlyOwn ? 'fbtn-on' : ''}}" hover-class="tap-hover" bindtap="toggleOwn">只看已收</view>
+      <!-- 贵金属的「只看已收」需要服务端按 code 列表过滤，暂时不给入口，免得点了没反应 -->
+      <view class="fbtn {{onlyOwn ? 'fbtn-on' : ''}}" wx:if="{{category !== 'pm'}}" hover-class="tap-hover" bindtap="toggleOwn">只看已收</view>
       <view class="fbtn fbtn-clear" wx:if="{{hasExtra}}" hover-class="tap-hover" bindtap="clearExtra">清除</view>
     </view>
   </view>
@@ -87,7 +89,10 @@
 
 <!-- 贵金属全量库（金币云集 2823 条）：卡片网格 + 占位图 + 加载更多 -->
 <view class="pm-full" wx:if="{{viewMode === 'list' && category === 'pm'}}">
-  <view class="pm-bar">贵金属纪念币 · 共 {{pmTotal || '…'}} 条</view>
+  <view class="pm-bar">
+    <text class="pm-bar-t">贵金属纪念币 · 共 {{pmTotal || '…'}} 条 · 已收 {{pmOwnedCount}}</text>
+    <view class="bar-btn {{desc ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
+  </view>
   <view class="pm-grid">
     <view
       class="pm-card"
@@ -110,7 +115,7 @@
   <view class="pm-loading" wx:if="{{pmLoading}}">加载中…</view>
   <view class="pm-more" wx:if="{{!pmLoading && pmLoaded && pmPage < pmPages}}" bindtap="loadMorePm">加载更多（{{pmPage}}/{{pmPages}}）</view>
   <view class="pm-empty pm-error" wx:if="{{pmLoaded && pmError}}" bindtap="retryPmFull">{{pmError}} · 点此重试</view>
-  <view class="pm-empty" wx:elif="{{pmLoaded && !pmError && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词试试</view>
+  <view class="pm-empty" wx:elif="{{pmLoaded && !pmError && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词或放宽筛选条件</view>
   <view class="pm-end" wx:if="{{pmLoaded && pmRows.length > 0 && pmPage >= pmPages}}">已显示全部 {{pmTotal}} 条</view>
 </view>
 

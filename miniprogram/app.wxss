@@ -12,7 +12,9 @@ page {
 view,
 text,
 button,
-input {
+input,
+textarea,
+image {
   box-sizing: border-box;
 }
 
@@ -54,7 +56,7 @@ input {
 
 /* ---------- 文本工具类 ---------- */
 .muted {
-  color: #8a8378;
+  color: #6b6559;
 }
 
 .small {
@@ -66,7 +68,7 @@ input {
 }
 
 .down {
-  color: #1e8e5a;
+  color: #17724a;
 }
 
 .gold {
@@ -115,7 +117,7 @@ button::after {
 /* ---------- 空态 ---------- */
 .empty {
   padding: 80rpx 24rpx;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 26rpx;
   line-height: 1.8;
   text-align: center;
@@ -145,7 +147,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #b9b2a4;
+  color: #8a8378;
   font-size: 22rpx;
   text-align: center;
 }

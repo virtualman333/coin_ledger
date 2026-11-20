@@ -2,8 +2,8 @@
 /**
  * 回归测试：小程序「全套清单」页「年份 ↓」排序按钮。
  * - 点击切换升序/降序，desc 状态与箭头（↓/↑）同步
- * - 贵金属 / 普通纪念币 / 纪念钞三个品类都真正重新排序
- * - 分页数据只排当前已加载的 pmRows，不发起新的网络请求
+ * - 普通纪念币 / 纪念钞在本地 catalog 上重排
+ * - 贵金属（2823 条 / 服务端分页）必须带 sort 参数回接口重查，不能只排已加载的那一页
  * 运行：node --test tests/mp-list-sort.test.js
  */
 const test = require('node:test');
@@ -101,7 +101,7 @@ test('按钮绑定与箭头表达式正确（↓ 降序 / ↑ 升序）', () => 
   assert.match(wxml, /\{\{desc \? '↓' : '↑'\}\}/);
 });
 
-test('贵金属：点击切换方向并真实重排 pmRows', () => {
+test('贵金属：切换排序会带 sort 参数回服务端重查（本地只有一页，排了也不对）', () => {
   setupWx();
   const p = loadListPage();
   p.data.category = 'pm';
@@ -109,33 +109,40 @@ test('贵金属：点击切换方向并真实重排 pmRows', () => {
   p.data.pmRows = [
     { code: 'a', year: 2020 },
     { code: 'b', year: 2024 },
-    { code: 'c', year: 2022 },
-  ];
-
-  p.toggleSort();
-  assert.equal(p.data.desc, false, '箭头方向状态应切到升序');
-  assert.deepEqual(years(p.data.pmRows), [2020, 2022, 2024], '升序：小年份在前');
-
-  p.toggleSort();
-  assert.equal(p.data.desc, true, '再次点击应切回降序');
-  assert.deepEqual(years(p.data.pmRows), [2024, 2022, 2020], '降序：大年份在前');
-});
-
-test('贵金属：字符串年份也能正确排序，且不发起新请求', () => {
-  setupWx();
-  const p = loadListPage();
-  p.data.category = 'pm';
-  p.data.desc = true;
-  p.data.pmRows = [
-    { code: 'a', year: '2021' },
-    { code: 'b', year: '2025' },
-    { code: 'c', year: '2019' },
   ];
   const before = apiCalls.length;
 
   p.toggleSort();
-  assert.deepEqual(years(p.data.pmRows), [2019, 2021, 2025]);
-  assert.equal(apiCalls.length, before, '排序不应重新请求接口');
+  assert.equal(p.data.desc, false, '箭头方向状态应切到升序');
+  assert.ok(apiCalls.length > before, '应重新请求贵金属列表');
+  assert.match(apiCalls[apiCalls.length - 1], /sort=year_asc/);
+  assert.deepEqual(p.data.pmRows, [], '换排序要清掉旧数据，避免先看到上一页的旧顺序');
+
+  p.toggleSort();
+  assert.equal(p.data.desc, true, '再次点击应切回降序');
+  assert.match(apiCalls[apiCalls.length - 1], /sort=year_desc/);
+});
+
+test('贵金属：改筛选条件同样回第一页重查，并把条件带给接口', () => {
+  setupWx();
+  const p = loadListPage();
+  p.data.category = 'pm';
+  p.data.pmRows = [{ code: 'a', year: 2020 }];
+  p.data.yearOpts = ['全部年份', '2024'];
+  p.data.faceOpts = ['全部面额', '10 元'];
+  p.data.matOpts = ['全部材质', '金'];
+
+  p.pickYear({ detail: { value: 1 } });
+  assert.match(apiCalls[apiCalls.length - 1], /year=2024/);
+
+  p.pickFace({ detail: { value: 1 } });
+  assert.match(apiCalls[apiCalls.length - 1], /face=10/);
+
+  p.pickMat({ detail: { value: 1 } });
+  const last = apiCalls[apiCalls.length - 1];
+  assert.match(last, /material=/);
+  assert.match(last, /year=2024/, '其他已生效的条件不能被后一次筛选丢掉');
+  assert.match(last, /facets=1/, '第一页要顺带取 facets');
 });
 
 test('普通纪念币：点击后 rows 按年份升序/降序切换', () => {
@@ -164,13 +171,4 @@ test('纪念钞：点击后 rows 按年份升序/降序切换', () => {
   p.toggleSort();
   assert.equal(p.data.desc, false);
   assert.deepEqual(years(p.data.rows), [2024], '点击后仍为升序且只含钞');
-});
-
-test('sortByYear 同年份稳定且与方向一致', () => {
-  setupWx();
-  const p = loadListPage();
-  const rows = [{ code: 'b', year: 2020 }, { code: 'a', year: 2020 }, { code: 'c', year: 2021 }];
-  assert.deepEqual(p.sortByYear(rows, true).map((r) => r.code), ['c', 'b', 'a']);
-  assert.deepEqual(p.sortByYear(rows, false).map((r) => r.code), ['a', 'b', 'c']);
-  assert.deepEqual(rows.map((r) => r.code), ['b', 'a', 'c'], '不应修改原数组');
 });

@@ -73,7 +73,9 @@ test('前端：pm 页有专属 pane，卡片点击进独立页而非弹窗', () 
 test('前端：pm 页 meta 用真实字段，且不写价格', () => {
   const js = read('public/app.js');
   const seg = js.slice(js.indexOf('function syncPmSeo'), js.indexOf('function syncSeo'));
-  assert.match(seg, /不提供参考估值/);
+  // 页面上有「克重价」（材料价值），所以文案不能说「本站不提供估值」——会和上方数字打架
+  assert.match(seg, /不出市场估值/);
+  assert.match(seg, /克重价仅为材料价值/);
   assert.ok(!/推理价|参考市价|约 ¥/.test(seg), 'meta 不能出现价格口径');
 });
 

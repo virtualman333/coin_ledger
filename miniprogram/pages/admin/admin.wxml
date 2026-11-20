@@ -1,3 +1,7 @@
+<!-- 弹层打开时锁住页面滚动：三个 .mask 没加 catchtouchmove（加了会让 .sheet 的
+     overflow-y:auto 失效、滚不动），改用 page-style 关掉页面滚动来防穿透 -->
+<page-meta page-style="{{editing || editingSeries || fbDetail ? 'overflow:hidden' : ''}}"></page-meta>
+
 <view class="page">
   <!-- 概览：三个数字都能点，直达对应模块 -->
   <view class="stats">

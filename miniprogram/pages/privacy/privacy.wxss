@@ -12,7 +12,7 @@
 .doc-meta {
   display: block;
   margin-top: 12rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
@@ -37,7 +37,7 @@
   margin-top: 40rpx;
   padding-top: 22rpx;
   border-top: 1rpx solid #ece7db;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 22rpx;
   line-height: 1.8;
 }

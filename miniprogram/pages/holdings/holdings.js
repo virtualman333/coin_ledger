@@ -146,7 +146,8 @@ Page({
         qty,
         qtyLabel: qty + ' ' + (coin && coin.kind === 'note' ? '张' : '枚'),
         badgeLabel: isPiece ? (rolls + (coin && coin.kind === 'note' ? ' 张' : ' 枚')) : (rolls + ' 套'),
-        faceText: cat.money((coin ? (coin.setFaceBase || coin.setFace) : 0) * rolls),
+        // 贵金属不在本地 catalog 里，拿不到真实面值 —— 宁可留空，也不能显示「面值 ¥0.00」
+        faceText: coin ? cat.money((coin.setFaceBase || coin.setFace) * rolls) : '',
         costText: cat.money(h.cost),
         unitCostText: cat.money(Math.round((Number(h.cost) || 0) / (rolls || 1))),
         unitWord: isPiece ? (coin && coin.kind === 'note' ? '张' : '枚') : '套',
@@ -168,6 +169,16 @@ Page({
 
     groups.forEach((g) => {
       g.open = !collapsed[g.name];
+      // 贵金属没有「系列进度」也没有推理价：分母不能拿普通币的单品种数冒充，
+      // 金额也不能显示 0.00（贵金属全站不出估值）
+      g.isPm = g.items.length > 0 && g.items.every((it) => it.isPm);
+      if (g.isPm) {
+        g.aiText = '';
+        g.total = g.own = g.items.length;
+        g.pct = 0;
+        g.progLabel = g.own + ' 枚';
+        return;
+      }
       g.aiText = cat.money(g.aiSum);
       // 分组进度：按「该系列有多少个品种」算，没系列就算独立品种
       g.total = g.code ? cat.inSeries(g.code).length : singlesTotal;
@@ -197,10 +208,14 @@ Page({
         costText: cat.money(st.cost),
         rolls: st.rolls,
         kinds: st.kinds,
+        pmKinds: st.pmKinds,
+        pmRolls: st.pmRolls,
       },
       summary: {
         kinds: st.kinds,
         rolls: st.rolls,
+        pmKinds: st.pmKinds,
+        pmRolls: st.pmRolls,
         faceText: cat.money(st.face),
         aiText: aiAllText,
         costText: cat.money(st.cost),
@@ -232,6 +247,7 @@ Page({
         origRolls: item.rolls,
         unitWord: item.unitWord,
         qtyLabel: item.qtyLabel,
+        isPm: !!item.isPm,
         aiText: item.aiText,
         costText: item.costText,
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),

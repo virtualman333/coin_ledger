@@ -105,8 +105,9 @@ test('render() 产出的卡片、分组与汇总字段符合新口径', () => {
     assert.ok(!(f in item), `卡片不应含字段 ${f}`);
   });
   assert.equal(typeof p.data.groups[0].aiText, 'string', '分组头部应是推理价合计');
-  assert.deepEqual(Object.keys(p.data.stats).sort(), ['aiText', 'costText', 'faceText', 'kinds', 'rolls']);
-  assert.deepEqual(Object.keys(p.data.summary).sort(), ['aiText', 'costText', 'faceText', 'kinds', 'rolls']);
+  // pmKinds / pmRolls：贵金属单独计数（本地 catalog 没有它们，面值/推理价都算不出来）
+  assert.deepEqual(Object.keys(p.data.stats).sort(), ['aiText', 'costText', 'faceText', 'kinds', 'pmKinds', 'pmRolls', 'rolls']);
+  assert.deepEqual(Object.keys(p.data.summary).sort(), ['aiText', 'costText', 'faceText', 'kinds', 'pmKinds', 'pmRolls', 'rolls']);
 });
 
 test('成本默认按面值 × 数量初始化，且不覆盖已保存的成本', () => {

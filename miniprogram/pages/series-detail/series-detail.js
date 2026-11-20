@@ -141,7 +141,8 @@ Page({
   /** 贵金属：项目元信息 + 成员分页，来自后端聚合接口 */
   loadPm(page, append) {
     const path = '/api/series/detail?category=pm&code=' + encodeURIComponent(this.data.code)
-      + '&page=' + page + '&size=30';
+      + '&page=' + page + '&size=30'
+      + '&sort=' + (this.data.desc ? 'year_desc' : 'year_asc');
     return api.get(path).then((res) => {
       if (!res || !res.ok) throw new Error('series detail failed');
       const s = res.series || {};
@@ -169,7 +170,8 @@ Page({
           yearText: yf && yt ? (yf === yt ? (yf + ' 年') : (yf + '—' + yt)) : '',
           matText: mats.slice(0, 4).join(' · '),
         },
-        rows: this.sortRows(allRows, this.data.desc),
+        // 服务端已经排好序，这里不再二次排序（二次排只会打乱「同年份按 code」的稳定序）
+        rows: allRows,
         total: Number(res.total) || 0,
         page: Number(res.page) || page,
         pages: Number(res.pages) || 0,
@@ -202,6 +204,12 @@ Page({
 
   toggleSort() {
     const desc = !this.data.desc;
+    // 贵金属成员是分页的，只排当前已加载的 30 条等于没排 —— 回第一页让服务端重排
+    if (this.data.category === 'pm') {
+      this.setData({ desc, rows: [], page: 0, pages: 0, loading: true });
+      this.loadPm(1, false);
+      return;
+    }
     this.setData({ desc: desc, rows: this.sortRows(this.data.rows, desc) });
   },
 

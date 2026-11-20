@@ -110,7 +110,7 @@
 .empty-sub {
   display: block;
   margin: 14rpx 0 28rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 23rpx;
   line-height: 1.7;
 }
@@ -133,7 +133,7 @@
 }
 
 .tools-text {
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -181,7 +181,9 @@
   padding: 14rpx 34rpx; border-radius: 999rpx;
   background: #9a6b1f; color: #fff; font-size: 26rpx; font-weight: 600;
 }
-.pick-go.off { background: #c9bca2; }
+.pick-go.off { background: #c9bca2; color: #4a4438; }
+/* 批量栏是 position:fixed，不占文档流；不留占位会盖住最后一张卡片（约 59rpx） */
+.pick-spacer { height: calc(120rpx + env(safe-area-inset-bottom)); }
 
 /* ================= 分组 ================= */
 .ghead {
@@ -205,7 +207,7 @@
 }
 
 .gprog {
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
@@ -221,7 +223,7 @@
 }
 
 .gchev {
-  color: #c3bbad;
+  color: #8a8378;
   font-size: 22rpx;
 }
 
@@ -314,7 +316,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #c3bbad;
+  color: #8a8378;
   font-size: 21rpx;
 }
 
@@ -326,7 +328,7 @@
   border-radius: 999rpx;
   background: #2b2926;
   color: #f6e7c6;
-  font-size: 18rpx;
+  font-size: 21rpx;
   line-height: 1.5;
 }
 
@@ -349,7 +351,7 @@
 .hc-sub {
   display: block;
   margin-top: 8rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -358,13 +360,13 @@
   margin-top: 10rpx;
   align-items: center;
   gap: 8rpx;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
 .foot-hint {
   margin: 22rpx 0 8rpx;
-  color: #c3bbad;
+  color: #8a8378;
   font-size: 20rpx;
   text-align: center;
 }
@@ -387,7 +389,7 @@
 .guest-sub {
   display: block;
   margin: 14rpx 0 28rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -410,15 +412,27 @@
 }
 
 .sheet {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  padding: 0 30rpx calc(26rpx + env(safe-area-inset-bottom));
+  /* 上限 86vh：号码 textarea 是 auto-height + 不限制长度，不设上限内容会把 ✕ 和「保存」顶出屏幕 */
+  max-height: 86vh;
+  padding: 0 30rpx calc(20rpx + env(safe-area-inset-bottom));
   border-radius: 28rpx 28rpx 0 0;
   background: #ffffff;
   box-sizing: border-box;
 }
 
+/* 中间可滚动区：min-height:0 是 flex 子项能真正收缩/滚动的必要条件 */
+.sheet-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .sheet-head {
   display: flex;
+  flex: 0 0 auto;
   padding: 26rpx 0 18rpx;
   align-items: center;
   gap: 16rpx;
@@ -450,13 +464,13 @@
 .sheet-sub {
   display: block;
   margin-top: 6rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
 .sheet-x {
   padding: 0 8rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 26rpx;
 }
 
@@ -524,20 +538,23 @@
 }
 
 .ph {
-  color: #c3bbad;
+  color: #8a8378;
 }
 
 .sheet-tip {
   display: block;
   margin-top: 10rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
 .sheet-acts {
   display: flex;
-  margin-top: 26rpx;
+  flex: 0 0 auto;
+  margin-top: 8rpx;
+  padding-top: 18rpx;
   gap: 18rpx;
+  border-top: 1rpx solid #f6f3ec;
 }
 
 .act {
@@ -552,7 +569,7 @@
 .act.ghost {
   border: 1rpx solid #f0d5d1;
   background: #fdf2f0;
-  color: #b5766c;
+  color: #9c5850;
 }
 
 .act.primary {
@@ -567,7 +584,7 @@
 
 .foot-note {
   margin-top: 16rpx;
-  color: #b5766c;
+  color: #9c5850;
   font-size: 21rpx;
   text-align: center;
 }
@@ -583,8 +600,8 @@
 .hc-ai-badge {
   /* 不用色块：小尺寸下深底容易糊成一团，改金色小字更干净 */
   padding: 0 2rpx 0 0;
-  color: #b98f43;
-  font-size: 17rpx;
+  color: #8a6420;
+  font-size: 21rpx;
   font-weight: 700;
   letter-spacing: 0.5rpx;
 }
@@ -599,27 +616,27 @@
 .hold-cats{display:flex;gap:12rpx;padding:16rpx 0 20rpx}
 .hc{
   padding:9rpx 26rpx;border-radius:999rpx;border:1rpx solid #e6e0d4;
-  background:#fff;color:#7d766b;font-size:24rpx
+  background:#fff;color:#6b6559;font-size:24rpx
 }
 .hc.on{background:#fbf1d8;border-color:#d9bd82;color:#9a6b1f;font-weight:600}
 
 /* 藏品增强：号码 / 花样 / 形态 / 图片（统一浅色主题，勿用深色 CSS 变量） */
-.ex-row{align-items:flex-start;padding-top:10px}
+.ex-row{align-items:flex-start;padding-top:20rpx}
 .sr-textarea{
   flex:1;min-height:56rpx;line-height:1.5;font-size:26rpx;
   padding:12rpx 16rpx;border-radius:12rpx;background:#f7f4ed;
   border:1rpx solid #ece6d9;color:#2b2926;box-sizing:border-box
 }
 .sr-tags{display:flex;flex-wrap:wrap;gap:8rpx}
-.sr-tag{font-size:20rpx;padding:4rpx 14rpx;border-radius:999rpx;background:#f6efe0;color:#8a7a5c}
-.sr-tag.rar2{color:#a9781f;background:#fbf2dd}
-.sr-tag.rar3{color:#5b86a8;background:#edf3f7}
-.sr-tag.rar4{color:#8c6b3f;background:#f6efe0}
+.sr-tag{font-size:20rpx;padding:4rpx 14rpx;border-radius:999rpx;background:#f6efe0;color:#6b5f45}
+.sr-tag.rar2{color:#8a6420;background:#fbf2dd}
+.sr-tag.rar3{color:#436b8a;background:#edf3f7}
+.sr-tag.rar4{color:#6f5329;background:#f6efe0}
 .sr-tag.rar5{color:#b4553f;background:#f8ece7}
 .sr-segs{display:flex;gap:12rpx}
 .sr-seg{
   font-size:24rpx;padding:8rpx 26rpx;border-radius:999rpx;
-  border:1rpx solid #e6e0d4;color:#7d766b;background:#fff
+  border:1rpx solid #e6e0d4;color:#6b6559;background:#fff
 }
 .sr-seg.on{color:#9a6b1f;border-color:#d9bd82;background:#fbf1d8;font-weight:600}
 .sr-imgs{display:flex;flex-wrap:wrap;gap:12rpx}
@@ -631,7 +648,7 @@
 }
 .sr-img-add{
   display:flex;align-items:center;justify-content:center;font-size:40rpx;
-  border:1rpx dashed #d9cfba;color:#b3aa9b;background:#faf8f3
+  border:1rpx dashed #d9cfba;color:#6b6559;background:#faf8f3
 }
 
 /* 高频操作热区 ≥44px（88rpx），视觉尺寸不变 */

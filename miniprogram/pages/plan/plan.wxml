@@ -111,45 +111,49 @@
       <text class="pd-x" bindtap="closeDetail">✕</text>
     </view>
 
-    <view class="pd-state {{detail.isUp ? 'up' : ''}}">
-      {{detail.isUp ? ('待发行 · ' + (detail.cdText || detail.dateFull)) : '已发行'}}
-    </view>
-
-    <view class="pd-sched" wx:if="{{detail.schedule.length}}">
-      <view class="pd-row" wx:for="{{detail.schedule}}" wx:key="k">
-        <text class="pd-k">{{item.k}}</text>
-        <text class="pd-v">{{item.v}}</text>
+    <!-- 中间走 scroll-view：遮罩上的 catchtouchmove 会连带取消普通 view 的滚动，
+         计划项内容一长，「复制公告链接」就按不到了 -->
+    <scroll-view class="pd-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="pd-state {{detail.isUp ? 'up' : ''}}">
+        {{detail.isUp ? ('待发行 · ' + (detail.cdText || detail.dateFull)) : '已发行'}}
       </view>
-    </view>
-    <view class="pd-sched" wx:else>
-      <view class="pd-row"><text class="pd-k">发行日</text><text class="pd-v">{{detail.dateFull || '待定'}}</text></view>
-      <view class="pd-row" wx:if="{{detail.reserveText}}"><text class="pd-k">预约</text><text class="pd-v">{{detail.reserveText}}</text></view>
-      <view class="pd-row" wx:if="{{detail.verifyText}}"><text class="pd-k">核实</text><text class="pd-v">{{detail.verifyText}}</text></view>
-      <view class="pd-row" wx:if="{{detail.exchangeText}}"><text class="pd-k">兑换</text><text class="pd-v">{{detail.exchangeText}}</text></view>
-    </view>
 
-    <text class="pd-spec" wx:if="{{detail.specText}}">{{detail.specText}}</text>
+      <view class="pd-sched" wx:if="{{detail.schedule.length}}">
+        <view class="pd-row" wx:for="{{detail.schedule}}" wx:key="k">
+          <text class="pd-k">{{item.k}}</text>
+          <text class="pd-v">{{item.v}}</text>
+        </view>
+      </view>
+      <view class="pd-sched" wx:else>
+        <view class="pd-row"><text class="pd-k">发行日</text><text class="pd-v">{{detail.dateFull || '待定'}}</text></view>
+        <view class="pd-row" wx:if="{{detail.reserveText}}"><text class="pd-k">预约</text><text class="pd-v">{{detail.reserveText}}</text></view>
+        <view class="pd-row" wx:if="{{detail.verifyText}}"><text class="pd-k">核实</text><text class="pd-v">{{detail.verifyText}}</text></view>
+        <view class="pd-row" wx:if="{{detail.exchangeText}}"><text class="pd-k">兑换</text><text class="pd-v">{{detail.exchangeText}}</text></view>
+      </view>
 
-    <view class="pd-block" wx:if="{{detail.banks}}">
-      <text class="pd-h">承办银行</text>
-      <text class="pd-p">{{detail.banks}}</text>
-    </view>
+      <text class="pd-spec" wx:if="{{detail.specText}}">{{detail.specText}}</text>
 
-    <view class="pd-block" wx:if="{{detail.limitText}}">
-      <text class="pd-h">限额</text>
-      <text class="pd-p">{{detail.limitText}}{{detail.proxy ? ('，最多代 ' + detail.proxy + ' 人办理') : ''}}</text>
-    </view>
+      <view class="pd-block" wx:if="{{detail.banks}}">
+        <text class="pd-h">承办银行</text>
+        <text class="pd-p">{{detail.banks}}</text>
+      </view>
 
-    <view class="pd-block" wx:if="{{detail.ob}}">
-      <text class="pd-h">正面图案</text>
-      <text class="pd-p">{{detail.ob}}</text>
-    </view>
-    <view class="pd-block" wx:if="{{detail.rev}}">
-      <text class="pd-h">背面图案</text>
-      <text class="pd-p">{{detail.rev}}</text>
-    </view>
+      <view class="pd-block" wx:if="{{detail.limitText}}">
+        <text class="pd-h">限额</text>
+        <text class="pd-p">{{detail.limitText}}{{detail.proxy ? ('，最多代 ' + detail.proxy + ' 人办理') : ''}}</text>
+      </view>
 
-    <text class="pd-src" wx:if="{{detail.sourceText}}">{{detail.sourceText}}</text>
+      <view class="pd-block" wx:if="{{detail.ob}}">
+        <text class="pd-h">正面图案</text>
+        <text class="pd-p">{{detail.ob}}</text>
+      </view>
+      <view class="pd-block" wx:if="{{detail.rev}}">
+        <text class="pd-h">背面图案</text>
+        <text class="pd-p">{{detail.rev}}</text>
+      </view>
+
+      <text class="pd-src" wx:if="{{detail.sourceText}}">{{detail.sourceText}}</text>
+    </scroll-view>
 
     <button class="pd-btn" bindtap="copySource" wx:if="{{detail.sourceUrl}}">复制公告链接</button>
   </view>

@@ -130,7 +130,16 @@ function stats() {
   let cost = 0;
   let market = 0;
   let rolls = 0;
+  let kinds = 0;
+  let pmKinds = 0;   // 贵金属不在本地 catalog，面值/推理价都算不出来，只能单独计数
+  let pmRolls = 0;
   state.holdings.forEach((h) => {
+    if (h.category === 'pm') {
+      pmKinds += 1;
+      pmRolls += Number(h.rolls) || 0;
+      cost += Number(h.cost) || 0;
+      return;
+    }
     const coin = cat.byName[h.name];
     if (!coin) return;
     const r = Number(h.rolls) || 0;
@@ -138,6 +147,7 @@ function stats() {
     cost += Number(h.cost) || 0;
     market += Number(h.market) || 0;
     rolls += r;
+    kinds += 1;
   });
   return {
     face: cat.round2(face),
@@ -145,7 +155,9 @@ function stats() {
     market: cat.round2(market),
     profit: cat.round2(market - cost),
     rolls,
-    kinds: state.holdings.length,
+    kinds,
+    pmKinds,
+    pmRolls,
   };
 }
 

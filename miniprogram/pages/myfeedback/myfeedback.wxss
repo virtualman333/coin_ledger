@@ -1,8 +1,8 @@
-.page{padding:24rpx}
+.page{padding:24rpx 24rpx calc(48rpx + env(safe-area-inset-bottom))}
 .hd{margin-bottom:20rpx}
 .h1{display:block;font-size:40rpx;font-weight:700;color:#2a2620}
-.h2{display:block;margin-top:8rpx;font-size:23rpx;color:#9a948a;line-height:1.6}
-.empty{padding:90rpx 0;text-align:center;color:#9a948a;font-size:26rpx}
+.h2{display:block;margin-top:8rpx;font-size:23rpx;color:#6b6559;line-height:1.6}
+.empty{padding:90rpx 0;text-align:center;color:#6b6559;font-size:26rpx}
 .fb{padding:22rpx;margin-bottom:16rpx;border-radius:16rpx;background:#fff;border:1rpx solid #ece7dc}
 .fb-top{display:flex;align-items:center;justify-content:space-between;gap:12rpx}
 .fb-coin{font-size:27rpx;font-weight:600;color:#2a2620;flex:1;min-width:0}
@@ -14,5 +14,5 @@
 .fb-reply{margin-top:16rpx;padding:16rpx 18rpx;border-radius:12rpx;background:#fbf7ea;border-left:5rpx solid #d4af37}
 .r-label{display:block;font-size:21rpx;color:#9a6b1f;font-weight:600;margin-bottom:6rpx}
 .r-text{display:block;font-size:26rpx;color:#5a4a2e;line-height:1.7}
-.fb-date{display:block;margin-top:14rpx;font-size:21rpx;color:#b2aca0}
+.fb-date{display:block;margin-top:14rpx;font-size:21rpx;color:#6b6559}
 .empty.err{color:#b4553f}

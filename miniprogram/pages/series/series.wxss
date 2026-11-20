@@ -11,7 +11,7 @@
 .h-sub {
   display: block;
   margin-top: 8rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 22rpx;
 }
 
@@ -65,7 +65,7 @@
   justify-content: center;
   gap: 8rpx;
   border-radius: 10rpx;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -82,13 +82,13 @@
   border-radius: 999rpx;
   background: rgba(154, 107, 31, 0.1);
   color: #9a6b1f;
-  font-size: 19rpx;
+  font-size: 21rpx;
   text-align: center;
 }
 
 .cat-tab:not(.on) .ct-n {
   background: rgba(138, 131, 120, 0.12);
-  color: #9a948a;
+  color: #6b6559;
 }
 
 /* 系列卡 */
@@ -126,7 +126,7 @@
 
 .scard-ph text {
   padding: 0 20rpx;
-  color: #b98f43;
+  color: #8a6420;
   font-size: 24rpx;
   text-align: center;
 }
@@ -148,7 +148,7 @@
 .scard-meta {
   display: block;
   margin-top: 6rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
@@ -184,15 +184,15 @@
 }
 
 .sc-group-h.note {
-  border-left-color: #5b86a8;
+  border-left-color: #436b8a;
 }
 
 .sc-group-h.pm {
-  border-left-color: #8c6b3f;
+  border-left-color: #6f5329;
 }
 
 .sc-g-n {
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
   font-weight: 400;
 }
@@ -201,7 +201,7 @@
   padding: 28rpx;
   border-radius: 16rpx;
   background: #ffffff;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 23rpx;
   text-align: center;
 }
@@ -218,15 +218,15 @@
   border-radius: 999rpx;
   background: rgba(43,38,32,.72);
   color: #fff;
-  font-size: 19rpx;
+  font-size: 21rpx;
 }
 .scard-tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 12rpx; }
 .scard-tag {
   padding: 3rpx 12rpx;
   border-radius: 6rpx;
   background: #f6efe0;
-  color: #8a7a5c;
-  font-size: 19rpx;
+  color: #6b5f45;
+  font-size: 21rpx;
 }
 .scard-pm .scard-body {
   padding: 18rpx 20rpx 20rpx;

@@ -2712,6 +2712,9 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 
 /* 贵金属项目筛选（与系列下拉区分，强调是另一套分类） */
 .pm-full-bar select.pm-full-q{cursor:pointer;max-width:220px}
+/* 年份排序按钮：和筛选下拉同高同宽，避免在换行后高低不齐 */
+.pm-full-bar .pm-full-sort{flex:0 0 auto;cursor:pointer;font-weight:600;color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.pm-full-bar .pm-full-sort:hover{background:var(--gold);color:#fff}
 
 /* 贵金属卡片：用数据库里存的本地缩略图，不再显示金色占位符号 */
 .pm-thumb{

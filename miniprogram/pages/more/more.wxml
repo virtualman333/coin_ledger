@@ -35,8 +35,8 @@
       <text class="ta-count">{{text.length}}/400</text>
     </view>
 
-    <button class="btn-primary submit" bindtap="submit" loading="{{busy}}" disabled="{{!text}}">
-      提交建议
+    <button class="btn-primary submit" bindtap="submit" loading="{{busy}}" disabled="{{!text || leftToday <= 0}}">
+      {{leftToday <= 0 ? '今天提交满了，明天再来' : '提交建议'}}
     </button>
 
     <text class="tip">提交后会进入我们的需求池，不承诺一定实现；同一问题提的人多，会优先做。</text>

@@ -19,6 +19,7 @@ Page({
     profileNick: '',
     profileAvatar: '',
     profileSaving: false,
+    kbH: 0,                       // 键盘高度：只为把「完善资料」面板顶上去
     pwdVisible: false,
     pwd2Visible: false,
     password2: '',
@@ -37,6 +38,20 @@ Page({
     try {
       if (wx.getStorageSync('cl_privacy_agreed')) this.setData({ agree: true });
     } catch (e) { /* 读不到就当未同意 */ }
+
+    // 「完善资料」是底部固定弹层，键盘弹起会把「保存 / 跳过」盖住，
+    // 所以自己监听键盘高度，把面板整体上移
+    this._onKb = (res) => {
+      const h = Math.max(0, Number((res && res.height) || 0));
+      if (h === this.data.kbH) return;
+      this.setData({ kbH: h });
+    };
+    if (wx.onKeyboardHeightChange) wx.onKeyboardHeightChange(this._onKb);
+  },
+
+  onUnload() {
+    if (this._onKb && wx.offKeyboardHeightChange) wx.offKeyboardHeightChange(this._onKb);
+    this._onKb = null;
   },
 
   onShow() {

@@ -1,28 +1,29 @@
-.page{padding:24rpx 24rpx 48rpx}
-.loading{padding:100rpx 0;text-align:center;color:#9a948a;font-size:26rpx}
+/* 底部必须叠加安全区：简写 padding 会覆盖 app.wxss 里 .page 的 env(safe-area-inset-bottom) */
+.page{padding:24rpx 24rpx calc(48rpx + env(safe-area-inset-bottom))}
+.loading{padding:100rpx 0;text-align:center;color:#6b6559;font-size:26rpx}
 .title{margin-bottom:22rpx}
 .h1{display:block;font-size:34rpx;font-weight:700;color:#2a2620;line-height:1.5}
-.h2{display:block;margin-top:8rpx;font-size:23rpx;color:#9a948a}
+.h2{display:block;margin-top:8rpx;font-size:23rpx;color:#6b6559}
 .figs{display:flex;gap:16rpx;margin-bottom:20rpx}
 .fig{flex:1;min-width:0}
 .fig image{width:100%;height:340rpx;border-radius:14rpx;background:#f3f0e9;border:1rpx solid #ece7dc}
-.fig-na{width:100%;height:340rpx;border-radius:14rpx;background:#f3f0e9;display:flex;align-items:center;justify-content:center;color:#b2aca0;font-size:23rpx}
-.cap{display:block;margin-top:10rpx;font-size:22rpx;line-height:1.6;color:#7d766b}
+.fig-na{width:100%;height:340rpx;border-radius:14rpx;background:#f3f0e9;display:flex;align-items:center;justify-content:center;color:#6b6559;font-size:23rpx}
+.cap{display:block;margin-top:10rpx;font-size:22rpx;line-height:1.6;color:#6b6559}
 .cap-k{display:inline-block;margin-right:8rpx;padding:1rpx 10rpx;border-radius:999rpx;background:#fbf1d8;color:#9a6b1f;font-weight:600}
 .card{margin-bottom:16rpx;padding:22rpx;border-radius:16rpx;background:#fff;border:1rpx solid #ece7dc}
 .card-h{display:block;margin-bottom:14rpx;font-size:27rpx;font-weight:600;color:#2a2620}
 .facts{display:flex;flex-direction:column;gap:12rpx}
 .cf{display:flex;gap:16rpx;align-items:baseline;font-size:25rpx;line-height:1.5}
-.cf-k{flex:0 0 150rpx;color:#9a948a}
+.cf-k{flex:0 0 150rpx;color:#6b6559}
 .cf-v{flex:1;color:#3a3630;word-break:break-all}
 .ann{font-size:25rpx;line-height:1.9;color:#5a5a5a;white-space:pre-wrap}
-.foot{margin-top:14rpx;font-size:21rpx;color:#b2aca0;line-height:1.7}
+.foot{margin-top:14rpx;font-size:21rpx;color:#6b6559;line-height:1.7}
 
 .pm-fav{
   width:100%;margin:24rpx 0 8rpx;padding:22rpx;border-radius:14rpx;
   border:0;background:#9a6b1f;color:#fff;font-size:28rpx;font-weight:600
 }
-.pm-fav[disabled]{background:#e6e0d4;color:#9a948a}
+.pm-fav[disabled]{background:#e6e0d4;color:#6b6559}
 .pm-share{
   width:100%;margin:0 0 8rpx;padding:20rpx;border-radius:14rpx;
   border:1rpx solid #d8c9a8;background:#fff;color:#9a6b1f;font-size:26rpx;font-weight:600
@@ -32,10 +33,10 @@
 /* 贵金属克重价：按实时金银价 × 成色净重 */
 .mv-box{margin-bottom:16rpx;padding:22rpx;border-radius:16rpx;background:#fbf6ec;border:1rpx solid #eadfc6}
 .mv-row{display:flex;align-items:baseline;gap:12rpx;flex-wrap:wrap}
-.mv-k{font-size:24rpx;color:#8a8378}
+.mv-k{font-size:24rpx;color:#6b6559}
 .mv-v{font-size:38rpx;font-weight:700;color:#9a6b1f}
-.mv-u{font-size:21rpx;color:#8a8378;margin-left:auto}
-.mv-tip{display:block;margin-top:12rpx;font-size:21rpx;line-height:1.6;color:#a0998c}
+.mv-u{font-size:21rpx;color:#6b6559;margin-left:auto}
+.mv-tip{display:block;margin-top:12rpx;font-size:21rpx;line-height:1.6;color:#6b6559}
 
 /* 加载失败态：给可点的重试与回首页出路，别把用户困在死页面 */
 .err-state{padding:80rpx 40rpx;text-align:center}

@@ -95,11 +95,19 @@ module.exports = async function catalogRoutes(app) {
       }
       const total = Number(m.count) || 0;
       const offset = (page - 1) * size;
+      // 排序在服务端做：项目内成员可能跨年份，前端只排已加载的那一页会漏
+      const ynum = "CAST(NULLIF(year, '') AS UNSIGNED)";
+      const PM_SORTS = {
+        year_desc: ' ORDER BY ' + ynum + ' IS NULL, ' + ynum + ' DESC, code DESC',
+        year_asc: ' ORDER BY ' + ynum + ' IS NULL, ' + ynum + ' ASC, code ASC',
+        code: ' ORDER BY code ASC',
+      };
+      const orderBy = PM_SORTS[String(one(q.sort) || 'year_desc')] || PM_SORTS.year_desc;
       const listSql =
         'SELECT code, project_code AS projectCode, project_name AS projectName, year, name, ' +
         'material, weight_g AS weightG, face, fineness, max_mintage AS maxMintage, quality, ' +
         'thumb, thumb_back AS thumbBack, front_picture AS frontPicture, back_picture AS backPicture ' +
-        'FROM cl_ecgci_pm WHERE project_code = ? ORDER BY code LIMIT ? OFFSET ?';
+        'FROM cl_ecgci_pm WHERE project_code = ?' + orderBy + ' LIMIT ? OFFSET ?';
       const rows = await app.db.query(listSql, [code, size, offset]);
       reply.send({
         ok: true,

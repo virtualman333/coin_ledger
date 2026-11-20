@@ -25,7 +25,7 @@
 
 .search-icon {
   margin-right: 10rpx;
-  color: #c0b9ab;
+  color: #8a8378;
   font-size: 30rpx;
   line-height: 1;
 }
@@ -57,7 +57,7 @@
   border-radius: 999rpx;
   background: #9a6b1f;
   color: #fff;
-  font-size: 19rpx;
+  font-size: 21rpx;
   line-height: 28rpx;
 }
 
@@ -90,10 +90,11 @@
 }
 
 .search-ph {
-  color: #b9b2a4;
+  color: #8a8378;
 }
 
 .search-clear {
+  position: relative;
   display: flex;
   width: 40rpx;
   height: 40rpx;
@@ -101,8 +102,19 @@
   justify-content: center;
   border-radius: 50%;
   background: #f2efe7;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 22rpx;
+}
+
+/* 视觉保持 40rpx，热区用伪元素扩到 88rpx（手按得准，也不破坏视觉比例） */
+.search-clear::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -44rpx 0 0 -44rpx;
 }
 
 .tabs {
@@ -141,7 +153,7 @@
 }
 
 .bar-text {
-  color: #8a8378;
+  color: #6b6559;
   font-size: 22rpx;
 }
 
@@ -151,6 +163,9 @@
 }
 
 .bar-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 64rpx;
   margin-left: 12rpx;
   padding: 8rpx 20rpx;
   border-radius: 999rpx;
@@ -213,7 +228,7 @@
 .row-meta {
   margin-top: 8rpx;
   overflow: hidden;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 22rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -228,7 +243,7 @@
 }
 
 .row-year {
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -240,8 +255,8 @@
 }
 
 .row-price-k {
-  color: #a39c8e;
-  font-size: 18rpx;
+  color: #6b6559;
+  font-size: 21rpx;
   font-weight: 400;
 }
 
@@ -253,7 +268,7 @@
 .fbtn{
   display:inline-flex;align-items:center;
   margin-right:14rpx;padding:10rpx 22rpx;border-radius:999rpx;
-  font-size:24rpx;color:#7a7a7a;background:#f5f3ee;border:1rpx solid #ece7dc;
+  font-size:24rpx;color:#6b6559;background:#f5f3ee;border:1rpx solid #ece7dc;
 }
 .fbtn-on{color:#8a6a1f;background:#faf3dd;border-color:#e2cf9a;font-weight:600}
 .fbtn-clear{color:#b04a3a;background:#fdf1ef;border-color:#f0d6d1}
@@ -264,7 +279,7 @@
   margin-top: 6rpx;
   align-items: center;
   overflow: hidden;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
   white-space: nowrap;
 }
@@ -276,7 +291,7 @@
 
 .row-dot {
   margin: 0 8rpx;
-  color: #d6cebe;
+  color: #8a8378;
 }
 
 /* 分类切换：普通纪念币 / 纪念钞 / 贵金属
@@ -293,7 +308,7 @@
   border-radius: 999rpx;
   border: 1rpx solid #e6e0d4;
   background: #ffffff;
-  color: #7d766b;
+  color: #6b6559;
   font-size: 25rpx;
   line-height: 1.4;
   transition: background .15s, color .15s;
@@ -307,8 +322,18 @@
 }
 
 /* ===== 贵金属全量库（金币云集 2823 条）卡片网格 ===== */
-.pm-full { padding: 8rpx 24rpx 40rpx; }
-.pm-bar { font-size: 24rpx; color: #9a8f7c; margin: 6rpx 0 18rpx; }
+/* 本页根节点没有 .page，安全区得自己补，否则最后一行卡片会被小白条压住 */
+.pm-full { padding: 8rpx 24rpx calc(40rpx + env(safe-area-inset-bottom)); }
+.pm-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 6rpx 0 18rpx;
+  font-size: 24rpx;
+  color: #6b6559;
+}
+.pm-bar-t { flex: 1; min-width: 0; }
 .pm-grid { display: flex; flex-wrap: wrap; gap: 18rpx; }
 .pm-card {
   width: calc((100% - 18rpx) / 2);
@@ -319,12 +344,12 @@
   overflow: hidden;
 }
 .pm-card-hover { opacity: .88; transform: scale(.98); }
+/* 1:1 占位用 padding-top 撑，不依赖 aspect-ratio —— 旧安卓 XWeb 不支持，
+   会让同一行卡片高度参差（实测差 42rpx） */
 .pm-ph {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 0;
+  padding-top: 100%;
   position: relative;
 }
 .pm-ph::after {
@@ -336,6 +361,10 @@
   box-shadow: inset 0 0 0 10rpx rgba(255,255,255,.18);
 }
 .pm-ph text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 64rpx;
   font-weight: 800;
   color: rgba(255,255,255,.92);
@@ -357,14 +386,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.pm-card-m { margin-top: 8rpx; font-size: 21rpx; color: #9a8f7c; }
-.pm-card-f { margin-top: 8rpx; font-size: 21rpx; color: #b8861b; }
-.pm-card-c { margin-top: 6rpx; font-size: 19rpx; color: #b8ae9c; font-family: monospace; }
-.pm-loading, .pm-empty, .pm-end { text-align: center; font-size: 23rpx; color: #9a8f7c; padding: 28rpx 0; }
+.pm-card-m { margin-top: 8rpx; font-size: 21rpx; color: #6b6559; }
+.pm-card-f { margin-top: 8rpx; font-size: 21rpx; color: #8a6420; }
+.pm-card-c { margin-top: 6rpx; font-size: 21rpx; color: #6b6559; font-family: monospace; }
+.pm-loading, .pm-empty, .pm-end { text-align: center; font-size: 23rpx; color: #6b6559; padding: 28rpx 0; }
 .pm-more {
   text-align: center;
   font-size: 25rpx;
-  color: #a8781f;
+  color: #8a6420;
   font-weight: 600;
   padding: 22rpx 0;
   margin-top: 16rpx;
@@ -391,7 +420,7 @@
   flex: 1;
   padding: 13rpx 0;
   border-radius: 9rpx;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 24rpx;
   letter-spacing: 1rpx;
   text-align: center;
@@ -426,7 +455,7 @@
 }
 .sv-intro.note .sv-intro-t::before { background: linear-gradient(180deg, #7ea3bf, #5b86a8); }
 .sv-intro.pm .sv-intro-t::before { background: linear-gradient(180deg, #c9a35f, #8c6b3f); }
-.sv-intro-s { display: block; margin-top: 8rpx; color: #a39c8e; font-size: 22rpx; }
+.sv-intro-s { display: block; margin-top: 8rpx; color: #6b6559; font-size: 22rpx; }
 
 .sv-cards { display: flex; flex-wrap: wrap; justify-content: space-between; }
 .sv-card {
@@ -451,9 +480,9 @@
   box-sizing: border-box;
   background: linear-gradient(135deg, #faf3e2, #f0e5cd);
 }
-.sv-ph text { color: #b08a3e; font-size: 23rpx; font-weight: 600; text-align: center; line-height: 1.5; }
+.sv-ph text { color: #8a6420; font-size: 23rpx; font-weight: 600; text-align: center; line-height: 1.5; }
 .sv-ph-pm { background: linear-gradient(135deg, #f6efdf, #e9dcc0); }
-.sv-ph-pm text { color: #8c6b3f; letter-spacing: 2rpx; }
+.sv-ph-pm text { color: #6f5329; letter-spacing: 2rpx; }
 .sv-badge {
   position: absolute;
   right: 12rpx;
@@ -462,7 +491,7 @@
   border-radius: 999rpx;
   background: rgba(43, 38, 32, 0.72);
   color: #fff;
-  font-size: 19rpx;
+  font-size: 21rpx;
   backdrop-filter: blur(4rpx);
 }
 .sv-body { padding: 18rpx 20rpx 20rpx; }
@@ -483,14 +512,14 @@
   padding: 3rpx 12rpx;
   border-radius: 6rpx;
   background: #f6efe0;
-  color: #8a7a5c;
-  font-size: 19rpx;
+  color: #6b5f45;
+  font-size: 21rpx;
 }
 .sv-tag-mat { background: #fbf2dd; color: #9a6b1f; }
 .sv-foot { display: flex; margin-top: 14rpx; align-items: center; justify-content: space-between; }
 .sv-own { color: #9a6b1f; font-size: 20rpx; font-weight: 500; }
-.sv-own-none { color: #b3aa9b; font-weight: 400; }
-.sv-arrow { color: #c3b9a5; font-size: 30rpx; line-height: 1; }
+.sv-own-none { color: #6b6559; font-weight: 400; }
+.sv-arrow { color: #8a8378; font-size: 30rpx; line-height: 1; }
 .sv-bar { margin-top: 12rpx; height: 6rpx; border-radius: 999rpx; background: #f2efe7; overflow: hidden; }
 .sv-fill { height: 100%; border-radius: 999rpx; background: linear-gradient(90deg, #b98f43, #d9b364); }
 .sv-empty {
@@ -498,7 +527,7 @@
   padding: 100rpx 20rpx;
   border-radius: 18rpx;
   background: #fff;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 24rpx;
   text-align: center;
 }

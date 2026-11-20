@@ -6,7 +6,9 @@
 var DB = [];              // 发行清单（est 已含行情覆盖）
 var PM_DB = [];           // 已上架贵金属套（3 套央行公告种子，独立从 /api/catalog?category=pm 拉取）
 var PM_FULL = {           // 贵金属全量库（金币云集 2823 条，分页加载，来自 /api/catalog/pm）
-  items: [], page: 0, pages: 0, total: 0, loading: false, loaded: false, q: '', project: ''
+  items: [], page: 0, pages: 0, total: 0, loading: false, loaded: false, q: '', project: '',
+  year: '', face: '', material: '', desc: true,   // 筛选与排序都在服务端做（本地只有一页）
+  facets: null                                     // 年份/面额/材质去重取值，首屏一并取回
 };
 var VIEW_CATEGORY = 'coin'; // /all 分段：默认普通纪念币，贵金属首屏 0 条
 var DEFAULTS = [];        // 服务端初始藏品种子
@@ -580,7 +582,16 @@ function pct(n){ return (Math.round(n*10)/10) + '%'; }
 function calc(){
   var main = {face:0, cost:0, market:0, rolls:0, kinds:0, coins:0};
   var sep  = {face:0, cost:0, market:0, rolls:0, kinds:0};
+  // 贵金属单独算：本地 catalog 里没有它们，面值/推理价都拿不到 0 以外的值。
+  // 混进 main 会得到「面值不含它、盈亏却减了它的成本」的假亏损。
+  var pm = {kinds:0, rolls:0, cost:0};
   coll.forEach(function(c){
+    if (c.category === 'pm') {
+      pm.kinds += 1;
+      pm.rolls += Number(c.rolls) || 0;
+      pm.cost += Number(c.cost) || 0;
+      return;
+    }
     var d = findDB(c.name);
     var f = itemFace(d, c.rolls);
     var target = c.sep ? sep : main;
@@ -594,17 +605,20 @@ function calc(){
   main.pnl = main.market - main.cost;
   main.rate = main.cost ? (main.pnl / main.cost * 100) : 0;
   sep.pnl = sep.market - sep.cost;
-  return {main:main, sep:sep};
+  return {main:main, sep:sep, pm:pm};
 }
 
 /* =========================================================
    6. 渲染：KPI
    ========================================================= */
 function renderKPI(){
-  var r = calc(), m = r.main, s = r.sep;
+  var r = calc(), m = r.main, s = r.sep, pm = r.pm || { kinds: 0, rolls: 0, cost: 0 };
 
   document.getElementById('kFace').textContent = money(m.face);
-  document.getElementById('kFaceNote').textContent = m.rolls + ' 份藏品 · 其中纪念币 ' + m.coins + ' 枚';
+  document.getElementById('kFaceNote').textContent = m.rolls + ' 份藏品 · 其中纪念币 ' + m.coins + ' 枚'
+    + (pm.kinds
+        ? ' · 另含 ' + pm.kinds + ' 种贵金属 ' + pm.rolls + ' 枚，成本 ' + money(pm.cost) + '（不计入估值与盈亏）'
+        : '');
 
   document.getElementById('kCost').textContent = money(m.cost);
   document.getElementById('kMarket').textContent = money(m.market);
@@ -747,11 +761,14 @@ function renderHoldings(){
     // 同一组里既有按卷的币又有按张的钞时，用中性量词，别把张数写成「卷」
     var unitKeys = Object.keys(unitSet);
     var groupUnit = unitKeys.length === 1 ? unitKeys[0] : '份';
+    // 贵金属不参与面值/推理价汇总（本地 catalog 里没有它们，算出来只会是 0）
+    var groupIsPm = items.length > 0 && items.every(function(c){ return c.category === 'pm'; });
 
     html += '<div class="group">';
     html += '<div class="group-head"><span class="bar"></span>' + g +
-            '<span class="tot">' + sumRolls + ' ' + groupUnit + ' · 面值 <b>' + money(sumFace) +
-            '</b> · 推理价 <b>' + money(sumMarket) + '</b></span></div>';
+            '<span class="tot">' + sumRolls + ' ' + groupUnit +
+            (groupIsPm ? '' : ' · 面值 <b>' + money(sumFace) + '</b> · 推理价 <b>' + money(sumMarket) + '</b>') +
+            '</span></div>';
     html += '<div class="grid">';
 
     items.forEach(function(c){
@@ -787,13 +804,14 @@ function renderHoldings(){
           '<span class="num"><b>' + c.rolls + '</b> ' + unit + '</span>' +
           '<button data-act="plus" data-name="' + c.name + '">+</button>' +
           '<span style="margin-left:auto;font-size:11.5px;color:var(--dim)">' +
-            qtyTxt + '面值 ' + money(face) + '</span>' +
+            qtyTxt + (c.category === 'pm' ? '' : '面值 ' + money(face)) + '</span>' +
         '</div>' +
         '<div class="nums">' +
           '<div><span>成本</span><input type="number" min="0" step="1" inputmode="numeric" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore value="' + c.cost + '" data-field="cost" data-name="' + c.name + '"></div>' +
           '<div><span>单' + unit + '成本</span><b>' + money(c.rolls ? (Number(c.cost)||0)/c.rolls : 0) + '</b></div>' +
         '</div>' +
-        '<div class="pnl"><span>浮动</span><b class="' + pnlCls + '" data-pnl="' + c.name + '">' + pnlTxt + '</b></div>' +
+        (c.category === 'pm' ? '' :
+          '<div class="pnl"><span>浮动</span><b class="' + pnlCls + '" data-pnl="' + c.name + '">' + pnlTxt + '</b></div>') +
         holdingExtraHtml(c, d) +
         aiLine(d, c) +
         '<button class="del" data-act="del" data-name="' + c.name + '">移除</button>' +
@@ -1986,25 +2004,41 @@ function pmPlaceholder(item){
 }
 /** 拉一页贵金属全量库（append=true 追加到现有列表） */
 function loadPmFull(page, append){
-  if (PM_FULL.loading) return Promise.resolve();
+  append = !!append;
+  // 追加型请求在 loading 期间直接忽略（下拉加载更多会连点），
+  // 但必须在自增序号之前返回，否则会把正在飞的那个请求判成「过期」从而永远不出结果
+  if (append && PM_FULL.loading) return Promise.resolve();
+  // 序号守卫：resetPmFull 会把 loading 置 false 再发起新请求，
+  // 只靠 loading 布尔量挡不住「旧请求晚到覆盖新结果」
+  var seq = (PM_FULL._seq = (PM_FULL._seq || 0) + 1);
   PM_FULL.loading = true;
-  var qs = '?page=' + page + '&pageSize=30';
+  var qs = '?page=' + page + '&pageSize=30&sort=' + (PM_FULL.desc ? 'year_desc' : 'year_asc');
   if (PM_FULL.q) qs += '&q=' + encodeURIComponent(PM_FULL.q);
   if (PM_FULL.project) qs += '&project=' + encodeURIComponent(PM_FULL.project);
+  if (PM_FULL.year) qs += '&year=' + encodeURIComponent(PM_FULL.year);
+  if (PM_FULL.face) qs += '&face=' + encodeURIComponent(PM_FULL.face);
+  if (PM_FULL.material) qs += '&material=' + encodeURIComponent(PM_FULL.material);
+  if (!append) qs += '&facets=1';
   return fetch('/api/catalog/pm' + qs, { cache: 'no-store' })
     .then(function(r){ return r.ok ? r.json() : { items: [], total: 0, pages: 0 }; })
     .then(function(j){
+      if (seq !== PM_FULL._seq) return j;      // 过期响应直接丢弃
       var items = Array.isArray(j.items) ? j.items : [];
       PM_FULL.items = append ? PM_FULL.items.concat(items) : items;
       PM_FULL.page = Number(j.page) || page;
       PM_FULL.pages = Number(j.pages) || 0;
       PM_FULL.total = Number(j.total) || 0;
+      if (j.facets) PM_FULL.facets = j.facets;
       PM_FULL.loaded = true;
       PM_FULL.loading = false;
       renderPmFull();
       return j;
     })
-    .catch(function(){ PM_FULL.loading = false; renderPmFull(); });
+    .catch(function(){
+      if (seq !== PM_FULL._seq) return;
+      PM_FULL.loading = false;
+      renderPmFull();
+    });
 }
 /** 重置并重新拉第一页 */
 var PM_SERIES_LOADED = false;
@@ -2021,14 +2055,20 @@ function loadPmSeries(cb){
     .catch(function(){});
 }
 
-function resetPmFull(q, project){
+function resetPmFull(q, project, patch){
   PM_FULL.items = []; PM_FULL.page = 0; PM_FULL.pages = 0; PM_FULL.total = 0;
   PM_FULL.q = q || ''; PM_FULL.project = project || ''; PM_FULL.loaded = false;
+  // 先解除 loading 锁，否则用户连续改两个筛选时第二次会被 append 判断挡掉
+  PM_FULL.loading = false;
+  if (patch) { for (var k in patch) { if (Object.prototype.hasOwnProperty.call(patch, k)) PM_FULL[k] = patch[k]; } }
   return loadPmFull(1, false);
 }
 /** 渲染贵金属全量库清单（卡片网格 + 加载更多） */
 function renderPmFull(){
   var box = document.getElementById('tbody'); if (!box) return;
+  // 分段标题里的条数跟着接口走，别再写死 2823
+  var lc = document.querySelector('#listCount');
+  if (lc) lc.textContent = '贵金属纪念币' + (PM_FULL.total ? ' · ' + PM_FULL.total + ' 条' : '');
   // 表格容器换成卡片区：pm 全量库用独立 DOM，避免污染普通清单的表头
   var tbox = box.closest('.tablebox'); if (tbox) tbox.style.display = 'none';
   var host = document.getElementById('pmFullBox');
@@ -2043,11 +2083,29 @@ function renderPmFull(){
     return '<option value="' + esc(s.code) + '"' + (PM_FULL.project === s.code ? ' selected' : '') + '>' +
       esc(s.name) + '（' + s.count + '）</option>';
   })).join('');
+  var f = PM_FULL.facets || { years: [], faces: [], materials: [] };
+  var fOpts = function(list, cur, allLabel, suffix){
+    return '<option value="">' + allLabel + '</option>' + list.map(function(v){
+      var val = String(v);
+      return '<option value="' + esc(val) + '"' + (String(cur) === val ? ' selected' : '') + '>' +
+        esc(val) + (suffix || '') + '</option>';
+    }).join('');
+  };
   var head = '<div class="pm-full-bar"><span>贵金属纪念币 · 共 ' + (PM_FULL.total || '…') + ' 条</span>'
-    + '<input id="pmFullQ" class="pm-full-q" type="search" placeholder="搜名称 / 编号" value="' + esc(PM_FULL.q) + '">'
-    + '<select id="pmFullSeries" class="pm-full-q">' + opts + '</select></div>';
+    + '<input id="pmFullQ" class="pm-full-q" type="search" placeholder="搜名称 / 编号 / 年份" value="' + esc(PM_FULL.q) + '">'
+    + '<select id="pmFullYear" class="pm-full-q">' + fOpts(f.years, PM_FULL.year, '全部年份') + '</select>'
+    + '<select id="pmFullFace" class="pm-full-q">' + fOpts(f.faces, PM_FULL.face, '全部面额', ' 元') + '</select>'
+    + '<select id="pmFullMat" class="pm-full-q">' + fOpts(f.materials, PM_FULL.material, '全部材质') + '</select>'
+    + '<select id="pmFullSeries" class="pm-full-q">' + opts + '</select>'
+    + '<button type="button" id="pmFullSort" class="pm-full-q pm-full-sort">年份 ' + (PM_FULL.desc ? '↓' : '↑') + '</button>'
+    + '</div>';
   if (!PM_FULL.loaded) { host.innerHTML = head + '<div class="pm-full-msg">正在加载贵金属目录…</div>'; return; }
-  if (!PM_FULL.items.length) { host.innerHTML = head + '<div class="pm-full-msg">没有匹配的贵金属品种，换个关键词试试。</div>'; return; }
+  if (!PM_FULL.items.length) {
+    var hasFilter = PM_FULL.q || PM_FULL.year || PM_FULL.face || PM_FULL.material || PM_FULL.project;
+    host.innerHTML = head + '<div class="pm-full-msg">' +
+      (hasFilter ? '没有符合条件的贵金属品种，试试放宽筛选条件。' : '贵金属目录暂时没有数据。') + '</div>';
+    return;
+  }
   var cards = PM_FULL.items.map(function(it){
     var owned = coll.some(function(c){ return c.category === 'pm' && c.id === it.code; });
     var meta = [it.year, it.material, it.weightG ? it.weightG + '克' : '', it.quality].filter(Boolean).join(' · ');
@@ -2072,6 +2130,14 @@ function renderPmFull(){
   if (qi) qi.onchange = function(){ resetPmFull(this.value.trim(), PM_FULL.project); };
   var si = document.getElementById('pmFullSeries');
   if (si) si.onchange = function(){ resetPmFull(PM_FULL.q, this.value); };
+  var yi = document.getElementById('pmFullYear');
+  if (yi) yi.onchange = function(){ resetPmFull(PM_FULL.q, PM_FULL.project, { year: this.value }); };
+  var fi = document.getElementById('pmFullFace');
+  if (fi) fi.onchange = function(){ resetPmFull(PM_FULL.q, PM_FULL.project, { face: this.value }); };
+  var mi = document.getElementById('pmFullMat');
+  if (mi) mi.onchange = function(){ resetPmFull(PM_FULL.q, PM_FULL.project, { material: this.value }); };
+  var sb = document.getElementById('pmFullSort');
+  if (sb) sb.onclick = function(){ resetPmFull(PM_FULL.q, PM_FULL.project, { desc: !PM_FULL.desc }); };
   var mb = document.getElementById('pmMore');
   if (mb) mb.onclick = function(){ loadPmFull(PM_FULL.page + 1, true); };
   var ab = host.querySelector('.pm-add');
@@ -2197,7 +2263,7 @@ function renderPmDetail(code){
         + (isOwned ? '✓ 已在藏品 · 点此取消' : '＋ 加入我的藏品') + '</button>'
         + '<button type="button" class="btn ghost" data-pmcopy="' + SITE + pathOf('pm', code) + '">复制本页链接</button>'
         + '</div>'
-        + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。</p>'
+        + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，全站不出市场估值；上方克重价只是材料价值。</p>'
         + '<div class="pm-src">资料来源：中国人民银行发行公告 · 中国金币集团</div>'
         + '</article>';
       syncPmSeo(code, d);
@@ -2353,7 +2419,7 @@ function renderPmCoin(d, i){
     + '<div class="coin-desc"><h3>套内规格（发行量单位：枚）</h3>'
       + '<table class="pm-pieces"><thead><tr><th>序号</th><th>名称</th><th>材质</th><th>克重</th><th>面额</th><th>最大发行量</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table>'
-      + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，本站不提供参考估值。</p></div>';
+      + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，全站不出市场估值；上方克重价只是材料价值。</p></div>';
   box.onclick = function(e){ var b = e.target.closest('[data-goto]'); if (b) goTab(b.getAttribute('data-goto')); };
 }
 
@@ -2365,7 +2431,7 @@ function renderTable(){
       var tb = pane.querySelector('.toolbar'); if (tb) tb.style.display = 'none';
       var ls = pane.querySelector('.liststats'); if (ls) ls.style.display = 'none';
       var sh = pane.querySelector('.sec-head'); if (sh) {
-        var t = sh.querySelector('#listCount'); if (t) t.textContent = '贵金属纪念币 · 2823 条';
+        var t = sh.querySelector('#listCount'); if (t) t.textContent = '贵金属纪念币' + (PM_FULL.total ? ' · ' + PM_FULL.total + ' 条' : '');
         var h = sh.querySelector('#listHint'); if (h) h.textContent = '';
       }
     }
@@ -3080,7 +3146,8 @@ document.addEventListener('keydown', function(e){
     return;
   }
   if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey && currentTab() === 'all') {
-    var qEl = document.getElementById('q');
+    // 贵金属分段把 #q 藏起来了，快捷键要落到它自己的搜索框，否则按了没反应
+    var qEl = document.getElementById(VIEW_CATEGORY === 'pm' ? 'pmFullQ' : 'q');
     if (qEl) { e.preventDefault(); qEl.focus(); qEl.select(); }
   }
 });
@@ -3308,7 +3375,7 @@ function syncPmSeo(code, d){
   var face = (d && d.face != null) ? '，面额 ' + d.face + ' 元' : '';
   var title = name + (year ? '（' + year + ' 贵金属纪念币）' : '') + ' 编号 ' + code + ' | 藏币录';
   var desc = (year ? year + ' 年发行的' : '') + '贵金属纪念币「' + name + '」' + proj + material + weight + face
-    + '。发行信息以中国人民银行公告为准，本站不提供参考估值。';
+    + '。发行信息以中国人民银行公告为准；本站不出市场估值，克重价仅为材料价值。';
   document.title = title;
   setAttr('meta[name="description"]', 'content', desc);
   setAttr('meta[property="og:title"]', 'content', title);
@@ -3325,7 +3392,7 @@ function syncSeo(tab, coin){
     var code = currentPmCode() || '';
     path = pathOf('pm', code);
     title = '贵金属纪念币 ' + code + ' · 发行档案 | 藏币录';
-    desc = '中国贵金属纪念币「' + code + '」的发行信息、币面图案与规格，资料以中国人民银行公告为准，本站不提供参考估值。';
+    desc = '中国贵金属纪念币「' + code + '」的发行信息、币面图案与规格，资料以中国人民银行公告为准；本站不出市场估值，克重价仅为材料价值。';
     document.title = title;
     setAttr('meta[name="description"]', 'content', desc);
     setAttr('meta[property="og:title"]', 'content', title);
@@ -4233,12 +4300,22 @@ function initMisc(){
     else if (mq.addListener) mq.addListener(onSys);
   }
 
-  // 离开页面前把未提交的改动推上去
+  // 离开页面前把未提交的改动推上去。
+  // 注意：/api/holdings 只接受 PUT，而 navigator.sendBeacon 永远是 POST —— 之前这里
+  // 发出去的请求 100% 被路由丢掉，用户在 450ms 防抖窗口内关页面的改动会静默丢失。
+  // 改用 fetch + keepalive，浏览器会在页面卸载后仍把请求发完。
   window.addEventListener('beforeunload', function(){
-    if (APP.pending && APP.online && isLoggedIn() && navigator.sendBeacon) {
-      navigator.sendBeacon('/api/holdings',
-        new Blob([JSON.stringify({ holdings: coll })], { type: 'application/json' }));
-    }
+    if (!(APP.pending && APP.online && isLoggedIn())) return;
+    try {
+      fetch('/api/holdings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        keepalive: true,
+        body: JSON.stringify({ holdings: coll }),
+      });
+      APP.pending = false;
+    } catch (e) { /* 不支持 keepalive 就交给下次进入时的补发 */ }
   });
 }
 

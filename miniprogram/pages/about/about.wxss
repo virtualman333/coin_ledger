@@ -22,7 +22,7 @@
 
 .brand-sub {
   margin-top: 14rpx;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 23rpx;
   letter-spacing: 2rpx;
 }
@@ -54,7 +54,7 @@
 }
 
 .info-k {
-  color: #8a8378;
+  color: #6b6559;
   font-size: 24rpx;
 }
 
@@ -69,7 +69,7 @@
 
 .note {
   padding: 20rpx 12rpx 40rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
   line-height: 1.8;
   text-align: center;
@@ -78,5 +78,5 @@
 .note-warn {
   display: block;
   margin-top: 12rpx;
-  color: #b5766c;
+  color: #9c5850;
 }

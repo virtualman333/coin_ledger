@@ -71,17 +71,19 @@
   font-weight: 600;
 }
 
+/* 盈亏数字：原来用 #fff6d8 / #e9f7e9，压在金色渐变上只有 1.8:1，且涨跌两色几乎分不出来。
+   改成深红 / 深绿，在 #b98f43→#e3c489 全程都有 4.7:1 以上，同时保留「涨红跌绿」语义 */
 .uv.up {
-  color: #fff6d8;
+  color: #7a2f14;
 }
 
 .uv.down {
-  color: #e9f7e9;
+  color: #175017;
 }
 
 .tip {
   margin: 0 4rpx 14rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -119,7 +121,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #c3bbad;
+  color: #8a8378;
   font-size: 20rpx;
 }
 
@@ -142,14 +144,14 @@
 .hsub {
   display: block;
   margin-top: 8rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
 .hmeta {
   display: block;
   margin-top: 6rpx;
-  color: #8a8378;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
@@ -173,11 +175,11 @@
 }
 
 .hpnl.up {
-  color: #b5766c;
+  color: #9c5850;
 }
 
 .hpnl.down {
-  color: #4f8a5f;
+  color: #3f7050;
 }
 
 /* 空态 */
@@ -198,13 +200,13 @@
 .e-sub {
   display: block;
   margin-top: 12rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 22rpx;
 }
 
 .loading {
   padding: 60rpx 0;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 24rpx;
   text-align: center;
 }

@@ -178,7 +178,7 @@
 
 <!-- 微信登录后：设置头像与昵称（可跳过） -->
 <view class="pf-mask" wx:if="{{profileSheet}}" catchtouchmove="noop">
-  <view class="pf-sheet">
+  <view class="pf-sheet" style="{{kbH ? 'transform:translateY(-' + kbH + 'px)' : ''}}">
     <text class="pf-title">设置头像和昵称</text>
     <text class="pf-sub">只在你自己的账本里显示，随时能改</text>
 
@@ -196,6 +196,8 @@
         bindinput="onProfileNick"
         placeholder="点这里可以用微信昵称"
         placeholder-class="ph"
+        cursor-spacing="24"
+        adjust-position="{{false}}"
       />
     </view>
 

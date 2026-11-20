@@ -33,6 +33,7 @@ Page({
     pmLoading: false,
     pmLoaded: false,
     pmError: '',
+    pmOwnedCount: 0,        // 贵金属已收数量（与普通币的 ownedCount 分开算）
     // 视图模式：list=顺序清单（默认）/ series=按系列卡片浏览
     viewMode: 'list',
     seriesCoin: [],
@@ -133,7 +134,20 @@ Page({
     const mode = e.currentTarget.dataset.mode === 'series' ? 'series' : 'list';
     if (mode === this.data.viewMode) return;
     this.setData({ viewMode: mode });
-    if (mode === 'series') this.buildSeriesView();
+    if (mode === 'series') {
+      this.buildSeriesView();
+      return;
+    }
+    // 切回顺序清单：贵金属的数据只在 loadPmFull 里，按系列视图期间从没拉过，
+    // 不补这一次就会看到「共 2823 条 + 空网格」
+    if (this.data.category === 'pm') {
+      if (!this.data.pmLoaded || this.data.pmError) {
+        this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false, pmError: '' });
+        this.loadPmFull(1, false);
+      }
+      return;
+    }
+    this.render();
   },
 
   /** 按系列视图点卡片：打开独立系列详情页，只展示该系列品种（不再跳回顺序清单） */
@@ -156,7 +170,7 @@ Page({
     });
   },
 
-  /** 从全量品种里生成三个下拉的选项 */
+  /** 从全量品种里生成三个下拉的选项（普通币/纪念钞用） */
   buildFilterOpts() {
     const years = [...new Set(cat.coins.map((c) => c.year))].sort((a, b) => b - a);
     const faces = [...new Set(cat.coins.map((c) => Number(c.face)))].sort((a, b) => a - b);
@@ -166,30 +180,63 @@ Page({
       matCount[c.material] = (matCount[c.material] || 0) + 1;
     });
     const mats = Object.keys(matCount).sort((a, b) => matCount[b] - matCount[a]);
-    this.setData({
+    this.coinFilterOpts = {
       yearOpts: ['全部年份'].concat(years.map(String)),
       faceOpts: ['全部面额'].concat(faces.map((f) => f + ' 元')),
       matOpts: ['全部材质'].concat(mats),
-    });
+    };
+    this.setData(this.coinFilterOpts);
+  },
+
+  /** 贵金属的三组选项来自接口 facets（2823 条，不能靠本地 catalog 推） */
+  buildPmFilterOpts(facets) {
+    if (!facets) return;
+    const years = (facets.years || []).map(String);
+    const faces = (facets.faces || [])
+      .map((f) => String(Number(f)))
+      .filter((f, i, a) => f !== 'NaN' && a.indexOf(f) === i);
+    const mats = (facets.materials || []).map(String);
+    this.pmFilterOpts = {
+      yearOpts: ['全部年份'].concat(years),
+      faceOpts: ['全部面额'].concat(faces.map((f) => f + ' 元')),
+      matOpts: ['全部材质'].concat(mats),
+    };
+    this.setData(this.pmFilterOpts);
+  },
+
+  /** 切品类时把下拉选项换成对应数据源的（否则贵金属会看到普通币的年份） */
+  applyFilterOpts(category) {
+    const o = category === 'pm' ? (this.pmFilterOpts || { yearOpts: ['全部年份'], faceOpts: ['全部面额'], matOpts: ['全部材质'] })
+      : this.coinFilterOpts;
+    if (o) this.setData(o);
   },
 
   pickYear(e) {
     const i = Number(e.detail.value) || 0;
     this.setData({ yearIdx: i, yearFilter: i ? String(this.data.yearOpts[i]) : '' });
     this.syncExtra();
-    this.render();
+    this.refreshAfterFilter();
   },
   pickFace(e) {
     const i = Number(e.detail.value) || 0;
     const label = i ? this.data.faceOpts[i] : '';
     this.setData({ faceIdx: i, faceFilter: label ? label.replace(' 元', '') : '' });
     this.syncExtra();
-    this.render();
+    this.refreshAfterFilter();
   },
   pickMat(e) {
     const i = Number(e.detail.value) || 0;
     this.setData({ matIdx: i, matFilter: i ? this.data.matOpts[i] : '' });
     this.syncExtra();
+    this.refreshAfterFilter();
+  },
+  /** 贵金属的数据在服务端（2823 条 / 分页），筛选条件变了必须回第一页重新拉，不能只在已加载的 30 条里过滤 */
+  refreshAfterFilter() {
+    if (this.data.category === 'pm') {
+      this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false, pmError: '' });
+      this.loadPmFull(1, false);
+      return;
+    }
     this.render();
   },
   syncExtra() {
@@ -204,11 +251,12 @@ Page({
   },
 
   clearExtra() {
+    // extraCount 也要归零，否则「筛选」按钮上的角标会一直留着已清空的条件数
     this.setData({
       yearIdx: 0, faceIdx: 0, matIdx: 0,
-      yearFilter: '', faceFilter: '', matFilter: '', hasExtra: false,
+      yearFilter: '', faceFilter: '', matFilter: '', hasExtra: false, extraCount: 0,
     });
-    this.render();
+    this.refreshAfterFilter();
   },
 
   applySeries(code) {
@@ -249,11 +297,14 @@ Page({
   /** 切换品类并可选定位到某个系列 code（从「按系列」页分组跳转用） */
   applyCategory(category, code) {
     this.setData({ category }, () => {
+      // 下拉选项必须换成对应数据源的，否则贵金属会列出普通币的年份
+      this.applyFilterOpts(category);
       if (category === 'pm') {
         this.setData({
           keyword: '', yearFilter: '', faceFilter: '', matFilter: '', onlyOwn: false,
           hasExtra: false, extraCount: 0, yearIdx: 0, faceIdx: 0, matIdx: 0,
           pmRows: [], pmPage: 1, pmPages: 1, pmTotal: 0, pmLoaded: false, pmError: '',
+          pmOwnedCount: 0,
           filterOpen: false, code: code || '',
           tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
         this.loadPmFull(1, false);
@@ -264,15 +315,33 @@ Page({
     });
   },
 
-  /** 贵金属全量库：从 /api/catalog/pm 分页拉（2823 条），带搜索 q */
+  /**
+   * 贵金属全量库：从 /api/catalog/pm 分页拉（2823 条）。
+   * 年份/面额/材质/排序全部交给服务端（本地只有一页，前端过滤会漏数据）；
+   * 首屏顺带取 facets 拼筛选项。
+   */
   loadPmFull(page, append) {
-    if (this.data.pmLoading) return;
+    append = !!append;
+    // 追加请求在 loading 期间直接丢掉（上拉会连点），但要在自增序号之前返回，
+    // 否则会把正在飞的那个请求判成过期，列表就永远停在「加载中」
+    if (append && this.data.pmLoading) return;
+    // 序号守卫：改筛选条件时旧请求可能还在路上，晚到的响应不能覆盖新结果
+    const seq = this._pmSeq = (this._pmSeq || 0) + 1;
     this.setData({ pmLoading: true });
+
     const kw = String(this.data.keyword || '').trim();
-    let path = '/api/catalog/pm?page=' + page + '&pageSize=30';
+    const first = !append;
+    let path = '/api/catalog/pm?page=' + page + '&pageSize=30'
+      + '&sort=' + (this.data.desc ? 'year_desc' : 'year_asc');
     if (kw) path += '&q=' + encodeURIComponent(kw);
     if (this.data.code) path += '&project=' + encodeURIComponent(this.data.code);
+    if (this.data.yearFilter) path += '&year=' + encodeURIComponent(this.data.yearFilter);
+    if (this.data.faceFilter) path += '&face=' + encodeURIComponent(this.data.faceFilter);
+    if (this.data.matFilter) path += '&material=' + encodeURIComponent(this.data.matFilter);
+    if (first) path += '&facets=1';
+
     api.get(path).then((j) => {
+      if (seq !== this._pmSeq) return;
       const items = Array.isArray(j.items) ? j.items : [];
       const rows = items.map((it) => ({
         code: it.code,
@@ -287,6 +356,8 @@ Page({
         metalClass: /金/.test(it.material || '') ? 'gold' : (/银/.test(it.material || '') ? 'silver' : (/铂/.test(it.material || '') ? 'platinum' : 'other')),
         metalChar: /金/.test(it.material || '') ? '金' : (/银/.test(it.material || '') ? '银' : (/铂/.test(it.material || '') ? '铂' : '币')),
       }));
+      if (first && j.facets) this.buildPmFilterOpts(j.facets);
+      const holdings = store.getState().holdings || [];
       this.setData({
         pmRows: append ? this.data.pmRows.concat(rows) : rows,
         pmPage: Number(j.page) || page,
@@ -295,11 +366,12 @@ Page({
         pmLoading: false,
         pmLoaded: true,
         pmError: '',
-        count: Number(j.total) || 0,
+        pmOwnedCount: holdings.filter((h) => h.category === 'pm').length,
       });
     }).catch(() => {
+      if (seq !== this._pmSeq) return;
       // 失败不等于「没有匹配品种」：以前会把 2823 条库伪装成空结果且无重试入口
-      this.setData({ pmLoading: false, pmLoaded: true, pmRows: [], pmError: '贵金属目录加载失败', count: 0 });
+      this.setData({ pmLoading: false, pmLoaded: true, pmRows: [], pmError: '贵金属目录加载失败' });
     });
   },
 
@@ -324,26 +396,11 @@ Page({
     wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(code) });
   },
 
-  /**
-   * 按年份排序（年份容错为数字）：desc 为 true 降序（大年份在前），否则升序。
-   * 同年份时用 code/id 兜底，保证顺序稳定、点击可精确反转。
-   */
-  sortByYear(rows, desc) {
-    const yearNum = (y) => { const n = Number(y); return Number.isFinite(n) ? n : 0; };
-    const key = (r) => String(r && (r.code != null ? r.code : r.id) || '');
-    return (rows || []).slice().sort((a, b) => {
-      const diff = (yearNum(a.year) - yearNum(b.year)) || key(a).localeCompare(key(b));
-      return desc ? -diff : diff;
-    });
-  },
-
   render() {
     const kw = String(this.data.keyword || '').trim().toLowerCase();
     const category = this.data.category || 'coin';
     if (category === 'pm') {
-      // pm 由 loadPmFull 单独维护分页；此处只对当前已加载的数据按年份排序，
-      // 不重新请求，也不会改动 pmPage/pmPages 等分页状态。
-      this.setData({ pmRows: this.sortByYear(this.data.pmRows, this.data.desc) });
+      // 贵金属全量库的顺序与筛选都由服务端负责（本地只有一页），这里不再二次排序
       return;
     }
     const code = this.data.code;
@@ -393,6 +450,16 @@ Page({
 
   onSearch(e) {
     this.setData({ keyword: e.detail.value, searchFocus: true });
+    if (this.data.category === 'pm') {
+      // 贵金属要打接口，逐字请求太费；停手 320ms 再查
+      clearTimeout(this._pmSearchTimer);
+      this._pmSearchTimer = setTimeout(() => {
+        if (this.data.category !== 'pm') return;
+        this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false, pmError: '' });
+        this.loadPmFull(1, false);
+      }, 320);
+      return;
+    }
     this.render();
   },
 
@@ -409,6 +476,12 @@ Page({
 
   clearSearch() {
     this.setData({ keyword: '', searchFocus: false, searchActive: false });
+    clearTimeout(this._pmSearchTimer);
+    if (this.data.category === 'pm') {
+      this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false, pmError: '' });
+      this.loadPmFull(1, false);
+      return;
+    }
     this.render();
   },
 
@@ -424,6 +497,12 @@ Page({
   toggleSort() {
     const desc = !this.data.desc;
     this.setData({ desc });
+    // 贵金属的排序在服务端做（本地只有一页数据，排了也不是全库顺序）
+    if (this.data.category === 'pm') {
+      this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false });
+      this.loadPmFull(1, false);
+      return;
+    }
     this.render();
   },
 
@@ -446,10 +525,16 @@ Page({
   onShareAppMessage(e) {
     // 定位到某系列时，直接分享到独立系列详情页（好友打开只看到这一系列，不再是清单筛选态）
     const code = this.data.code;
+    const isPm = this.data.category === 'pm';
     if (code) {
-      const name = cat.seriesName(code);
+      // 贵金属的「系列」是发行项目，名称在 pmTabs 里，条数是 pmTotal；
+      // 用 cat.seriesName/count 会得到「（0 个品种）」
+      const name = isPm
+        ? ((this.data.pmTabs.filter((t) => t.code === code)[0] || {}).name || '发行项目')
+        : (cat.seriesName(code) || '系列');
+      const n = isPm ? this.data.pmTotal : this.data.count;
       return {
-        title: '藏币录 · ' + (name || '系列') + '（' + this.data.count + ' 个品种）',
+        title: '藏币录 · ' + name + (n ? '（共 ' + n + (isPm ? ' 枚）' : ' 个品种）') : ''),
         path: '/pages/series-detail/series-detail?category=' + this.data.category
           + '&code=' + encodeURIComponent(code)
           + '&name=' + encodeURIComponent(name || ''),

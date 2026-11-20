@@ -11,7 +11,7 @@
 .h-sub {
   display: block;
   margin-top: 10rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 23rpx;
   line-height: 1.6;
 }
@@ -31,7 +31,7 @@
 .sec-sub {
   display: block;
   margin-top: 10rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 22rpx;
   line-height: 1.7;
 }
@@ -75,7 +75,7 @@
 .feat-desc {
   display: block;
   margin-top: 6rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
   line-height: 1.5;
 }
@@ -85,8 +85,8 @@
   padding: 3rpx 12rpx;
   border-radius: 8rpx;
   background: #f2efe7;
-  color: #a39c8e;
-  font-size: 19rpx;
+  color: #6b6559;
+  font-size: 21rpx;
   flex: 0 0 auto;
 }
 
@@ -113,15 +113,15 @@
 }
 
 .ph {
-  color: #c3bbad;
+  color: #8a8378;
 }
 
 .ta-count {
   position: absolute;
   right: 20rpx;
   bottom: 12rpx;
-  color: #c3bbad;
-  font-size: 19rpx;
+  color: #8a8378;
+  font-size: 21rpx;
 }
 
 .submit {
@@ -146,14 +146,14 @@
 .tip {
   display: block;
   margin-top: 16rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
   line-height: 1.6;
 }
 
 .foot {
   margin-top: 8rpx;
-  color: #c3bbad;
+  color: #8a8378;
   font-size: 20rpx;
   text-align: center;
 }

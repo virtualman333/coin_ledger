@@ -22,7 +22,29 @@ Page({
     if (!user || user.isTest) {
       wx.showToast({ title: '这个入口暂不开放', icon: 'none' });
       setTimeout(() => wx.navigateBack(), 600);
+      return;
     }
+    this.syncQuota();
+  },
+
+  /** 今日已提交条数本地记录：文案里的「已经提过 N 条 / 今天还能提 M 条」不能写死 */
+  syncQuota() {
+    const LIMIT = 3;
+    const today = new Date().toISOString().slice(0, 10);
+    let n = 0;
+    try {
+      const rec = wx.getStorageSync('cl_feat_req') || {};
+      if (rec.d === today) n = Number(rec.n) || 0;
+    } catch (e) { /* 读不到就当 0 */ }
+    this.setData({ sentCount: n, leftToday: Math.max(0, LIMIT - n) });
+  },
+
+  bumpQuota() {
+    const LIMIT = 3;
+    const today = new Date().toISOString().slice(0, 10);
+    const n = this.data.sentCount + 1;
+    try { wx.setStorageSync('cl_feat_req', { d: today, n }); } catch (e) { /* 写不进去只影响文案 */ }
+    this.setData({ sentCount: n, leftToday: Math.max(0, LIMIT - n) });
   },
 
   onInput(e) {
@@ -31,6 +53,10 @@ Page({
 
   submit() {
     if (this.data.busy) return;
+    if (this.data.leftToday <= 0) {
+      wx.showToast({ title: '今天已经提过 3 条了，明天再来', icon: 'none' });
+      return;
+    }
     const text = String(this.data.text || '').trim();
     if (text.length < 4) {
       wx.showToast({ title: '多写几个字', icon: 'none' });
@@ -38,7 +64,8 @@ Page({
     }
     this.setData({ busy: true });
     api.post('/api/feature-request', { text }).then(() => {
-      this.setData({ busy: false, text: '', sentCount: this.data.sentCount + 1 });
+      this.setData({ busy: false, text: '' });
+      this.bumpQuota();
       wx.showModal({
         title: '收到了',
         content: '谢谢，这条会进需求池。如果做出来，会在「关于」里说明。',

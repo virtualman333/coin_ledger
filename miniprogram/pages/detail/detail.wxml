@@ -71,7 +71,7 @@
         <text class="ai-value">¥{{aiPrice}}</text>
         <text class="ai-q" catchtap="toggleFormula">?</text>
       </view>
-      <view class="ai-formula-mask" wx:if="{{formulaOpen}}" catchtap="toggleFormula">
+      <view class="ai-formula-mask" wx:if="{{formulaOpen}}" catchtap="toggleFormula" catchtouchmove="noop">
         <view class="ai-formula-panel" catchtap="noop">
           <view class="ai-formula-h"><text>推理价怎么算的</text><text class="ai-formula-x" catchtap="toggleFormula">×</text></view>
           <text class="ai-formula-body">计算方式：用发行量、材质、发行年份三项公开参数，按对数回归模型推算 ln(价) = 12.605 − 2.2721·ln(量) + 0.1102·ln(量)² + 0.3325·ln(1+年数) + 材质系数 + 钞券系数；量按万枚/万张计，年数 = 今年 − 发行年，材质与钞券系数取固定值。结果不低于面值按年化 2.5% 折算至今的购买力。模型由在册品种拟合而成（R²≈0.83），不含题材溢价，仅供参考。</text>
@@ -147,16 +147,20 @@
       <text class="peek-title">{{peek.name}}</text>
       <text class="peek-x" bindtap="closePeek">✕</text>
     </view>
-    <view class="peek-body">
-      <image class="peek-img" src="{{peek.imgUrl}}" mode="aspectFit" wx:if="{{peek.imgUrl}}"></image>
-      <view class="peek-meta">
-        <text>{{peek.year}} 年</text>
-        <text wx:if="{{peek.face}}">面额 {{peek.face}} 元</text>
-        <text wx:if="{{peek.mintageText}}">{{peek.mintageText}}{{peek.unit}}</text>
+    <!-- 中间走 scroll-view：遮罩的 catchtouchmove 会阻断普通 view 的原生滚动，
+         介绍很长时否则滚不动、「查看详情」按钮就到不了 -->
+    <scroll-view class="peek-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="peek-body">
+        <image class="peek-img" src="{{peek.imgUrl}}" mode="aspectFit" wx:if="{{peek.imgUrl}}"></image>
+        <view class="peek-meta">
+          <text>{{peek.year}} 年</text>
+          <text wx:if="{{peek.face}}">面额 {{peek.face}} 元</text>
+          <text wx:if="{{peek.mintageText}}">{{peek.mintageText}}{{peek.unit}}</text>
+        </view>
+        <text class="peek-desc" wx:if="{{peek.desc}}">{{peek.desc}}</text>
+        <text class="peek-desc peek-empty" wx:else>这枚还没有收录详细介绍，可以进去看面额、发行量与套系进度。</text>
       </view>
-      <text class="peek-desc" wx:if="{{peek.desc}}">{{peek.desc}}</text>
-      <text class="peek-desc peek-empty" wx:else>这枚还没有收录详细介绍，可以进去看面额、发行量与套系进度。</text>
-    </view>
+    </scroll-view>
     <view class="peek-foot">
       <button class="peek-btn ghost" bindtap="closePeek">再看看</button>
       <button class="peek-btn primary" bindtap="goPeek">查看详情</button>

@@ -1,17 +1,18 @@
-.page{padding:28rpx 24rpx 60rpx}
+.page{padding:28rpx 24rpx calc(60rpx + env(safe-area-inset-bottom))}
 .intro{margin-bottom:24rpx}
 .intro-t{display:block;font-size:40rpx;font-weight:700;color:#2a2620}
-.intro-d{display:block;margin-top:10rpx;font-size:24rpx;line-height:1.7;color:#8a8378}
+.intro-d{display:block;margin-top:10rpx;font-size:24rpx;line-height:1.7;color:#6b6559}
 .btn-primary{
   width:100%;padding:24rpx;border:0;border-radius:14rpx;
   background:#9a6b1f;color:#fff;font-size:29rpx;font-weight:600
 }
-.btn-primary[disabled]{background:#d9d2c5;color:#fff}
+/* 禁用态文字必须深色：白字在 #d9d2c5 上只有 1.5:1，「识别中…」等于看不见 */
+.btn-primary[disabled]{background:#d9d2c5;color:#4a4438}
 .err{margin-top:18rpx;padding:18rpx;border-radius:12rpx;background:#fff2f0;color:#b23b2e;font-size:24rpx}
 .result{margin-top:28rpx;padding:28rpx;border-radius:16rpx;background:#fff;border:1rpx solid #ece7dc}
 .result-head{display:flex;align-items:center;justify-content:space-between}
 .result-k{font-size:26rpx;font-weight:600;color:#2a2620}
-.result-note{font-size:21rpx;color:#9a948a}
+.result-note{font-size:21rpx;color:#6b6559}
 .num-row{display:flex;align-items:center;justify-content:center;gap:40rpx;margin:24rpx 0 6rpx}
 .num-btn{
   width:80rpx;height:80rpx;border-radius:50%;background:#f6f1e6;color:#9a6b1f;
@@ -19,12 +20,13 @@
 }
 .num-main{display:flex;align-items:baseline;gap:8rpx}
 .num-v{font-size:88rpx;font-weight:700;color:#9a6b1f;line-height:1}
-.num-u{font-size:28rpx;color:#8a8378}
-.adjust-tip{display:block;text-align:center;margin-top:10rpx;font-size:21rpx;color:#b2aca0}
+.num-u{font-size:28rpx;color:#6b6559}
+.adjust-tip{display:block;text-align:center;margin-top:10rpx;font-size:21rpx;color:#6b6559}
 .marked-box{margin-top:24rpx;padding:20rpx;border-radius:16rpx;background:#fff;border:1rpx solid #ece7dc}
 .marked-h{display:block;margin-bottom:12rpx;font-size:24rpx;color:#6b6459}
-.marked-img{width:100%;border-radius:10rpx;background:#f3f0e9}
+/* 占位高度：图片加载前块高度为 0，识别结果一出来整页会跳一下 */
+.marked-img{width:100%;min-height:300rpx;border-radius:10rpx;background:#f3f0e9}
 .tips{margin-top:28rpx;padding:24rpx;border-radius:14rpx;background:#faf7f0}
 .tips-h{display:block;margin-bottom:12rpx;font-size:25rpx;font-weight:600;color:#6b6459}
-.tips-i{display:block;font-size:23rpx;line-height:2;color:#9a948a}
+.tips-i{display:block;font-size:23rpx;line-height:2;color:#6b6559}
 .err .retry{color:#9a6b1f;font-weight:600;margin-left:8rpx}

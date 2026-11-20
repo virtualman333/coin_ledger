@@ -57,6 +57,8 @@ Page({
     tab: 'coin',                 // coin=普通纪念币（钞） / pm=贵金属
     pmYears: [],                 // 来自统一 API 的贵金属计划
     plansFromApi: null,
+    plansError: '',              // wxml 在用，之前没声明，首帧是 undefined
+    detail: null,                // 计划项详情弹层
   },
 
   onLoad() {
@@ -67,7 +69,7 @@ Page({
 
   /** 后端一个 API 服务：Web 与小程序共用 /api/plans */
   loadPlans() {
-    api.getPlans().then((res) => {
+    return api.getPlans().then((res) => {
       if (!res || !res.ok) return;
       this.setData({ plansFromApi: res });
       this.build();
@@ -103,9 +105,10 @@ Page({
   },
 
   onPullDownRefresh() {
-    // loadPlans 内含 build() + buildPm()，普通币与贵金属一次刷新到位
-    this.retryPlans();
-    setTimeout(() => wx.stopPullDownRefresh(), 600);
+    // loadPlans 内含 build() + buildPm()，普通币与贵金属一次刷新到位。
+    // 转圈跟着真实请求结束，不要用固定 600ms 抢跑（接口慢时圈会先消失）
+    const done = () => wx.stopPullDownRefresh();
+    Promise.resolve(this.retryPlans()).then(done, done);
   },
 
   switchTab(e) {

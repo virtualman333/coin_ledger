@@ -19,7 +19,7 @@
 .se-sub {
   display: block;
   margin-top: 12rpx;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -129,7 +129,7 @@
 
 .pnl-p {
   margin-top: 4rpx;
-  font-size: 19rpx;
+  font-size: 21rpx;
   opacity: 0.8;
 }
 
@@ -177,7 +177,7 @@
 .empty-sub {
   display: block;
   margin-top: 12rpx;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -200,7 +200,7 @@
 }
 
 .lt-text {
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -222,7 +222,7 @@
 
 .chevron {
   margin-right: 8rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 20rpx;
 }
 
@@ -250,7 +250,7 @@
 }
 
 .group-sum {
-  color: #8a8378;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -303,8 +303,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #c3bbab;
-  font-size: 18rpx;
+  color: #8a8378;
+  font-size: 21rpx;
 }
 
 .hold-main {
@@ -328,7 +328,7 @@
 .hold-sub {
   margin-top: 8rpx;
   overflow: hidden;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 21rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -398,7 +398,7 @@
 
 .del {
   padding: 6rpx 4rpx 6rpx 20rpx;
-  color: #b3aa9b;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -430,12 +430,12 @@
 
 .menu-v {
   margin-right: 12rpx;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
 .menu-arrow {
-  color: #cfc7b8;
+  color: #8a8378;
   font-size: 28rpx;
   line-height: 1;
 }
@@ -456,7 +456,7 @@
 .guest-sub {
   display: block;
   margin-top: 12rpx;
-  color: #a39c8e;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -472,8 +472,8 @@
 }
 
 .foot-disc {
-  color: #b3aa9b;
-  font-size: 19rpx;
+  color: #6b6559;
+  font-size: 21rpx;
 }
 
 .admin-menu {
@@ -497,6 +497,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #b98f43;
+  color: #8a6420;
   font-size: 24rpx;
 }
