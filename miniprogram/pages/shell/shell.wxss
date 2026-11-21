@@ -2,3 +2,12 @@
   min-height: 100vh;
   background: #f6f4ef;
 }
+
+/* 组件节点默认不是块级，双保险：组件内部已有 :host，这里再兜一层，
+   避免个别基础库忽略 :host 时视图高度塌掉 */
+home-view,
+plan-view,
+list-view,
+mine-view {
+  display: block;
+}
