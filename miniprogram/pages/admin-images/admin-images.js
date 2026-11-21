@@ -7,8 +7,11 @@ Page({
     coins: [],
   },
 
-  onLoad() {
+  onLoad(q) {
     if (!ensureAdmin()) return;
+    // 从「资料库」点进来时带着品种名，直接定位到这一枚
+    const kw = String((q && q.kw) || '').trim();
+    if (kw) this.setData({ keyword: kw });
     this.loadCoins();
   },
 

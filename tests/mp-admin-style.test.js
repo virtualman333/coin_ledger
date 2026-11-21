@@ -145,8 +145,9 @@ test('管理首页只留入口，模块内容都已下沉到三级页面', () =>
 test('每个模块页的 onLoad 真的会去拉数据（不是光写个属性名）', () => {
   for (const slug of MODULES) {
     const js = pageJs(slug);
-    const start = js.indexOf('onLoad()');
-    const end = js.indexOf('onPullDownRefresh()');
+    // onLoad 允许带参数（从「资料库」深链进来时要读 query），不能只认 onLoad()
+    const start = js.search(/onLoad\s*\([^)]*\)\s*\{/);
+    const end = js.indexOf('onPullDownRefresh(');
     assert.ok(start > 0 && end > start, slug + ' 找不到 onLoad');
     const body = js.slice(start, end);
     assert.match(body, /this\.load\w+\(/, slug + ' 的 onLoad 没有调用加载方法');

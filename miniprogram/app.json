@@ -19,6 +19,7 @@
     "pages/series/series",
     "pages/series-detail/series-detail",
     "pages/admin/admin",
+    "pages/admin-browse/admin-browse",
     "pages/admin-cats/admin-cats",
     "pages/admin-pm/admin-pm",
     "pages/admin-params/admin-params",

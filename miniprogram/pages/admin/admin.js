@@ -8,6 +8,7 @@ const { ensureAdmin } = require('../../utils/admin-guard');
  * 不会再像以前那样从「用户管理」一按返回直接跳出管理端。
  */
 const MODULE_PATHS = {
+  browse: '/pages/admin-browse/admin-browse',
   cats: '/pages/admin-cats/admin-cats',
   pmall: '/pages/admin-pm/admin-pm',
   params: '/pages/admin-params/admin-params',
@@ -22,6 +23,7 @@ Page({
   data: {
     modules: [
       { group: '内容', cls: 'g-content', items: [
+        { k: 'browse', t: '资料库', d: '品类 → 系列 → 单枚', i: '◉' },
         { k: 'cats', t: '大分类', d: '品类总览与规模', i: '▤' },
         { k: 'pmall', t: '贵金属库', d: '全量检索与查看', i: '✦' },
         { k: 'params', t: '参数', d: '品种基础数据', i: '⚙' },
