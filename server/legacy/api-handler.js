@@ -583,6 +583,7 @@ async function handleApi(req, res, pathname) {
         ua: String(req.headers['user-agent'] || '').slice(0, 240),
         uid: vme ? vme.id : '',
         userName: vme ? vme.name : '',
+        nickName: vme ? (vme.nickname || '') : '',
       });
     }
     const total = await store.commit((draft) => {
@@ -1109,7 +1110,11 @@ async function handleApi(req, res, pathname) {
     const chk = await wxsec.checkText(text, me.wxOpenid || '');
     if (!chk.ok) return sendJSON(res, 400, { ok: false, error: '内容里有不适合发布的信息，请修改后再提交' });
 
-    const rec = feedback.add({ kind: 'feature', uid: me.id, userName: me.name, text });
+    const rec = feedback.add({
+      kind: 'feature', uid: me.id, userName: me.name,
+      nickname: me.nickname || '', avatar: me.avatar ? '/avatar/' + me.avatar : '',
+      text,
+    });
     console.log('[feature] ' + me.name + ' 提需求：' + text.slice(0, 40));
     return sendJSON(res, 200, { ok: true, id: rec.id });
   }
@@ -1157,6 +1162,8 @@ async function handleApi(req, res, pathname) {
     const saved = feedback.add({
       uid: me.id,
       userName: me.name,
+      nickname: me.nickname || '',
+      avatar: me.avatar ? '/avatar/' + me.avatar : '',
       coinId,
       coinName: coin ? coin.name : '',
       text,

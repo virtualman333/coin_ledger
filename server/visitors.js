@@ -177,7 +177,7 @@ function ipGroups(items) {
       map[ip] = {
         ip: x.ip || '—',
         pv: 0, sessions: {}, pages: {}, clients: {}, days: {},
-        first: x.at, last: x.at, name: '', ua: x.ua || '',
+        first: x.at, last: x.at, name: '', nickName: '', ua: x.ua || '',
       };
     }
     const g = map[ip];
@@ -189,6 +189,8 @@ function ipGroups(items) {
     if (Date.parse(x.at) < Date.parse(g.first)) g.first = x.at;
     if (Date.parse(x.at) > Date.parse(g.last)) g.last = x.at;
     if (!g.name && x.userName) g.name = x.userName;
+    // 用户名用来认账号，昵称用来认人 —— 两个都留着，别互相覆盖
+    if (!g.nickName && x.nickName) g.nickName = x.nickName;
     if (!g.ua && x.ua) g.ua = x.ua;
   });
   return Object.keys(map).map((k) => {
@@ -204,6 +206,7 @@ function ipGroups(items) {
       first: g.first,
       last: g.last,
       name: g.name,
+      nickName: g.nickName || '',
       ua: g.ua,
     };
   }).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 60);
@@ -220,7 +223,7 @@ function detail(items, query) {
   return {
     rows: rows.slice(0, 200).map((x) => ({
       at: x.at, tab: x.tab, client: x.client || 'web', sid: x.sid,
-      name: x.userName || '', ua: x.ua || '', path: x.path || '', ip: x.ip || '',
+      name: x.userName || '', nickName: x.nickName || '', ua: x.ua || '', path: x.path || '', ip: x.ip || '',
     })).sort((a, b) => String(b.at).localeCompare(String(a.at))),
     total: rows.length,
   };
@@ -248,7 +251,7 @@ function stats(items, options) {
     if (!sessions[x.sid]) {
       sessions[x.sid] = {
         first: x.at, last: x.at, pages: {}, ip: x.ip, ua: x.ua,
-        uid: x.uid, name: x.userName, client: x.client || 'web',
+        uid: x.uid, name: x.userName, nickName: x.nickName || '', client: x.client || 'web',
       };
     }
     sessions[x.sid].last = x.at;
@@ -296,6 +299,7 @@ function stats(items, options) {
       ua: s.ua,
       uid: s.uid,
       name: s.name,
+      nickName: s.nickName || '',
       client: s.client,
     };
   }).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 40);

@@ -45,12 +45,24 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="提交人" width="120" show-overflow-tooltip>
-            <template #default="{ row }">{{ row.userName || '—' }}</template>
+          <el-table-column label="提交人" width="190">
+            <template #default="{ row }">
+              <div class="fb-user">
+                <img v-if="row.avatar" :src="row.avatar" class="fb-ava" alt="">
+                <span v-else class="fb-ava fb-ava-ph">{{ (row.nickname || row.userName || '?').slice(0, 1) }}</span>
+                <span class="fb-user-txt">
+                  <b class="fb-nick">{{ row.nickname || row.userName || '—' }}</b>
+                  <span v-if="row.nickname && row.userName" class="fb-name">{{ row.userName }}</span>
+                </span>
+              </div>
+            </template>
           </el-table-column>
 
-          <el-table-column label="时间" width="140" show-overflow-tooltip>
-            <template #default="{ row }">{{ fmtTime(row.createdAt) }}</template>
+          <el-table-column label="时间" width="150">
+            <template #default="{ row }">
+              <div class="cl-mono fb-t">{{ fmtTime(row.createdAt) }}</div>
+              <div v-if="row.repliedAt" class="fb-muted fb-t">回复 {{ fmtTime(row.repliedAt) }}</div>
+            </template>
           </el-table-column>
 
           <el-table-column label="正文" min-width="220" show-overflow-tooltip>
@@ -213,6 +225,26 @@ async function doDelete() {
 </script>
 
 <style scoped>
+/* 提交人：头像 + 昵称（认人）+ 用户名（账号） */
+.fb-user { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fb-ava {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--cl-line-2); background: var(--cl-panel-2);
+}
+.fb-ava-ph {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--cl-muted); font-size: 12px;
+}
+.fb-user-txt { display: flex; flex-direction: column; min-width: 0; }
+.fb-nick {
+  font-size: 13px; font-weight: 600; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;
+}
+.fb-name {
+  font-size: 11.5px; color: var(--cl-muted); line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;
+}
+.fb-t { line-height: 1.4; }
 .fb-muted { color: var(--cl-muted); }
 .fb-jump {
   color: var(--el-color-primary); font-size: 12px;

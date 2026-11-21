@@ -92,6 +92,7 @@
           <el-table-column label="访客" min-width="150">
             <template #default="{ row }">
               <b>{{ row.name || (viewMode === 'ip' ? '访客' : '未登录') }}</b>
+              <span v-if="row.nickName && row.nickName !== row.name" class="vs-nick">{{ row.nickName }}</span>
               <el-tag size="small" :type="isMp(row) ? 'warning' : 'info'" effect="plain" style="margin-left:8px">
                 {{ sourceText(row) }}
               </el-tag>
@@ -289,6 +290,13 @@ async function openDetail(row) {
 </script>
 
 <style scoped>
+/* 用户名是账号（认人找账号都用它），昵称跟在后面做辅助 */
+.vs-nick {
+  margin-left: 8px;
+  color: var(--cl-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
 .vs-h3 { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
 .vs-range { font-size: 12px; color: var(--cl-muted); }
 .vs-live { font-size: 12px; color: var(--cl-dim); }
