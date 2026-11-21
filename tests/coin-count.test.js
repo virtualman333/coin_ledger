@@ -403,3 +403,21 @@ test('轻微歪斜的平铺照片不会把一个币判到隔壁行', () => {
   const rowIdx = ordered.map(function (s) { return Math.round(s.y / 100); });
   assert.deepEqual(rowIdx, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]);
 });
+
+/**
+ * 分享海报用的小图：服务端把标注图 PNG 压成 JPEG 下发，
+ * 小程序写成本地文件再画 canvas，绕开 downloadFile 域名白名单。
+ */
+test('标注图可压成 ≤680px 的 JPEG 缩略图（分享海报用）', () => {
+  const sc = makeRealisticScene(10, 8, 26, 2, 700, 600, 80);
+  const r = svc.count(sc.buf);
+  const png = svc.annotate(r, sc.buf);
+  const jpg = svc.previewJpeg(png, 680, 76);
+  assert.ok(jpg && jpg.length > 1000, '缩略图为空');
+  assert.equal(jpg[0], 0xFF, '不是 JPEG');
+  assert.equal(jpg[1], 0xD8, '不是 JPEG');
+  assert.ok(jpg.length < png.length, '缩略图没有变小');
+  // 尺寸不超过上限
+  const img = require('jpeg-js').decode(jpg);
+  assert.ok(Math.max(img.width, img.height) <= 680, '缩略图尺寸超限：' + img.width + 'x' + img.height);
+});

@@ -30,3 +30,27 @@
 .tips-h{display:block;margin-bottom:12rpx;font-size:25rpx;font-weight:600;color:#6b6459}
 .tips-i{display:block;font-size:23rpx;line-height:2;color:#6b6559}
 .err .retry{color:#9a6b1f;font-weight:600;margin-left:8rpx}
+
+/* 好友分享进来的邀请条：先给结论（朋友数了多少），再给入口 */
+.invite{
+  margin-bottom:22rpx;padding:22rpx 24rpx;border-radius:14rpx;
+  background:#fdf6e6;border:1rpx solid #ecdfc4;border-left:6rpx solid #c9a45c
+}
+.invite-t{display:block;font-size:27rpx;font-weight:600;color:#7d5716}
+.invite-d{display:block;margin-top:8rpx;font-size:22rpx;line-height:1.7;color:#6b6559}
+
+/* 结果图分享：主按钮是「拍照」，分享是次级动作，用描边胶囊，不抢主次 */
+.share-row{margin-top:26rpx;padding-top:22rpx;border-top:1rpx dashed #ece7dc;text-align:center}
+.btn-share{
+  display:inline-block;padding:0 46rpx;height:78rpx;line-height:76rpx;border-radius:39rpx;
+  background:#fff;border:1rpx solid #d9c39a;color:#9a6b1f;font-size:27rpx;font-weight:600
+}
+.btn-share.tap-hover,.tap-hover.btn-share{background:#faf3e4}
+.share-tip{display:block;margin-top:14rpx;font-size:21rpx;line-height:1.6;color:#6b6559}
+
+/* 海报画布挪到屏幕外：必须有布局尺寸（canvas 2d 在 display:none 下画不出来），
+   逻辑像素由 JS 里的 canvas.width/height 决定，这里只影响它在屏幕上的占位大小 */
+.poster-canvas{
+  position:fixed;left:-9999rpx;top:0;width:540rpx;height:675rpx;
+  pointer-events:none;opacity:0
+}

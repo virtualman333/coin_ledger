@@ -65,4 +65,28 @@ module.exports = async function coinCountRoutes(app) {
       ms: result.ms
     });
   });
+
+  /**
+   * GET /api/coin-count/preview?f=cnt-xxx.png
+   * 分享海报用的标注图缩略图（JPEG base64）。
+   * 小程序画 canvas 取网络图要先过 downloadFile 合法域名，域名没配就画不出来；
+   * 改成点「分享结果图」时按需取一次，客户端写本地临时文件，绕开域名依赖，
+   * 也避免每次计数都多传几百 KB。
+   */
+  app.get('/api/coin-count/preview', { preHandler: app.requireLogin }, async function (request, reply) {
+    const f = String((request.query && request.query.f) || '');
+    if (!/^cnt-[A-Za-z0-9_-]{1,80}\.png$/.test(f)) {
+      return reply.code(400).send({ ok: false, error: '参数不对' });
+    }
+    const file = path.join(OUT_DIR, f);
+    if (!fs.existsSync(file)) {
+      return reply.code(404).send({ ok: false, error: '标注图已过期，重新拍一张吧' });
+    }
+    try {
+      const jpg = coinCount.previewJpeg(fs.readFileSync(file), 680, 76);
+      reply.send({ ok: true, dataUrl: 'data:image/jpeg;base64,' + jpg.toString('base64') });
+    } catch (e) {
+      reply.code(400).send({ ok: false, error: '缩略图生成失败' });
+    }
+  });
 };

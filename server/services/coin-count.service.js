@@ -618,4 +618,37 @@ function distanceTransform(bin, w, h) {
   return D;
 }
 
-module.exports = { count, decode, binarize, distanceTransform, annotate, readingOrder, MAX_SIDE };
+/**
+ * 标注图 PNG → 小尺寸 JPEG（给小程序画分享海报用）。
+ *
+ * 为什么不直接让小程序拿 marked 的网络地址去画：canvas 取网络图要先过
+ * downloadFile 合法域名，域名没配就画不出来，海报会空一块。这里由服务端
+ * 顺手压一张 ≤720px 的 JPEG（约 100KB），客户端写成本地临时文件即可，
+ * 不依赖任何域名白名单。
+ */
+function previewJpeg(pngBuf, maxSide, quality) {
+  const side = maxSide || 720;
+  const img = PNG.sync.read(pngBuf);
+  const scale = Math.min(1, side / Math.max(img.width, img.height));
+  if (scale >= 1) {
+    return jpeg.encode({ width: img.width, height: img.height, data: img.data }, quality || 82).data;
+  }
+  const w = Math.max(1, Math.round(img.width * scale));
+  const h = Math.max(1, Math.round(img.height * scale));
+  const out = Buffer.alloc(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const sy = Math.min(img.height - 1, Math.round(y / scale));
+    for (let x = 0; x < w; x++) {
+      const sx = Math.min(img.width - 1, Math.round(x / scale));
+      const s = (sy * img.width + sx) * 4;
+      const d = (y * w + x) * 4;
+      out[d] = img.data[s];
+      out[d + 1] = img.data[s + 1];
+      out[d + 2] = img.data[s + 2];
+      out[d + 3] = 255;
+    }
+  }
+  return jpeg.encode({ width: w, height: h, data: out }, quality || 82).data;
+}
+
+module.exports = { count, decode, binarize, distanceTransform, annotate, readingOrder, previewJpeg, MAX_SIDE };
