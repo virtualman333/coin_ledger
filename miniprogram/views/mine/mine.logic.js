@@ -163,7 +163,7 @@ module.exports = {
   /** 快捷入口分发（收藏备份在更多功能页里，那里有导入导出的完整逻辑） */
   onQuick(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === 'backup') { this.goMoreTools(); return; }
+    if (key === 'backup') { wx.navigateTo({ url: '/pages/backup/backup' }); return; }
     if (key === 'count') { wx.navigateTo({ url: '/pages/count/count' }); return; }
     if (key === 'feedback') { wx.navigateTo({ url: '/pages/feedback/feedback' }); return; }
     if (key === 'plaza') { wx.navigateTo({ url: '/pages/plaza/plaza' }); return; }

@@ -1,0 +1,76 @@
+<view class="page">
+  <!-- 这个页面本身就是说明书：先说清「备份是什么、能干嘛」，再给动作 -->
+  <view class="intro">
+    <text class="in-t">收藏备份</text>
+    <text class="in-d">把账本导出成一个 CSV 表格文件，存到微信、电脑或网盘。换手机、重装、误删时，用这个文件把收藏恢复回来。</text>
+    <view class="in-state" wx:if="{{loggedIn}}">
+      <text class="is-k">当前收藏</text>
+      <text class="is-v">{{count}} 条 · {{kinds}} 个品种</text>
+    </view>
+    <text class="in-last {{lastBackup ? '' : 'warn'}}">
+      {{lastBackup ? '上次导出：' + lastBackup : '还没有导出过，建议先备份一份'}}
+    </text>
+  </view>
+
+  <text class="sec">备份（导出）</text>
+  <view class="group">
+    <view class="act" hover-class="row-hover" hover-stay-time="80" bindtap="fileExport" aria-role="button" aria-label="存成文件发到微信">
+      <view class="ac-ico">⇩</view>
+      <view class="ac-txt">
+        <text class="ac-t">存成文件发到微信</text>
+        <text class="ac-d">生成 .csv 文件，发给「文件传输助手」保存，电脑上用 Excel / WPS 都能打开</text>
+      </view>
+      <text class="ac-a">›</text>
+    </view>
+    <view class="act" hover-class="row-hover" hover-stay-time="80" bindtap="copyExport" aria-role="button" aria-label="复制表格内容">
+      <view class="ac-ico">⧉</view>
+      <view class="ac-txt">
+        <text class="ac-t">复制表格内容</text>
+        <text class="ac-d">贴到备忘录、微信收藏里都能还原，适合顺手存一份</text>
+      </view>
+      <text class="ac-a">›</text>
+    </view>
+  </view>
+
+  <text class="sec">恢复（导入）</text>
+  <view class="group">
+    <view class="act" hover-class="row-hover" hover-stay-time="80" bindtap="importFromFile" aria-role="button" aria-label="从聊天记录选文件">
+      <view class="ac-ico">⇧</view>
+      <view class="ac-txt">
+        <text class="ac-t">从聊天记录选文件</text>
+        <text class="ac-d">选中之前发给自己的 .csv，自动识别并合并</text>
+      </view>
+      <text class="ac-a">›</text>
+    </view>
+    <view class="act" hover-class="row-hover" hover-stay-time="80" bindtap="importFromClipboard" aria-role="button" aria-label="从剪贴板粘贴导入">
+      <view class="ac-ico">贴</view>
+      <view class="ac-txt">
+        <text class="ac-t">从剪贴板粘贴导入</text>
+        <text class="ac-d">复制过的表格内容直接粘进来即可</text>
+      </view>
+      <text class="ac-a">›</text>
+    </view>
+  </view>
+
+  <text class="sec">怎么用</text>
+  <view class="group docs">
+    <view class="doc">
+      <text class="dc-t">备份里有什么</text>
+      <text class="dc-p">品种、数量、成本、号码、整套/单个、图片地址。不含账号和密码。</text>
+    </view>
+    <view class="doc">
+      <text class="dc-t">导入会覆盖吗</text>
+      <text class="dc-p">不会。已存在的品种按名称跳过，你现在的数量和成本不受影响；只有新品种会被加进来。</text>
+    </view>
+    <view class="doc">
+      <text class="dc-t">什么时候该备份</text>
+      <text class="dc-p">大批量录入之后、换手机之前、清理微信缓存之前。CSV 存在你自己的设备上，本站不代管。</text>
+    </view>
+    <view class="doc">
+      <text class="dc-t">文件格式</text>
+      <text class="dc-p">CSV（逗号分隔，UTF-8 带 BOM），手机和电脑都能打开。别用 Excel 改完再导回来，容易把格式改坏。</text>
+    </view>
+  </view>
+
+  <view class="foot">备份文件只在你自己的设备与微信里流转</view>
+</view>

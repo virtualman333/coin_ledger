@@ -58,8 +58,8 @@ test('更多功能页：工具 / 反馈 / 管理分组齐全', () => {
   assert.match(adminBlock, /wx:if="\{\{isAdmin\}\}"/, '管理端入口应只对管理员显示');
 });
 
-test('收藏备份迁到更多功能页后逻辑完整', () => {
-  const js = read('pages/more-tools/more-tools.js');
+test('收藏备份迁到独立备份页后逻辑完整', () => {
+  const js = read('pages/backup/backup.js');
   assert.match(js, /store\.exportCsv\(\)/, '缺导出（CSV）');
   assert.match(js, /store\.parseImport\(/, '缺解析');
   assert.match(js, /store\.importHoldings\(parsed\.items, 'merge'\)/, '缺合并导入');

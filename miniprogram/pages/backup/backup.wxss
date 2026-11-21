@@ -1,0 +1,164 @@
+
+.page {
+  padding: 24rpx;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+/* 说明头 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  padding: 28rpx 26rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid #ece7dc;
+  background: #ffffff;
+}
+
+.in-t {
+  color: #2b2926;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.in-d {
+  color: #6b6559;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.in-state {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 4rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f2eee4;
+}
+
+.is-k {
+  color: #6b6559;
+  font-size: 22rpx;
+}
+
+.is-v {
+  color: #2b2926;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.in-last {
+  color: #8a6420;
+  font-size: 21rpx;
+}
+
+.in-last.warn {
+  color: #9c5850;
+}
+
+/* 分组标题 */
+.sec {
+  display: block;
+  margin: 28rpx 4rpx 12rpx;
+  color: #6b6559;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+}
+
+.group {
+  border-radius: 18rpx;
+  border: 1rpx solid #ece7dc;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* 动作行 */
+.act {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 24rpx 22rpx;
+  border-bottom: 1rpx solid #f2eee4;
+}
+
+.act:last-child {
+  border-bottom: none;
+}
+
+.ac-ico {
+  display: flex;
+  width: 64rpx;
+  height: 64rpx;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background: #faf8f3;
+  color: #8a6420;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.ac-txt {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.ac-t {
+  color: #2b2926;
+  font-size: 27rpx;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ac-d {
+  color: #6b6559;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.ac-a {
+  flex: 0 0 auto;
+  color: #c9bca2;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+/* 说明条目 */
+.docs {
+  padding: 6rpx 22rpx;
+}
+
+.doc {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f2eee4;
+}
+
+.doc:last-child {
+  border-bottom: none;
+}
+
+.dc-t {
+  display: block;
+  color: #2b2926;
+  font-size: 25rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.dc-p {
+  display: block;
+  color: #6b6559;
+  font-size: 21rpx;
+  line-height: 1.6;
+}
+
+.foot {
+  margin-top: 24rpx;
+  text-align: center;
+  color: #8a8378;
+  font-size: 20rpx;
+}
