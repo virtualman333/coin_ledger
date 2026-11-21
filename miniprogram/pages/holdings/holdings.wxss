@@ -114,12 +114,6 @@
   font-weight: 600;
 }
 
-.cat-empty-s {
-  display: block;
-  margin-top: 10rpx;
-  color: #6b6559;
-  font-size: 22rpx;
-}
 
 /* ================= 空态 ================= */
 .empty-card {
@@ -136,13 +130,6 @@
   font-weight: 600;
 }
 
-.empty-sub {
-  display: block;
-  margin: 14rpx 0 28rpx;
-  color: #6b6559;
-  font-size: 23rpx;
-  line-height: 1.7;
-}
 
 .empty-btn {
   display: inline-block;
@@ -158,6 +145,7 @@
   display: flex;
   margin: 6rpx 4rpx 14rpx;
   align-items: center;
+  justify-content: flex-end;
   justify-content: space-between;
 }
 

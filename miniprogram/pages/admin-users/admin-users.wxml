@@ -1,23 +1,63 @@
 <view class="page">
+  <!-- 一句话统计，不占版面 -->
+  <view class="sum">
+    <text>共 {{stats.total}} 位</text>
+    <text class="sum-s">管理员 {{stats.admins}}</text>
+    <text class="sum-s">测试 {{stats.tests}}</text>
+    <text class="sum-s" wx:if="{{stats.disabled}}">禁用 {{stats.disabled}}</text>
+  </view>
 
-    <view class="card list">
-      <view
-        class="row"
-        wx:for="{{users}}"
-        wx:key="id"
-        data-id="{{item.id}}"
-        bindtap="userActions"
-        hover-class="tap-hover"
-      >
-        <view class="r-main">
-          <view class="r-title">
-            <text>{{item.name}}</text>
-            <text class="badge {{item.role === 'admin' ? 'admin' : ''}}">{{item.role === 'admin' ? '管理员' : '用户'}}</text>
-            <text class="badge test" wx:if="{{item.isTest}}">测试</text>
-          </view>
-          <text class="r-sub">藏品 {{item.holdings}} 条 · 注册 {{item.createdAtText}}</text>
+  <view class="search">
+    <text class="s-ico">⌕</text>
+    <input
+      class="s-input"
+      value="{{q}}"
+      placeholder="搜用户名或昵称"
+      placeholder-class="s-ph"
+      confirm-type="search"
+      bindinput="onSearchInput"
+      bindconfirm="loadUsers"
+    />
+    <view class="s-clear" wx:if="{{q}}" bindtap="clearSearch" hover-class="tap-hover">✕</view>
+  </view>
+
+  <view class="chips">
+    <view
+      class="chip {{status === item.v ? 'on' : ''}}"
+      wx:for="{{statusTabs}}"
+      wx:key="v"
+      data-v="{{item.v}}"
+      bindtap="setStatus"
+      hover-class="tap-hover"
+    >{{item.t}}</view>
+  </view>
+
+  <view class="list" wx:if="{{users.length}}">
+    <view
+      class="row user-row"
+      wx:for="{{users}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="userActions"
+      hover-class="tap-hover"
+    >
+      <view class="uava {{item.role === 'admin' ? 'adm' : ''}} {{item.disabled ? 'off' : ''}}">{{item.initial}}</view>
+      <view class="r-main">
+        <view class="r-title">
+          <text class="r-title-text">{{item.displayName}}</text>
+          <text class="badge admin" wx:if="{{item.role === 'admin'}}">管理员</text>
+          <text class="badge test" wx:if="{{item.isTest}}">测试</text>
+          <text class="badge off" wx:if="{{item.disabled}}">已禁用</text>
         </view>
-        <text class="r-more">›</text>
+        <text class="r-sub">{{item.name}} · {{item.holdings}} 条藏品 · {{item.createdAtText}}</text>
       </view>
+      <text class="r-more">›</text>
     </view>
+  </view>
+
+  <view class="empty" wx:if="{{!users.length && !loading}}">{{q ? '没有匹配的用户' : '还没有用户'}}</view>
+
+  <view class="more" wx:if="{{loading}}">加载中…</view>
+  <view class="more" wx:elif="{{hasMore}}" bindtap="loadMore" hover-class="tap-hover">加载更多</view>
+  <view class="more" wx:elif="{{users.length}}">没有更多了</view>
 </view>

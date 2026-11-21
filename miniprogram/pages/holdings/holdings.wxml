@@ -35,19 +35,17 @@
 
     <view class="empty-card" wx:if="{{empty}}">
       <text class="empty-title">还没有藏品</text>
-      <text class="empty-sub">去清单里挑几枚加进来，账本会自动汇总面值、推理价与成本</text>
       <view class="empty-btn" hover-class="tap-hover" bindtap="goList">去挑藏品</view>
     </view>
 
     <block wx:if="{{!empty}}">
       <view class="cat-empty" wx:if="{{catEmpty}}">
         <text class="cat-empty-t">这个分类下还没有藏品</text>
-        <text class="cat-empty-s">切到「全部」看看别的</text>
       </view>
 
       <block wx:if="{{!catEmpty}}">
       <view class="tools">
-        <text class="tools-text">{{selectMode ? '点选要分享的藏品（最多 20 件）' : (groups.length + ' 个分组 · 点 ⋯ 改账')}}</text>
+        <text class="tools-text" wx:if="{{selectMode}}">点选要分享的藏品（最多 20 件）</text>
         <view class="tools-acts">
           <text class="tools-btn" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</text>
           <button class="tools-share" open-type="share" hover-class="tap-hover" wx:if="{{!selectMode}}">分享我的收藏</button>

@@ -28,8 +28,7 @@
     </view>
   </view>
 
-  <view class="tip" wx:if="{{!loading}}">共 {{items.length}} 条持仓 · 仅管理员可见<text wx:if="{{summary.pmKinds}}">
-其中 {{summary.pmKinds}} 条贵金属不计入市值与盈亏（成本 ¥{{summary.pmCostText}}）</text></view>
+  <view class="tip" wx:if="{{!loading && items.length}}">{{items.length}} 条持仓<text wx:if="{{summary.pmKinds}}"> · {{summary.pmKinds}} 条贵金属不计估值</text></view>
 
   <view class="card list" wx:if="{{items.length}}">
     <view class="hrow" wx:for="{{items}}" wx:key="id">
@@ -55,10 +54,7 @@
     </view>
   </view>
 
-  <view class="empty" wx:if="{{!loading && !items.length}}">
-    <text class="e-title">这个账号还没有藏品</text>
-    <text class="e-sub">等他自己记录，或者从网页端看更详细的数据</text>
-  </view>
+  <view class="empty" wx:if="{{!loading && !items.length}}">这个账号还没有藏品</view>
 
   <view class="loading" wx:if="{{loading}}">加载中…</view>
 </view>
