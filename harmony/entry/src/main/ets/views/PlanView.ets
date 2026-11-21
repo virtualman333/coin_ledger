@@ -97,7 +97,8 @@ class ReminderBody {
 
 @Component
 export struct PlanView {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   onSwitchTab: (index: number) => void = (index: number): void => {
   };
 
@@ -708,7 +709,7 @@ export struct PlanView {
                   .fontColor(Theme.goldDeep)
                 Blank()
                 Text(this.nextMeta)
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.muted)
               }
               .width('100%')
@@ -869,7 +870,7 @@ export struct PlanView {
                   })
               }
               .width('100%')
-              .padding({ top: 18, bottom: 96 })
+              .padding({ top: 18, bottom: 24 })
             }
           }
           .width('100%')

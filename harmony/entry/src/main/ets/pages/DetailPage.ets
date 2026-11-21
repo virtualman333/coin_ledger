@@ -39,7 +39,8 @@ class GalItem {
 
 @Component
 export struct DetailPage {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   @StorageProp('cl_dataRev') @Watch('onStoreChange') dataRev: number = 0;
 
   @State coin: Coin | null = null;
@@ -193,6 +194,14 @@ export struct DetailPage {
       b.bullet = false;
       b.segs = this.splitBold(raw.replace(/\n/g, ' '));
       out.push(b);
+    }
+    return out;
+  }
+
+  private blockText(b: DescBlock): string {
+    let out = '';
+    for (let i = 0; i < b.segs.length; i++) {
+      out += b.segs[i].text;
     }
     return out;
   }
@@ -467,16 +476,17 @@ export struct DetailPage {
       ForEach(this.facts, (f: FactRow) => {
         Row() {
           Text(f.k)
-            .fontSize(12)
+            .fontSize(13)
             .fontColor(Theme.faint)
-            .width(76)
+            .width(80)
           Text(f.v)
-            .fontSize(12)
+            .fontSize(13)
             .fontColor(Theme.textStrong)
             .layoutWeight(1)
+            .lineHeight(20)
         }
         .width('100%')
-        .padding({ top: 8, bottom: 8 })
+        .padding({ top: 9, bottom: 9 })
         .alignItems(VerticalAlign.Top)
       }, (f: FactRow) => f.k + f.v)
       if (this.specNote.length > 0) {
@@ -502,16 +512,12 @@ export struct DetailPage {
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
         ForEach(this.descBlocks, (b: DescBlock) => {
-          Text() {
-            ForEach(b.segs, (s: DescSeg) => {
-              Span(s.text)
-                .fontWeight(s.bold ? FontWeight.Medium : FontWeight.Normal)
-                .fontColor(s.bold ? Theme.gold : '#5A5A5A')
-            }, (s: DescSeg, i: number) => String(i) + s.text)
-          }
-          .fontSize(13)
-          .lineHeight(23)
-          .width('100%')
+          // Text 的子节点只能是 Span/ImageSpan，里面放 ForEach 会在渲染阶段 Cpp Crash
+          Text(this.blockText(b))
+            .fontSize(13)
+            .lineHeight(23)
+            .fontColor('#5A5A5A')
+            .width('100%')
         }, (b: DescBlock, i: number) => String(i))
       }
       .width('100%')

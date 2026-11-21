@@ -1,6 +1,5 @@
 import { common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
-import { AppTabBar } from '../components/TabBar';
 import { HomeView } from '../views/HomeView';
 import { PlanView } from '../views/PlanView';
 import { ListView } from '../views/ListView';
@@ -169,6 +168,23 @@ struct Index {
   }
 
   @Builder
+  tabItem(index: number, label: string, icon: Resource, iconOn: Resource) {
+    Column({ space: 2 }) {
+      Image(this.currentTab === index ? iconOn : icon)
+        .width(24)
+        .height(24)
+        .objectFit(ImageFit.Contain)
+      Text(label)
+        .fontSize(10)
+        .fontColor(this.currentTab === index ? Theme.goldDeep : Theme.faint)
+        .fontWeight(this.currentTab === index ? FontWeight.Medium : FontWeight.Normal)
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+  }
+
+  @Builder
   pageMap(name: string) {
     NavDestination() {
       if (name === Routes.DETAIL) {
@@ -217,13 +233,15 @@ struct Index {
     }
     .hideTitleBar(true)
     .backgroundColor(Theme.bg)
+    // 不写尺寸时 NavDestination 会按内容自适应，出现「页面比屏幕窄、左侧露出下页」的残影
+    .width('100%')
+    .height('100%')
   }
 
   build() {
     Stack() {
       if (this.agreed) {
         Navigation(this.stack) {
-        Stack({ alignContent: Alignment.Bottom }) {
           Tabs({ barPosition: BarPosition.End, index: this.currentTab }) {
             TabContent() {
               HomeView({
@@ -231,6 +249,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
+            .tabBar(this.tabItem(0, '首页', $r('app.media.tab_home'), $r('app.media.tab_home_on')))
 
             TabContent() {
               PlanView({
@@ -238,6 +257,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
+            .tabBar(this.tabItem(1, '计划', $r('app.media.tab_plan'), $r('app.media.tab_plan_on')))
 
             TabContent() {
               ListView({
@@ -245,6 +265,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
+            .tabBar(this.tabItem(2, '清单', $r('app.media.tab_list'), $r('app.media.tab_list_on')))
 
             TabContent() {
               MineView({
@@ -252,32 +273,23 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
+            .tabBar(this.tabItem(3, '我的', $r('app.media.tab_mine'), $r('app.media.tab_mine_on')))
           }
           .width('100%')
           .height('100%')
-          .barHeight(0)
-          .scrollable(true)
+          // 系统原生底部栏：白底 + 顶部分隔线 + 图标/文字着色，不做悬浮胶囊
+          .barHeight(58)
+          .barBackgroundColor(Theme.card)
+          .divider({ strokeWidth: 0.5, color: Theme.line })
+          .fadingEdge(false)
+          .scrollable(false)
           .animationDuration(220)
           .onChange((index: number): void => {
             this.currentTab = index;
           })
-
-          Column() {
-            AppTabBar({
-              current: this.currentTab,
-              onSelect: (index: number): void => this.switchTab(index)
-            })
-              .width('100%')
-          }
-          .width('100%')
-          .padding({ left: 15, right: 15, bottom: 10 })
-          .zIndex(2)
         }
-        .width('100%')
-        .height('100%')
-      }
-        .hideTitleBar(true)
-        .mode(NavigationMode.Stack)
+      .hideTitleBar(true)
+      .mode(NavigationMode.Stack)
         .navDestination(this.pageMap)
         .width('100%')
         .height('100%')

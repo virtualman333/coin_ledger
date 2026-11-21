@@ -30,7 +30,8 @@ class RecentItem {
 
 @Component
 export struct MineView {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   onSwitchTab: (index: number) => void = (index: number): void => {
   };
 
@@ -47,7 +48,7 @@ export struct MineView {
   @State pnlPct: number = 0;
   @State profitUp: boolean = true;
   @State totalCoins: number = 0;
-  @State segs: boolean[] = [];
+  @State progPct: number = 0;
   @State dist: DistItem[] = [];
   @State quick: QuickItem[] = [];
   @State recent: RecentItem[] = [];
@@ -85,12 +86,8 @@ export struct MineView {
     this.totalCoins = Catalog.total();
     this.syncTip = state.synced ? '' : (state.error || '');
 
-    const N = 20;
-    const rawPct = Catalog.total() > 0 ? (st.kinds / Catalog.total()) * 100 : 0;
-    const filled = Math.round((Math.max(0, Math.min(100, rawPct)) / 100) * N);
-    const segs: boolean[] = [];
-    for (let i = 0; i < N; i++) segs.push(i < filled);
-    this.segs = segs;
+    this.progPct = Catalog.total() > 0
+      ? Math.round((st.kinds / Catalog.total()) * 1000) / 10 : 0;
 
     const dist: DistItem[] = [];
     const coin = new DistItem();
@@ -122,7 +119,7 @@ export struct MineView {
     quick.push(this.quickItem('backup', '收藏备份', '⇅'));
     quick.push(this.quickItem('count', '拍照数币', '◎'));
     quick.push(this.quickItem('feedback', '意见反馈', '✎'));
-    quick.push(this.quickItem('plaza', '藏品广场', '✦'));
+    quick.push(this.quickItem('plaza', '藏品广场', '✧'));
     this.quick = quick;
 
     const rec: RecentItem[] = [];
@@ -139,7 +136,7 @@ export struct MineView {
       const size = c !== undefined ? (c.setSizeBase || c.setSizeCalc) : 20;
       const qty = h.unit === 'piece' ? (Number(h.rolls) || 0) : (Number(h.rolls) || 0) * size;
       const r = new RecentItem();
-      r.name = h.name;
+      r.name = c !== undefined ? (c.short || h.name) : h.name;
       r.initial = h.name.length > 0 ? h.name.charAt(0) : '藏';
       r.img = img;
       r.qtyText = qty + ' ' + (c !== undefined && c.kind === 'note' ? '张' : '枚');
@@ -235,7 +232,7 @@ export struct MineView {
       ForEach(this.quick, (item: QuickItem) => {
         Column({ space: 6 }) {
           Text(item.icon)
-            .fontSize(17)
+            .fontSize(16)
             .fontColor(Theme.goldDeep)
             .width(44)
             .height(44)
@@ -403,16 +400,20 @@ export struct MineView {
                 .fontSize(10)
                 .fontColor(Theme.muted)
 
-              Row({ space: 3 }) {
-                ForEach(this.segs, (on: boolean, index: number) => {
-                  Row()
-                    .layoutWeight(1)
-                    .height(10)
-                    .borderRadius(2)
-                    .backgroundColor(on ? Theme.gold : '#EAE3D4')
-                }, (on: boolean, index: number) => String(index) + (on ? '1' : '0'))
+              Stack({ alignContent: Alignment.Start }) {
+                Row()
+                  .width('100%')
+                  .height(8)
+                  .borderRadius(4)
+                  .backgroundColor('#EAE3D4')
+                Row()
+                  .width(this.progPct + '%')
+                  .height(8)
+                  .borderRadius(4)
+                  .linearGradient({ angle: 90, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
               }
               .width('100%')
+              .height(8)
               .margin({ top: 4 })
 
               Row() {
@@ -507,7 +508,7 @@ export struct MineView {
               .fontColor(Theme.faint)
           }
           .width('100%')
-          .margin({ top: 16, bottom: 96 })
+          .margin({ top: 16, bottom: 24 })
         } else {
           Column({ space: 8 }) {
             Text('登录后才有账本')
@@ -546,7 +547,7 @@ export struct MineView {
           .backgroundColor(Theme.card)
 
           Column()
-            .height(96)
+            .height(24)
         }
       }
       .width('100%')

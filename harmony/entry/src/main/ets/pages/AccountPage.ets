@@ -28,7 +28,8 @@ class AuthResponse {
 
 @Component
 export struct AccountPage {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   @StorageProp('cl_dataRev') @Watch('onStoreChange') dataRev: number = 0;
 
   @State mode: string = 'login';

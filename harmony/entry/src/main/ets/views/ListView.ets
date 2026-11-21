@@ -80,7 +80,8 @@ class FilterSnap {
 
 @Component
 export struct ListView {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   onSwitchTab: (index: number) => void = (index: number): void => {
   };
 
@@ -1131,7 +1132,7 @@ export struct ListView {
           }
         }
         .width('100%')
-        .padding({ left: 16, right: 16, bottom: 96 })
+        .padding({ left: 16, right: 16, bottom: 24 })
         .margin({ top: 4 })
       }
       .width('100%')

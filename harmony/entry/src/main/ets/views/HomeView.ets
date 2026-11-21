@@ -6,7 +6,7 @@ import { agoText, fmtPrice, hhmm, money, signed } from '../utils/format';
 import { Nav, RouteParam, Routes } from '../utils/router';
 import { Store } from '../utils/store';
 import { Theme } from '../utils/theme';
-import { Coin, Holding, ShareItem, SharesResponse } from '../model/types';
+import { Coin, Holding } from '../model/types';
 import { SectionHead } from '../components/Common';
 
 interface LatestCard {
@@ -35,16 +35,6 @@ interface MetalInfo {
   stale: boolean;
 }
 
-interface FeedCard {
-  id: string;
-  author: string;
-  holdingName: string;
-  serialText: string;
-  tag: string;
-  pic: string;
-  timeText: string;
-}
-
 interface QuotesResponse {
   ok: boolean;
   stale?: boolean;
@@ -63,7 +53,8 @@ interface MetalQuote {
 
 @Component
 export struct HomeView {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   onSwitchTab: (index: number) => void = (index: number): void => {
   };
 
@@ -76,7 +67,6 @@ export struct HomeView {
   @State latest: LatestCard[] = [];
   @State seriesTop: SeriesCard[] = [];
   @State metal: MetalInfo | null = null;
-  @State feed: FeedCard[] = [];
   @State syncTip: string = '';
   @State faceText: string = '0';
   @State costText: string = '0';
@@ -91,7 +81,6 @@ export struct HomeView {
   aboutToAppear(): void {
     this.render();
     this.loadMetal();
-    this.loadFeed();
     if (Store.isLogin()) {
       Store.refresh().catch((e: Error): void => {
         this.syncTip = e.message || '同步失败';
@@ -191,40 +180,9 @@ export struct HomeView {
     });
   }
 
-  private loadFeed(): void {
-    Api.get<SharesResponse>('/api/shares?sort=new&limit=3').then((r: SharesResponse): void => {
-      if (!r || !r.ok || !Array.isArray(r.items)) {
-        this.feed = [];
-        return;
-      }
-      const out: FeedCard[] = [];
-      for (let i = 0; i < r.items.length && i < 3; i++) {
-        const s: ShareItem = r.items[i];
-        let tag = '';
-        if (s.tags && s.tags.length > 0) {
-          const t = s.tags[0];
-          tag = typeof t === 'string' ? t : (t.name || '');
-        }
-        out.push({
-          id: String(s.id),
-          author: s.author || '藏友',
-          holdingName: s.holdingName || '',
-          serialText: s.serials && s.serials.length > 0 ? s.serials[0] : '',
-          tag: tag,
-          pic: s.images && s.images.length > 0 ? Api.imgUrl(s.images[0]) : '',
-          timeText: agoText(s.createdAt)
-        });
-      }
-      this.feed = out;
-    }).catch((): void => {
-      this.feed = [];
-    });
-  }
-
   private doRefresh(): void {
     this.refreshing = true;
     this.loadMetal();
-    this.loadFeed();
     Store.refresh(true).then((): void => {
       this.render();
       this.refreshing = false;
@@ -247,7 +205,9 @@ export struct HomeView {
 
   @Builder
   hero() {
-    Stack({ alignContent: Alignment.BottomEnd }) {
+    // 用 Row 分栏而不是 Stack：Stack 的 .align() 只管组件内部内容，
+    // 定位只能靠 alignContent，文字和图片需要不同对齐时会互相带偏
+    Row() {
       Column({ space: 6 }) {
         Text('藏币录')
           .fontSize(26)
@@ -274,28 +234,43 @@ export struct HomeView {
             Clip.copy(Config.WEB_URL, '链接已复制，可粘贴分享');
           })
       }
+      .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
-      .padding({ left: 20, top: 24 })
-      .align(Alignment.TopStart)
 
       if (this.heroImg.length > 0) {
         Image(this.heroImg)
-          .width(104)
-          .height(104)
+          .width(96)
+          .height(96)
           .objectFit(ImageFit.Contain)
-          .margin({ right: 18, bottom: 24 })
-          .opacity(0.95)
+          .borderRadius(12)
+          .margin({ left: 8 })
+          .opacity(0.96)
       } else {
-        Image($r('app.media.logo_seal'))
-          .width(88)
-          .height(88)
-          .objectFit(ImageFit.Contain)
-          .margin({ right: 22, bottom: 30 })
-          .opacity(0.9)
+        // 装饰方孔钱（同小程序 .hero-coin）：不依赖位图，颜色跟主题走
+        Stack({ alignContent: Alignment.Center }) {
+          Column()
+            .width(72)
+            .height(72)
+            .borderRadius(36)
+            .backgroundColor('#E9DCC0')
+            .border({ width: 2, color: '#D8C49B' })
+          Column()
+            .width(22)
+            .height(22)
+            .backgroundColor(Theme.bg)
+            .border({ width: 3, color: '#C9A96A' })
+        }
+        .width(72)
+        .height(72)
+        .margin({ left: 8 })
+        .opacity(0.92)
       }
     }
     .width('100%')
     .height(196)
+    .padding({ left: 20, right: 16, top: 20, bottom: 20 })
+    .alignItems(VerticalAlign.Center)
+    .justifyContent(FlexAlign.SpaceBetween)
     .borderRadius(20)
     .clip(true)
     .linearGradient({ angle: 135, colors: [['#FBF7EE', 0], ['#F2E9D6', 1]] })
@@ -536,70 +511,6 @@ export struct HomeView {
   }
 
   @Builder
-  feedList() {
-    Column({ space: 8 }) {
-      ForEach(this.feed, (item: FeedCard) => {
-        Row({ space: 10 }) {
-          if (item.pic.length > 0) {
-            Image(item.pic)
-              .width(48)
-              .height(48)
-              .borderRadius(8)
-              .objectFit(ImageFit.Cover)
-          } else {
-            Text('藏')
-              .width(48)
-              .height(48)
-              .borderRadius(8)
-              .textAlign(TextAlign.Center)
-              .fontSize(16)
-              .fontColor(Theme.gold)
-              .backgroundColor(Theme.goldBg)
-          }
-          Column({ space: 3 }) {
-            Row({ space: 6 }) {
-              Text(item.holdingName)
-                .fontSize(13)
-                .fontColor(Theme.textStrong)
-                .maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
-              if (item.tag.length > 0) {
-                Text(item.tag)
-                  .fontSize(9)
-                  .fontColor(Theme.goldDeep)
-                  .padding({ left: 5, right: 5, top: 1, bottom: 1 })
-                  .backgroundColor(Theme.goldBg)
-                  .borderRadius(4)
-              }
-            }
-            if (item.serialText.length > 0) {
-              Text('号码 ' + item.serialText)
-                .fontSize(10)
-                .fontColor(Theme.muted)
-            }
-            Text(item.author + ' · ' + item.timeText)
-              .fontSize(10)
-              .fontColor(Theme.faint)
-          }
-          .layoutWeight(1)
-          .alignItems(HorizontalAlign.Start)
-
-          Text('›')
-            .fontSize(18)
-            .fontColor(Theme.faint)
-        }
-        .width('100%')
-        .padding(12)
-        .borderRadius(12)
-        .backgroundColor(Theme.card)
-        .onClick((): void => {
-          Nav.push(this.stack, Routes.PLAZA, new RouteParam());
-        })
-      }, (item: FeedCard) => item.id)
-    }
-  }
-
-  @Builder
   seriesGrid() {
     Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
       ForEach(this.seriesTop, (item: SeriesCard) => {
@@ -679,19 +590,6 @@ export struct HomeView {
             .padding({ left: 12, right: 12 })
           }
 
-          if (this.feed.length > 0) {
-            SectionHead({ title: '藏友晒单', more: '去广场 ›', onMore: (): void => {
-              Nav.push(this.stack, Routes.PLAZA, new RouteParam());
-            } })
-              .width('100%')
-              .padding({ left: 12, right: 12 })
-            Column() {
-              this.feedList()
-            }
-            .width('100%')
-            .padding({ left: 12, right: 12 })
-          }
-
           SectionHead({
             title: '按系列',
             more: '全部 ' + this.seriesCount + ' 个 ›',
@@ -719,7 +617,7 @@ export struct HomeView {
           }
           .width('100%')
           .alignItems(HorizontalAlign.Center)
-          .margin({ top: 10, bottom: 96 })
+          .margin({ top: 10, bottom: 24 })
         }
         .width('100%')
       }

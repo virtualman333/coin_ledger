@@ -25,7 +25,8 @@ class CountResult {
 
 @Component
 export struct CountPage {
-  @Prop stack: NavPathStack;
+  // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
+  stack: NavPathStack = new NavPathStack();
   @State image: string = '';
   @State marked: string = '';
   @State count: number = 0;
