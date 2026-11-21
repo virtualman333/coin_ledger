@@ -68,7 +68,7 @@ Page({
     let scene = 0;
     try { scene = Number((wx.getLaunchOptionsSync() || {}).scene || 0); } catch (e) { /* 老基础库忽略 */ }
     if (scene === 1154) wx.reLaunch({ url: '/pages/index/index' });
-    else wx.switchTab({ url: '/pages/index/index' });
+    else getApp().goTab(0);
   },
 
   onShareAppMessage() {

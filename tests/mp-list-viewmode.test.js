@@ -66,9 +66,10 @@ function loadListPage() {
     get: () => Promise.resolve({ ok: true, items: [], page: 1, pages: 0, total: 0 }),
   });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const file = path.join(MP, 'pages/list/list.js');
+  const file = path.join(MP, 'views/list/list.logic.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch, cb) {
@@ -146,7 +147,7 @@ test('按系列模式下顶部品类 tab 切换生效，且不动顺序清单状
 });
 
 test('WXML：视图切换 + 品类分组 + 贵金属富信息', () => {
-  const wxml = fs.readFileSync(path.join(MP, 'pages/list/list.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(MP, 'views/list/list.wxml'), 'utf8');
   assert.match(wxml, /bindtap="toggleViewMode"/);
   assert.ok(wxml.includes('data-mode="list"'));
   assert.ok(wxml.includes('data-mode="series"'));

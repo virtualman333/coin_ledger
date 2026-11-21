@@ -81,6 +81,7 @@ function loadSeriesPage() {
   const file = mp('pages/series/series.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   return instance();
 }
 
@@ -105,9 +106,10 @@ function loadListPage() {
     get: () => Promise.resolve({ ok: true, items: [], page: 1, pages: 0, total: 0 }),
   });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const file = mp('pages/list/list.js');
+  const file = mp('views/list/list.logic.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const inst = instance();
   inst.data.allTabs = [{ code: '', name: '全部' }];
   inst.data.pmTabs = [{ code: '', name: '全部项目' }];

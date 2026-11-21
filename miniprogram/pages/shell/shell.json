@@ -1,0 +1,17 @@
+{
+  "navigationBarTitleText": "藏币录",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f4ef",
+  "backgroundColorTop": "#f6f4ef",
+  "backgroundColorBottom": "#f6f4ef",
+  "backgroundTextStyle": "dark",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "home-view": "/views/home/home",
+    "plan-view": "/views/plan/plan",
+    "list-view": "/views/list/list",
+    "mine-view": "/views/mine/mine",
+    "tabbar": "/components/tabbar/index"
+  }
+}

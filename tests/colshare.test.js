@@ -133,6 +133,7 @@ function loadHoldings(holdingsData, loggedIn, state) {
   const file = path.join(MP, 'pages/holdings/holdings.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const page = Object.assign({}, captured);
   page.data = JSON.parse(JSON.stringify(captured.data || {}));
   page.setData = function (patch) {
@@ -207,6 +208,7 @@ test('快照页读取接口、按本地时间展示，并可二次分享', () =>
   const file = path.join(MP, 'pages/colshare/colshare.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const page = Object.assign({}, captured);
   page.data = JSON.parse(JSON.stringify(captured.data));
   page.setData = function (patch) {

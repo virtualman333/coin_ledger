@@ -149,12 +149,13 @@ test('分享落地页与失败态都有明确的出路（重试 / 回首页）',
   const colshare = read('miniprogram/pages/colshare/colshare.wxml');
   assert.match(colshare, /bindtap="goHome"/, 'colshare 必须有回主界面入口');
   const colshareJs = read('miniprogram/pages/colshare/colshare.js');
-  assert.match(colshareJs, /switchTab\(\{ url: '\/pages\/index\/index' \}\)/);
+  // tab 页已并入 pages/shell，回主界面统一走 getApp().goTab(0)
+  assert.match(colshareJs, /goTab\(0\)/);
 
   const pm = read('miniprogram/pages/pmdetail/pmdetail.wxml');
   assert.match(pm, /bindtap="retry"/);
   assert.match(pm, /bindtap="goHome"/);
-  const list = read('miniprogram/pages/list/list.wxml');
+  const list = read('miniprogram/views/list/list.wxml');
   assert.match(list, /bindtap="retryPmFull"/);
   const myfb = read('miniprogram/pages/myfeedback/myfeedback.wxml');
   assert.match(myfb, /wx:if="\{\{err\}\}"/);

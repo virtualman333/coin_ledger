@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 /* ============ 首页 ============ */
 .home {
   /* 这一层是 .page 本体，简写 padding-bottom 会抹掉全局的安全区留白。

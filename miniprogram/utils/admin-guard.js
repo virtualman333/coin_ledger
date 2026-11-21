@@ -17,7 +17,7 @@ function ensureAdmin() {
     success: () => {
       wx.navigateBack({
         fail: () => {
-          wx.switchTab({ url: '/pages/mine/mine' });
+          getApp().goTab(3);
         },
       });
     },

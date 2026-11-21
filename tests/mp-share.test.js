@@ -24,7 +24,16 @@ const CONTENT_PAGES = [
   'list/list',
 ];
 
+// tab 页已并入宿主页 pages/shell，页面逻辑搬到 views/*，这里做一次路径映射
+const VIEW_FILES = {
+  'index/index': 'views/home/home.logic.js',
+  'plan/plan': 'views/plan/plan.logic.js',
+  'list/list': 'views/list/list.logic.js',
+  'mine/mine': 'views/mine/mine.logic.js',
+};
+
 function pageFile(rel) {
+  if (VIEW_FILES[rel]) return path.join(MP, VIEW_FILES[rel]);
   return path.join(MP, 'pages', rel + '.js');
 }
 
@@ -105,6 +114,7 @@ test('pmdetail 分享回调透传当前详情，未加载时用 URL code 兜底'
   const file = pageFile('pmdetail/pmdetail');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
 
   const page = Object.assign({}, captured);
   page.data = { code: 'CODE1', item: { code: 'ITEM1' } };

@@ -100,7 +100,7 @@ Page({
 
   goAll() {
     wx.removeStorageSync('cl_pending_series');
-    wx.switchTab({ url: '/pages/list/list' });
+    getApp().goTab(2);
   },
 
   onShareAppMessage() {

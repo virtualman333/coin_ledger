@@ -63,14 +63,17 @@ function loadHomePage(opts) {
     BASE: 'https://example.test',
     get: (p) => mockGet(p),
   });
-  const file = mp('pages/index/index.js');
+  const file = mp('views/home/home.logic.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch) {
     Object.keys(patch).forEach((k) => { this.data[k] = patch[k]; });
   };
+  // 视图里的跨 tab 跳转改成 triggerEvent（由宿主页接），测试里补个空实现
+  inst.triggerEvent = function () {};
   return inst;
 }
 
@@ -158,13 +161,16 @@ test('晒单板块：接口失败整块隐藏', async () => {
 test('行情卡跳转贵金属目录，晒单跳转广场', () => {
   setupWx();
   const p = loadHomePage();
-  const tabUrls = [];
+  const tabEvents = [];
   const navUrls = [];
-  global.wx.switchTab = (o) => tabUrls.push(o.url);
+  // 切 tab 不再走 wx.switchTab，改成向宿主页发 switchtab 事件
+  p.triggerEvent = (name, detail) => {
+    if (name === 'switchtab') tabEvents.push(detail.index);
+  };
   global.wx.navigateTo = (o) => navUrls.push(o.url);
   p.goMetal();
   p.goPlaza();
-  assert.equal(tabUrls[0], '/pages/list/list');
+  assert.equal(tabEvents[0], 2, '贵金属目录应该切到「全套清单」tab');
   assert.deepEqual(mem['cl_pending_series'], { code: '', category: 'pm' });
   assert.equal(navUrls[0], '/pages/plaza/plaza');
 });

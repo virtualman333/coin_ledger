@@ -15,7 +15,7 @@ const MP = path.join(__dirname, '..', 'miniprogram');
 const read = (p) => fs.readFileSync(path.join(MP, p), 'utf8');
 
 test('「我的」只留三个入口，工具类不再堆在主页', () => {
-  const wxml = read('pages/mine/mine.wxml');
+  const wxml = read('views/mine/mine.wxml');
   for (const fn of ['goHoldings', 'goProfile', 'goMoreTools']) {
     assert.ok(wxml.includes('bindtap="' + fn + '"'), '缺少入口：' + fn);
   }
@@ -25,8 +25,8 @@ test('「我的」只留三个入口，工具类不再堆在主页', () => {
 });
 
 test('「我的」不再用整块渐变卡，主数字独立成区', () => {
-  const wxml = read('pages/mine/mine.wxml');
-  const wxss = read('pages/mine/mine.wxss');
+  const wxml = read('views/mine/mine.wxml');
+  const wxss = read('views/mine/mine.wxss');
   // 旧设计：.stat / .stat-main / .sm-big 的大渐变块
   assert.ok(!wxml.includes('class="stat"'), '旧的总览卡应已替换');
   assert.ok(!wxss.includes('.stat-main'), '旧样式的残留');
@@ -39,8 +39,8 @@ test('「我的」不再用整块渐变卡，主数字独立成区', () => {
 });
 
 test('「我的」的方法与模板对得上', () => {
-  const wxml = read('pages/mine/mine.wxml');
-  const js = read('pages/mine/mine.js');
+  const wxml = read('views/mine/mine.wxml');
+  const js = read('views/mine/mine.logic.js');
   const handlers = new Set((wxml.match(/(?:bind|catch)tap="([A-Za-z_]\w*)"/g) || [])
     .map((m) => m.split('"')[1]));
   for (const h of handlers) {
@@ -89,7 +89,7 @@ test('两个新页面都已注册，且「我的」能跳过去', () => {
   assert.ok(app.pages.includes('pages/profile/profile'));
   assert.ok(app.pages.includes('pages/more-tools/more-tools'));
 
-  const js = read('pages/mine/mine.js');
+  const js = read('views/mine/mine.logic.js');
   assert.match(js, /\/pages\/profile\/profile/);
   assert.match(js, /\/pages\/more-tools\/more-tools/);
 });
@@ -105,16 +105,18 @@ test('三页只依赖项目自身样式：全局 .cell + 既定色板', () => {
   // 外部 skill 的样式已整体移除：不许有 styles/ui.wxss，也不许页面 @import 它
   assert.ok(!fs.existsSync(path.join(MP, 'styles', 'ui.wxss')), 'styles/ui.wxss 应已删除');
   for (const slug of ['mine', 'profile', 'more-tools']) {
-    const wxss = read('pages/' + slug + '/' + slug + '.wxss');
+    // 我的页已搬到 views/mine（宿主页 pages/shell 的视图），另两页仍是独立页面
+    const base = slug === 'mine' ? 'views/mine/mine' : 'pages/' + slug + '/' + slug;
+    const wxss = read(base + '.wxss');
     assert.doesNotMatch(wxss, /@import/, slug + ' 不该再 @import 外部样式');
-    const wxml = read('pages/' + slug + '/' + slug + '.wxml');
+    const wxml = read(base + '.wxml');
     assert.match(wxml, /class="cell"/, slug + ' 没用全局 .cell');
   }
   const appWxss = read('app.wxss');
   for (const cls of ['.cell', '.cell-k', '.cell-v', '.cell-a']) {
     assert.ok(appWxss.includes(cls + ' {'), 'app.wxss 缺 ' + cls);
   }
-  const mine = read('pages/mine/mine.wxss');
+  const mine = read('views/mine/mine.wxss');
   // 渐变只允许出现在主 CTA 按钮上（与全站 .btn-primary 保持一致），其余地方不许
   const grads = (mine.match(/linear-gradient\([^)]*\)/g) || []);
   assert.equal(grads.length, 2, '渐变只该出现在两个主按钮上，实际：' + grads.length);

@@ -78,6 +78,7 @@ function loadHoldings() {
   const f = path.join(MP, 'pages/holdings/holdings.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch, cb) {
@@ -136,6 +137,7 @@ test('广场评论：首次展开状态写回 cmts[id]，删除后条目与计�
   const f = path.join(MP, 'pages/plaza/plaza.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const p = Object.assign({}, captured);
   p.data = JSON.parse(JSON.stringify(captured.data || {}));
   p.setData = function (patch, cb) {

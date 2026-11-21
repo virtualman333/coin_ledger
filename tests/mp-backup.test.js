@@ -235,15 +235,15 @@ test('小程序的广场入口都受开关控制', () => {
   // 广场入口从「我的」收进了「更多功能」页
   assert.match(readMp('pages/more-tools/more-tools.wxml'), /wx:if="\{\{plazaOn\}\}"[\s\S]{0,120}goPlaza/,
     '「更多功能」里的广场入口没有开关');
-  assert.doesNotMatch(readMp('pages/mine/mine.wxml'), /goPlaza/, '「我的」不该再直接挂广场入口');
-  assert.match(readMp('pages/index/index.wxml'), /plazaOn && feed\.length/, '首页晒单板块没有开关');
+  assert.doesNotMatch(readMp('views/mine/mine.wxml'), /goPlaza/, '「我的」不该再直接挂广场入口');
+  assert.match(readMp('views/home/home.wxml'), /plazaOn && feed\.length/, '首页晒单板块没有开关');
   const holdings = readMp('pages/holdings/holdings.wxml');
   assert.match(holdings, /wx:if="\{\{plazaOn\}\}"[^>]*shareToPlaza/, '弹层里的「分享广场」没有开关');
   assert.match(holdings, /wx:if="\{\{plazaOn\}\}"[^>]*toggleSelectMode/, '「多选分享」没有开关');
 });
 
 test('小程序首页关闭广场后不再请求广场数据', () => {
-  const s = readMp('pages/index/index.js');
+  const s = readMp('views/home/home.logic.js');
   assert.match(s, /if \(!feature\.plaza\)[\s\S]{0,80}feed: \[\]/, '关掉入口后还在拉 /api/shares');
 });
 

@@ -55,9 +55,10 @@ function loadPage() {
   global.App = () => {};
   global.getApp = () => ({ globalData: {} });
 
-  const file = path.join(MP, 'pages', 'plan', 'plan.js');
+  const file = path.join(MP, 'views', 'plan', 'plan.logic.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
 
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));

@@ -97,9 +97,10 @@
     inset 0 1rpx 0 rgba(255, 255, 255, 0.95),
     inset 0 -3rpx 5rpx rgba(199, 160, 88, 0.14),
     inset 0 0 0 1rpx rgba(214, 178, 110, 0.22);
-  /* transition 不写在这里：由 wxml 内联控制。
-     页面切过来时首帧必须没有过渡（直接定格），只有点击才播滑动，
-     否则新实例会从第 1 格滑到目标格，衔接就断了。 */
+  /* 组件常驻，过渡一直挂着；切视图不会重建它，滑动天然连续。
+     原来"新实例首帧要定格"的开关已经不需要了。
+     */
+  transition: transform 0.26s cubic-bezier(0.3, 0.88, 0.3, 1);
   will-change: transform;
 }
 

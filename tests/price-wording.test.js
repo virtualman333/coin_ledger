@@ -69,12 +69,12 @@ test('账本底层字段保留：成本 cost 与市场估值 market 仍在，小
 });
 
 test('小程序：清单页与首页卡片价格用 aiPriceOf，账本市值不参与', () => {
-  const list = read('miniprogram/pages/list/list.js');
+  const list = read('miniprogram/views/list/list.logic.js');
   assert.match(list, /priceText: '¥' \+ cat\.money\(cat\.aiPriceOf\(c\) \* c\.setSize\)/);
   assert.doesNotMatch(list, /store\.setPriceOf\(c\)/);
-  const index = read('miniprogram/pages/index/index.js');
+  const index = read('miniprogram/views/home/home.logic.js');
   assert.match(index, /priceText: '推理价 ¥' \+ cat\.money\(cat\.aiPriceOf\(c\) \* c\.setSize\)/);
-  const listWxml = read('miniprogram/pages/list/list.wxml');
+  const listWxml = read('miniprogram/views/list/list.wxml');
   assert.match(listWxml, /推理价/);
 });
 

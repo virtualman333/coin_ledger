@@ -67,7 +67,7 @@ test('页面级 .page 简写 padding 不能抹掉安全区', () => {
     'pages/colshare/colshare.wxss',
     'pages/count/count.wxss',
     'pages/myfeedback/myfeedback.wxss',
-    'pages/plan/plan.wxss',
+    'views/plan/plan.wxss',
   ];
   for (const f of must) {
     const s = readFile(path.join(MP, f));
@@ -80,8 +80,8 @@ test('页面级 .page 简写 padding 不能抹掉安全区', () => {
 test('顶到屏幕底部的容器都要留安全区', () => {
   // 列表页根节点没有 .page，安全区得自己补
   const cases = [
-    ['pages/list/list.wxss', /\.pm-full\s*\{[^}]*\}/],
-    ['pages/index/index.wxss', /\.home\s*\{[^}]*\}/],
+    ['views/list/list.wxss', /\.pm-full\s*\{[^}]*\}/],
+    ['views/home/home.wxss', /\.home\s*\{[^}]*\}/],
   ];
   for (const [f, re] of cases) {
     const s = readFile(path.join(MP, f));
@@ -108,9 +108,9 @@ test('遮罩带 catchtouchmove 时，弹层主体必须是 scroll-view 而不是
       sheet: /\.peek-sheet\s*\{[^}]*\}/,
     },
     {
-      wxml: 'pages/plan/plan.wxml',
+      wxml: 'views/plan/plan.wxml',
       scroll: 'pd-scroll',
-      wxss: 'pages/plan/plan.wxss',
+      wxss: 'views/plan/plan.wxss',
       sheet: /\.pd-sheet\s*\{[^}]*\}/,
     },
   ];
@@ -193,7 +193,7 @@ test('浅色底上的文字色不低于 4.5:1', () => {
 });
 
 test('深色 hero 上的文字不能是深灰', () => {
-  const s = readFile(path.join(MP, 'pages/index/index.wxss'));
+  const s = readFile(path.join(MP, 'views/home/home.wxss'));
   const m = s.match(/\.hero-tag\s*\{[^}]*\}/);
   assert.ok(m, '找不到 .hero-tag');
   const c = m[0].match(/color\s*:\s*(#[0-9a-fA-F]{6})/);
@@ -260,7 +260,7 @@ test('全部 wxml 标签闭合', () => {
 // ------------------------------------------------------------- 小热区兜底
 test('小于 88rpx 的圆形按钮用伪元素扩展热区', () => {
   const cases = [
-    ['pages/list/list.wxss', '.search-clear'],
+    ['views/list/list.wxss', '.search-clear'],
     ['pages/detail/detail.wxss', '.ai-q'],
   ];
   for (const [f, cls] of cases) {
@@ -303,7 +303,7 @@ test('关闭按钮（✕）用伪元素扩热区，不靠放大盒子', () => {
     ['pages/holdings/holdings.wxss', '.sheet-x'],
     ['pages/detail/detail.wxss', '.peek-x'],
     ['pages/detail/detail.wxss', '.ai-formula-x'],
-    ['pages/plan/plan.wxss', '.pd-x'],
+    ['views/plan/plan.wxss', '.pd-x'],
     ['pages/admin/admin-common.wxss', '.sheet-x'],
     ['pages/admin/admin-common.wxss', '.vdd-x'],
     ['pages/account/account.wxss', '.policy-close'],

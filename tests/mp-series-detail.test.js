@@ -92,6 +92,7 @@ function loadDetailPage(apiStub) {
   const file = path.join(MP, 'pages/series-detail/series-detail.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   return instance();
 }
 
@@ -226,9 +227,10 @@ test('list.goSeriesCard 打开新页面，不再跳回顺序清单', () => {
   install('utils/store.js', { ownedNames: () => ({}), setPriceOf: () => 0, getState: () => ({ holdings: [] }), refresh: () => Promise.resolve() });
   install('utils/api.js', { BASE: 'https://example.test', get: () => Promise.resolve({ ok: true, items: [] }) });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const f = path.join(MP, 'pages/list/list.js');
+  const f = path.join(MP, 'views/list/list.logic.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const p = instance();
   p.data.viewMode = 'series';
   p.data.seriesNote = [{ code: 's2', name: '钞系列' }];
@@ -250,6 +252,7 @@ test('series.goSeries 打开新页面，保留返回栈', () => {
   const f = path.join(MP, 'pages/series/series.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const p = instance();
   p.data.noteGroup = [{ code: 's2', name: '钞系列' }];
   p.goSeries({ currentTarget: { dataset: { code: 's2', cat: 'note' } } });
@@ -265,9 +268,10 @@ test('index.goSeries 打开新页面（修复老格式不带 category 的 bug）
   install('utils/store.js', { stats: () => ({}), ownedNames: () => ({}), getState: () => ({ user: null }), refresh: () => Promise.resolve() });
   install('utils/api.js', { BASE: 'https://example.test', get: () => Promise.resolve({ ok: false }) });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const f = path.join(MP, 'pages/index/index.js');
+  const f = path.join(MP, 'views/home/home.logic.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const p = instance();
   p.goSeries({ currentTarget: { dataset: { code: 's2', cat: 'note', name: '钞系列' } } });
   assert.equal(navs[0].type, 'navigateTo');
@@ -281,9 +285,10 @@ test('老格式 cl_pending_series：推断品类并回顺序清单', () => {
   install('utils/store.js', { ownedNames: () => ({}), setPriceOf: () => 0, getState: () => ({ holdings: [] }), refresh: () => Promise.resolve() });
   install('utils/api.js', { BASE: 'https://example.test', get: () => Promise.resolve({ ok: true, items: [] }) });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const f = path.join(MP, 'pages/list/list.js');
+  const f = path.join(MP, 'views/list/list.logic.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const p = instance();
   p.data.viewMode = 'series';
   mem['cl_pending_series'] = 's2';

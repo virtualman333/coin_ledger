@@ -1,0 +1,248 @@
+<view class="head">
+  <view class="search-row" wx:if="{{viewMode === 'list'}}">
+    <view class="search">
+      <!-- 未激活时放一个「假框」：不渲染 input，机型再想自动聚焦也没有对象 -->
+      <view
+        wx:if="{{!searchActive}}"
+        class="search-fake"
+        hover-class="tap-hover"
+        bindtap="activateSearch"
+      >
+        <text class="search-icon">⌕</text>
+        <text class="search-ph">{{keyword || '搜品种 / 年份'}}</text>
+      </view>
+      <input
+        wx:else
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜品种 / 年份"
+        placeholder-class="search-ph"
+        confirm-type="search"
+        focus="{{searchFocus}}"
+        bindinput="onSearch"
+        bindtap="focusSearch"
+        bindblur="onSearchBlur"
+        bindconfirm="onSearchBlur"
+      />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</view>
+    </view>
+    <view class="filter-toggle {{filterOpen || extraCount ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleFilter">
+      <text>筛选</text>
+      <text class="filter-badge" wx:if="{{extraCount}}">{{extraCount}}</text>
+    </view>
+  </view>
+
+  <!-- 视图模式：顺序清单 / 按系列 -->
+  <view class="view-switch">
+    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
+    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
+  </view>
+
+  <view class="cat-tabs">
+    <view
+      class="cat-tab {{category === item.code ? 'on' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="code"
+      data-cat="{{item.code}}"
+      bindtap="pickCategory"
+    >{{item.name}}</view>
+  </view>
+
+  <scroll-view class="tabs" scroll-x enable-flex wx:if="{{viewMode === 'list'}}">
+    <view
+      class="tab {{code === item.code ? 'tab-on' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="code"
+      hover-class="tab-hover"
+      data-code="{{item.code}}"
+      bindtap="pickTab"
+    >
+      <text>{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 普通币这一行显示本地 catalog 的计数；贵金属走自己的 .pm-bar，避免两套数字打架 -->
+  <view class="bar" wx:if="{{viewMode === 'list' && category !== 'pm'}}">
+    <text class="bar-text">{{count}} 个品种 · 已收 {{ownedCount}}</text>
+    <view class="bar-actions">
+      <view class="bar-btn {{desc ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
+    </view>
+  </view>
+
+  <view class="fpanel" wx:if="{{viewMode === 'list' && filterOpen}}">
+    <view class="frow">
+      <picker range="{{yearOpts}}" value="{{yearIdx}}" bindchange="pickYear">
+        <view class="fbtn {{yearFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{yearFilter || '年份'}} ▾</view>
+      </picker>
+      <picker range="{{faceOpts}}" value="{{faceIdx}}" bindchange="pickFace">
+        <view class="fbtn {{faceFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{faceFilter ? faceFilter + ' 元' : '面额'}} ▾</view>
+      </picker>
+      <picker range="{{matOpts}}" value="{{matIdx}}" bindchange="pickMat">
+        <view class="fbtn {{matFilter ? 'fbtn-on' : ''}}" hover-class="tap-hover">{{matFilter || '材质'}} ▾</view>
+      </picker>
+      <!-- 贵金属的「只看已收」需要服务端按 code 列表过滤，暂时不给入口，免得点了没反应 -->
+      <view class="fbtn {{onlyOwn ? 'fbtn-on' : ''}}" wx:if="{{category !== 'pm'}}" hover-class="tap-hover" bindtap="toggleOwn">只看已收</view>
+      <view class="fbtn fbtn-clear" wx:if="{{hasExtra}}" hover-class="tap-hover" bindtap="clearExtra">清除</view>
+    </view>
+  </view>
+</view>
+
+<!-- 贵金属全量库（金币云集 2823 条）：卡片网格 + 占位图 + 加载更多 -->
+<view class="pm-full" wx:if="{{viewMode === 'list' && category === 'pm'}}">
+  <view class="pm-bar">
+    <text class="pm-bar-t">贵金属纪念币 · 共 {{pmTotal || '…'}} 条 · 已收 {{pmOwnedCount}}</text>
+    <view class="bar-btn {{desc ? 'on' : ''}}" hover-class="tap-hover" bindtap="toggleSort">年份 {{desc ? '↓' : '↑'}}</view>
+  </view>
+  <view class="pm-grid">
+    <view
+      class="pm-card"
+      wx:for="{{pmRows}}"
+      wx:key="code"
+      hover-class="pm-card-hover"
+      data-code="{{item.code}}"
+      bindtap="goPmDetail"
+    >
+      <image wx:if="{{item.thumb}}" class="pm-thumb" src="{{item.thumb}}" mode="aspectFill" lazy-load></image>
+      <view wx:else class="pm-ph pm-{{item.metalClass}}"><text>{{item.metalChar}}</text></view>
+      <view class="pm-card-b">
+        <view class="pm-card-t">{{item.name}}</view>
+        <view class="pm-card-m">{{item.metaText}}</view>
+        <view class="pm-card-f">面额 {{item.faceText}} · 成色 {{item.fineness || '—'}}%</view>
+        <view class="pm-card-c">{{item.code}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="pm-loading" wx:if="{{pmLoading}}">加载中…</view>
+  <view class="pm-more" wx:if="{{!pmLoading && pmLoaded && pmPage < pmPages}}" bindtap="loadMorePm">加载更多（{{pmPage}}/{{pmPages}}）</view>
+  <view class="pm-empty pm-error" wx:if="{{pmLoaded && pmError}}" bindtap="retryPmFull">{{pmError}} · 点此重试</view>
+  <view class="pm-empty" wx:elif="{{pmLoaded && !pmError && pmRows.length === 0}}">没有匹配的贵金属品种，换个关键词或放宽筛选条件</view>
+  <view class="pm-end" wx:if="{{pmLoaded && pmRows.length > 0 && pmPage >= pmPages}}">已显示全部 {{pmTotal}} 条</view>
+</view>
+
+<view class="list" wx:if="{{viewMode === 'list' && category !== 'pm'}}">
+  <view
+    class="row"
+    wx:for="{{shownRows}}"
+    wx:key="id"
+    hover-class="row-hover"
+    data-id="{{item.id}}"
+    bindtap="goDetail"
+  >
+    <image
+      wx:if="{{!item.imgFail}}"
+      class="thumb"
+      src="{{item.imgUrl}}"
+      mode="aspectFit"
+      lazy-load
+      data-id="{{item.id}}"
+      binderror="imgErr"
+    ></image>
+    <view wx:else class="thumb placeholder">无图</view>
+    <view class="row-main">
+      <view class="row-top">
+        <text class="row-name">{{item.name}}</text>
+        <text class="tag" wx:if="{{item.owned}}">已收</text>
+      </view>
+      <text class="row-meta">{{item.metaText}}</text>
+      <view class="row-sub">
+        <text class="row-mint" wx:if="{{item.mintageLabel}}">{{item.mintageLabel}}</text>
+        <text class="row-dot" wx:if="{{item.mintageLabel}}">·</text>
+        <text class="row-set">{{item.setLabel}}</text>
+      </view>
+    </view>
+    <view class="row-right">
+      <text class="row-year">{{item.year}}</text>
+      <text class="row-price"><text class="row-price-k">推理价 </text>{{item.priceText}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{count === 0}}">
+    {{onlyOwn ? '还没有收藏到符合条件的东西，先取消「只看已收」试试' : '没有匹配的品种，换个关键词试试'}}
+  </view>
+  <view class="pm-end" wx:if="{{count > 0 && shownRows.length < rows.length}}">上拉加载更多</view>
+  <view class="pm-end" wx:elif="{{count > 0}}">已显示全部 {{count}} 项</view>
+</view>
+
+<!-- 按系列视图：跟随顶部品类 tab，一次只展示一类，点卡片回顺序清单并定位 -->
+<view class="series-view" wx:if="{{viewMode === 'series'}}">
+
+  <!-- 普通纪念币 -->
+  <block wx:if="{{category === 'coin'}}">
+    <view class="sv-intro">
+      <text class="sv-intro-t">普通纪念币</text>
+      <text class="sv-intro-s">按系列整理 · 点开查看该系列全部品种</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesCoin.length}}">
+      <view class="sv-card" wx:for="{{seriesCoin}}" wx:key="code" data-cat="coin" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+          <text class="sv-badge">{{item.count}} 枚</text>
+        </view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <view class="sv-foot">
+            <text class="sv-own" wx:if="{{item.own}}">已藏 {{item.own}} / {{item.count}}</text>
+            <text class="sv-own sv-own-none" wx:else>还没收藏</text>
+            <text class="sv-arrow">›</text>
+          </view>
+          <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
+      </view>
+    </view>
+    <view class="sv-empty" wx:else>普通纪念币系列加载中…</view>
+  </block>
+
+  <!-- 纪念钞 -->
+  <block wx:elif="{{category === 'note'}}">
+    <view class="sv-intro note">
+      <text class="sv-intro-t">纪念钞</text>
+      <text class="sv-intro-s">按系列整理 · 点开查看该系列全部品种</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesNote.length}}">
+      <view class="sv-card" wx:for="{{seriesNote}}" wx:key="code" data-cat="note" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.imgUrl}}" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph" wx:else><text>{{item.name}}</text></view>
+          <text class="sv-badge">{{item.count}} 张</text>
+        </view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <view class="sv-foot">
+            <text class="sv-own" wx:if="{{item.own}}">已藏 {{item.own}} / {{item.count}}</text>
+            <text class="sv-own sv-own-none" wx:else>还没收藏</text>
+            <text class="sv-arrow">›</text>
+          </view>
+          <view class="sv-bar"><view class="sv-fill" style="width:{{item.pct}}%"></view></view>
+        </view>
+      </view>
+    </view>
+    <view class="sv-empty" wx:else>纪念钞系列加载中…</view>
+  </block>
+
+  <!-- 贵金属：封面 + 年份跨度 + 材质标签 + 枚数 -->
+  <block wx:elif="{{category === 'pm'}}">
+    <view class="sv-intro pm">
+      <text class="sv-intro-t">贵金属纪念币</text>
+      <text class="sv-intro-s">按发行项目整理 · 共 {{seriesPm.length}} 个项目</text>
+    </view>
+    <view class="sv-cards" wx:if="{{seriesPm.length}}">
+      <view class="sv-card sv-card-pm" wx:for="{{seriesPm}}" wx:key="code" data-cat="pm" data-code="{{item.code}}" bindtap="goSeriesCard" hover-class="sv-hover">
+        <view class="sv-media">
+          <image class="sv-img" wx:if="{{item.thumb}}" src="{{item.thumb}}" mode="aspectFit" lazy-load></image>
+          <view class="sv-ph sv-ph-pm" wx:else><text>贵金属</text></view>
+          <text class="sv-badge">{{item.count}} 枚</text>
+        </view>
+        <view class="sv-body">
+          <text class="sv-name">{{item.name}}</text>
+          <view class="sv-tags" wx:if="{{item.yearText || item.matText}}">
+            <text class="sv-tag" wx:if="{{item.yearText}}">{{item.yearText}}</text>
+            <text class="sv-tag sv-tag-mat" wx:if="{{item.matText}}">{{item.matText}}</text>
+          </view>
+          <view class="sv-foot"><text class="sv-own">查看目录</text><text class="sv-arrow">›</text></view>
+        </view>
+      </view>
+    </view>
+    <view class="sv-empty" wx:elif="{{seriesPmLoaded}}">暂无贵金属项目</view>
+    <view class="sv-empty" wx:else>贵金属项目加载中…</view>
+  </block>
+</view>

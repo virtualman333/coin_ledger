@@ -1,0 +1,25 @@
+<!-- 常驻 TabBar：鸿蒙风悬浮玻璃胶囊。
+     药丸位移只由 selected 驱动，组件不重建，所以一次点击就是一段连续滑动。 -->
+<view class="tabbar" aria-role="tablist">
+  <!-- 玻璃顶部高光（3D 反光面），必须在最底层 -->
+  <view class="tb-gloss"></view>
+  <!-- 选中态滑片：宽度固定为 1/4，靠 translateX 位移 -->
+  <view class="tb-pill" style="transform: translateX({{selected * 100}}%)"></view>
+
+  <view
+    class="tb-item {{selected === index ? 'on' : ''}}"
+    wx:for="{{list}}"
+    wx:key="key"
+    data-index="{{index}}"
+    bindtap="onTap"
+    hover-class="tb-item-press"
+    hover-start-time="0"
+    hover-stay-time="90"
+    aria-role="tab"
+    aria-selected="{{selected === index}}"
+    aria-label="{{item.text}}"
+  >
+    <view class="tb-ico ico-{{item.icon}}"></view>
+    <text class="tb-txt">{{item.text}}</text>
+  </view>
+</view>

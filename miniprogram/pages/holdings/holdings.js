@@ -583,13 +583,13 @@ Page({
   },
 
   goList() {
-    wx.switchTab({ url: '/pages/list/list' });
+    getApp().goTab(2);
   },
 
   goBack() {
     const pages = getCurrentPages();
     if (pages.length > 1) wx.navigateBack();
-    else wx.switchTab({ url: '/pages/mine/mine' });
+    else getApp().goTab(3);
   },
 
   onShareAppMessage() {

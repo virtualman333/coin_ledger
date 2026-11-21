@@ -59,7 +59,7 @@ Page({
   },
 
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' });
+    getApp().goTab(0);
   },
 
   isOwned(code) {

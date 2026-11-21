@@ -79,9 +79,10 @@ function loadListPage() {
     },
   });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  const file = mp('pages/list/list.js');
+  const file = mp('views/list/list.logic.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch, cb) {
@@ -96,7 +97,7 @@ function loadListPage() {
 const years = (rows) => rows.map((r) => Number(r.year));
 
 test('按钮绑定与箭头表达式正确（↓ 降序 / ↑ 升序）', () => {
-  const wxml = fs.readFileSync(path.join(MP, 'pages', 'list', 'list.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(MP, 'views', 'list', 'list.wxml'), 'utf8');
   assert.match(wxml, /bindtap="toggleSort"/);
   assert.match(wxml, /\{\{desc \? '↓' : '↑'\}\}/);
 });

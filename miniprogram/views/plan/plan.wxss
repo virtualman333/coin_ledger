@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 .page{padding:24rpx 24rpx calc(196rpx + env(safe-area-inset-bottom))}
 
 .head{margin-bottom:20rpx}

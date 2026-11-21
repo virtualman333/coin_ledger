@@ -372,7 +372,7 @@ Page({
     if (pages.length > 1) {
       wx.navigateBack();
     } else {
-      wx.switchTab({ url: '/pages/mine/mine' });
+      getApp().goTab(3);
     }
   },
 

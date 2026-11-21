@@ -75,9 +75,10 @@ function loadPage() {
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}), COVER: '' });
   install('utils/feature.js', { plaza: false });
 
-  const f = path.join(MP, 'pages/list/list.js');
+  const f = path.join(MP, 'views/list/list.logic.js');
   delete require.cache[require.resolve(f)];
   require(f);
+  if (!captured) captured = require(f);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch, cb) {

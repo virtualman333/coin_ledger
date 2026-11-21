@@ -57,6 +57,7 @@ function loadPmDetailPage() {
   const file = path.join(MP, 'pages/pmdetail/pmdetail.js');
   delete require.cache[require.resolve(file)];
   require(file);
+  if (!captured) captured = require(file);
   const inst = Object.assign({}, captured);
   inst.data = JSON.parse(JSON.stringify(captured.data || {}));
   inst.setData = function (patch, cb) {

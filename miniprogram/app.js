@@ -35,4 +35,29 @@ App({
       });
     }
   },
+
+  /**
+   * 统一跳到某个 tab。
+   *
+   * 现在四个 tab 都住在常驻宿主页 pages/shell 里，具体是哪一格通过 globalData
+   * 带过去（switchTab 不支持带参数）。其它页面不要再直接 switchTab 到
+   * pages/index|plan|list|mine —— 那些路径已经退化成兼容壳，会多绕一次重定向。
+   */
+  goTab(index) {
+    this.globalData.pendingTab = index;
+    wx.switchTab({
+      url: '/pages/shell/shell',
+      // 已经站在宿主页时 switchTab 会失败，那就直接切视图
+      fail: () => {
+        try {
+          const pages = getCurrentPages();
+          const cur = pages[pages.length - 1];
+          if (cur && cur.route === 'pages/shell/shell' && typeof cur.apply === 'function') {
+            this.globalData.pendingTab = null;
+            cur.apply(index);
+          }
+        } catch (e) { /* 忽略 */ }
+      },
+    });
+  },
 });
