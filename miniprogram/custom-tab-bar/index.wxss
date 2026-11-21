@@ -2,7 +2,7 @@
 
 /* =========================================================
    自定义 tabBar · 鸿蒙风悬浮玻璃胶囊
-   - 玻璃：72% 白 + 高斯模糊 + 饱和提升，底下内容隐约透出
+   - 玻璃：45% 白 + 强高斯模糊 + 饱和提升，底下内容明显透出来
    - 立体：外层双层落影撑起高度，内层高光/反光做出玻璃厚度，
            顶部一整片渐变反光面（.tb-gloss）模拟受光
    - 选中：淡金药丸带自身投影，浮在玻璃上而不是贴在上面
@@ -22,20 +22,30 @@
   height: 108rpx;
   padding: 8rpx;
   border-radius: 999rpx;
-  /* 透一点底，玻璃才有"透"的感觉 */
-  background-color: rgba(255, 255, 255, 0.62);
+  /* 白度不再是均匀一层：上沿略实、中段最透、下沿再收一点（玻璃弧面）。
+     均匀半透在浅色页面上会糊成"白板"，有厚度差才看得出是块玻璃。
+     只用渐变、不叠 background-color，避免两层白相乘反而更实。 */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.24) 58%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
   /* 不支持 backdrop-filter 的机型退化为半透白底，仍能压住内容。
      blur 用 px 而不是 rpx：部分基础库对 filter 里的 rpx 转换不完整 */
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
-  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  backdrop-filter: blur(30px) saturate(190%);
+  /* 强制独立合成层：否则切页/滚动时 backdrop-filter 会重算，底面闪白一下 */
+  transform: translateZ(0);
+  will-change: transform;
   box-shadow:
-    /* 落影：大而淡，撑起悬浮高度 */
-    0 18rpx 40rpx rgba(60, 48, 26, 0.16),
-    0 4rpx 12rpx rgba(60, 48, 26, 0.08),
+    /* 落影：透得更狠，投影就要更实，否则胶囊边界糊在背景里 */
+    0 20rpx 44rpx rgba(60, 48, 26, 0.2),
+    0 4rpx 12rpx rgba(60, 48, 26, 0.1),
     /* 玻璃厚度：顶部亮边 + 底部反光 + 外圈描边 */
     inset 0 1rpx 0 rgba(255, 255, 255, 0.98),
-    inset 0 -2rpx 6rpx rgba(120, 100, 70, 0.06),
-    inset 0 0 0 1rpx rgba(255, 255, 255, 0.72);
+    inset 0 -2rpx 6rpx rgba(120, 100, 70, 0.05),
+    inset 0 0 0 1rpx rgba(255, 255, 255, 0.85);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
@@ -52,16 +62,16 @@
     /* 左上斜向反光：只在边角出一道亮，别铺满整块，否则玻璃又变回实心白 */
     linear-gradient(
       104deg,
-      rgba(255, 255, 255, 0.42) 0%,
-      rgba(255, 255, 255, 0.08) 18%,
-      rgba(255, 255, 255, 0) 34%
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.06) 16%,
+      rgba(255, 255, 255, 0) 30%
     ),
-    /* 上沿受光：薄薄一层，落在胶囊边框附近 */
+    /* 上沿受光：薄薄一层贴着边框，压太重会变成一层白雾盖住透感 */
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0.06) 16%,
-      rgba(255, 255, 255, 0) 34%
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.04) 12%,
+      rgba(255, 255, 255, 0) 26%
     );
   pointer-events: none;
 }
@@ -77,13 +87,19 @@
   z-index: 0;
   width: calc((100% - 16rpx) / 4);
   border-radius: 999rpx;
-  background: linear-gradient(180deg, #fdf6e7 0%, #f5e7c9 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(253, 246, 231, 0.96) 0%,
+    rgba(245, 231, 201, 0.92) 100%
+  );
   box-shadow:
     0 4rpx 10rpx rgba(154, 107, 31, 0.16),
     inset 0 1rpx 0 rgba(255, 255, 255, 0.95),
     inset 0 -3rpx 5rpx rgba(199, 160, 88, 0.14),
     inset 0 0 0 1rpx rgba(214, 178, 110, 0.22);
-  transition: transform 0.42s cubic-bezier(0.3, 0.9, 0.3, 1);
+  /* transition 不写在这里：由 wxml 内联控制。
+     页面切过来时首帧必须没有过渡（直接定格），只有点击才播滑动，
+     否则新实例会从第 1 格滑到目标格，衔接就断了。 */
   will-change: transform;
 }
 
@@ -119,6 +135,8 @@
   line-height: 1;
   letter-spacing: 0.5rpx;
   white-space: nowrap;
+  /* 玻璃更透后，文字难免压在彩色内容上，加一层白色光晕把字托出来 */
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.9);
   transition: color 0.24s ease, opacity 0.2s ease,
     transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
