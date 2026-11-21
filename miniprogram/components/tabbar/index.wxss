@@ -1,55 +1,52 @@
 @import "./icons.wxss";
 
 /* =========================================================
-   自定义 tabBar · 鸿蒙风悬浮玻璃胶囊
-   - 玻璃：45% 白 + 强高斯模糊 + 饱和提升，底下内容明显透出来
-   - 立体：外层双层落影撑起高度，内层高光/反光做出玻璃厚度，
-           顶部一整片渐变反光面（.tb-gloss）模拟受光
-   - 选中：淡金药丸带自身投影，浮在玻璃上而不是贴在上面
-   - 触摸：按下 0.1s 快速下沉（图标压扁 + 文字变淡），
-           松手 0.34s 弹性回弹；另配一次轻振动
+   底部 TabBar · 鸿蒙风悬浮玻璃胶囊
+   - 玻璃：上沿略实、中段最透、下沿收一点的纵向渐变 + 高斯模糊
+   - 立体：双层落影撑高度，内层高光/反光做厚度，顶部斜向反光面模拟受光
+   - 选中：淡金药丸（自带投影 + 内侧白边），浮在玻璃上而不是贴在上面
+   - 触摸：按下 0.08s 压扁变淡，松手 0.16s ease-out 回位（不要过冲曲线）
    ========================================================= */
 
 .tabbar {
   position: fixed;
-  left: 26rpx;
-  right: 26rpx;
-  bottom: calc(16rpx + env(safe-area-inset-bottom));
+  left: 30rpx;
+  right: 30rpx;
+  bottom: calc(20rpx + env(safe-area-inset-bottom));
   z-index: 100;
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  height: 108rpx;
-  padding: 8rpx;
+  height: 116rpx;
+  padding: 10rpx;
   border-radius: 999rpx;
-  /* 白度不再是均匀一层：上沿略实、中段最透、下沿再收一点（玻璃弧面）。
-     均匀半透在浅色页面上会糊成"白板"，有厚度差才看得出是块玻璃。
-     只用渐变、不叠 background-color，避免两层白相乘反而更实。 */
+  /* 白度按 iOS 磨砂玻璃的量级（约 0.7）：再透就会出事 ——
+     首页底部的「今日金银价」是深色卡片，胶囊压上去时未选中的灰字会看不清。
+     透感交给高斯模糊和大面积高光，不靠压低白度。 */
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.24) 58%,
-    rgba(255, 255, 255, 0.4) 100%
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.68) 58%,
+    rgba(255, 255, 255, 0.76) 100%
   );
-  /* 不支持 backdrop-filter 的机型退化为半透白底，仍能压住内容。
-     blur 用 px 而不是 rpx：部分基础库对 filter 里的 rpx 转换不完整 */
-  -webkit-backdrop-filter: blur(30px) saturate(190%);
-  backdrop-filter: blur(30px) saturate(190%);
-  /* 强制独立合成层：否则切页/滚动时 backdrop-filter 会重算，底面闪白一下 */
+  /* blur 用 px 而不是 rpx：部分基础库对 filter 里的 rpx 转换不完整 */
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  /* 强制独立合成层：否则滚动时 backdrop-filter 重算，底面会闪白 */
   transform: translateZ(0);
   will-change: transform;
   box-shadow:
-    /* 落影：透得更狠，投影就要更实，否则胶囊边界糊在背景里 */
-    0 20rpx 44rpx rgba(60, 48, 26, 0.2),
-    0 4rpx 12rpx rgba(60, 48, 26, 0.1),
+    /* 落影：透得狠，投影就要更实，否则胶囊边界糊在背景里 */
+    0 22rpx 48rpx rgba(60, 48, 26, 0.22),
+    0 6rpx 14rpx rgba(60, 48, 26, 0.08),
     /* 玻璃厚度：顶部亮边 + 底部反光 + 外圈描边 */
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.98),
+    inset 0 1rpx 0 rgba(255, 255, 255, 1),
     inset 0 -2rpx 6rpx rgba(120, 100, 70, 0.05),
-    inset 0 0 0 1rpx rgba(255, 255, 255, 0.85);
+    inset 0 0 0 1rpx rgba(255, 255, 255, 0.9);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
-/* 受光面：上半部渐亮，做出玻璃的弧面反光 */
+/* 受光面：左上斜向一道 + 上沿薄薄一层，压太重会变成白雾盖住透感 */
 .tb-gloss {
   position: absolute;
   top: 1rpx;
@@ -59,17 +56,15 @@
   z-index: 0;
   border-radius: 999rpx;
   background:
-    /* 左上斜向反光：只在边角出一道亮，别铺满整块，否则玻璃又变回实心白 */
     linear-gradient(
       104deg,
-      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.32) 0%,
       rgba(255, 255, 255, 0.06) 16%,
       rgba(255, 255, 255, 0) 30%
     ),
-    /* 上沿受光：薄薄一层贴着边框，压太重会变成一层白雾盖住透感 */
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.36) 0%,
       rgba(255, 255, 255, 0.04) 12%,
       rgba(255, 255, 255, 0) 26%
     );
@@ -77,29 +72,28 @@
 }
 
 /* 药丸滑片：宽度恒为 1/4，translateX 位移由 selected 驱动。
-   自带投影 + 顶部内高光，看起来是浮在玻璃上的一枚小金片 */
+   自带投影 + 内侧白边，看起来是嵌在玻璃里的一枚实体小金片 */
 .tb-pill {
   position: absolute;
-  top: 8rpx;
+  top: 10rpx;
   right: auto;
-  bottom: 8rpx;
-  left: 8rpx;
+  bottom: 10rpx;
+  left: 10rpx;
   z-index: 0;
-  width: calc((100% - 16rpx) / 4);
+  width: calc((100% - 20rpx) / 4);
   border-radius: 999rpx;
   background: linear-gradient(
     180deg,
-    rgba(253, 246, 231, 0.96) 0%,
-    rgba(245, 231, 201, 0.92) 100%
+    #fdf4de 0%,
+    #f8e8c6 52%,
+    #f3debb 100%
   );
   box-shadow:
-    0 4rpx 10rpx rgba(154, 107, 31, 0.16),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.95),
-    inset 0 -3rpx 5rpx rgba(199, 160, 88, 0.14),
-    inset 0 0 0 1rpx rgba(214, 178, 110, 0.22);
-  /* 组件常驻，过渡一直挂着；切视图不会重建它，滑动天然连续。
-     原来"新实例首帧要定格"的开关已经不需要了。
-     */
+    0 4rpx 10rpx rgba(154, 107, 31, 0.18),
+    inset 0 1rpx 0 rgba(255, 255, 255, 1),
+    inset 0 -3rpx 5rpx rgba(186, 144, 66, 0.16),
+    inset 0 0 0 1rpx rgba(212, 174, 104, 0.26);
+  /* 组件常驻，过渡一直挂着；切视图不会重建它，滑动天然连续 */
   transition: transform 0.26s cubic-bezier(0.3, 0.88, 0.3, 1);
   will-change: transform;
 }
@@ -110,60 +104,58 @@
   display: flex;
   flex: 1 1 0;
   min-width: 0;
-  height: 92rpx;
+  height: 96rpx;
   align-items: center;
   justify-content: center;
-  gap: 7rpx;
+  gap: 9rpx;
   border-radius: 999rpx;
 }
 
 .tb-ico {
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   flex: 0 0 auto;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
-  /* 松手回位用短 ease-out：不要过冲曲线，
-     它会先弹过头再缩回来，叠上药丸滑动就像动画播了两次 */
+  /* 松手回位用短 ease-out：过冲曲线会先弹过头再缩回来，像动画播了两次 */
   transition: transform 0.16s ease-out;
 }
 
 .tb-txt {
   flex: 0 0 auto;
-  color: #8f8878;
-  font-size: 21rpx;
+  color: #6b6559;
+  font-size: 22rpx;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.5rpx;
   white-space: nowrap;
-  /* 玻璃更透后，文字难免压在彩色内容上，加一层白色光晕把字托出来 */
-  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.9);
+  /* 玻璃是透的，文字可能压在彩色内容上，加一层白色光晕把字托出来 */
+  text-shadow: 0 0 3rpx rgba(255, 255, 255, 0.95), 0 1rpx 2rpx rgba(255, 255, 255, 0.85);
   transition: color 0.2s ease, opacity 0.16s ease, transform 0.16s ease-out;
 }
 
-/* 选中：图标微放大并带一点浮雕投影，文字转品牌金加粗 */
+/* 选中：图标微放大 + 极轻浮雕，文字转品牌金加粗 */
 .tb-item.on .tb-ico {
-  transform: scale(1.06);
-  -webkit-filter: drop-shadow(0 1rpx 1rpx rgba(154, 107, 31, 0.22));
-  filter: drop-shadow(0 1rpx 1rpx rgba(154, 107, 31, 0.22));
+  transform: scale(1.04);
+  -webkit-filter: drop-shadow(0 1rpx 1rpx rgba(154, 107, 31, 0.18));
+  filter: drop-shadow(0 1rpx 1rpx rgba(154, 107, 31, 0.18));
 }
 
 .tb-item.on .tb-txt {
-  color: #9a6b1f;
+  color: #8f5f14;
   font-weight: 600;
 }
 
 /* ---- 触摸反馈 ----
-   按下：0.1s 快速压扁下沉，比松手的弹性快得多，手感才跟手。
-   优先级要压过 .tb-item.on .tb-ico 的 scale(1.06)，所以带 .tabbar 前缀。 */
+   按下快速压扁变淡，优先于 .tb-item.on 的 scale，所以带 .tabbar 前缀 */
 .tabbar .tb-item-press .tb-ico {
-  transform: scale(0.86);
+  transform: scale(0.88);
   transition: transform 0.08s ease-out;
 }
 
 .tabbar .tb-item-press .tb-txt {
-  opacity: 0.5;
-  transform: scale(0.92);
+  opacity: 0.55;
+  transform: scale(0.94);
   transition: opacity 0.08s ease-out, transform 0.08s ease-out;
 }

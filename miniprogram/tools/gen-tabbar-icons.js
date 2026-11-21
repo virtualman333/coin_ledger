@@ -19,8 +19,8 @@ const ICONS = {
 };
 
 const VARIANTS = {
-  off: { color: '#8f8878', width: 1.7 },
-  on: { color: '#9a6b1f', width: 2.05 },
+  off: { color: '#8a8276', width: 1.7 },
+  on: { color: '#9a6b1f', width: 1.9 },
 };
 
 function svg(body, { color, width }) {
@@ -45,6 +45,6 @@ Object.keys(ICONS).forEach((name) => {
   lines.push('');
 });
 
-const out = path.join(__dirname, '..', 'custom-tab-bar', 'icons.wxss');
+const out = path.join(__dirname, '..', 'components', 'tabbar', 'icons.wxss');
 fs.writeFileSync(out, lines.join('\n'), 'utf8');
 console.log('written', out);
