@@ -193,3 +193,17 @@ button::after {
   line-height: 1;
   flex: 0 0 auto;
 }
+
+/* 行首图标：统一的浅金底方块，不做多色 */
+.cell-ico {
+  display: flex;
+  width: 64rpx;
+  height: 64rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background: #f6efe0;
+  color: #8a6420;
+  font-size: 28rpx;
+  flex: 0 0 auto;
+}

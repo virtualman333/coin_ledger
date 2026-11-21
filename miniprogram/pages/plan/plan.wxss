@@ -48,7 +48,6 @@
 .badge.done{background:#f3f0e9;color:#6b6559;font-weight:500}
 .it-when{display:flex;margin-top:4rpx;align-items:center;justify-content:flex-end;gap:8rpx;font-size:21rpx;color:#6b6559}
 .it-sched{display:block;margin-top:2rpx;font-size:20rpx;color:#8a8378;line-height:1.4}
-.it-reserve{display:block;font-size:21rpx;color:#6b6559}
 .cd{
   display:inline-block;margin-top:6rpx;padding:1rpx 12rpx;border-radius:999rpx;
   font-size:20rpx;font-weight:600;background:#fbf1d8;color:#9a6b1f
@@ -105,25 +104,8 @@
   font-size: 21rpx;
 }
 
-.it-exchange {
-  margin-top: 4rpx;
-  color: #6b6559;
-  font-size: 20rpx;
-  text-align: right;
-}
 
-.it-limit {
-  margin-top: 4rpx;
-  color: #6b6559;
-  font-size: 20rpx;
-  text-align: right;
-}
 
-.foot-next {
-  display: block;
-  margin-top: 8rpx;
-  color: #6b6559;
-}
 
 /* 计划项详情弹层 */
 .pd-mask {

@@ -1,4 +1,4 @@
-/* 更多功能：纯列表，行样式走全局 .cell */
+/* 更多功能：分组卡片 + 行首图标 */
 
 .page {
   padding-top: 4rpx;
@@ -6,11 +6,22 @@
 
 .grp {
   display: block;
-  margin: 30rpx 0 2rpx;
+  margin: 28rpx 12rpx 10rpx;
   color: #6b6559;
   font-size: 22rpx;
 }
 
 .grp:first-child {
   margin-top: 8rpx;
+}
+
+.group {
+  padding: 0 24rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  box-shadow: 0 3rpx 16rpx rgba(74, 55, 20, 0.06);
+}
+
+.group .cell {
+  min-height: 116rpx;
 }

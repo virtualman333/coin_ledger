@@ -3,7 +3,6 @@
     <view class="head-title">
       <text class="h1">发行计划</text>
       <text class="h-sub" wx:if="{{source}}">{{source}}</text>
-      <text class="h-tip">点「提醒我」，预约当天 09:00 微信通知你（每次授权只发一条）</text>
     </view>
     <view class="next-bar" wx:if="{{next}}">
       <text class="nb-tag">下一枚</text>
@@ -37,16 +36,13 @@
         <text class="badge done">已发行</text>
       </view>
     </view>
-    <view class="foot" wx:if="{{pmYears.length}}">
-      <text>贵金属计划来自中国人民银行年度发行公告，由金币云集目录聚合。不进入藏品与成本口径。</text>
-    </view>
   </block>
 
   <block wx:if="{{tab === 'coin' && has}}">
     <view class="year" wx:for="{{years}}" wx:key="year" wx:for-item="y">
       <view class="year-head">
         <text class="y-num">{{y.year}} 年</text>
-        <text class="y-meta">计划 {{y.planCount}} 项<block wx:if="{{y.extraCount}}"> · 增发 {{y.extraCount}} 项</block> · 已发 {{y.doneCount}} 项</text>
+        <text class="y-meta">{{y.planCount}} 项<block wx:if="{{y.extraCount}}"> · 增发 {{y.extraCount}}</block> · 已发 {{y.doneCount}}</text>
       </view>
 
       <view
@@ -71,11 +67,15 @@
         </view>
         <view class="it-right">
           <text class="badge {{it.reserveNow ? 'now' : (it.isUp ? '' : 'done')}}">{{it.badgeText}}</text>
-          <text class="it-date">{{it.dateText}} 发行</text>
-          <text class="it-reserve" wx:if="{{it.reserveText}}">{{it.reserveText}} 预约</text>
-          <text class="it-exchange" wx:if="{{it.exchangeText}}">{{it.exchangeText}} 兑换</text>
-          <text class="cd {{it.cdCls}}" wx:if="{{it.cdText}}">{{it.cdText}}</text>
-          <text class="it-limit" wx:if="{{it.limitText}}">{{it.limitText}}</text>
+          <view class="it-when">
+            <text>{{it.dateText}} 发行</text>
+            <text class="cd {{it.cdCls}}" wx:if="{{it.cdText}}">{{it.cdText}}</text>
+          </view>
+          <text class="it-sched" wx:if="{{it.reserveText || it.exchangeText}}">
+            <text wx:if="{{it.reserveText}}">{{it.reserveText}} 预约</text>
+            <text wx:if="{{it.reserveText && it.exchangeText}}"> · </text>
+            <text wx:if="{{it.exchangeText}}">{{it.exchangeText}} 兑换</text>
+          </text>
           <view
             class="remind {{reminded[it.key] ? 'on' : ''}}"
             wx:if="{{it.canRemind}}"
@@ -92,9 +92,8 @@
     </view>
 
     <view class="foot">
-      <text>计划来源：中国人民银行年度公告，具体发行信息以发行前公告为准。</text>
-      <text class="foot-next">2027 年普通纪念币发行计划一般在当年 12 月公布，届时这里会自动更新</text>
-      <view class="foot-btn" hover-class="tap-hover" bindtap="goList">去全套清单看看已发的 {{totalCoins}} 个品种 ›</view>
+      <text class="foot-src">来源：中国人民银行年度公告，以发行前公告为准</text>
+      <view class="foot-btn" hover-class="tap-hover" bindtap="goList">去看已发行的 {{totalCoins}} 个品种 ›</view>
     </view>
   </block>
 
