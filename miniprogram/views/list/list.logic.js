@@ -92,8 +92,8 @@ module.exports = {
     store.refresh().then(() => {
       this.render();
       if (this.data.viewMode === 'series') this.buildSeriesView();
-      wx.stopPullDownRefresh();
-    }).catch(() => wx.stopPullDownRefresh());
+      this.triggerEvent('refreshed');
+    }).catch(() => this.triggerEvent('refreshed'));
   },
 
   /** 按系列视图：普通币/纪念钞从本地目录分组，贵金属项目复用已加载的 pmTabs */

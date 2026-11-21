@@ -6,7 +6,6 @@
   "backgroundColorTop": "#f6f4ef",
   "backgroundColorBottom": "#f6f4ef",
   "backgroundTextStyle": "dark",
-  "enablePullDownRefresh": true,
   "usingComponents": {
     "home-view": "/views/home/home",
     "plan-view": "/views/plan/plan",

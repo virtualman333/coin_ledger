@@ -119,7 +119,7 @@ module.exports = {
   onPullDownRefresh() {
     // loadPlans 内含 build() + buildPm()，普通币与贵金属一次刷新到位。
     // 转圈跟着真实请求结束，不要用固定 600ms 抢跑（接口慢时圈会先消失）
-    const done = () => wx.stopPullDownRefresh();
+    const done = () => this.triggerEvent('refreshed');
     Promise.resolve(this.retryPlans()).then(done, done);
   },
 

@@ -56,8 +56,8 @@ module.exports = {
   onPullDownRefresh() {
     store.refresh().then(() => {
       this.render();
-      wx.stopPullDownRefresh();
-    }).catch(() => wx.stopPullDownRefresh());
+      this.triggerEvent('refreshed');
+    }).catch(() => this.triggerEvent('refreshed'));
   },
 
   /** 最近 3 枚有图的藏品，放在「我的藏品」行左侧当视觉锚点 */

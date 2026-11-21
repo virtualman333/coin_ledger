@@ -19,6 +19,7 @@ const IDS = ['#view-home', '#view-plan', '#view-list', '#view-mine'];
 Page({
   data: {
     tab: 0,
+    refreshing: false,
   },
 
   onLoad(query) {
@@ -94,19 +95,15 @@ Page({
 
     if (next === this.data.tab) {
       // 已经在这一格：只回顶，不要再跑一遍 onShow（那会让列表又闪一次）
-      wx.pageScrollTo({ scrollTop: 0, duration: 220, fail() {} });
+      this.scrollTop();
       return;
     }
 
     const prev = this.data.tab;
     this.run(prev, 'onHide');
 
-    // 关键顺序：先把当前页回顶，再切视图。
-    // 反过来（切完再回顶）的话，新内容一出现页面会先被自动钳到某个位置，
-    // 数据灌满后又撑开 —— 一次切换里滚了两次，看起来就是"内容跳一下"。
-    // 放在切之前做，这一下被紧接着的视图切换掩盖掉。
-    wx.pageScrollTo({ scrollTop: 0, duration: 0, fail() {} });
-
+    // 不再需要 pageScrollTo：每个 tab 在自己的 scroll-view 里，
+    // 切走再切回还停在原来的位置，也就不会有"回到顶部"的那一下跳。
     this.setData({ tab: next }, () => {
       wx.setNavigationBarTitle({ title: TITLES[next] });
       wx.nextTick(() => {
@@ -125,20 +122,58 @@ Page({
     this.apply(e.detail.index);
   },
 
-  /** 再点当前 tab：回到顶部 */
-  onRetap() {
-    wx.pageScrollTo({ scrollTop: 0, duration: 220, fail() {} });
-  },
+  /** scroll-view 下拉刷新：转给当前视图，完成后由视图的 refreshed 事件收回 */
+  onRefresh() {
+    if (this.data.refreshing) return;
+    this.setData({ refreshing: true });
 
-  onPullDownRefresh() {
+    // 兜底：视图异常没回调也要把转圈收掉，否则一直挂着
+    if (this._refreshTimer) clearTimeout(this._refreshTimer);
+    this._refreshTimer = setTimeout(() => this.finishRefresh(), 5000);
+
     const v = this.view();
     if (v && typeof v.onPullDownRefresh === 'function') v.onPullDownRefresh();
-    else wx.stopPullDownRefresh();
+    else this.finishRefresh();
   },
 
-  onReachBottom() {
+  onRefreshed() {
+    this.finishRefresh();
+  },
+
+  finishRefresh() {
+    if (this._refreshTimer) {
+      clearTimeout(this._refreshTimer);
+      this._refreshTimer = null;
+    }
+    if (this.data.refreshing) this.setData({ refreshing: false });
+  },
+
+  /** scroll-view 触底：转给当前视图做加载更多 */
+  onLower() {
     const v = this.view();
     if (v && typeof v.onReachBottom === 'function') v.onReachBottom();
+  },
+
+  /** 再点当前 tab：回到顶部（页面自己不再滚动，得让 scroll-view 滚） */
+  onRetap() {
+    this.scrollTop();
+  },
+
+  /**
+   * 当前 tab 回顶。
+   * scroll-view 是原生组件，selectComponent 拿不到，只能用 selectorQuery 取节点上下文
+   * （基础库 2.14+ 的 ScrollViewContext）；取不到就静默跳过，不影响其它交互。
+   */
+  scrollTop() {
+    const id = '#scroll-' + this.data.tab;
+    try {
+      wx.createSelectorQuery().in(this).select(id).node().exec((res) => {
+        const ctx = res && res[0] && res[0].node;
+        if (ctx && typeof ctx.scrollTo === 'function') {
+          ctx.scrollTo({ top: 0, animated: true });
+        }
+      });
+    } catch (e) { /* 忽略 */ }
   },
 
   onShareAppMessage(res) {

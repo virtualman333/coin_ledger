@@ -45,9 +45,9 @@ module.exports = {
     this.loadFeed();
     store.refresh().then(() => {
       this.render();
-      wx.stopPullDownRefresh();
+      this.triggerEvent('refreshed');
     }).catch(() => {
-      wx.stopPullDownRefresh();
+      this.triggerEvent('refreshed');
     });
   },
 

@@ -3,11 +3,16 @@
   background: #f6f4ef;
 }
 
-/* 每个视图至少撑满一屏：
-   切过来时内容还没灌满，页面高度也不会从 0 长起来。
-   否则高度突变 + 滚动条出现/消失，就是"内容跳一下"的来源 */
+/* 页面本身不再滚动（滚动交给各自的 scroll-view），
+   胶囊是 fixed，下拉刷新时不会再被 webview 拖走 */
 .pane {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* scroll-view 默认高度为 0，必须显式撑满视口 */
+.pane-scroll {
+  height: 100vh;
 }
 
 /* 组件节点默认不是块级，双保险：组件内部已有 :host，这里再兜一层，

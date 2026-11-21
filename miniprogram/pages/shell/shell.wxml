@@ -1,25 +1,78 @@
 <!--
   唯一宿主页：四个内容视图全部常驻在这里，底部 TabBar 只渲染一次、永不重建。
-  这是"切换不跳"的根本 —— tabBar 不随页面切换，药丸的滑动就是一段连续动画。
+  TabBar 不随页面切换，药丸的滑动就是一段连续动画。
 
-  视图不用 wx:if 按需创建：插入新节点会让内容高度突变，
-  用户看到的就是"药丸滑完又来一下"。数据加载仍然按需（onShow 时才开始拉）。
+  每个 tab 用 scroll-view 独立滚动，不再用页面级 enablePullDownRefresh：
+  iOS 的下拉刷新会把整个 webview 往下推，position: fixed 的胶囊会被一起拖走 ——
+  那就是"下拉时 tabBar 抖动"的来源。交给 scroll-view 自己做，页面不动，胶囊就不会动。
 -->
 <view class="shell">
   <view class="pane" hidden="{{tab !== 0}}">
-    <home-view id="view-home" bind:switchtab="onViewSwitch"></home-view>
+    <scroll-view
+      id="scroll-0"
+      class="pane-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      refresher-enabled
+      refresher-background="#f6f4ef"
+      refresher-triggered="{{refreshing}}"
+      bindrefresherrefresh="onRefresh"
+      bindscrolltolower="onLower"
+    >
+      <home-view id="view-home" bind:switchtab="onViewSwitch" bind:refreshed="onRefreshed"></home-view>
+    </scroll-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 1}}">
-    <plan-view id="view-plan" bind:switchtab="onViewSwitch"></plan-view>
+    <scroll-view
+      id="scroll-1"
+      class="pane-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      refresher-enabled
+      refresher-background="#f6f4ef"
+      refresher-triggered="{{refreshing}}"
+      bindrefresherrefresh="onRefresh"
+      bindscrolltolower="onLower"
+    >
+      <plan-view id="view-plan" bind:switchtab="onViewSwitch" bind:refreshed="onRefreshed"></plan-view>
+    </scroll-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 2}}">
-    <list-view id="view-list" bind:switchtab="onViewSwitch"></list-view>
+    <scroll-view
+      id="scroll-2"
+      class="pane-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      refresher-enabled
+      refresher-background="#f6f4ef"
+      refresher-triggered="{{refreshing}}"
+      bindrefresherrefresh="onRefresh"
+      bindscrolltolower="onLower"
+    >
+      <list-view id="view-list" bind:switchtab="onViewSwitch" bind:refreshed="onRefreshed"></list-view>
+    </scroll-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 3}}">
-    <mine-view id="view-mine" bind:switchtab="onViewSwitch"></mine-view>
+    <scroll-view
+      id="scroll-3"
+      class="pane-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      refresher-enabled
+      refresher-background="#f6f4ef"
+      refresher-triggered="{{refreshing}}"
+      bindrefresherrefresh="onRefresh"
+      bindscrolltolower="onLower"
+    >
+      <mine-view id="view-mine" bind:switchtab="onViewSwitch" bind:refreshed="onRefreshed"></mine-view>
+    </scroll-view>
   </view>
 
   <tabbar selected="{{tab}}" bind:change="onTabChange" bind:retap="onRetap"></tabbar>
