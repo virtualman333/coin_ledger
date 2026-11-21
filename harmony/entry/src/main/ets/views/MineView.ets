@@ -253,22 +253,23 @@ export struct MineView {
 
   @Builder
   quickRow() {
-    Row() {
+    // 三个等宽工具卡：图标不用底色块，直接金色符号 + 深色文字，整齐不散
+    Row({ space: 8 }) {
       ForEach(this.quick, (item: QuickItem) => {
-        Column({ space: 6 }) {
+        Column({ space: 8 }) {
           SymbolGlyph(item.symbol)
-            .fontSize(20)
-            .fontColor([Theme.goldDeep])
-            .width(46)
-            .height(46)
-            .borderRadius(Theme.radiusM)
-            .backgroundColor(Theme.card)
-            .border({ width: 1, color: Theme.lineSoft })
+            .fontSize(24)
+            .fontColor([Theme.gold])
           Text(item.name)
-            .fontSize(11)
-            .fontColor(Theme.muted)
+            .fontSize(13)
+            .fontColor(Theme.textStrong)
         }
         .layoutWeight(1)
+        .height(84)
+        .justifyContent(FlexAlign.Center)
+        .borderRadius(Theme.radiusInner)
+        .backgroundColor(Theme.card)
+        .border({ width: 1, color: Theme.lineSoft })
         .onClick((): void => {
           this.goQuick(item.key);
         })
@@ -588,14 +589,15 @@ export struct MineView {
           .backgroundColor(Theme.card)
 
           Column() {
-            this.cellRow('收藏备份', '', [], Routes.BACKUP, '导出 CSV / 导入恢复')
-            Divider().color(Theme.lineSoft)
             this.cellRow('更多功能', '', [], Routes.MORE_TOOLS, '')
           }
           .width('100%')
           .margin({ top: 12 })
           .borderRadius(14)
           .backgroundColor(Theme.card)
+
+          // 未登录也给工具入口：数币与反馈本来就不需要账号
+          this.quickRow()
 
           Column()
             .height(88)
