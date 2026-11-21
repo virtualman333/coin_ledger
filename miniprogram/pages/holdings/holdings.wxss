@@ -278,48 +278,11 @@
 }
 
 /* ================= 藏品卡片 ================= */
-/* 左滑：卡片左移，右侧露出「改成本 / 改数量」 */
-.hswipe {
-  position: relative;
-  margin-bottom: 16rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-}
-
-.hswipe .hcard {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 0;
-  transition: transform 0.22s ease;
-}
-
-.hswipe .hcard.swiped {
-  transform: translateX(-200rpx);
-}
-
-.hswipe-acts {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  z-index: 1;
-}
-
-.hs-act {
-  width: 100rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 24rpx;
-  line-height: 1.3;
-}
-
-.hs-cost { background: #b98f43; }
-.hs-qty { background: #6b6459; }
-
+/* 交互：点卡片看资料，点右侧「⋯」改账。不再有左滑和长按——
+   账本页的高频动作是改数量/成本，藏在手势里既不可发现，
+   横向滑动又会和页面上下滚动抢手势（实测误触率高）。 */
 .hcard {
+  position: relative;
   display: flex;
   margin-bottom: 16rpx;
   padding: 20rpx;
@@ -327,6 +290,23 @@
   border-radius: 20rpx;
   background: #ffffff;
   box-shadow: 0 3rpx 16rpx rgba(74, 55, 20, 0.06);
+}
+
+/* 编辑入口：视觉 38rpx 的「⋯」，热区 96rpx 且贴到卡片右边缘 */
+.hc-more {
+  flex: 0 0 auto;
+  display: flex;
+  width: 96rpx;
+  height: 96rpx;
+  margin: 0 -12rpx 0 2rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  color: #8a8378;
+  font-size: 38rpx;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 1rpx;
 }
 
 .hc-fig {
@@ -350,18 +330,6 @@
   justify-content: center;
   color: #8a8378;
   font-size: 21rpx;
-}
-
-.hc-badge {
-  position: absolute;
-  right: -6rpx;
-  bottom: -6rpx;
-  padding: 3rpx 12rpx;
-  border-radius: 999rpx;
-  background: #2b2926;
-  color: #f6e7c6;
-  font-size: 21rpx;
-  line-height: 1.5;
 }
 
 .hc-main {
@@ -389,9 +357,10 @@
 
 .hc-meta {
   display: flex;
-  margin-top: 10rpx;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
   align-items: center;
-  gap: 8rpx;
+  gap: 4rpx 8rpx;
   color: #6b6559;
   font-size: 20rpx;
 }
@@ -498,6 +467,13 @@
   margin-top: 6rpx;
   color: #6b6559;
   font-size: 21rpx;
+}
+
+.sheet-link {
+  padding: 0 12rpx 0 4rpx;
+  color: #8a6420;
+  font-size: 22rpx;
+  line-height: 44rpx;
 }
 
 .sheet-x {
@@ -634,27 +610,10 @@
   text-align: center;
 }
 
-/* 卡片里的推理价 */
-.hc-ai {
-  display: flex;
-  margin-top: 8rpx;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.hc-ai-badge {
-  /* 不用色块：小尺寸下深底容易糊成一团，改金色小字更干净 */
-  padding: 0 2rpx 0 0;
-  color: #8a6420;
-  font-size: 21rpx;
-  font-weight: 700;
-  letter-spacing: 0.5rpx;
-}
-
-.hc-ai-val {
-  color: #9a6b1f;
-  font-size: 21rpx;
-  font-weight: 600;
+/* 卡片里「成本 · 推理价」合并成一行：原来推理价单独占一行，
+   把卡片撑到 4 行高，同屏能看到的藏品少了一半 */
+.hc-sep {
+  color: #8a8378;
 }
 
 /* 藏品品类筛选 */

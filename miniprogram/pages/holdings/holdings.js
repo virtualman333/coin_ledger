@@ -28,7 +28,6 @@ Page({
       { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' },
     ],
     empty: true,
-    swipeId: '',        // 左滑展开操作的那张卡片（持仓 id）
     shareCode: '',      // 收藏快照分享码（进页面时预生成）
     selectMode: false,  // 多选分享模式：点卡片改为勾选
     selected: {},       // 持仓 id -> true
@@ -100,7 +99,7 @@ Page({
     if (next === this.data.holdCat) return;
     // 切分类时退出多选：否则 selected 里留着看不见的藏品，
     // 底部「已选 N 件」点分享会把当前分类外的也带出去
-    this.setData({ holdCat: next, selectMode: false, selected: {}, selectedCount: 0, swipeId: '' },
+    this.setData({ holdCat: next, selectMode: false, selected: {}, selectedCount: 0 },
       () => this.render());
   },
 
@@ -153,6 +152,11 @@ Page({
         qty,
         qtyLabel: qty + ' ' + (coin && coin.kind === 'note' ? '张' : '枚'),
         badgeLabel: isPiece ? (rolls + (coin && coin.kind === 'note' ? ' 张' : ' 枚')) : (rolls + ' 套'),
+        // 卡片副标题：套数与总件数合成一句（原先是图片角标「2 套」+ 副标题「40 枚」，
+        // 用户得自己换算；而且角标压在图上显挤）
+        qtyText: isPiece
+          ? (rolls + (coin && coin.kind === 'note' ? ' 张' : ' 枚'))
+          : (rolls + ' 套 · ' + qty + (coin && coin.kind === 'note' ? ' 张' : ' 枚')),
         // 贵金属不在本地 catalog 里，拿不到真实面值 —— 宁可留空，也不能显示「面值 ¥0.00」
         faceText: coin ? cat.money((coin.setFaceBase || coin.setFace) * rolls) : '',
         costText: cat.money(h.cost),
@@ -235,7 +239,7 @@ Page({
     });
   },
 
-  /** 长按卡片 / 左滑点操作 → 底部编辑面板；多选模式下长按 = 勾选 */
+  /** 点卡片右侧「⋯」→ 底部编辑面板（多选模式下点卡片是勾选，不进这里） */
   openSheet(e) {
     if (this.data.selectMode) { this.toggleSelect(e); return; }
     const ds = e.currentTarget.dataset;
@@ -246,10 +250,10 @@ Page({
     if (!item) return;
     wx.vibrateShort && wx.vibrateShort({ type: 'light' });
     this.setData({
-      swipeId: '',
       sheet: {
         id: item.id,
         coinId: item.coinId,
+        pmCode: item.pmCode || '',
         name: item.name,
         imgUrl: item.imgUrl,
         rolls: item.rolls,
@@ -266,10 +270,11 @@ Page({
         luckyTags: item.luckyTags || [],
         form: item.form || '',
         images: item.images || [],
-        // 左滑「改成本」直接聚焦输入框；「改数量」聚焦步进器
         focus: ds.focus || '',
       },
     });
+    // 记一份「打开时的样子」，关闭时据此判断有没有没保存的改动
+    this._sheetSnap = this.sheetSnapshot(this.data.sheet);
     // 纪念钞有号码时请求服务端分析花样（后端与 Web 共用同一套规则）
     if (item.isNote && item.serials && item.serials.length) {
       const sheetId = item.id;
@@ -361,7 +366,7 @@ Page({
   toggleSelectMode() {
     if (!store.isLogin()) { wx.showToast({ title: '请先登录', icon: 'none' }); return; }
     if (this.data.selectMode) { this.exitSelectMode(); return; }
-    this.setData({ selectMode: true, selected: {}, selectedCount: 0, swipeId: '', sheet: null });
+    this.setData({ selectMode: true, selected: {}, selectedCount: 0, sheet: null });
   },
 
   exitSelectMode() {
@@ -413,34 +418,55 @@ Page({
     });
   },
 
-  swipeStart(e) {
-    const t = e.touches && e.touches[0];
-    if (!t) return;
-    this._swipe = { x: t.clientX, y: t.clientY, id: e.currentTarget.dataset.hold || '' };
-  },
-
-  /** 只在水平位移明显大于垂直时判为左滑，避免和页面上下滚动打架 */
-  swipeEnd(e) {
-    const s = this._swipe;
-    this._swipe = null;
-    // 多选模式下左滑不应展开「改成本/改数量」，那两个按钮在多选态是死的
-    if (this.data.selectMode) return;
-    const t = e.changedTouches && e.changedTouches[0];
-    if (!s || !t || !s.id) return;
-    const dx = t.clientX - s.x;
-    const dy = t.clientY - s.y;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
-    this.setData({ swipeId: dx < 0 ? s.id : '' });
-  },
-
-  closeSwipe() {
-    if (this.data.swipeId) this.setData({ swipeId: '' });
-  },
-
   noop() {},
 
+  /** 面板里值得保存的字段串成一行，用来判断「改没改」 */
+  sheetSnapshot(sheet) {
+    if (!sheet) return '';
+    const serials = String(sheet.serialsText || '')
+      .split(/[\n,，\s]+/).map((x) => x.trim()).filter(Boolean).slice(0, 200);
+    return JSON.stringify({
+      rolls: sheet.rolls,
+      unitCost: String(Number(sheet.unitCost) || 0),
+      serials: serials,
+      form: sheet.form || '',
+      images: sheet.images || [],
+    });
+  },
+
   closeSheet() {
+    if (!this.data.sheet) return;
+    // 改了一半点遮罩：以前会静默丢弃，用户以为存上了
+    if (this._sheetSnap && this.sheetSnapshot(this.data.sheet) !== this._sheetSnap) {
+      wx.showModal({
+        title: '放弃修改？',
+        content: '这次改的数量、成本或号码还没有保存。',
+        confirmText: '放弃',
+        cancelText: '继续编辑',
+        confirmColor: '#c0392b',
+        success: (r) => { if (r.confirm) this.dismissSheet(); },
+      });
+      return;
+    }
+    this.dismissSheet();
+  },
+
+  dismissSheet() {
+    this._sheetSnap = null;
     this.setData({ sheet: null });
+  },
+
+  /** 面板里直接看这枚币的资料，不用关掉再点卡片 */
+  goSheetDetail() {
+    const s = this.data.sheet;
+    if (!s) return;
+    this.dismissSheet();
+    if (s.isPm) {
+      const code = s.pmCode || s.id;
+      if (code) wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(code) });
+      return;
+    }
+    if (s.coinId) wx.navigateTo({ url: '/pages/detail/detail?id=' + s.coinId });
   },
 
   sheetStep(e) {
@@ -470,7 +496,8 @@ Page({
       .then(() => store.refresh({ force: true }))
       .then(() => {
         wx.hideLoading();
-        this.setData({ sheet: null, swipeId: '' });
+        this._sheetSnap = null;
+        this.setData({ sheet: null });
         this.render();
         wx.showToast({ title: '已保存', icon: 'success' });
       })
@@ -491,54 +518,11 @@ Page({
       success: (res) => {
         if (!res.confirm) return;
         store.removeHolding(sheet.id).then(() => store.refresh({ force: true })).then(() => {
-          this.setData({ sheet: null, swipeId: '' });
+          this._sheetSnap = null;
+          this.setData({ sheet: null });
           this.render();
           wx.showToast({ title: '已移出', icon: 'success' });
         }).catch((err) => {
-          wx.showToast({ title: err.message || '操作失败', icon: 'none' });
-        });
-      },
-    });
-  },
-
-  changeRolls(e) {
-    const id = e.currentTarget.dataset.id;
-    const delta = Number(e.currentTarget.dataset.delta);
-    if (this.pendingRolls && this.pendingRolls[id]) return;   // 同一行还在保存，先别叠请求
-    const target = store.getState().holdings.filter((h) => h.id === id)[0];
-    if (!target) return;
-    const next = (Number(target.rolls) || 0) + delta;
-    if (next < 1) {
-      wx.showToast({ title: '至少保留 1 套，移出请用删除', icon: 'none' });
-      return;
-    }
-    this.pendingRolls = this.pendingRolls || {};
-    this.pendingRolls[id] = true;
-    store.setRolls(id, next).then(() => store.refresh({ force: true })).then(() => {
-      delete this.pendingRolls[id];
-      this.render();
-    }).catch((err) => {
-      delete this.pendingRolls[id];
-      wx.showToast({ title: err.message || '保存失败', icon: 'none' });
-      this.render();
-    });
-  },
-
-  removeItem(e) {
-    const id = e.currentTarget.dataset.id;
-    const name = e.currentTarget.dataset.name;
-    wx.showModal({
-      title: '移出藏品',
-      content: '把「' + name + '」从我的藏品里移出？',
-      confirmText: '移出',
-      confirmColor: '#c0392b',
-      success: (res) => {
-        if (!res.confirm) return;
-        store.removeHolding(id).then(() => store.refresh({ force: true })).then(() => {
-          this.render();
-          wx.showToast({ title: '已移出', icon: 'success' });
-        }).catch((err) => {
-          this.render();
           wx.showToast({ title: err.message || '操作失败', icon: 'none' });
         });
       },
@@ -559,8 +543,6 @@ Page({
   goDetail(e) {
     // 多选模式：点卡片 = 勾选，不跳详情
     if (this.data.selectMode) { this.toggleSelect(e); return; }
-    // 卡片处于左滑展开状态时，点一下先收起，不跳详情
-    if (this.data.swipeId) { this.setData({ swipeId: '' }); return; }
     const ds = e.currentTarget.dataset;
     if (ds.ispm === '1' || ds.ispm === true) {
       if (ds.pmcode) wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(ds.pmcode) });

@@ -47,7 +47,7 @@
 
       <block wx:if="{{!catEmpty}}">
       <view class="tools">
-        <text class="tools-text">{{selectMode ? '点选要分享的藏品（最多 20 件）' : (groups.length + ' 个分组 · 左滑或长按卡片可改数量与成本')}}</text>
+        <text class="tools-text">{{selectMode ? '点选要分享的藏品（最多 20 件）' : (groups.length + ' 个分组 · 点 ⋯ 改账')}}</text>
         <view class="tools-acts">
           <text class="tools-btn" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</text>
           <button class="tools-share" open-type="share" hover-class="tap-hover" wx:if="{{!selectMode}}">分享我的收藏</button>
@@ -73,28 +73,15 @@
           <view class="gbar" wx:if="{{!group.isPm}}"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
 
           <view
-            class="hswipe"
+            class="hcard {{selectMode && selected[item.id] ? 'picked' : ''}}"
             wx:for="{{group.items}}"
             wx:key="id"
             wx:for-index="ii"
             wx:for-item="item"
+            data-id="{{item.coinId}}" data-ispm="{{item.isPm}}" data-pmcode="{{item.pmCode}}"
+            bindtap="goDetail"
+            hover-class="tap-hover"
           >
-            <view class="hswipe-acts" wx:if="{{!selectMode}}">
-              <view class="hs-act hs-cost" data-g="{{gi}}" data-i="{{ii}}" data-focus="cost" catchtap="openSheet">改成本</view>
-              <view class="hs-act hs-qty" data-g="{{gi}}" data-i="{{ii}}" data-focus="rolls" catchtap="openSheet">改数量</view>
-            </view>
-            <view
-              class="hcard {{swipeId === item.id ? 'swiped' : ''}} {{selectMode && selected[item.id] ? 'picked' : ''}}"
-              data-g="{{gi}}"
-              data-i="{{ii}}"
-              data-id="{{item.coinId}}" data-ispm="{{item.isPm}}" data-pmcode="{{item.pmCode}}"
-              data-hold="{{item.id}}"
-              bindtap="goDetail"
-              bindlongpress="openSheet"
-              bindtouchstart="swipeStart"
-              bindtouchend="swipeEnd"
-              hover-class="tap-hover"
-            >
             <view class="pick-mark" wx:if="{{selectMode}}">{{selected[item.id] ? '✓' : ''}}</view>
             <view class="hc-fig">
               <image
@@ -107,26 +94,36 @@
                 binderror="imgErr"
               ></image>
               <view wx:else class="hc-img hc-ph">无图</view>
-              <text class="hc-badge" wx:if="{{item.badgeLabel}}">{{item.badgeLabel}}</text>
             </view>
 
             <view class="hc-main">
               <text class="hc-name">{{item.name}}</text>
-              <text class="hc-sub">{{item.qtyLabel}}<text wx:if="{{item.faceText}}"> · 面值 ¥{{item.faceText}}</text></text>
+              <text class="hc-sub">{{item.qtyText}}<text wx:if="{{item.faceText}}"> · 面值 ¥{{item.faceText}}</text></text>
               <view class="hc-meta">
                 <text>成本 ¥{{item.costText}}</text>
-              </view>
-              <view class="hc-ai" wx:if="{{item.aiText}}">
-                <text class="hc-ai-badge">推理价</text>
-                <text class="hc-ai-val">¥{{item.aiText}}</text>
+                <text class="hc-sep" wx:if="{{item.aiText}}">·</text>
+                <text wx:if="{{item.aiText}}">推理价 ¥{{item.aiText}}</text>
               </view>
             </view>
-            </view>
+
+            <!-- 唯一的编辑入口：显式的「⋯」。左滑与长按都已去掉，
+                 隐藏手势在账本页里既不可发现，又容易和上下滚动抢手势 -->
+            <view
+              class="hc-more"
+              wx:if="{{!selectMode}}"
+              data-g="{{gi}}"
+              data-i="{{ii}}"
+              catchtap="openSheet"
+              hover-class="tap-hover"
+              hover-stay-time="80"
+              aria-role="button"
+              aria-label="编辑 {{item.name}}"
+            >⋯</view>
           </view>
         </view>
       </block>
 
-      <view class="foot-hint" wx:if="{{!selectMode}}">左滑或长按任意一枚，可以改数量、改成本和移出</view>
+      <view class="foot-hint" wx:if="{{!selectMode}}">点每张卡右侧的 ⋯ 可以改数量、改成本，或移出账本</view>
       </block>
     </block>
 
@@ -148,7 +145,7 @@
   </view>
 </view>
 
-<!-- 长按：改数量 / 改成本 / 移出 -->
+<!-- 编辑面板：改数量 / 成本 / 号码 / 形态 / 图片 / 移出 -->
 <view class="sheet-mask" wx:if="{{sheet}}" bindtap="closeSheet" catchtouchmove="noop">
   <view class="sheet" catchtap="noop">
     <view class="sheet-head">
@@ -157,6 +154,7 @@
         <text class="sheet-name">{{sheet.name}}</text>
         <text class="sheet-sub">{{sheet.qtyLabel}}<text wx:if="{{!sheet.isPm}}"> · 推理价 ¥{{sheet.aiText}}</text></text>
       </view>
+      <text class="sheet-link" hover-class="tap-hover" bindtap="goSheetDetail">资料</text>
       <text class="sheet-x" hover-class="tap-hover" bindtap="closeSheet">✕</text>
     </view>
 
