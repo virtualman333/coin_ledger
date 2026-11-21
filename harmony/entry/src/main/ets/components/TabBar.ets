@@ -50,7 +50,7 @@ export struct AppTabBar {
     .height(58)
     .padding(5)
     .borderRadius(29)
-    .backgroundColor('rgba(255,255,255,0.72)')
+    .backgroundColor('rgba(255,255,255,0.94)')
     .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .shadow({ radius: 22, color: 'rgba(60,48,26,0.20)', offsetY: 8 })
   }

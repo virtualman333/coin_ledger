@@ -275,23 +275,22 @@ export struct HomeView {
           })
       }
       .alignItems(HorizontalAlign.Start)
-      .padding({ left: 20, top: 22 })
-      .height('100%')
-      .justifyContent(FlexAlign.Start)
+      .padding({ left: 20, top: 24 })
+      .align(Alignment.TopStart)
 
       if (this.heroImg.length > 0) {
         Image(this.heroImg)
-          .width(112)
-          .height(112)
+          .width(104)
+          .height(104)
           .objectFit(ImageFit.Contain)
-          .margin({ right: 16, bottom: 26 })
+          .margin({ right: 18, bottom: 24 })
           .opacity(0.95)
       } else {
         Image($r('app.media.logo_seal'))
-          .width(96)
-          .height(96)
+          .width(88)
+          .height(88)
           .objectFit(ImageFit.Contain)
-          .margin({ right: 20, bottom: 34 })
+          .margin({ right: 22, bottom: 30 })
           .opacity(0.9)
       }
     }
@@ -452,6 +451,7 @@ export struct HomeView {
             Text(item.priceText)
               .fontSize(10)
               .fontColor(Theme.gold)
+              .maxLines(1)
               .width(104)
           }
           .alignItems(HorizontalAlign.Start)
@@ -462,7 +462,7 @@ export struct HomeView {
       }, (item: LatestCard) => String(item.id))
     }
     .listDirection(Axis.Horizontal)
-    .height(184)
+    .height(196)
     .scrollBar(BarState.Off)
     .width('100%')
   }
@@ -644,26 +644,38 @@ export struct HomeView {
     Refresh({ refreshing: $$this.refreshing }) {
       Scroll() {
         Column() {
-          this.hero()
+          // hero 与卡片同宽：贴边会让圆角落在屏幕边缘，看起来像被裁掉一半
+          Column() {
+            this.hero()
+          }
+          .width('100%')
+          .padding({ left: 12, right: 12 })
+          .margin({ top: 10 })
 
           Column() {
             this.ledger()
           }
-          .margin({ top: -28, left: 12, right: 12 })
+          .width('100%')
+          .padding({ left: 12, right: 12 })
+          .margin({ top: 12 })
 
           SectionHead({ title: '最新发行', more: '全部 ›', onMore: (): void => this.onSwitchTab(1) })
+            .width('100%')
             .padding({ left: 12, right: 12 })
           Column() {
             this.latestRow()
           }
+          .width('100%')
           .padding({ left: 12, right: 12 })
 
           if (this.metal !== null) {
             SectionHead({ title: '今日金银价', more: '贵金属目录 ›', onMore: (): void => this.onSwitchTab(2) })
+              .width('100%')
               .padding({ left: 12, right: 12 })
             Column() {
               this.metalCard()
             }
+            .width('100%')
             .padding({ left: 12, right: 12 })
           }
 
@@ -671,10 +683,12 @@ export struct HomeView {
             SectionHead({ title: '藏友晒单', more: '去广场 ›', onMore: (): void => {
               Nav.push(this.stack, Routes.PLAZA, new RouteParam());
             } })
+              .width('100%')
               .padding({ left: 12, right: 12 })
             Column() {
               this.feedList()
             }
+            .width('100%')
             .padding({ left: 12, right: 12 })
           }
 
@@ -685,10 +699,12 @@ export struct HomeView {
               Nav.push(this.stack, Routes.SERIES, new RouteParam());
             }
           })
+            .width('100%')
             .padding({ left: 12, right: 12 })
           Column() {
             this.seriesGrid()
           }
+          .width('100%')
           .padding({ left: 12, right: 12 })
 
           Column({ space: 4 }) {
@@ -701,6 +717,8 @@ export struct HomeView {
                 .fontColor(Theme.up)
             }
           }
+          .width('100%')
+          .alignItems(HorizontalAlign.Center)
           .margin({ top: 10, bottom: 96 })
         }
         .width('100%')

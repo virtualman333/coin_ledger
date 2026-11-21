@@ -11,7 +11,14 @@ cd "$(dirname "$0")"
 DEVECO_HOME="${DEVECO_HOME:-D:/Program Files/Huawei/DevEco Studio}"
 export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-$DEVECO_HOME/sdk}"
 export JAVA_HOME="${JAVA_HOME:-$DEVECO_HOME/jbr}"
-export PATH="$JAVA_HOME/bin:$PATH"
+
+# Git Bash 的 PATH 用冒号分隔，直接拼 "D:/..." 会被盘符冒号截断，
+# 必须先转成 /d/... 形式，否则 hvigor 打包阶段 spawn java 会 ENOENT
+if command -v cygpath >/dev/null 2>&1; then
+  export PATH="$(cygpath -u "$JAVA_HOME")/bin:$PATH"
+else
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
 
 MODE="${1:-debug}"
 HVIGOR="$DEVECO_HOME/tools/hvigor/bin/hvigorw.js"

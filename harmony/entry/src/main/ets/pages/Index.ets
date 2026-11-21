@@ -253,6 +253,8 @@ struct Index {
               })
             }
           }
+          .width('100%')
+          .height('100%')
           .barHeight(0)
           .scrollable(true)
           .animationDuration(220)
@@ -265,10 +267,11 @@ struct Index {
               current: this.currentTab,
               onSelect: (index: number): void => this.switchTab(index)
             })
+              .width('100%')
           }
           .width('100%')
           .padding({ left: 15, right: 15, bottom: 10 })
-          .hitTestBehavior(HitTestMode.Transparent)
+          .zIndex(2)
         }
         .width('100%')
         .height('100%')
