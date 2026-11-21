@@ -2571,6 +2571,8 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   border-color:var(--gold);background:var(--gold-soft);
   color:var(--gold);font-weight:600
 }
+/* 全部系列页的分类 tab 紧跟在 sec-head 下面，靠 sec-head 自己的下边距留白 */
+#seriesCats{margin:0 1px 14px}
 @media (max-width:640px){
   .cat-tabs{gap:6px;margin:10px 1px 0}
   .cat-tabs button{padding:6px 11px;font-size:11.5px}

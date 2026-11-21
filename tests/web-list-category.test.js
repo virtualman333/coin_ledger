@@ -45,3 +45,24 @@ test('renderTable 一进来就同步下拉', () => {
   const head = fn.slice(0, 200);
   assert.match(head, /rebuildFilterOptions\(\)/, '渲染前应先同步下拉选项');
 });
+
+test('全部系列页有品类 tab，且只渲染选中的那一组', () => {
+  const html = read('index.html');
+  const bar = html.match(/<div class="cat-tabs" id="seriesCats">[\s\S]*?<\/div>/);
+  assert.ok(bar, '系列页缺少分类 tab');
+  for (const cat of ['all', 'coin', 'note', 'pm']) {
+    assert.ok(bar[0].includes('data-scat="' + cat + '"'), '缺少分类按钮：' + cat);
+  }
+
+  const js = read('app.js');
+  assert.match(js, /var SERIES_CAT = 'all'/, '缺分类状态');
+  assert.match(js, /function initSeriesCats\(\)/, '缺点击绑定');
+  const fn = js.slice(js.indexOf('function renderSeries()'), js.indexOf('function renderCost'));
+  assert.match(fn, /showCoin = SERIES_CAT === 'all' \|\| SERIES_CAT === 'coin'/);
+  assert.match(fn, /showNote = SERIES_CAT === 'all' \|\| SERIES_CAT === 'note'/);
+  assert.match(fn, /showPm = SERIES_CAT === 'all' \|\| SERIES_CAT === 'pm'/);
+  // 三组 section 都要受 show* 控制，不能无条件拼接
+  assert.match(fn, /\(showCoin \? section\('纪念币'/);
+  assert.match(fn, /\(showNote \? section\('纪念钞'/);
+  assert.match(fn, /\(showPm \? section\('贵金属纪念币'/);
+});

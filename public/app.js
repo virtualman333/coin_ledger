@@ -1031,19 +1031,14 @@ function shortNames(names, seriesName){
 }
 
 /** 全部系列页：卡片网格 */
+/* 全部系列页的品类筛选：all/coin/note/pm。
+   之前三组（纪念币 / 纪念钞 / 贵金属）一直堆在同一页，想只看纪念钞得往下滚。 */
+var SERIES_CAT = 'all';
 function renderSeries(){
   var box = document.getElementById('seriesBox');
   if (!box) return;
   var list = buildSeriesList();
   var anon = !isLoggedIn();
-  var hint = document.getElementById('seriesHint');
-  if (hint) {
-    var sets = list.filter(function(x){ return !x.isSingle; });
-    hint.textContent = sets.length + ' 个系列' +
-      (list.length > sets.length ? ' + 独立发行' : '') +
-      ' · ' + DB.length + ' 个品种' +
-      (anon ? ' · 登录后显示你的集齐进度' : '');
-  }
 
   function cardHtml(x){
     var rate = x.total ? Math.min(100, x.ownCount / x.total * 100) : 0;
@@ -1098,14 +1093,35 @@ function renderSeries(){
       '<div class="sc-own dim">点开看该套全部规格</div></button>';
   }).join('');
 
-  box.innerHTML =
-    section('纪念币', 'g-coin', coinCards, coinList.length) +
-    section('纪念钞', 'g-note', noteCards, noteList.length) +
-    section('贵金属纪念币', 'g-pm', PM_SERIES_LOADED
-      ? (pmCards || '<div class="sc-group-empty">暂无贵金属项目</div>')
-      : '<div class="sc-group-empty">正在加载贵金属项目…</div>', PM_SERIES.length);
+  var showCoin = SERIES_CAT === 'all' || SERIES_CAT === 'coin';
+  var showNote = SERIES_CAT === 'all' || SERIES_CAT === 'note';
+  var showPm = SERIES_CAT === 'all' || SERIES_CAT === 'pm';
 
-  if (!PM_SERIES_LOADED) {
+  var hint = document.getElementById('seriesHint');
+  if (hint) {
+    if (SERIES_CAT === 'coin') {
+      hint.textContent = coinList.length + ' 个纪念币系列';
+    } else if (SERIES_CAT === 'note') {
+      hint.textContent = noteList.length + ' 个纪念钞系列';
+    } else if (SERIES_CAT === 'pm') {
+      hint.textContent = (PM_SERIES_LOADED ? PM_SERIES.length : '…') + ' 个贵金属项目';
+    } else {
+      var sets = list.filter(function(x){ return !x.isSingle; });
+      hint.textContent = sets.length + ' 个系列' +
+        (list.length > sets.length ? ' + 独立发行' : '') +
+        ' · ' + DB.length + ' 个品种' +
+        (anon ? ' · 登录后显示你的集齐进度' : '');
+    }
+  }
+
+  box.innerHTML =
+    (showCoin ? section('纪念币', 'g-coin', coinCards, coinList.length) : '') +
+    (showNote ? section('纪念钞', 'g-note', noteCards, noteList.length) : '') +
+    (showPm ? section('贵金属纪念币', 'g-pm', PM_SERIES_LOADED
+      ? (pmCards || '<div class="sc-group-empty">暂无贵金属项目</div>')
+      : '<div class="sc-group-empty">正在加载贵金属项目…</div>', PM_SERIES.length) : '');
+
+  if (showPm && !PM_SERIES_LOADED) {
     loadPmSeries(function(){ if (document.getElementById('seriesBox') === box) renderSeries(); });
   }
 
@@ -5035,4 +5051,21 @@ function openShareDialog(presetName){
   if (PLAZA_ON) return;
   var el = document.querySelector('[data-tab="plaza"]');
   if (el) el.hidden = true;
+})();
+
+/* 全部系列页的品类 tab：点了只显示对应分组 */
+(function initSeriesCats(){
+  var bar = document.getElementById('seriesCats');
+  if (!bar) return;
+  bar.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-scat]');
+    if (!btn || !bar.contains(btn)) return;
+    var next = btn.getAttribute('data-scat');
+    if (next === SERIES_CAT) return;
+    SERIES_CAT = next;
+    Array.prototype.forEach.call(bar.querySelectorAll('[data-scat]'), function(x){
+      x.className = x.getAttribute('data-scat') === SERIES_CAT ? 'on' : '';
+    });
+    renderSeries();
+  });
 })();
