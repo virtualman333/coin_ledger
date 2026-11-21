@@ -24,8 +24,8 @@ Page({
     groups: [],
     holdCat: 'all',
     holdCats: [
-      { code: 'all', name: '全部' }, { code: 'coin', name: '普通币' },
-      { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' },
+      { code: 'all', name: '全部' }, { code: 'coin', name: '普通纪念币' },
+      { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属纪念币' },
     ],
     empty: true,
     shareCode: '',      // 收藏快照分享码（进页面时预生成）
@@ -127,7 +127,9 @@ Page({
       const coin = cat.byName[h.name];
       // 分组跟「系列」走（系列主数据里的名字），而不是品种上的历史 group 字段
       const seriesCode = (coin && coin.series) || '';
-      const groupName = (coin && coin.seriesName) || h.group || '独立藏品';
+      const rawGroup = (coin && coin.seriesName) || h.group || '独立藏品';
+      // 老数据 group 存的是「贵金属」，展示统一成全称
+      const groupName = rawGroup === '贵金属' ? '贵金属纪念币' : rawGroup;
       if (!map[groupName]) {
         map[groupName] = { name: groupName, code: seriesCode, items: [], aiSum: 0 };
         groups.push(map[groupName]);

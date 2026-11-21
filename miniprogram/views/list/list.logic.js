@@ -16,7 +16,7 @@ module.exports = {
     rowLimit: 40,
     category: 'coin',
     allTabs: [], pmTabs: [],   // 两套完全独立的系列：普通币/纪念钞 vs 贵金属发行项目
-    categories: [{ code: 'coin', name: '普通纪念币' }, { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' }],
+    categories: [{ code: 'coin', name: '普通纪念币' }, { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属纪念币' }],
     count: 0,
     ownedCount: 0,
     tabs: [],

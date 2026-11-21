@@ -6,7 +6,7 @@
   {
    "code": "coin",
    "name": "普通纪念币",
-   "short": "普通币",
+   "short": "普通纪念币",
    "status": "active",
    "source": "cl_coins",
    "seriesSource": "series",
@@ -28,7 +28,7 @@
   {
    "code": "pm",
    "name": "贵金属纪念币",
-   "short": "贵金属",
+   "short": "贵金属纪念币",
    "status": "active",
    "source": "cl_ecgci_pm",
    "seriesSource": "pmProjects",

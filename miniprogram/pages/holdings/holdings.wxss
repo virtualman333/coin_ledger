@@ -141,43 +141,82 @@
 }
 
 /* ================= 工具条 ================= */
+/* ================= 工具条：列表折叠 + 分享 ================= */
 .tools {
   display: flex;
-  margin: 6rpx 4rpx 14rpx;
+  margin: 2rpx 4rpx 18rpx;
   align-items: center;
-  justify-content: flex-end;
   justify-content: space-between;
+  gap: 12rpx;
+}
+
+/* 左侧折叠控制：纯文字 + 小箭头，刻意压轻，不和右侧动作抢视线 */
+.tools-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  color: #6b6559;
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.tools-arrow {
+  font-size: 20rpx;
+  line-height: 1;
+  color: #8a8378;
+  transition: transform 0.2s ease;
+}
+
+.tools-arrow.up {
+  transform: rotate(180deg);
 }
 
 .tools-text {
   flex: 1;
   min-width: 0;
-  margin-right: 12rpx;
   color: #6b6559;
   font-size: 21rpx;
-}
-
-.tools-btn {
-  color: #9a6b1f;
-  font-size: 22rpx;
 }
 
 .tools-acts {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
-.tools-share {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #9a6b1f;
+/* 次要动作：白底细边胶囊 */
+.tools-ghost {
+  padding: 14rpx 24rpx;
+  border: 1rpx solid #e6e0d4;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #6b6559;
   font-size: 22rpx;
-  line-height: 1.4;
+  line-height: 1;
+}
+
+/* 主操作：淡金胶囊，和全站卡片同一套语言 */
+.tools-share {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin: 0;
+  padding: 15rpx 26rpx;
+  border: 1rpx solid #dcc08a;
+  border-radius: 999rpx;
+  background: linear-gradient(180deg, #fdf6e7 0%, #f7e8c8 100%);
+  color: #8f5f14;
+  font-size: 22rpx;
+  font-weight: 500;
+  line-height: 1;
 }
 .tools-share::after { border: none; }
+
+.tools-share-ico {
+  font-size: 22rpx;
+  line-height: 1;
+}
 
 /* ================= 多选分享 ================= */
 .hcard.picked { outline: 3rpx solid #9a6b1f; outline-offset: -3rpx; background: #fdf8ec; }
@@ -649,11 +688,15 @@
    之前这里写成 .hc{min-height:72rpx;line-height:44rpx}、.step{width/height:88rpx} 之类，
    虽然注释写着「视觉尺寸不变」，实际把品类胶囊拉胖、把步进器 56rpx 的圆撑成 88rpx、
    把缩略图删除角标从 32rpx 放大一倍，整页看起来就是错版的。 */
-.tools-btn,
-.tools-share {
-  /* 上下 padding 撑出 88rpx 热区，负 margin 抵消占位；横向只留 6rpx，免得把右侧挤爆 */
-  padding: 24rpx 6rpx;
-  margin: -24rpx 0;
+/* 「展开全部」是纯文字，靠伪元素把热区撑到 88rpx（胶囊按钮自带 padding，不需要） */
+.tools-btn::after {
+  content: '';
+  position: absolute;
+  left: -12rpx;
+  right: -12rpx;
+  top: 50%;
+  height: 88rpx;
+  margin-top: -44rpx;
 }
 .hc::after {
   content: '';

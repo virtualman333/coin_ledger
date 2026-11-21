@@ -44,12 +44,21 @@
       </view>
 
       <block wx:if="{{!catEmpty}}">
+      <!-- 工具条：左边是列表折叠（轻量），右边是分享动作（胶囊按钮）。
+           以前三个都是同色纯文字，看不出主次，也看不出哪个是动作哪个是开关 -->
       <view class="tools">
+        <view class="tools-btn" hover-class="tap-hover" wx:if="{{!selectMode}}" bindtap="toggleAll">
+          <text>{{allOpen ? '收起分组' : '展开全部'}}</text>
+          <text class="tools-arrow {{allOpen ? 'up' : ''}}">▾</text>
+        </view>
         <text class="tools-text" wx:if="{{selectMode}}">点选要分享的藏品（最多 20 件）</text>
+
         <view class="tools-acts">
-          <text class="tools-btn" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</text>
-          <button class="tools-share" open-type="share" hover-class="tap-hover" wx:if="{{!selectMode}}">分享我的收藏</button>
-          <text class="tools-btn" hover-class="tap-hover" bindtap="toggleAll" wx:if="{{!selectMode}}">{{allOpen ? '收起' : '展开'}}</text>
+          <view class="tools-ghost" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</view>
+          <button class="tools-share" open-type="share" hover-class="tap-hover" wx:if="{{!selectMode}}">
+            <text class="tools-share-ico">↗</text>
+            <text>分享我的收藏</text>
+          </button>
         </view>
       </view>
 

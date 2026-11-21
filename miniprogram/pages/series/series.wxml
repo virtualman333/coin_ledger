@@ -21,7 +21,7 @@
       <text class="ct-label">纪念钞</text><text class="ct-n">{{noteGroup.length}}</text>
     </view>
     <view class="cat-tab {{activeCat === 'pm' ? 'on' : ''}}" data-cat="pm" bindtap="switchCat">
-      <text class="ct-label">贵金属</text><text class="ct-n">{{pmLoaded ? pmGroup.length : '…'}}</text>
+      <text class="ct-label">贵金属纪念币</text><text class="ct-n">{{pmLoaded ? pmGroup.length : '…'}}</text>
     </view>
   </view>
 

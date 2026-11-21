@@ -2365,7 +2365,7 @@ function ensureCategoryTabs(){
   if (!cats.length) cats = [
     { code:'coin', name:'普通纪念币', status:'active' },
     { code:'note', name:'纪念钞', status:'active' },
-    { code:'pm', name:'贵金属', status:'active' }
+    { code:'pm', name:'贵金属纪念币', status:'active' }
   ];
   box.innerHTML = cats.map(function(x){
     var planned = x.status === 'planned';
