@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Coin Ledger entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Coin Ledger · Chinese commemorative coin catalogue and collection ledger"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "藏币录"
+    },
+    {
+      "name": "perm_internet_reason",
+      "value": "Used to load the coin catalogue, sync your collection and issuance plans"
+    }
+  ]
+}

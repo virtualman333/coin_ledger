@@ -6,6 +6,7 @@
 |---|---|
 | 网页 | <https://coin.virtualman.top/>（HTTP 自动跳 HTTPS） |
 | 小程序 | 微信搜索「藏币录」 |
+| 鸿蒙 | `harmony/`（原生 ArkTS，待上架华为应用市场） |
 | 备案 | [鲁ICP备2020034737号](https://beian.miit.gov.cn/) |
 | 当前版本 | Web `3.0.75` · 小程序 `2.9.33` |
 | 数据说明 | 发行量、面额、图案取自央行公告与中国金币网；推理价为公开参数估算，**不是市场价** |
@@ -40,6 +41,17 @@ MYSQL_USER=coin_ledger MYSQL_PASSWORD=xxx node server/index.js
 ### 1.2 跑小程序
 
 用微信开发者工具打开 `miniprogram/` 目录即可。接口域名在 `miniprogram/utils/api.js` 的 `BASE`。
+
+### 1.3 跑鸿蒙
+
+用 DevEco Studio 6.0 打开 `harmony/`，或命令行：
+
+```bash
+npm run harmony:data     # 从小程序同源数据生成 rawfile/catalog.json
+npm run harmony:build    # 需要本机 DevEco Studio（自带 SDK/JBR）
+```
+
+详见 [`harmony/README.md`](harmony/README.md) 与上架清单 [`docs/harmony-release.md`](docs/harmony-release.md)。
 
 上传（不需要开开发者工具）：
 
@@ -84,6 +96,10 @@ coin-ledger/
 │  ├─ store-json.js             ← JSON 单文档后端（回退 / 本地开发）
 │  ├─ auth.js                   ← 多用户口令 + 签名会话 + 微信登录
 │  └─ guard.js                  ← 限流 / UA 拦截 / 蜜罐
+├─ harmony/                     ← 鸿蒙原生客户端（Stage / ArkTS，API 20）
+│  ├─ entry/src/main/ets/       ← 页面、视图、utils、数据模型
+│  ├─ entry/src/main/resources/rawfile/catalog.json  ← 内置品种目录（同源生成）
+│  └─ README.md                 ← 功能对照、构建、已知差异
 ├─ miniprogram/                 ← 微信小程序（原生，无框架）
 │  ├─ app.js / app.json / app.wxss  ← 全局样式与 token 在这里
 │  ├─ pages/                    ← 页面；首页/计划/清单/我的四个主标签挂在宿主页里，其余是二级页

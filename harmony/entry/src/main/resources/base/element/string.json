@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "藏币录主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "藏币录 · 中国纪念币图鉴与收藏账本"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "藏币录"
+    },
+    {
+      "name": "perm_internet_reason",
+      "value": "用于加载钱币图鉴、同步你的收藏账本与发行计划"
+    }
+  ]
+}

@@ -24,7 +24,10 @@
     "export:json": "node tools/export-json.js",
     "diff:catalog": "node tools/diff-catalog.js",
     "pm:import": "node tools/import-pm-seed.js",
-    "data:sync": "node tools/export-json.js && node tools/build_mp_data.js"
+    "data:sync": "node tools/export-json.js && node tools/build_mp_data.js",
+    "harmony:data": "node tools/build_harmony_data.js",
+    "harmony:icons": "node tools/build_harmony_icons.js",
+    "harmony:build": "bash harmony/build.sh"
   },
   "dependencies": {
     "fastify": "^4.29.1",

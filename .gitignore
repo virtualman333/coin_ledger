@@ -37,3 +37,19 @@ desktop.ini
 tools/_data/
 .wbapp_*.genie
 *.genie
+
+# ---- HarmonyOS 构建产物 / 本地 SDK 配置（DevEco Studio 生成）----
+harmony/**/build/
+harmony/**/.preview/
+harmony/**/.cxx/
+harmony/local.properties
+harmony/.hvigor/
+harmony/oh_modules/
+harmony/**/oh_modules/
+harmony/**/*.hap
+harmony/**/*.hsp
+harmony/**/*.app
+harmony/.clangd
+harmony/.clang-format
+harmony/.clang-tidy
+harmony/.idea/

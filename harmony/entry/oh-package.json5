@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "藏币录主模块",
+  "main": "",
+  "author": "virtualman",
+  "license": "MIT",
+  "dependencies": {}
+}

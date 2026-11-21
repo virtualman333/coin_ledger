@@ -1,0 +1,11 @@
+{
+  "modelVersion": "6.0.0",
+  "name": "coin-ledger-harmony",
+  "version": "1.0.0",
+  "description": "藏币录 · 中国纪念币收藏管理（HarmonyOS 原生客户端）",
+  "main": "",
+  "author": "virtualman",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
