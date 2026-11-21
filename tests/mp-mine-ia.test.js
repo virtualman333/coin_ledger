@@ -30,9 +30,10 @@ test('「我的」不再用整块渐变卡，主数字独立成区', () => {
   // 旧设计：.stat / .stat-main / .sm-big 的大渐变块
   assert.ok(!wxml.includes('class="stat"'), '旧的总览卡应已替换');
   assert.ok(!wxss.includes('.stat-main'), '旧样式的残留');
-  assert.match(wxml, /class="kpi"/, '主数字区');
-  assert.match(wxml, /class="duo"/, '两格数据');
-  assert.match(wxml, /class="prog"/, '收藏进度');
+  assert.match(wxml, /class="hero"/, '主视觉块');
+  assert.match(wxml, /class="rows"/, '入口行');
+  assert.match(wxml, /class="row-thumbs"/, '藏品缩略图叠放');
+  assert.match(wxml, /class="hp-seg/, '分段进度刻度');
   // 渐变只保留在小面积元素上（头像占位、按钮、进度条），不再是一整块
   assert.ok(!/background: linear-gradient\(135deg, #b98f43 0%/.test(wxss), '仍有大面积金色渐变');
 });
@@ -100,17 +101,19 @@ test('账户与安全没丢：从个人资料页进', () => {
   assert.match(js, /\/pages\/account\/account/);
 });
 
-test('三个页面统一走 baseline UI，不用渐变与装饰色', () => {
-  for (const slug of ['mine', 'profile', 'more-tools']) {
+test('列表页走 baseline UI，主页面只允许既定暖色，都不用渐变', () => {
+  // mine 是唯一的主视觉页，自成一套；profile / more-tools 是列表页，复用 baseline
+  for (const slug of ['profile', 'more-tools']) {
     const wxss = read('pages/' + slug + '/' + slug + '.wxss');
     assert.match(wxss, /@import "\.\.\/\.\.\/styles\/ui\.wxss"/, slug + ' 没引入 baseline UI');
   }
   const mine = read('pages/mine/mine.wxss');
   assert.ok(!/gradient/i.test(mine), '主页面不该再用渐变');
   // 只允许涨跌这两个语义色，其余一律中性
-  const colors = (mine.match(/#[0-9a-fA-F]{6}/g) || []).filter((c) => {
-    const v = c.toLowerCase();
-    return !['#151515', '#757575', '#a5a5a5', '#ededed', '#f0f0f0', '#ffffff', '#c0392b', '#1e7b4d'].includes(v);
-  });
+  // 暖色系：近黑、两级灰、纸白、描边、唯一品牌金，加涨跌两个语义色
+  const ALLOWED = ['#1a1714', '#7a7468', '#b3ab9c', '#8a7a5c', '#6b604c',
+    '#faf8f3', '#f1ece2', '#f1eee7', '#e8e3d8', '#f0ece3',
+    '#b98f43', '#ffffff', '#b3402f', '#1f7a4d'];
+  const colors = (mine.match(/#[0-9a-fA-F]{6}/g) || []).filter((c) => !ALLOWED.includes(c.toLowerCase()));
   assert.deepEqual([...new Set(colors)], [], '主页面出现了计划外的颜色');
 });

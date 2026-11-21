@@ -1,15 +1,14 @@
-@import "../../styles/ui.wxss";
-
-/* 我的：一条主线从身份到数据再到入口，中间只用细线分隔，不堆卡片 */
+/* 我的：一个暖色主视觉块承载全部数字，下面是极简两行。
+   不用渐变、不叠阴影，靠留白、字重和一处品牌金建立层次。 */
 
 .page {
-  padding-top: 6rpx;
+  padding-top: 4rpx;
 }
 
 /* ---------- 身份 ---------- */
 .me {
   display: flex;
-  padding: 4rpx 0 28rpx;
+  padding: 6rpx 0 26rpx;
   align-items: center;
   gap: 16rpx;
 }
@@ -23,10 +22,10 @@
 }
 
 .me-ava {
-  width: 88rpx;
-  height: 88rpx;
+  width: 92rpx;
+  height: 92rpx;
   border-radius: 999rpx;
-  background: #f0f0f0;
+  background: #f1eee7;
   flex: 0 0 auto;
 }
 
@@ -34,8 +33,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #757575;
-  font-size: 34rpx;
+  color: #8a7a5c;
+  font-size: 36rpx;
   font-weight: 500;
 }
 
@@ -43,124 +42,227 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 5rpx;
+}
+
+.me-name {
+  color: #1a1714;
+  font-size: 36rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.4rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.me-sub {
+  color: #7a7468;
+  font-size: 22rpx;
 }
 
 .me-edit {
-  padding: 8rpx 22rpx;
-  border: 1rpx solid #ededed;
+  padding: 9rpx 22rpx;
+  border: 1rpx solid #e8e3d8;
   border-radius: 999rpx;
-  color: #151515;
+  color: #6b604c;
   font-size: 22rpx;
   flex: 0 0 auto;
 }
 
-/* ---------- 主数字 ---------- */
-.kpi {
-  padding: 30rpx 0 26rpx;
+/* ---------- 主视觉 ---------- */
+.hero {
+  padding: 30rpx 32rpx 28rpx;
+  border: 1rpx solid #f1ece2;
+  border-radius: 26rpx;
+  background: #faf8f3;
 }
 
-.kpi-row {
+.hero-k {
+  display: block;
+  color: #7a7468;
+  font-size: 22rpx;
+}
+
+.hero-line {
   display: flex;
-  flex-wrap: wrap;
   margin-top: 10rpx;
   align-items: baseline;
-  gap: 6rpx 16rpx;
+  gap: 8rpx;
+  flex-wrap: wrap;
 }
 
-.kpi-d {
+.hero-cur {
+  color: #1a1714;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.hero-v {
+  color: #1a1714;
+  font-size: 72rpx;
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -2rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-d {
   margin-left: auto;
   font-size: 22rpx;
   font-weight: 500;
 }
 
-/* 涨跌是语义色，不属于装饰色 */
-.kpi-d.up { color: #c0392b; }
-.kpi-d.down { color: #1e7b4d; }
+/* 涨跌是语义色，不是装饰色 */
+.hero-d.up { color: #b3402f; }
+.hero-d.down { color: #1f7a4d; }
 
-/* ---------- 空账本 ---------- */
-.blank {
-  padding: 44rpx 0 46rpx;
-}
-
-.blank-t {
+.hero-sub {
   display: block;
-  color: #151515;
-  font-size: 30rpx;
-  font-weight: 600;
-  letter-spacing: -0.2rpx;
+  margin-top: 12rpx;
+  color: #7a7468;
+  font-size: 21rpx;
 }
 
-.blank-btn {
-  display: inline-block;
+/* 进度做成 20 段刻度，像集章册的格子 */
+.hero-prog {
+  display: flex;
   margin-top: 22rpx;
-  padding: 12rpx 28rpx;
-  border: 1rpx solid #151515;
-  border-radius: 10rpx;
-  color: #151515;
-  font-size: 24rpx;
+  align-items: center;
+  gap: 16rpx;
 }
 
-/* ---------- 两格 ---------- */
-.duo {
-  display: flex;
-  padding: 2rpx 0 26rpx;
-  gap: 24rpx;
-}
-
-.duo-cell {
+.hp-segs {
   flex: 1;
-  min-width: 0;
-}
-
-.duo-v {
-  display: block;
-  margin-top: 6rpx;
-  color: #151515;
-  font-size: 34rpx;
-  font-weight: 600;
-  letter-spacing: -0.6rpx;
-  line-height: 1.2;
-}
-
-/* ---------- 进度 ---------- */
-.prog {
-  padding: 0 0 30rpx;
-}
-
-.prog-top {
   display: flex;
-  margin-bottom: 12rpx;
-  align-items: baseline;
-  justify-content: space-between;
+  gap: 3rpx;
+  height: 14rpx;
 }
 
-.prog-v {
-  color: #151515;
-  font-size: 22rpx;
-  font-weight: 500;
+.hp-seg {
+  flex: 1;
+  border-radius: 2rpx;
+  background: rgba(26, 23, 20, 0.09);
 }
 
-/* ---------- 未登录 ---------- */
-.guest {
-  padding: 64rpx 0 44rpx;
-  text-align: center;
+.hp-seg.on {
+  background: #b98f43;
 }
 
-.guest .u-label {
+.hp-t {
+  color: #7a7468;
+  font-size: 20rpx;
+  flex: 0 0 auto;
+}
+
+/* 空状态 / 未登录 */
+.hero-empty {
+  padding: 44rpx 32rpx 40rpx;
+}
+
+.he-t {
+  display: block;
+  color: #1a1714;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: -0.3rpx;
+}
+
+.he-s {
   display: block;
   margin-top: 10rpx;
+  color: #7a7468;
+  font-size: 23rpx;
 }
 
-.guest-btn {
+.he-btn {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 14rpx 32rpx;
+  border-radius: 999rpx;
+  background: #1a1714;
+  color: #ffffff;
+  font-size: 25rpx;
+}
+
+.he-primary {
   width: 300rpx;
-  margin: 30rpx auto 0;
+  height: 84rpx;
+  margin: 28rpx 0 0;
+  padding: 0;
+  border-radius: 999rpx;
+  background: #1a1714;
+  color: #ffffff;
+  font-size: 27rpx;
+  font-weight: 500;
+  line-height: 84rpx;
+}
+
+.he-primary::after {
+  border: none;
+}
+
+/* ---------- 两行入口 ---------- */
+.rows {
+  margin-top: 22rpx;
+  border-top: 1rpx solid #f0ece3;
+}
+
+.row {
+  display: flex;
+  min-height: 108rpx;
+  align-items: center;
+  gap: 14rpx;
+  border-bottom: 1rpx solid #f0ece3;
+}
+
+.row-hover {
+  background: #faf8f3;
+}
+
+.row-k {
+  flex: 1;
+  min-width: 0;
+  color: #1a1714;
+  font-size: 28rpx;
+}
+
+.row-v {
+  color: #7a7468;
+  font-size: 23rpx;
+  flex: 0 0 auto;
+}
+
+.row-a {
+  color: #b3ab9c;
+  font-size: 32rpx;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.row-thumbs {
+  display: flex;
+  flex: 0 0 auto;
+  padding-right: 4rpx;
+}
+
+.rt-img {
+  width: 54rpx;
+  height: 54rpx;
+  margin-left: -16rpx;
+  border: 2rpx solid #ffffff;
+  border-radius: 999rpx;
+  background: #f1eee7;
+}
+
+.rt-img:first-child {
+  margin-left: 0;
 }
 
 /* ---------- 页脚 ---------- */
 .foot {
   margin-top: 22rpx;
-  color: #a5a5a5;
+  color: #b3ab9c;
   font-size: 20rpx;
   text-align: center;
 }

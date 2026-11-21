@@ -9,7 +9,7 @@
 .grp {
   display: block;
   margin: 30rpx 0 2rpx;
-  color: #757575;
+  color: #7a7468;
   font-size: 22rpx;
 }
 
