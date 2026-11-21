@@ -60,9 +60,27 @@ const payload = {
 };
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify(payload), 'utf8');
-const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
+
+/* 数据没变就不重写：generatedAt 每次都不同，会让 rawfile 在 git 里天天噪声 diff */
+let prev = null;
+try { prev = JSON.parse(fs.readFileSync(OUT, 'utf8')); } catch (e) { prev = null; }
+let unchanged = false;
+if (prev) {
+  const a = Object.assign({}, prev);
+  const b = Object.assign({}, payload);
+  delete a.generatedAt;
+  delete b.generatedAt;
+  unchanged = JSON.stringify(a) === JSON.stringify(b);
+}
+
 console.log('  · 数据源：' + loaded.from);
 console.log('  · ' + payload.coins.length + ' 个品种 · ' + payload.seriesMeta.length + ' 个系列 · '
   + (payload.plan.years || []).length + ' 年发行计划');
-console.log('  · 已写入 ' + path.relative(ROOT, OUT) + '（' + kb + ' KB）');
+
+if (unchanged) {
+  console.log('  · 数据无变化，跳过写入（保留原 generatedAt，避免无意义的 diff）');
+} else {
+  fs.writeFileSync(OUT, JSON.stringify(payload), 'utf8');
+  const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
+  console.log('  · 已写入 ' + path.relative(ROOT, OUT) + '（' + kb + ' KB）');
+}
