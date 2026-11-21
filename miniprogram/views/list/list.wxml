@@ -1,4 +1,10 @@
 <view class="head">
+  <!-- 视图模式：顺序清单 / 按系列（放最上面：先定形态，再搜索/筛选） -->
+  <view class="view-switch">
+    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
+    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
+  </view>
+
   <view class="search-row" wx:if="{{viewMode === 'list'}}">
     <view class="search">
       <!-- 未激活时放一个「假框」：不渲染 input，机型再想自动聚焦也没有对象 -->
@@ -30,12 +36,6 @@
       <text>筛选</text>
       <text class="filter-badge" wx:if="{{extraCount}}">{{extraCount}}</text>
     </view>
-  </view>
-
-  <!-- 视图模式：顺序清单 / 按系列 -->
-  <view class="view-switch">
-    <view class="vs-btn {{viewMode === 'list' ? 'on' : ''}}" data-mode="list" bindtap="toggleViewMode">顺序清单</view>
-    <view class="vs-btn {{viewMode === 'series' ? 'on' : ''}}" data-mode="series" bindtap="toggleViewMode">按系列</view>
   </view>
 
   <view class="cat-tabs">

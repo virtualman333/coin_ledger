@@ -413,7 +413,8 @@
 .view-switch {
   position: relative;
   display: flex;
-  margin: 16rpx 0 6rpx;
+  /* 已经挪到最上面，不需要顶部外间距；与下方搜索框留 12rpx */
+  margin: 0 0 12rpx;
   padding: 4rpx;
   border-radius: 12rpx;
   background: #ebe5d8;
