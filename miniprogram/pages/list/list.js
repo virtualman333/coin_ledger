@@ -46,9 +46,10 @@ Page({
     if (query && query.code) {
       wx.setStorageSync('cl_pending_series', query.code);
     }
-    this.buildFilterOpts();
-    const allTabs = [{ code: '', name: '全部', count: cat.total }].concat(cat.seriesList);
-    this.setData({ allTabs, tabs: allTabs });
+    // 页签与下拉都按当前品类生成：纪念钞不该出现纪念币的系列和面额
+    this.applyFilterOpts(this.data.category);
+    const tabs = this.tabsForCategory(this.data.category);
+    this.setData({ allTabs: tabs, tabs: tabs });
     this.loadPmSeries();
     this.render();
   },
@@ -77,7 +78,9 @@ Page({
       if (members.length && members.filter((c) => cat.categoryOf(c) === 'commemorative_note').length > members.length / 2) {
         guess = 'note';
       }
-      this.setData({ code: codeStr, category: guess, viewMode: 'list' });
+      // 走 applyCategory 而不是直接 setData：否则页签和筛选选项还停在上一个品类
+      this.setData({ viewMode: 'list' });
+      this.applyCategory(guess, codeStr);
     }
     this.render();
     if (this.data.viewMode === 'series') this.buildSeriesView();
@@ -141,12 +144,17 @@ Page({
     // 切回顺序清单：贵金属的数据只在 loadPmFull 里，按系列视图期间从没拉过，
     // 不补这一次就会看到「共 2823 条 + 空网格」
     if (this.data.category === 'pm') {
+      // 按系列视图里切到贵金属时没重建页签，回清单要换成发行项目
+      this.setData({ tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
       if (!this.data.pmLoaded || this.data.pmError) {
         this.setData({ pmRows: [], pmPage: 0, pmPages: 0, pmLoaded: false, pmError: '' });
         this.loadPmFull(1, false);
       }
       return;
     }
+    // 按系列视图里可以切品类，回到清单时页签与下拉要跟着当前品类刷新
+    this.applyFilterOpts(this.data.category);
+    this.setData({ tabs: this.tabsForCategory(this.data.category) });
     this.render();
   },
 
@@ -171,21 +179,54 @@ Page({
   },
 
   /** 从全量品种里生成三个下拉的选项（普通币/纪念钞用） */
-  buildFilterOpts() {
-    const years = [...new Set(cat.coins.map((c) => c.year))].sort((a, b) => b - a);
-    const faces = [...new Set(cat.coins.map((c) => Number(c.face)))].sort((a, b) => a - b);
+  /** 该品类下的品种（纪念币 / 纪念钞 / 贵金属各自一套） */
+  coinsOf(category) {
+    return cat.coins.filter((c) => {
+      const cc = cat.categoryOf(c);
+      if (category === 'note') return cc === 'commemorative_note';
+      if (category === 'pm') return cc === 'precious_metal';
+      return cc === 'commemorative_coin';
+    });
+  },
+
+  /**
+   * 系列页签只列「该品类自己出现过的系列」。
+   * 以前用的是全量 seriesList，于是切到纪念钞，下面还挂着一轮生肖贺岁、
+   * 世界文化遗产这些纪念币系列，选中必然 0 条。
+   */
+  tabsForCategory(category) {
+    const items = this.coinsOf(category);
+    const counts = {};
+    items.forEach((c) => {
+      (c.seriesKeys || [c.series]).forEach((k) => {
+        if (k) counts[k] = (counts[k] || 0) + 1;
+      });
+    });
+    const tabs = cat.seriesList
+      .filter((s) => counts[s.code])
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+      .map((s) => ({ code: s.code, name: s.name, count: counts[s.code] }));
+    return [{ code: '', name: '全部', count: items.length }].concat(tabs);
+  },
+
+  /** 三个下拉的选项也按品类各生成一套：纪念钞没有 5 元面额，年份区间也不一样 */
+  buildFilterOpts(category) {
+    const items = this.coinsOf(category);
+    const years = [...new Set(items.map((c) => c.year))].sort((a, b) => b - a);
+    const faces = [...new Set(items.map((c) => Number(c.face)))]
+      .filter((n) => n > 0)
+      .sort((a, b) => a - b);
     const matCount = {};
-    cat.coins.forEach((c) => {
+    items.forEach((c) => {
       if (!c.material) return;
       matCount[c.material] = (matCount[c.material] || 0) + 1;
     });
     const mats = Object.keys(matCount).sort((a, b) => matCount[b] - matCount[a]);
-    this.coinFilterOpts = {
+    return {
       yearOpts: ['全部年份'].concat(years.map(String)),
       faceOpts: ['全部面额'].concat(faces.map((f) => f + ' 元')),
       matOpts: ['全部材质'].concat(mats),
     };
-    this.setData(this.coinFilterOpts);
   },
 
   /** 贵金属的三组选项来自接口 facets（2823 条，不能靠本地 catalog 推） */
@@ -196,19 +237,48 @@ Page({
       .map((f) => String(Number(f)))
       .filter((f, i, a) => f !== 'NaN' && a.indexOf(f) === i);
     const mats = (facets.materials || []).map(String);
-    this.pmFilterOpts = {
+    this.filterOpts = this.filterOpts || {};
+    this.filterOpts.pm = {
       yearOpts: ['全部年份'].concat(years),
       faceOpts: ['全部面额'].concat(faces.map((f) => f + ' 元')),
       matOpts: ['全部材质'].concat(mats),
     };
-    this.setData(this.pmFilterOpts);
+    if (this.data.category === 'pm') this.setData(this.filterOpts.pm);
   },
 
-  /** 切品类时把下拉选项换成对应数据源的（否则贵金属会看到普通币的年份） */
+  /** 切品类时把下拉选项换成该品类的（三套各自缓存，互不污染） */
   applyFilterOpts(category) {
-    const o = category === 'pm' ? (this.pmFilterOpts || { yearOpts: ['全部年份'], faceOpts: ['全部面额'], matOpts: ['全部材质'] })
-      : this.coinFilterOpts;
-    if (o) this.setData(o);
+    this.filterOpts = this.filterOpts || {};
+    if (category === 'pm') {
+      this.setData(this.filterOpts.pm
+        || { yearOpts: ['全部年份'], faceOpts: ['全部面额'], matOpts: ['全部材质'] });
+      return;
+    }
+    if (!this.filterOpts[category]) this.filterOpts[category] = this.buildFilterOpts(category);
+    this.setData(this.filterOpts[category]);
+  },
+
+  /** 记住当前品类的筛选，切走再切回来还能接着用 */
+  saveFilterSnap(category) {
+    if (!category) return;
+    this._filterSnap = this._filterSnap || {};
+    this._filterSnap[category] = {
+      yearIdx: this.data.yearIdx,
+      faceIdx: this.data.faceIdx,
+      matIdx: this.data.matIdx,
+      yearFilter: this.data.yearFilter,
+      faceFilter: this.data.faceFilter,
+      matFilter: this.data.matFilter,
+      onlyOwn: this.data.onlyOwn,
+    };
+  },
+
+  restoreFilterSnap(category) {
+    const s = (this._filterSnap && this._filterSnap[category]) || {
+      yearIdx: 0, faceIdx: 0, matIdx: 0,
+      yearFilter: '', faceFilter: '', matFilter: '', onlyOwn: false,
+    };
+    this.setData(s);
   },
 
   pickYear(e) {
@@ -296,6 +366,9 @@ Page({
 
   /** 切换品类并可选定位到某个系列 code（从「按系列」页分组跳转用） */
   applyCategory(category, code) {
+    const prev = this.data.category;
+    // 切走之前先把上一个品类的筛选记下来，切回来还能接着用
+    if (prev && prev !== category) this.saveFilterSnap(prev);
     this.setData({ category }, () => {
       // 下拉选项必须换成对应数据源的，否则贵金属会列出普通币的年份
       this.applyFilterOpts(category);
@@ -309,7 +382,10 @@ Page({
           tabs: this.data.pmTabs.length ? this.data.pmTabs : [{ code: '', name: '全部项目' }] });
         this.loadPmFull(1, false);
       } else {
-        this.setData({ code: code || '', tabs: this.data.allTabs, category });
+        // 恢复该品类自己的筛选，页签也只列它自己的系列
+        this.restoreFilterSnap(category);
+        this.syncExtra();
+        this.setData({ code: code || '', tabs: this.tabsForCategory(category), category });
         this.render();
       }
     });

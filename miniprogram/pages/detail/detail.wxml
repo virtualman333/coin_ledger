@@ -125,16 +125,27 @@
     <view class="section-head">
       <text class="section-title">同系列</text>
     </view>
-    <view class="chips">
-      <view
-        class="chip"
-        wx:for="{{same}}"
-        wx:key="id"
-        hover-class="tap-hover"
-        data-id="{{item.id}}"
-        bindtap="peekCoin"
-      >{{item.name}}</view>
-    </view>
+    <scroll-view class="same-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="same-row">
+        <view
+          class="same-card"
+          wx:for="{{same}}"
+          wx:key="id"
+          hover-class="tap-hover"
+          hover-stay-time="80"
+          data-id="{{item.id}}"
+          bindtap="peekCoin"
+        >
+          <view class="same-fig">
+            <image wx:if="{{item.imgUrl}}" class="same-img" src="{{item.imgUrl}}" mode="aspectFit" lazy-load></image>
+            <view wx:else class="same-img same-ph"><text>{{item.year}}</text></view>
+            <text class="same-own" wx:if="{{item.owned}}">已收</text>
+          </view>
+          <text class="same-name">{{item.name}}</text>
+          <text class="same-meta">{{item.year}}<text wx:if="{{item.faceText}}"> · {{item.faceText}}</text></text>
+        </view>
+      </view>
+    </scroll-view>
   </block>
 </view>
 

@@ -80,10 +80,19 @@ Page({
     }
     const state = store.getState();
     const holding = store.findHolding(coin.name);
+    // 同系列做成卡片：带缩略图、年份面额和「已收」标记，比纯文字胶囊好扫读
+    const ownedMap = store.ownedNames();
     const same = cat.coins
       .filter((c) => c.series === coin.series && c.id !== coin.id)
-      .slice(0, 8)
-      .map((c) => ({ id: c.id, name: c.short || c.name, year: c.year }));
+      .slice(0, 12)
+      .map((c) => ({
+        id: c.id,
+        name: c.short || c.name,
+        year: c.year,
+        imgUrl: c.smallUrl || c.thumbUrl || c.imgUrl || '',
+        faceText: c.face ? (Number(c.face) + ' 元') : '',
+        owned: !!ownedMap[c.name],
+      }));
 
     // 所属套系的收集进度（成套系列才有）
     let setInfo = null;
