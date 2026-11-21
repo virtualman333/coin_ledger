@@ -74,7 +74,7 @@ Page({
           roleText: u.role === 'admin' ? '管理员' : '普通用户',
           createdText: dayText(u.createdAt),
           lastLoginText: dayText(u.lastLogin),
-          metaText: u.holdings + ' 条藏品 · 注册 ' + dayText(u.createdAt)
+          metaText: (Number(u.holdings) || 0) + ' 条藏品 · 注册 ' + dayText(u.createdAt)
             + (u.lastLogin ? ' · 最近登录 ' + dayText(u.lastLogin) : ''),
         });
       });
