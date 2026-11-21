@@ -101,19 +101,18 @@ Page({
     const prev = this.data.tab;
     this.run(prev, 'onHide');
 
-    // 全部视图常驻，这里只切显示。
-    // 不再用 wx:if 按需创建：新视图插入会让内容高度突变，看起来就是"第二次动画"。
+    // 关键顺序：先把当前页回顶，再切视图。
+    // 反过来（切完再回顶）的话，新内容一出现页面会先被自动钳到某个位置，
+    // 数据灌满后又撑开 —— 一次切换里滚了两次，看起来就是"内容跳一下"。
+    // 放在切之前做，这一下被紧接着的视图切换掩盖掉。
+    wx.pageScrollTo({ scrollTop: 0, duration: 0, fail() {} });
+
     this.setData({ tab: next }, () => {
       wx.setNavigationBarTitle({ title: TITLES[next] });
-      // 同一帧同步回顶；延迟执行会先露出旧位置再跳上去，又是一次视觉跳动
-      wx.pageScrollTo({ scrollTop: 0, duration: 0, fail() {} });
-
-      // 让"切显示"这一帧先画完，再灌数据。
-      // 同一帧里既切视图又 setData 大量列表，会两次重排，药丸动画就被拖出卡顿感。
-      setTimeout(() => {
+      wx.nextTick(() => {
         this.boot(next);
         visit.track(ROUTES[next]);
-      }, 16);
+      });
     });
   },
 
