@@ -13,7 +13,6 @@
     </view>
     <image class="hero-img" wx:if="{{heroImg}}" src="{{heroImg}}" mode="aspectFit"></image>
     <view class="hero-coin" wx:else><view class="coin-hole"></view></view>
-    <view class="hero-line"></view>
   </view>
 
   <!-- 账本（浮在 hero 下沿） -->

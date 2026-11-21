@@ -109,15 +109,6 @@
   transform: translate(-50%, -50%);
 }
 
-.hero-line {
-  position: absolute;
-  left: 34rpx;
-  right: 34rpx;
-  bottom: 26rpx;
-  height: 1rpx;
-  background: linear-gradient(90deg, rgba(232, 200, 119, 0.4), rgba(232, 200, 119, 0));
-}
-
 /* ---------- 账本卡 ---------- */
 .ledger {
   position: relative;
