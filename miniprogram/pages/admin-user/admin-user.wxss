@@ -242,7 +242,7 @@
 .ubadge {
   padding: 2rpx 12rpx;
   border-radius: 999rpx;
-  font-size: 19rpx;
+  font-size: 20rpx;
   line-height: 1.6;
   background: rgba(255, 255, 255, 0.24);
   color: #ffffff;

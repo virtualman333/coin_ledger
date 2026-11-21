@@ -60,7 +60,7 @@ test('更多功能页：工具 / 反馈 / 管理分组齐全', () => {
 
 test('收藏备份迁到更多功能页后逻辑完整', () => {
   const js = read('pages/more-tools/more-tools.js');
-  assert.match(js, /store\.exportHoldings\(\)/, '缺导出');
+  assert.match(js, /store\.exportCsv\(\)/, '缺导出（CSV）');
   assert.match(js, /store\.parseImport\(/, '缺解析');
   assert.match(js, /store\.importHoldings\(parsed\.items, 'merge'\)/, '缺合并导入');
   assert.match(js, /chooseMessageFile/, '缺从聊天记录选文件');

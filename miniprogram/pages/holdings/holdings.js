@@ -668,10 +668,13 @@ Page({
     const ds = e.currentTarget.dataset;
     if (ds.ispm === '1' || ds.ispm === true) {
       if (ds.pmcode) wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(ds.pmcode) });
+      // 以前这里直接 return，点了没反应也不说为什么
+      else wx.showToast({ title: '这枚暂无详情页', icon: 'none' });
       return;
     }
     const id = ds.id;
-    if (!id) return;
+    // coinId 缺失 = 目录里查不到（改名或已下架），别让点击变成哑巴
+    if (!id) { wx.showToast({ title: '该品种暂无详情页', icon: 'none' }); return; }
     wx.navigateTo({ url: '/pages/detail/detail?id=' + id });
   },
 

@@ -752,24 +752,31 @@ function renderHoldings(){
 
     items.forEach(function(c){
       var d = findDB(c.name);
-      var face = c.category === 'pm' ? 0 : itemFace(d, c.rolls);
-      // 件数只在「1 份多于 1 件」时才补写：整卷 20 枚要写「共 400 枚」，
+      // isPiece 必须先算出来：原来它在下面才 var 声明，提升后这里恒为 undefined，
+      // 按枚记的藏品被当成按份记 —— 面值和「共 N 枚」一起被放大 size 倍。
+      var isPiece = c.unit === 'piece';
+      var unitSize = holdingUnitSize(d);
+      var qtyNum = (Number(c.rolls) || 0) * (isPiece ? 1 : unitSize);
+      var oneFace = d ? (Number(unitPrice(d).face) || 0) : 0;
+      var face = c.category === 'pm' ? 0 : Math.round(oneFace * qtyNum * 100) / 100;
+      // 件数只在「1 份多于 1 件」且按份记时才补写：整卷 20 枚要写「共 400 枚」，
       // 按张记的独立钞「20 张」本身已是件数，再写一遍反而糊。
-      var perSet = (d && !isPiece) ? holdingUnitSize(d) : 0;
+      var perSet = (!isPiece && unitSize > 1) ? unitSize : 0;
       var qtyUnit = d && d.kind === 'note' ? '张' : '枚';
       var qtyTxt = perSet > 1 ? ('共 ' + (Number(c.rolls) || 0) * perSet + ' ' + qtyUnit + ' · ') : '';
       var pnl = (Number(c.market)||0) - (Number(c.cost)||0);
       var pnlCls = pnl >= 0 ? 'gain' : 'loss';
       var pnlTxt = (pnl >= 0 ? '+' : '-') + money(Math.abs(pnl));
       var meta = d ? (d.year + ' · ' + d.face + '元 · ' + fmMint(d.mintage) + (d.kind==='note'?'张':'枚')) : '';
-      var isPiece = c.unit === 'piece';
       var unit = isPiece ? (d && d.kind === 'note' ? '张' : '枚') : holdingUnitName(d);
       var label = d && d.kind === 'note' ? d.face : (d ? d.face : '');
 
       var thumb = (c.category === 'pm' && c.thumb) ? c.thumb : (d ? imgSmall(d.i + 1) : '');
       if (c.category === 'pm') meta = '贵金属 · ' + String(c.id || '').slice(0, 12);
       html += '<div class="hcard">' +
-        '<div class="hcard-top">' +
+        '<div class="hcard-top"' + (c.category === 'pm'
+            ? (c.id ? ' data-pmcode="' + esc(c.id) + '" title="查看详情"' : '')
+            : (d ? ' data-coin="' + d.i + '" title="查看详情"' : '')) + '>' +
           (thumb
             ? '<img class="hthumb" src="' + thumb + '" alt="' + esc(c.name) + '" width="46" height="46" loading="lazy">'
             : '<div class="coin">' + label + '</div>') +
@@ -3217,8 +3224,12 @@ function openBackupModal(){
 })();
 
 document.getElementById('holdingsBox').addEventListener('click', function(e){
-  var nmEl = e.target.closest('.name[data-coin]');
-  if (nmEl) { goCoin(parseInt(nmEl.getAttribute('data-coin'), 10)); return; }
+  // 卡头整块可点：普通币进 /coin/x，贵金属进 /pm/<code>
+  var pmEl = e.target.closest('[data-pmcode]');
+  if (pmEl) { goPm(pmEl.getAttribute('data-pmcode')); return; }
+
+  var coinEl = e.target.closest('[data-coin]');
+  if (coinEl) { goCoin(parseInt(coinEl.getAttribute('data-coin'), 10)); return; }
 
   /* ---- 藏品增强交互 ---- */
   var ex = e.target.closest('[data-ex-act]');
