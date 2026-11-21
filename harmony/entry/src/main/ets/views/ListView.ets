@@ -790,51 +790,62 @@ export struct ListView {
 
   @Builder
   pmCard(row: PmCard) {
-    Column({ space: 4 }) {
+    Column({ space: 0 }) {
       if (row.thumb.length > 0) {
         Image(row.thumb)
           .width('100%')
-          .height(96)
-          .borderRadius(8)
+          .height(92)
+          .borderRadius(Theme.radiusThumb)
           .objectFit(ImageFit.Contain)
-          .backgroundColor('#F7F4EC')
+          .backgroundColor('#FBF9F4')
       } else {
         Text(row.metalChar)
           .width('100%')
-          .height(96)
-          .borderRadius(8)
+          .height(92)
+          .borderRadius(Theme.radiusThumb)
           .textAlign(TextAlign.Center)
           .fontSize(20)
           .fontColor(row.metalClass === 'gold' ? '#B08A3E'
             : (row.metalClass === 'silver' ? '#8A9099' : '#9A8F7A'))
-          .backgroundColor('#F7F4EC')
+          .backgroundColor('#FBF9F4')
       }
+
       Text(row.name)
         .fontSize(13)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.textStrong)
-        .maxLines(2)
+        .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
-        .height(34)
+        .width('100%')
+        .margin({ top: 8 })
+
       Text(row.metaText)
         .fontSize(11)
         .fontColor(Theme.muted)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
-      Text('面额 ' + row.faceText + ' · 成色 ' + (row.fineness || '—') + '%')
-        .fontSize(11)
-        .fontColor(Theme.faint)
-        .maxLines(1)
-      Text(row.code)
-        .fontSize(11)
-        .fontColor(Theme.faint)
+        .width('100%')
+        .margin({ top: 3 })
+
+      Row() {
+        Text(row.faceText)
+          .fontSize(11)
+          .fontColor(Theme.faint)
+        Blank()
+        Text((row.fineness || '—') + '%')
+          .fontSize(11)
+          .fontColor(Theme.faint)
+      }
+      .width('100%')
+      .margin({ top: 3 })
     }
     .width('48%')
     .alignItems(HorizontalAlign.Start)
-    .padding(8)
+    .padding(10)
     .margin({ bottom: 10 })
-    .borderRadius(10)
+    .borderRadius(Theme.radiusM)
     .backgroundColor(Theme.card)
+    .border({ width: 1, color: Theme.lineSoft })
     .onClick((): void => {
       const p = new RouteParam();
       p.code = row.code;

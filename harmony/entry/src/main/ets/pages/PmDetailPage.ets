@@ -643,8 +643,10 @@ export struct PmDetailPage {
                 Text(it.name)
                   .fontSize(11)
                   .fontColor(Theme.textStrong)
-                  .maxLines(1)
+                  .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .lineHeight(15)
+                  .height(30)
                   .width(84)
                 Text(it.year + (it.weightText ? ' · ' + it.weightText : ''))
                   .fontSize(10)
@@ -663,7 +665,7 @@ export struct PmDetailPage {
           }, (it: SiblingItem) => it.code)
         }
         .listDirection(Axis.Horizontal)
-        .height(136)
+        .height(158)
         .scrollBar(BarState.Off)
         .width('100%')
       }

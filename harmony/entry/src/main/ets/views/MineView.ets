@@ -16,6 +16,7 @@ class QuickItem {
   key: string = '';
   name: string = '';
   icon: string = '';
+  symbol: Resource = $r('sys.symbol.star');
 }
 
 class RecentItem {
@@ -116,10 +117,10 @@ export struct MineView {
     this.dist = dist;
 
     const quick: QuickItem[] = [];
-    quick.push(this.quickItem('backup', '收藏备份', '⇅'));
-    quick.push(this.quickItem('count', '拍照数币', '◎'));
-    quick.push(this.quickItem('feedback', '意见反馈', '✎'));
-    quick.push(this.quickItem('plaza', '藏品广场', '✧'));
+    quick.push(this.quickItem('backup', '收藏备份', $r('sys.symbol.arrow_clockwise')));
+    quick.push(this.quickItem('count', '拍照数币', $r('sys.symbol.camera')));
+    quick.push(this.quickItem('feedback', '意见反馈', $r('sys.symbol.doc_text')));
+    quick.push(this.quickItem('plaza', '藏品广场', $r('sys.symbol.star')));
     this.quick = quick;
 
     const rec: RecentItem[] = [];
@@ -162,11 +163,11 @@ export struct MineView {
     this.thumbs = thumbs;
   }
 
-  private quickItem(key: string, name: string, icon: string): QuickItem {
+  private quickItem(key: string, name: string, symbol: Resource): QuickItem {
     const q = new QuickItem();
     q.key = key;
     q.name = name;
-    q.icon = icon;
+    q.symbol = symbol;
     return q;
   }
 
@@ -256,16 +257,14 @@ export struct MineView {
     Row() {
       ForEach(this.quick, (item: QuickItem) => {
         Column({ space: 6 }) {
-          Text(item.icon)
-            .fontSize(16)
-            .fontColor(Theme.goldDeep)
+          SymbolGlyph(item.symbol)
+            .fontSize(20)
+            .fontColor([Theme.goldDeep])
             .width(46)
             .height(46)
-            .textAlign(TextAlign.Center)
             .borderRadius(Theme.radiusM)
-            .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THIN)
-            .border({ width: 1, color: Theme.glassBorder })
+            .backgroundColor(Theme.card)
+            .border({ width: 1, color: Theme.lineSoft })
           Text(item.name)
             .fontSize(11)
             .fontColor(Theme.muted)

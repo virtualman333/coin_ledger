@@ -9,12 +9,14 @@ class ToolRow {
   hint: string = '';
   route: string = '';
   icon: string = '';
+  symbol: Resource = $r('sys.symbol.info_circle');
 
-  constructor(label: string, hint: string, route: string, icon: string) {
+  constructor(label: string, hint: string, route: string, icon: string, symbol: Resource) {
     this.label = label;
     this.hint = hint;
     this.route = route;
     this.icon = icon;
+    this.symbol = symbol;
   }
 }
 
@@ -33,18 +35,18 @@ export struct MoreToolsPage {
 
   aboutToAppear(): void {
     this.tools = [
-      new ToolRow('拍照数币', '一张照片数清多少枚', Routes.COUNT, '◎'),
-      new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '⇅'),
-      new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '✎'),
-      new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '☰')
+      new ToolRow('拍照数币', '一张照片数清多少枚', Routes.COUNT, '', $r('sys.symbol.camera')),
+      new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '', $r('sys.symbol.arrow_clockwise')),
+      new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '', $r('sys.symbol.doc_text')),
+      new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '', $r('sys.symbol.list_bullet'))
     ];
     this.plaza = [
-      new ToolRow('藏品广场', '藏友晒单与号码', Routes.PLAZA, '✦'),
-      new ToolRow('按系列浏览', '20 个系列分组', Routes.SERIES, '▤')
+      new ToolRow('藏品广场', '藏友晒单与号码', Routes.PLAZA, '', $r('sys.symbol.star')),
+      new ToolRow('按系列浏览', '20 个系列分组', Routes.SERIES, '', $r('sys.symbol.square_grid_2x2'))
     ];
     this.aboutRows = [
-      new ToolRow('关于藏币录', '版本 ' + Config.APP_VERSION, Routes.ABOUT, 'i'),
-      new ToolRow('隐私政策与用户协议', '', Routes.PRIVACY, '§')
+      new ToolRow('关于藏币录', '版本 ' + Config.APP_VERSION, Routes.ABOUT, '', $r('sys.symbol.info_circle')),
+      new ToolRow('隐私政策与用户协议', '', Routes.PRIVACY, '', $r('sys.symbol.lock'))
     ];
     this.render();
   }
@@ -114,12 +116,11 @@ export struct MoreToolsPage {
   @Builder
   row(item: ToolRow) {
     Row({ space: 10 }) {
-      Text(item.icon)
-        .fontSize(14)
-        .fontColor(Theme.goldDeep)
+      SymbolGlyph(item.symbol)
+        .fontSize(16)
+        .fontColor([Theme.goldDeep])
         .width(32)
         .height(32)
-        .textAlign(TextAlign.Center)
         .borderRadius(10)
         .backgroundColor(Theme.goldBg)
       Column({ space: 2 }) {
