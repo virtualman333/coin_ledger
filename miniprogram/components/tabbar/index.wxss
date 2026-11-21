@@ -124,8 +124,9 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
-  /* 松手：带一点过冲的弹性回位 */
-  transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 松手回位用短 ease-out：不要过冲曲线，
+     它会先弹过头再缩回来，叠上药丸滑动就像动画播了两次 */
+  transition: transform 0.16s ease-out;
 }
 
 .tb-txt {
@@ -138,8 +139,7 @@
   white-space: nowrap;
   /* 玻璃更透后，文字难免压在彩色内容上，加一层白色光晕把字托出来 */
   text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.9);
-  transition: color 0.24s ease, opacity 0.2s ease,
-    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: color 0.2s ease, opacity 0.16s ease, transform 0.16s ease-out;
 }
 
 /* 选中：图标微放大并带一点浮雕投影，文字转品牌金加粗 */
@@ -158,12 +158,12 @@
    按下：0.1s 快速压扁下沉，比松手的弹性快得多，手感才跟手。
    优先级要压过 .tb-item.on .tb-ico 的 scale(1.06)，所以带 .tabbar 前缀。 */
 .tabbar .tb-item-press .tb-ico {
-  transform: scale(0.8) translateY(2rpx);
-  transition: transform 0.1s ease-out;
+  transform: scale(0.86);
+  transition: transform 0.08s ease-out;
 }
 
 .tabbar .tb-item-press .tb-txt {
   opacity: 0.5;
   transform: scale(0.92);
-  transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+  transition: opacity 0.08s ease-out, transform 0.08s ease-out;
 }

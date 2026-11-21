@@ -1,23 +1,25 @@
 <!--
-  唯一宿主页：四个内容视图都常驻在这里，底部 TabBar 只渲染一次、永不重建。
-  这是"切换不跳"的根本 —— tabBar 不再和页面生命周期绑定，药丸的滑动是一段连续动画。
-  原来的 pages/index|plan|list|mine 退化成兼容壳，只负责把老链接转到对应 tab。
+  唯一宿主页：四个内容视图全部常驻在这里，底部 TabBar 只渲染一次、永不重建。
+  这是"切换不跳"的根本 —— tabBar 不随页面切换，药丸的滑动就是一段连续动画。
+
+  视图不用 wx:if 按需创建：插入新节点会让内容高度突变，
+  用户看到的就是"药丸滑完又来一下"。数据加载仍然按需（onShow 时才开始拉）。
 -->
 <view class="shell">
   <view class="pane" hidden="{{tab !== 0}}">
-    <home-view id="view-home" wx:if="{{visited[0]}}" bind:switchtab="onViewSwitch"></home-view>
+    <home-view id="view-home" bind:switchtab="onViewSwitch"></home-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 1}}">
-    <plan-view id="view-plan" wx:if="{{visited[1]}}" bind:switchtab="onViewSwitch"></plan-view>
+    <plan-view id="view-plan" bind:switchtab="onViewSwitch"></plan-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 2}}">
-    <list-view id="view-list" wx:if="{{visited[2]}}" bind:switchtab="onViewSwitch"></list-view>
+    <list-view id="view-list" bind:switchtab="onViewSwitch"></list-view>
   </view>
 
   <view class="pane" hidden="{{tab !== 3}}">
-    <mine-view id="view-mine" wx:if="{{visited[3]}}" bind:switchtab="onViewSwitch"></mine-view>
+    <mine-view id="view-mine" bind:switchtab="onViewSwitch"></mine-view>
   </view>
 
   <tabbar selected="{{tab}}" bind:change="onTabChange" bind:retap="onRetap"></tabbar>

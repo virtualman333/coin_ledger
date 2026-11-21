@@ -19,8 +19,6 @@ const IDS = ['#view-home', '#view-plan', '#view-list', '#view-mine'];
 Page({
   data: {
     tab: 0,
-    // 首次只渲染首页，其余按需创建：list 有 2800+ 条数据，一次性全渲染会卡
-    visited: [true, false, false, false],
   },
 
   onLoad(query) {
@@ -28,9 +26,7 @@ Page({
 
     const t = Number(query && query.tab);
     if (t > 0 && t <= 3) {
-      const visited = this.data.visited.slice();
-      visited[t] = true;
-      this.setData({ tab: t, visited });
+      this.setData({ tab: t });
       wx.setNavigationBarTitle({ title: TITLES[t] });
     }
   },
@@ -97,26 +93,27 @@ Page({
     if (typeof next !== 'number' || next < 0 || next > 3) return;
 
     if (next === this.data.tab) {
-      this.boot(next);
-      visit.track(ROUTES[next]);
+      // 已经在这一格：只回顶，不要再跑一遍 onShow（那会让列表又闪一次）
+      wx.pageScrollTo({ scrollTop: 0, duration: 220, fail() {} });
       return;
     }
 
     const prev = this.data.tab;
     this.run(prev, 'onHide');
 
-    const visited = this.data.visited.slice();
-    visited[next] = true;
-
-    // 只切显示：组件不销毁，药丸同一帧开始滑动，视觉上是连续的
-    this.setData({ tab: next, visited }, () => {
+    // 全部视图常驻，这里只切显示。
+    // 不再用 wx:if 按需创建：新视图插入会让内容高度突变，看起来就是"第二次动画"。
+    this.setData({ tab: next }, () => {
       wx.setNavigationBarTitle({ title: TITLES[next] });
-      this.boot(next);
-      visit.track(ROUTES[next]);
-      // 各 tab 各自从顶部开始，避免上一个 tab 的滚动位置串过来
+      // 同一帧同步回顶；延迟执行会先露出旧位置再跳上去，又是一次视觉跳动
+      wx.pageScrollTo({ scrollTop: 0, duration: 0, fail() {} });
+
+      // 让"切显示"这一帧先画完，再灌数据。
+      // 同一帧里既切视图又 setData 大量列表，会两次重排，药丸动画就被拖出卡顿感。
       setTimeout(() => {
-        wx.pageScrollTo({ scrollTop: 0, duration: 0, fail() {} });
-      }, 30);
+        this.boot(next);
+        visit.track(ROUTES[next]);
+      }, 16);
     });
   },
 
