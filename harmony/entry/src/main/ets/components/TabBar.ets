@@ -31,9 +31,9 @@ export struct AppTabBar {
               .width('100%')
               .height(44)
               .borderRadius(22)
-              .backgroundColor('#F3E7CBE6')
-              .border({ width: 1, color: '#FFFFFFB3' })
-              .shadow({ radius: 12, color: 'rgba(150,110,50,0.18)', offsetY: 4 })
+              .backgroundColor('#FBF3E2')
+              .border({ width: 1, color: '#F0E6D2' })
+              .shadow({ radius: 10, color: 'rgba(0,0,0,0.06)', offsetY: 3 })
           }
           Column({ space: 3 }) {
             Image(this.current === index ? item.iconOn : item.icon)
@@ -57,9 +57,9 @@ export struct AppTabBar {
     .height(56)
     .padding(5)
     .borderRadius(28)
-    .backgroundColor('#FFFFFFC7')
+    .backgroundColor('#FFFFFFF0')
     .backgroundBlurStyle(BlurStyle.COMPONENT_ULTRA_THICK)
-    .border({ width: 1, color: '#FFFFFFE6' })
-    .shadow({ radius: 28, color: 'rgba(120,90,40,0.18)', offsetY: 10 })
+    .border({ width: 1, color: '#0000000A' })
+    .shadow({ radius: 24, color: 'rgba(0,0,0,0.10)', offsetY: 8 })
   }
 }

@@ -1,5 +1,5 @@
 import { common } from '@kit.AbilityKit';
-import { promptAction, SymbolGlyphModifier } from '@kit.ArkUI';
+import { promptAction } from '@kit.ArkUI';
 import { AppTabBar } from '../components/TabBar';
 import { HomeView } from '../views/HomeView';
 import { PlanView } from '../views/PlanView';
@@ -170,15 +170,6 @@ struct Index {
     .alignContent(Alignment.Center)
   }
 
-  /** 官方 BottomTabBarStyle + 系统符号：图标与文字一起跟随系统选中色 */
-  private tabStyle(normal: Resource, selected: Resource, text: string): BottomTabBarStyle {
-    const sym: TabBarSymbol = {
-      normal: new SymbolGlyphModifier(normal),
-      selected: new SymbolGlyphModifier(selected)
-    };
-    return new BottomTabBarStyle(sym, text);
-  }
-
   @Builder
   pageMap(name: string) {
     NavDestination() {
@@ -246,23 +237,13 @@ struct Index {
 
       // 左上方主光源（暖金光斑，大半径模糊）
       Column()
-        .width(320)
-        .height(320)
-        .borderRadius(160)
+        .width(280)
+        .height(280)
+        .borderRadius(140)
         .backgroundColor(Theme.glowWarm)
-        .opacity(0.5)
-        .blur(72)
-        .position({ x: -110, y: -90 })
-
-      // 右侧辅助光（更淡，形成景深）
-      Column()
-        .width(240)
-        .height(240)
-        .borderRadius(120)
-        .backgroundColor(Theme.glowLight)
-        .opacity(0.45)
-        .blur(64)
-        .position({ x: 250, y: 120 })
+        .opacity(0.12)
+        .blur(90)
+        .position({ x: -120, y: -110 })
 
       if (this.agreed) {
         Navigation(this.stack) {
@@ -274,7 +255,6 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabStyle($r('sys.symbol.house'), $r('sys.symbol.house_fill'), '首页'))
 
             TabContent() {
               PlanView({
@@ -282,7 +262,6 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabStyle($r('sys.symbol.calendar'), $r('sys.symbol.calendar_fill'), '计划'))
 
             TabContent() {
               ListView({
@@ -290,7 +269,6 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabStyle($r('sys.symbol.list_square'), $r('sys.symbol.list_square'), '清单'))
 
             TabContent() {
               MineView({
@@ -298,7 +276,6 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabStyle($r('sys.symbol.person'), $r('sys.symbol.person_fill'), '我的'))
           }
           .width('100%')
           .height('100%')

@@ -1,5 +1,8 @@
 import { promptAction } from '@kit.ArkUI';
+import { common } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { Api } from '../utils/api';
+import { Huawei } from '../utils/huawei';
 import { ImagePicker } from '../utils/image';
 import { Nav, RouteParam, Routes } from '../utils/router';
 import { Store } from '../utils/store';
@@ -39,6 +42,15 @@ class SimpleOk {
   error: string = '';
 }
 
+/** 华为绑定只递交授权码；换 token 与落库都在服务端 */
+class HuaweiBody {
+  code: string = '';
+
+  constructor(code: string) {
+    this.code = code;
+  }
+}
+
 @Component
 export struct ProfilePage {
   // NavPathStack 是框架原生对象：@Prop 会尝试深拷贝，运行时会 Cpp Crash
@@ -60,6 +72,8 @@ export struct ProfilePage {
   @State newPwd: string = '';
   @State newPwd2: string = '';
   @State pwdBusy: boolean = false;
+  @State hwBound: boolean = false;
+  @State hwBusy: boolean = false;
 
   aboutToAppear(): void {
     this.fill();
@@ -77,6 +91,7 @@ export struct ProfilePage {
     this.origName = u.name || '';
     this.nameLocked = !!u.nameChanged;
     this.hasPassword = !!u.hasPassword;
+    this.hwBound = u.hw === true;
     this.joinedText = u.createdAt ? String(u.createdAt).slice(0, 10).replace(/-/g, '/') : '';
     this.avatarUrl = u.avatar ? Api.imgUrl(u.avatar) : '';
   }
@@ -152,6 +167,69 @@ export struct ProfilePage {
     }).catch((e: Error): void => {
       this.pwdBusy = false;
       promptAction.showToast({ message: e.message || '修改失败', duration: 1800 });
+    });
+  }
+
+  /** 绑定华为账号：拉授权码 → 服务端挂到当前账号 → 刷新状态 */
+  private huaweiBind(): void {
+    if (this.hwBusy) return;
+    this.hwBusy = true;
+    Huawei.fetchCode(getContext(this) as common.UIAbilityContext)
+      .then((code: string): Promise<SimpleOk> => {
+        return Api.post<SimpleOk>('/api/auth/huawei/bind', new HuaweiBody(code));
+      })
+      .then((): Promise<void> => {
+        return Store.refresh(true).then((): void => {
+        });
+      })
+      .then((): void => {
+        this.hwBusy = false;
+        this.fill();
+        promptAction.showToast({ message: '已绑定华为账号，下次可一键登录', duration: 1800 });
+      })
+      .catch((e: Error): void => {
+        this.hwBusy = false;
+        const be = e as BusinessError;
+        // 1001502001：设备上没有登录华为账号（官方错误码）
+        const msg: string = be.code === 1001502001
+          ? '设备还没登录华为账号，请先在系统设置里登录'
+          : (e.message !== undefined && e.message !== '' ? e.message : '绑定失败，请稍后重试');
+        promptAction.showToast({ message: msg, duration: 2200 });
+      });
+  }
+
+  /** 解绑华为账号：只解除华为绑定，密码与藏品不动 */
+  private huaweiUnbind(): void {
+    if (this.hwBusy) return;
+    AlertDialog.show({
+      title: '解绑华为账号',
+      message: '解绑后就不能用华为账号登录这本账本了，用户名密码登录不受影响。确定解绑？',
+      primaryButton: {
+        value: '取消',
+        action: (): void => {
+        }
+      },
+      secondaryButton: {
+        value: '解绑',
+        fontColor: Theme.up,
+        action: (): void => {
+          this.hwBusy = true;
+          Api.post<SimpleOk>('/api/auth/huawei/unbind', new HuaweiBody(''))
+            .then((): Promise<void> => {
+              return Store.refresh(true).then((): void => {
+              });
+            })
+            .then((): void => {
+              this.hwBusy = false;
+              this.fill();
+              promptAction.showToast({ message: '已解绑', duration: 1500 });
+            })
+            .catch((e: Error): void => {
+              this.hwBusy = false;
+              promptAction.showToast({ message: e.message || '解绑失败', duration: 2000 });
+            });
+        }
+      }
     });
   }
 
@@ -354,6 +432,30 @@ export struct ProfilePage {
               .height(40)
               .onClick((): void => {
                 this.pwdOpen = true;
+              })
+
+              Divider().color(Theme.lineSoft)
+
+              // 个人资料页的华为账号入口：绑定后下次可直接用华为账号一键登录
+              Row() {
+                Text('华为账号')
+                  .fontSize(13)
+                  .fontColor(Theme.textStrong)
+                Blank()
+                Text(this.hwBound ? '已绑定 · 点此解绑'
+                  : (this.hwBusy ? '处理中…' : '未绑定 · 去绑定'))
+                  .fontSize(12)
+                  .fontColor(this.hwBound ? Theme.muted : Theme.gold)
+              }
+              .width('100%')
+              .height(40)
+              .onClick((): void => {
+                if (this.hwBusy) return;
+                if (this.hwBound) {
+                  this.huaweiUnbind();
+                } else {
+                  this.huaweiBind();
+                }
               })
             }
             .width('100%')

@@ -433,9 +433,9 @@ export struct MineView {
             .width('100%')
             .padding(16)
             .borderRadius(16)
-            .linearGradient({ angle: 140, colors: [['#FFFFFFF0', 0], ['#F6E9CC', 0.62], ['#EFDFBE', 1]] })
-            .border({ width: 1, color: '#FFFFFFE6' })
-            .shadow({ radius: 30, color: 'rgba(150,110,50,0.12)', offsetY: 12 })
+            .backgroundColor(Theme.card)
+            .border({ width: 1, color: Theme.lineSoft })
+            .shadow({ radius: 20, color: 'rgba(0,0,0,0.05)', offsetY: 6 })
             .alignItems(HorizontalAlign.Start)
           } else {
             Column({ space: 6 }) {

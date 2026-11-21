@@ -571,23 +571,27 @@ export struct ListView {
     Row({ space: 8 }) {
       Text('顺序清单')
         .fontSize(13)
-        .fontColor(this.viewMode === 'list' ? Color.White : Theme.muted)
+        .fontColor(this.viewMode === 'list' ? Theme.goldDeep : Theme.muted)
+        .fontWeight(this.viewMode === 'list' ? FontWeight.Medium : FontWeight.Normal)
         .textAlign(TextAlign.Center)
         .layoutWeight(1)
         .height(36)
         .borderRadius(Theme.radiusS)
-        .backgroundColor(this.viewMode === 'list' ? Theme.gold : Theme.card)
+        .backgroundColor(this.viewMode === 'list' ? Theme.goldBg : Theme.card)
+        .border({ width: 1, color: this.viewMode === 'list' ? Theme.goldLine : Color.Transparent })
         .onClick((): void => {
           this.toggleViewMode('list');
         })
       Text('按系列')
         .fontSize(13)
-        .fontColor(this.viewMode === 'series' ? Color.White : Theme.muted)
+        .fontColor(this.viewMode === 'series' ? Theme.goldDeep : Theme.muted)
+        .fontWeight(this.viewMode === 'series' ? FontWeight.Medium : FontWeight.Normal)
         .textAlign(TextAlign.Center)
         .layoutWeight(1)
         .height(36)
         .borderRadius(Theme.radiusS)
-        .backgroundColor(this.viewMode === 'series' ? Theme.gold : Theme.card)
+        .backgroundColor(this.viewMode === 'series' ? Theme.goldBg : Theme.card)
+        .border({ width: 1, color: this.viewMode === 'series' ? Theme.goldLine : Color.Transparent })
         .onClick((): void => {
           this.toggleViewMode('series');
         })
@@ -653,7 +657,7 @@ export struct ListView {
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.textStrong)
-          .maxLines(2)
+          .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
@@ -680,14 +684,6 @@ export struct ListView {
       .alignItems(HorizontalAlign.Start)
 
       Column({ space: 4 }) {
-        if (row.owned) {
-          Text('已收')
-            .fontSize(11)
-            .fontColor(Theme.goldDeep)
-            .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-            .backgroundColor(Theme.goldBg)
-            .borderRadius(Theme.radiusS)
-        }
         Text(String(row.year))
           .fontSize(12)
           .fontColor(Theme.muted)
@@ -849,18 +845,9 @@ export struct ListView {
   build() {
     Scroll() {
       Column() {
-        Column({ space: 4 }) {
-          Text('全套清单')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(Theme.text)
-          Text('137 个品种 · 按系列整理')
-            .fontSize(12)
-            .fontColor(Theme.muted)
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-        .padding({ left: Theme.pagePadding, right: Theme.pagePadding, top: 16, bottom: 12 })
+        Column()
+          .width('100%')
+          .height(10)
 
         Column() {
           this.viewSwitch()

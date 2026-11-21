@@ -227,7 +227,7 @@ export struct HomeView {
           .fontColor(Theme.goldDeep)
           .padding({ left: 14, right: 14, top: 8, bottom: 8 })
           .borderRadius(Theme.radiusS)
-          .backgroundColor('#FFFFFFB3')
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.goldLine })
           .margin({ top: 10 })
           .onClick((): void => {
@@ -239,8 +239,8 @@ export struct HomeView {
 
       if (this.heroImg.length > 0) {
         Image(this.heroImg)
-          .width(92)
-          .height(92)
+          .width(84)
+          .height(84)
           .objectFit(ImageFit.Contain)
           .borderRadius(14)
           .backgroundColor('#FFFFFFCC')
@@ -269,15 +269,14 @@ export struct HomeView {
       }
     }
     .width('100%')
-    .height(184)
-    .padding({ left: 20, right: 16, top: 18, bottom: 18 })
+    .height(168)
+    .padding({ left: 20, right: 16, top: 16, bottom: 16 })
     .alignItems(VerticalAlign.Center)
     .justifyContent(FlexAlign.SpaceBetween)
     .borderRadius(Theme.radiusL)
     .clip(true)
-    .linearGradient({ angle: 140, colors: [['#FFFFFFF0', 0], ['#F6E9CC', 0.62], ['#EFDFBE', 1]] })
-    .border({ width: 1, color: '#FFFFFFE6' })
-    .shadow({ radius: 34, color: 'rgba(150,110,50,0.14)', offsetY: 14 })
+    .linearGradient({ angle: 165, colors: [['#FFFFFF', 0], ['#FFFDF8', 0.7], ['#FDF7EC', 1]] })
+    .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
   }
 
   @Builder
@@ -346,7 +345,7 @@ export struct HomeView {
       .backgroundColor(Theme.glass)
       .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 30, color: 'rgba(120,90,40,0.10)', offsetY: 10 })
+      .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
       .onClick((): void => {
         Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
       })
@@ -379,7 +378,7 @@ export struct HomeView {
       .backgroundColor(Theme.glass)
       .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 30, color: 'rgba(120,90,40,0.10)', offsetY: 10 })
+      .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
     }
   }
 
@@ -402,61 +401,63 @@ export struct HomeView {
 
   @Builder
   latestRow() {
-    List({ space: 10 }) {
+    // 对齐小程序：三张等分、名称单行省略、图片统一方框，避免换行导致高度参差
+    Row({ space: 8 }) {
       ForEach(this.latest, (item: LatestCard) => {
-        ListItem() {
-          Column({ space: 4 }) {
-            Stack({ alignContent: Alignment.TopStart }) {
-              Image(item.imgUrl)
-                .width(88)
-                .height(88)
-                .borderRadius(Theme.radiusInner)
-                .backgroundColor('#F4F1E9')
-                .objectFit(ImageFit.Cover)
-              Text(String(item.year))
-                .fontSize(9)
-                .fontColor(Theme.goldDeep)
-                .padding({ left: 5, right: 5, top: 2, bottom: 2 })
-                .backgroundColor('#FFFFFFD9')
-                .borderRadius(6)
-                .margin({ left: 5, top: 5 })
-            }
-            .width(88)
-            .height(88)
-
-            Text(item.name)
-              .fontSize(11)
-              .fontColor(Theme.textStrong)
-              .maxLines(2)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .height(36)
-              .width(112)
-            Text(item.faceText)
+        Column() {
+          Stack({ alignContent: Alignment.TopStart }) {
+            Image(item.imgUrl)
+              .width('100%')
+              .height(98)
+              .borderRadius(6)
+              .backgroundColor('#FBF9F4')
+              .objectFit(ImageFit.Contain)
+            Text(String(item.year))
               .fontSize(10)
-              .fontColor(Theme.muted)
-              .width(112)
-            Text(item.priceText)
-              .fontSize(11)
-              .fontColor(Theme.gold)
-              .maxLines(1)
-              .width(112)
+              .fontColor('#F0D79A')
+              .padding({ left: 6, right: 6, top: 1, bottom: 1 })
+              .backgroundColor('rgba(36,28,20,0.66)')
+              .borderRadius(10)
+              .margin({ left: 6, top: 6 })
           }
-          .alignItems(HorizontalAlign.Start)
-          .padding(8)
-          .borderRadius(Theme.radiusM)
-          .backgroundColor(Theme.glassSoft)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THIN)
-          .border({ width: 1, color: '#FFFFFFB3' })
-          .onClick((): void => {
-            this.goDetail(item.id);
-          })
+          .width('100%')
+          .height(98)
+
+          Text(item.name)
+            .fontSize(11)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(Theme.textStrong)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+            .margin({ top: 8 })
+
+          Text(item.faceText)
+            .fontSize(11)
+            .fontColor(Theme.muted)
+            .maxLines(1)
+            .width('100%')
+            .margin({ top: 2 })
+
+          Text(item.priceText)
+            .fontSize(11)
+            .fontColor(Theme.gold)
+            .maxLines(1)
+            .width('100%')
+            .margin({ top: 2 })
         }
+        .layoutWeight(1)
+        .padding(7)
+        .borderRadius(Theme.radiusInner)
+        .backgroundColor(Theme.card)
+        .shadow({ radius: 12, color: 'rgba(0,0,0,0.05)', offsetY: 4 })
+        .onClick((): void => {
+          this.goDetail(item.id);
+        })
       }, (item: LatestCard) => String(item.id))
     }
-    .listDirection(Axis.Horizontal)
-    .height(196)
-    .scrollBar(BarState.Off)
     .width('100%')
+    .alignItems(VerticalAlign.Top)
   }
 
   @Builder
@@ -516,9 +517,8 @@ export struct HomeView {
       .width('100%')
       .padding(18)
       .borderRadius(Theme.radiusL)
-      .linearGradient({ angle: 130, colors: [['#FFFFFFE6', 0], ['#FBF1DC', 1]] })
-      .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .linearGradient({ angle: 160, colors: [['#FFFFFF', 0], ['#FDF8EE', 1]] })
+      .shadow({ radius: 20, color: 'rgba(0,0,0,0.05)', offsetY: 6 })
       .onClick((): void => {
         const p = new RouteParam();
         p.cat = 'pm';
@@ -564,7 +564,7 @@ export struct HomeView {
         .backgroundColor(Theme.glass)
         .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
         .border({ width: 1, color: Theme.glassBorder })
-        .shadow({ radius: 18, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
+        .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
         .onClick((): void => {
           this.goSeries(item.code, item.cat, item.name);
         })
@@ -653,8 +653,8 @@ export struct HomeView {
     .onRefreshing((): void => {
       this.doRefresh();
     })
+    .backgroundColor(Color.Transparent)
     .width('100%')
     .height('100%')
-    .backgroundColor(Color.Transparent)
   }
 }

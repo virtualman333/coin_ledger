@@ -1,12 +1,12 @@
 import { promptAction } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
-import { authentication } from '@kit.AccountKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { Api } from '../utils/api';
 import { Catalog } from '../utils/catalog';
 import { Clip } from '../utils/clip';
 import { Config } from '../utils/config';
 import { Nav, RouteParam, Routes } from '../utils/router';
+import { Huawei } from '../utils/huawei';
 import { Privacy } from '../utils/privacy';
 import { Store } from '../utils/store';
 import { Theme } from '../utils/theme';
@@ -157,13 +157,21 @@ export struct AccountPage {
     }).then((): void => {
       this.busy = false;
       this.render();
+      const isLogin: boolean = this.mode === 'login';
       promptAction.showToast({
-        message: this.mode === 'login' ? '登录成功' : '注册成功',
+        message: isLogin ? '登录成功' : '注册成功',
         duration: 1500
       });
-      setTimeout((): void => {
-        Nav.pop(this.stack);
-      }, 500);
+      // 账号密码登录进来、且还没绑华为：推荐一次 —— 绑完下次就能用华为账号一键登录
+      const u: User | null = Store.currentUser();
+      const bound: boolean = u !== null && u.hw === true;
+      if (isLogin && !bound) {
+        this.suggestHuaweiBind();
+      } else {
+        setTimeout((): void => {
+          Nav.pop(this.stack);
+        }, 500);
+      }
     }).catch((e: Error): void => {
       this.busy = false;
       AlertDialog.show({
@@ -184,23 +192,7 @@ export struct AccountPage {
    * Client Secret 不进安装包。系统没登录华为账号时会拉起系统登录页（forceLogin）。
    */
   private fetchHuaweiCode(): Promise<string> {
-    const authRequest = new authentication.HuaweiIDProvider().createLoginWithHuaweiIDRequest();
-    authRequest.forceLogin = true;
-    const controller = new authentication.AuthenticationController(
-      getContext(this) as common.UIAbilityContext);
-
-    return controller.executeRequest(authRequest)
-      .then((response: authentication.AuthenticationResponse): string => {
-        const detail = response as authentication.LoginWithHuaweiIDResponse;
-        // authorizationCode 在类型上是可选的：没授权成功时不会有值
-        const rawCode: string | undefined = detail.data !== undefined && detail.data !== null
-          ? detail.data.authorizationCode : undefined;
-        const code: string = rawCode !== undefined ? rawCode : '';
-        if (code === '') {
-          throw new Error('没有拿到华为账号授权码，请重试');
-        }
-        return code;
-      });
+    return Huawei.fetchCode(getContext(this) as common.UIAbilityContext);
   }
 
   /** 华为相关失败提示：先把官方错误码翻译成人话 */
@@ -257,8 +249,28 @@ export struct AccountPage {
       });
   }
 
-  /** 给当前已登录账号绑定华为账号 */
-  private huaweiBind(): void {
+  /** 登录成功后推荐绑定华为账号：绑完下次就能一键登录 */
+  private suggestHuaweiBind(): void {
+    AlertDialog.show({
+      title: '绑定华为账号？',
+      message: '绑定后，下次在登录页直接点「华为账号快速登录」就能进入这本账本，不用再记密码。',
+      primaryButton: {
+        value: '以后再说',
+        action: (): void => {
+          Nav.pop(this.stack);
+        }
+      },
+      secondaryButton: {
+        value: '去绑定',
+        action: (): void => {
+          this.huaweiBind(true);
+        }
+      }
+    });
+  }
+
+  /** 给当前已登录账号绑定华为账号；backAfter=true 时绑完返回上一页 */
+  private huaweiBind(backAfter: boolean = false): void {
     if (this.hwBusy) return;
     this.hwBusy = true;
     this.fetchHuaweiCode()
@@ -273,6 +285,11 @@ export struct AccountPage {
         this.hwBusy = false;
         this.render();
         promptAction.showToast({ message: '已绑定华为账号', duration: 1600 });
+        if (backAfter) {
+          setTimeout((): void => {
+            Nav.pop(this.stack);
+          }, 600);
+        }
       })
       .catch((e: Error): void => {
         this.hwBusy = false;
@@ -282,6 +299,8 @@ export struct AccountPage {
           confirm: {
             value: '知道了',
             action: (): void => {
+              // 登录已经成功，只是绑定没成：关掉提示后照常返回
+              if (backAfter) Nav.pop(this.stack);
             }
           }
         });

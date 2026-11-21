@@ -860,7 +860,7 @@ export struct PlanView {
                     ForEach(g.items, (row: PlanRow) => {
                       Column() {
                         this.coinItem(row)
-                        Divider().color(Theme.lineSoft)
+                        Divider().color(Theme.line).strokeWidth(0.5)
                       }
                     }, (row: PlanRow) => row.key)
                   }
@@ -904,6 +904,7 @@ export struct PlanView {
       .onRefreshing((): void => {
         this.doRefresh();
       })
+      .backgroundColor(Color.Transparent)
 
       if (this.detail !== null) {
         this.detailSheet(this.detail as PlanRow)

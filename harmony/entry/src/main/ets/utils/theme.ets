@@ -5,31 +5,31 @@
  */
 export class Theme {
   // 底色与卡片（暖中性，避免纯白刺眼）
-  static readonly bg: string = '#F5F3EE';
-  static readonly bgDeep: string = '#EFEBE2';
+  static readonly bg: string = '#F6F6F7';
+  static readonly bgDeep: string = '#EFEFF1';
   static readonly card: string = '#FFFFFF';
-  static readonly cardSoft: string = '#FAF8F3';
+  static readonly cardSoft: string = '#FBFBFC';
 
   // 文本层级（主 → 次 → 辅助 → 占位）
-  static readonly text: string = '#1A1918';
-  static readonly textStrong: string = '#2B2926';
-  static readonly muted: string = '#6E6A63';
-  static readonly faint: string = '#9C978E';
+  static readonly text: string = '#1C1C1E';
+  static readonly textStrong: string = '#2C2C2E';
+  static readonly muted: string = '#6E6E73';
+  static readonly faint: string = '#A1A1A6';
 
   // 品牌金
   static readonly gold: string = '#9A6B1F';
   static readonly goldDeep: string = '#7A541A';
-  static readonly goldBg: string = '#F5EFE1';
-  static readonly goldBgSoft: string = '#FAF5EA';
-  static readonly goldLine: string = '#E8DCC2';
+  static readonly goldBg: string = '#FBF3E2';
+  static readonly goldBgSoft: string = '#FDF9F0';
+  static readonly goldLine: string = '#EADFC8';
 
   // 涨跌（国内习惯：涨红跌绿）
   static readonly up: string = '#C0392B';
   static readonly down: string = '#17724A';
 
   // 线条
-  static readonly line: string = '#EAE5DA';
-  static readonly lineSoft: string = '#F3EFE7';
+  static readonly line: string = '#ECECEE';
+  static readonly lineSoft: string = '#F5F5F6';
 
   // 间距：8vp 栅格
   static readonly gapXs: number = 4;
@@ -69,30 +69,30 @@ export class Theme {
   static readonly fontHuge: number = 28;
 
   // 阴影：低透明度、柔和
-  static readonly shadowCard: string = '0 2vp 8vp rgba(60,48,26,0.04)';
-  static readonly shadowSoft: string = '0 1vp 4vp rgba(60,48,26,0.03)';
-  static readonly shadowFloat: string = '0 8vp 24vp rgba(60,48,26,0.12)';
+  static readonly shadowCard: string = '0 2vp 10vp rgba(0,0,0,0.05)';
+  static readonly shadowSoft: string = '0 1vp 4vp rgba(0,0,0,0.04)';
+  static readonly shadowFloat: string = '0 8vp 24vp rgba(0,0,0,0.10)';
 
   // 触控热区
   static readonly touch: number = 44;
 
   /* ---------- 空间感 / 沉浸光感 ---------- */
   // 玻璃材质：半透明白 + 背景模糊 + 1px 高光边
-  static readonly glass: string = '#FFFFFFB8';
-  static readonly glassStrong: string = '#FFFFFFD9';
-  static readonly glassSoft: string = '#FFFFFF8C';
-  static readonly glassBorder: string = '#FFFFFFD9';
+  static readonly glass: string = '#FFFFFFF2';
+  static readonly glassStrong: string = '#FFFFFFFA';
+  static readonly glassSoft: string = '#FFFFFFE8';
+  static readonly glassBorder: string = '#0000000A';
 
   // 光晕（暖金），配合 blur 做柔和光斑
-  static readonly glowWarm: string = '#F2D7A0';
-  static readonly glowLight: string = '#FBEBCB';
-  static readonly glowCool: string = '#E9DCC4';
+  static readonly glowWarm: string = '#F7E9CE';
+  static readonly glowLight: string = '#FBF3E4';
+  static readonly glowCool: string = '#EFE9DD';
 
   // 层次阴影：近景更实、背景最虚
-  static readonly shadowGlass: string = '0 10vp 30vp rgba(120,90,40,0.10)';
+  static readonly shadowGlass: string = '0 8vp 24vp rgba(0,0,0,0.06)';
 
   // 背景三段渐变
-  static readonly skyTop: string = '#FEFBF4';
-  static readonly skyMid: string = '#F6F0E2';
-  static readonly skyBottom: string = '#EDE5D3';
+  static readonly skyTop: string = '#FBFBFC';
+  static readonly skyMid: string = '#F6F6F7';
+  static readonly skyBottom: string = '#F0F0F2';
 }
