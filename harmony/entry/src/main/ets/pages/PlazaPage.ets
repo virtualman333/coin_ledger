@@ -117,6 +117,10 @@ export struct PlazaPage {
     return v;
   }
 
+  private onReachBottom(): void {
+    if (!this.loading && this.hasMore) this.load(this.page + 1, true);
+  }
+
   private toggleLike(item: ShareView): void {
     if (!Store.isLogin()) {
       promptAction.showToast({ message: '登录后才能点赞', duration: 1500 });
@@ -281,6 +285,8 @@ export struct PlazaPage {
                     .lineHeight(19)
                 }
                 .width('100%')
+                .constraintSize({ minHeight: '100%' })
+                .justifyContent(FlexAlign.Start)
                 .padding({ top: 6, bottom: 6 })
                 .alignItems(HorizontalAlign.Start)
               }
@@ -438,6 +444,7 @@ export struct PlazaPage {
                 .fontSize(10)
                 .fontColor(Theme.muted)
             }
+            .justifyContent(FlexAlign.Start)
             .width('100%')
             .alignItems(HorizontalAlign.Start)
 
@@ -486,9 +493,14 @@ export struct PlazaPage {
             Column().height(30)
           }
           .width('100%')
+          .constraintSize({ minHeight: '100%' })
+          .justifyContent(FlexAlign.Start)
           .padding({ left: 16, right: 16, top: 8 })
         }
         .scrollBar(BarState.Off)
+        .onScrollEdge((side: Edge): void => {
+          if (side === Edge.Bottom) this.onReachBottom();
+        })
         .layoutWeight(1)
       }
       .width('100%')

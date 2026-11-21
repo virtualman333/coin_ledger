@@ -99,6 +99,7 @@ export struct AboutPage {
               .fontSize(10)
               .fontColor(Theme.faint)
           }
+          .justifyContent(FlexAlign.Start)
           .width('100%')
           .padding({ top: 20, bottom: 16 })
           .alignItems(HorizontalAlign.Center)
@@ -170,6 +171,8 @@ export struct AboutPage {
             .margin({ top: 6, bottom: 30 })
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16 })
       }
       .scrollBar(BarState.Off)

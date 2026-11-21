@@ -9,12 +9,17 @@ export struct SectionHead {
   };
 
   build() {
-    Row() {
+    Row({ space: 8 }) {
+      Row()
+        .width(3)
+        .height(14)
+        .borderRadius(2)
+        .linearGradient({ angle: 180, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
       Text(this.title)
-        .fontSize(Theme.fontTitle)
+        .fontSize(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.text)
-        .letterSpacing(0.5)
+        .letterSpacing(0.3)
       Blank()
       if (this.more) {
         Text(this.more)
@@ -28,7 +33,7 @@ export struct SectionHead {
     }
     .width('100%')
     .alignItems(VerticalAlign.Center)
-    .margin({ top: 18, bottom: 8 })
+    .margin({ top: 22, bottom: 10 })
     .padding({ left: 2, right: 2 })
   }
 }

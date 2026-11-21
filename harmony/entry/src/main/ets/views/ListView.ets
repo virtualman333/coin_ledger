@@ -543,6 +543,20 @@ export struct ListView {
     Nav.push(this.stack, Routes.SERIES_DETAIL, p);
   }
 
+  /** 滚动到内容底部时自动续一页（按钮保留，作为触底失败的兜底） */
+  private onReachBottom(): void {
+    if (this.viewMode !== 'list') return;
+    if (this.category === 'pm') {
+      if (!this.pmLoading && this.pmLoaded && this.pmPage < this.pmPages) {
+        this.loadPmFull(this.pmPage + 1, true);
+      }
+      return;
+    }
+    if (this.rows.length > this.rowLimit) {
+      this.rowLimit += 40;
+    }
+  }
+
   private toOptions(list: string[]): SelectOption[] {
     const out: SelectOption[] = [];
     for (let i = 0; i < list.length; i++) {
@@ -1136,9 +1150,14 @@ export struct ListView {
         .margin({ top: 4 })
       }
       .width('100%')
+      .constraintSize({ minHeight: '100%' })
+      .justifyContent(FlexAlign.Start)
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
+    .onScrollEdge((side: Edge): void => {
+      if (side === Edge.Bottom) this.onReachBottom();
+    })
     .width('100%')
     .height('100%')
     .backgroundColor(Theme.bg)

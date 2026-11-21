@@ -135,6 +135,7 @@ export struct FeedbackPage {
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
+            .justifyContent(FlexAlign.Start)
             .width('100%')
             .padding(10)
             .borderRadius(8)
@@ -239,6 +240,8 @@ export struct FeedbackPage {
           Column().height(30)
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
       .scrollBar(BarState.Off)

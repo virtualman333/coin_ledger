@@ -1,5 +1,5 @@
 import { common } from '@kit.AbilityKit';
-import { promptAction } from '@kit.ArkUI';
+import { promptAction, SymbolGlyphModifier } from '@kit.ArkUI';
 import { HomeView } from '../views/HomeView';
 import { PlanView } from '../views/PlanView';
 import { ListView } from '../views/ListView';
@@ -167,21 +167,13 @@ struct Index {
     .alignContent(Alignment.Center)
   }
 
-  @Builder
-  tabItem(index: number, label: string, icon: Resource, iconOn: Resource) {
-    Column({ space: 2 }) {
-      Image(this.currentTab === index ? iconOn : icon)
-        .width(24)
-        .height(24)
-        .objectFit(ImageFit.Contain)
-      Text(label)
-        .fontSize(10)
-        .fontColor(this.currentTab === index ? Theme.goldDeep : Theme.faint)
-        .fontWeight(this.currentTab === index ? FontWeight.Medium : FontWeight.Normal)
-    }
-    .width('100%')
-    .height('100%')
-    .justifyContent(FlexAlign.Center)
+  /** 官方 BottomTabBarStyle + 系统符号：图标与文字一起跟随系统选中色 */
+  private tabStyle(normal: Resource, selected: Resource, text: string): BottomTabBarStyle {
+    const sym: TabBarSymbol = {
+      normal: new SymbolGlyphModifier(normal),
+      selected: new SymbolGlyphModifier(selected)
+    };
+    return new BottomTabBarStyle(sym, text);
   }
 
   @Builder
@@ -249,7 +241,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabItem(0, '首页', $r('app.media.tab_home'), $r('app.media.tab_home_on')))
+            .tabBar(this.tabStyle($r('sys.symbol.house'), $r('sys.symbol.house_fill'), '首页'))
 
             TabContent() {
               PlanView({
@@ -257,7 +249,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabItem(1, '计划', $r('app.media.tab_plan'), $r('app.media.tab_plan_on')))
+            .tabBar(this.tabStyle($r('sys.symbol.calendar'), $r('sys.symbol.calendar_fill'), '计划'))
 
             TabContent() {
               ListView({
@@ -265,7 +257,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabItem(2, '清单', $r('app.media.tab_list'), $r('app.media.tab_list_on')))
+            .tabBar(this.tabStyle($r('sys.symbol.list_square'), $r('sys.symbol.list_square'), '清单'))
 
             TabContent() {
               MineView({
@@ -273,7 +265,7 @@ struct Index {
                 onSwitchTab: (index: number): void => this.switchTab(index)
               })
             }
-            .tabBar(this.tabItem(3, '我的', $r('app.media.tab_mine'), $r('app.media.tab_mine_on')))
+            .tabBar(this.tabStyle($r('sys.symbol.person'), $r('sys.symbol.person_fill'), '我的'))
           }
           .width('100%')
           .height('100%')

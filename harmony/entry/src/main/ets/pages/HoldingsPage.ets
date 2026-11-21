@@ -720,6 +720,7 @@ export struct HoldingsPage {
                       this.stack.pop();
                     })
                 }
+                .justifyContent(FlexAlign.Start)
                 .width('100%')
                 .padding(18)
                 .borderRadius(14)
@@ -811,6 +812,8 @@ export struct HoldingsPage {
               .margin({ top: 6, bottom: 40 })
             }
             .width('100%')
+            .constraintSize({ minHeight: '100%' })
+            .justifyContent(FlexAlign.Start)
           }
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)

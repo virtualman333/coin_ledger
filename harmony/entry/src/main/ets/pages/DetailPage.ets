@@ -944,6 +944,9 @@ export struct DetailPage {
                 .height(40)
             }
             .width('100%')
+            .constraintSize({ minHeight: '100%' })
+            .justifyContent(FlexAlign.Start)
+            .justifyContent(FlexAlign.Start)
           }
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)

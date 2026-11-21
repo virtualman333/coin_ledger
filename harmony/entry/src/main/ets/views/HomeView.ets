@@ -210,14 +210,14 @@ export struct HomeView {
     Row() {
       Column({ space: 6 }) {
         Text('藏币录')
-          .fontSize(26)
+          .fontSize(28)
           .fontWeight(FontWeight.Bold)
           .fontColor(Theme.goldDeep)
-          .letterSpacing(1)
+          .letterSpacing(1.5)
         Text('中国纪念币图鉴')
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.muted)
-          .letterSpacing(1)
+          .letterSpacing(1.2)
         Text('1984—2026 · ' + this.totalCoins + ' 个品种')
           .fontSize(11)
           .fontColor(Theme.faint)
@@ -239,12 +239,14 @@ export struct HomeView {
 
       if (this.heroImg.length > 0) {
         Image(this.heroImg)
-          .width(96)
-          .height(96)
+          .width(92)
+          .height(92)
           .objectFit(ImageFit.Contain)
-          .borderRadius(12)
+          .borderRadius(14)
+          .backgroundColor('#FFFFFFCC')
+          .border({ width: 2, color: '#FFFFFFE6' })
+          .shadow({ radius: 10, color: 'rgba(120,90,40,0.16)', offsetY: 3 })
           .margin({ left: 8 })
-          .opacity(0.96)
       } else {
         // 装饰方孔钱（同小程序 .hero-coin）：不依赖位图，颜色跟主题走
         Stack({ alignContent: Alignment.Center }) {
@@ -267,13 +269,13 @@ export struct HomeView {
       }
     }
     .width('100%')
-    .height(196)
-    .padding({ left: 20, right: 16, top: 20, bottom: 20 })
+    .height(184)
+    .padding({ left: 20, right: 16, top: 18, bottom: 18 })
     .alignItems(VerticalAlign.Center)
     .justifyContent(FlexAlign.SpaceBetween)
     .borderRadius(20)
     .clip(true)
-    .linearGradient({ angle: 135, colors: [['#FBF7EE', 0], ['#F2E9D6', 1]] })
+    .linearGradient({ angle: 135, colors: [['#FCF7EA', 0], ['#F0E3C8', 1]] })
   }
 
   @Builder
@@ -287,7 +289,7 @@ export struct HomeView {
             .fontColor(Theme.text)
           Blank()
           Text(String(this.owned))
-            .fontSize(18)
+            .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor(Theme.goldDeep)
           Text(' / ' + this.totalCoins)
@@ -326,12 +328,15 @@ export struct HomeView {
 
         Row() {
           this.numCell('面值', '¥' + this.faceText, Theme.text)
+          Divider().vertical(true).height(24).color(Theme.line)
           this.numCell('投入', '¥' + this.costText, Theme.text)
+          Divider().vertical(true).height(24).color(Theme.line)
           this.numCell('市值', '¥' + this.marketText, Theme.text)
+          Divider().vertical(true).height(24).color(Theme.line)
           this.numCell('浮动', '¥' + this.profitText, this.profitUp ? Theme.up : Theme.down)
         }
         .width('100%')
-        .margin({ top: 2 })
+        .margin({ top: 4 })
       }
       .width('100%')
       .padding(16)
@@ -396,9 +401,9 @@ export struct HomeView {
           Column({ space: 4 }) {
             Stack({ alignContent: Alignment.TopStart }) {
               Image(item.imgUrl)
-                .width(104)
-                .height(104)
-                .borderRadius(10)
+                .width(112)
+                .height(112)
+                .borderRadius(12)
                 .backgroundColor('#F4F1E9')
                 .objectFit(ImageFit.Cover)
               Text(String(item.year))
@@ -409,25 +414,25 @@ export struct HomeView {
                 .borderRadius(6)
                 .margin({ left: 5, top: 5 })
             }
-            .width(104)
-            .height(104)
+            .width(112)
+            .height(112)
 
             Text(item.name)
               .fontSize(12)
               .fontColor(Theme.textStrong)
               .maxLines(2)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .height(34)
-              .width(104)
+              .height(36)
+              .width(112)
             Text(item.faceText)
               .fontSize(10)
               .fontColor(Theme.muted)
-              .width(104)
+              .width(112)
             Text(item.priceText)
-              .fontSize(10)
+              .fontSize(11)
               .fontColor(Theme.gold)
               .maxLines(1)
-              .width(104)
+              .width(112)
           }
           .alignItems(HorizontalAlign.Start)
           .onClick((): void => {
@@ -437,7 +442,7 @@ export struct HomeView {
       }, (item: LatestCard) => String(item.id))
     }
     .listDirection(Axis.Horizontal)
-    .height(196)
+    .height(212)
     .scrollBar(BarState.Off)
     .width('100%')
   }
@@ -453,7 +458,7 @@ export struct HomeView {
               .fontColor(Theme.muted)
             Row() {
               Text('¥' + this.metal.gold)
-                .fontSize(20)
+                .fontSize(22)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.goldDeep)
               Text(' 元/克')
@@ -471,7 +476,7 @@ export struct HomeView {
               .fontColor(Theme.muted)
             Row() {
               Text('¥' + this.metal.silver)
-                .fontSize(20)
+                .fontSize(22)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#7C7F86')
               Text(' 元/克')
@@ -516,7 +521,7 @@ export struct HomeView {
       ForEach(this.seriesTop, (item: SeriesCard) => {
         Column({ space: 5 }) {
           Text(item.name)
-            .fontSize(13)
+            .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.textStrong)
             .maxLines(1)
@@ -540,9 +545,9 @@ export struct HomeView {
         }
         .width('48%')
         .alignItems(HorizontalAlign.Start)
-        .padding(12)
+        .padding(14)
         .margin({ bottom: 10 })
-        .borderRadius(12)
+        .borderRadius(16)
         .backgroundColor(Theme.card)
         .onClick((): void => {
           this.goSeries(item.code, item.cat, item.name);
@@ -559,6 +564,7 @@ export struct HomeView {
           Column() {
             this.hero()
           }
+          .justifyContent(FlexAlign.Start)
           .width('100%')
           .padding({ left: 12, right: 12 })
           .margin({ top: 10 })
@@ -620,6 +626,8 @@ export struct HomeView {
           .margin({ top: 10, bottom: 24 })
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
       }
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)

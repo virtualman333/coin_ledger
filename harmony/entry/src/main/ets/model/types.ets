@@ -203,6 +203,11 @@ export interface User {
   name: string;
   nickname?: string;
   avatar?: string;
+  /** 华为账号头像外链（会失效，仅作展示兜底） */
+  hwAvatar?: string;
+  /** 是否绑定了微信 / 华为账号 */
+  wx?: boolean;
+  hw?: boolean;
   role?: string;
   createdAt?: string;
   nameChanged?: boolean;

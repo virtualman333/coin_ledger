@@ -200,6 +200,7 @@ export struct MoreToolsPage {
                 })
             }
           }
+          .justifyContent(FlexAlign.Start)
           .width('100%')
           .padding(14)
           .borderRadius(14)
@@ -266,6 +267,8 @@ export struct MoreToolsPage {
             .margin({ top: 6, bottom: 30 })
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
       .scrollBar(BarState.Off)

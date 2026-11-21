@@ -33,7 +33,9 @@ export class Theme {
   // 尺寸
   static readonly pagePadding: number = 12;
   static readonly cardPadding: number = 14;
-  static readonly radiusCard: number = 10;
+  static readonly radiusCard: number = 16;
+  static readonly radiusInner: number = 12;
+  static readonly radiusChip: number = 15;
   static readonly radiusBtn: number = 7;
   static readonly radiusThumb: number = 7;
   static readonly fontBody: number = 14;
@@ -44,7 +46,8 @@ export class Theme {
   static readonly fontHuge: number = 28;
 
   // 阴影
-  static readonly shadowCard: string = '0 1vp 6vp rgba(60,48,26,0.06)';
+  static readonly shadowCard: string = '0 2vp 12vp rgba(60,48,26,0.05)';
+  static readonly shadowSoft: string = '0 1vp 4vp rgba(60,48,26,0.04)';
   static readonly shadowFloat: string = '0 11vp 24vp rgba(60,48,26,0.22)';
 }
 

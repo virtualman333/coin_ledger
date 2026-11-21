@@ -300,6 +300,7 @@ export struct ProfilePage {
                   .fontColor(Theme.faint)
               }
             }
+            .justifyContent(FlexAlign.Start)
             .width('100%')
             .padding(18)
             .borderRadius(14)
@@ -363,6 +364,8 @@ export struct ProfilePage {
             Column().height(20)
           }
           .width('100%')
+          .constraintSize({ minHeight: '100%' })
+          .justifyContent(FlexAlign.Start)
           .padding({ left: 16, right: 16, top: 8 })
         }
         .scrollBar(BarState.Off)

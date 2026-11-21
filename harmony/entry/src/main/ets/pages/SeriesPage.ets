@@ -244,6 +244,7 @@ export struct SeriesPage {
               .fontSize(10)
               .fontColor(Theme.muted)
           }
+          .justifyContent(FlexAlign.Start)
           .width('100%')
           .alignItems(HorizontalAlign.Start)
 
@@ -326,6 +327,8 @@ export struct SeriesPage {
           Column().height(30)
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
       .scrollBar(BarState.Off)

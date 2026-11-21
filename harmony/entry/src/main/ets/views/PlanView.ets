@@ -353,6 +353,10 @@ export struct PlanView {
     this.pmGroups = all.slice(0, shown);
   }
 
+  private onReachBottom(): void {
+    if (this.tab === 'pm') this.loadMorePm();
+  }
+
   private loadMorePm(): void {
     if (this.pmGroups.length >= this.pmAll.length) return;
     this.pmShown = Math.min(this.pmShown + 3, this.pmAll.length);
@@ -551,6 +555,7 @@ export struct PlanView {
                       .fontColor(Theme.textStrong)
                       .layoutWeight(1)
                   }
+                  .justifyContent(FlexAlign.Start)
                   .width('100%')
                   .alignItems(VerticalAlign.Top)
                 }, (s: PlanSchedule) => s.k)
@@ -626,6 +631,8 @@ export struct PlanView {
             }
           }
           .width('100%')
+          .constraintSize({ minHeight: '100%' })
+          .justifyContent(FlexAlign.Start)
           .alignItems(HorizontalAlign.Start)
         }
         .constraintSize({ maxHeight: 420 })
@@ -684,6 +691,7 @@ export struct PlanView {
                   .fontColor(Theme.text)
                 Blank()
               }
+              .justifyContent(FlexAlign.Start)
               .width('100%')
               if (this.source.length > 0) {
                 Text(this.source)
@@ -874,9 +882,14 @@ export struct PlanView {
             }
           }
           .width('100%')
+          .constraintSize({ minHeight: '100%' })
+          .justifyContent(FlexAlign.Start)
         }
         .scrollBar(BarState.Off)
         .edgeEffect(EdgeEffect.Spring)
+        .onScrollEdge((side: Edge): void => {
+          if (side === Edge.Bottom) this.onReachBottom();
+        })
       }
       .onRefreshing((): void => {
         this.doRefresh();

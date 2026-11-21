@@ -400,6 +400,8 @@ export struct PmDetailPage {
               Column().height(30)
             }
             .width('100%')
+            .constraintSize({ minHeight: '100%' })
+            .justifyContent(FlexAlign.Start)
           }
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)

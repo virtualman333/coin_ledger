@@ -1,4 +1,7 @@
 import { promptAction } from '@kit.ArkUI';
+import { common } from '@kit.AbilityKit';
+import { authentication } from '@kit.AccountKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { Api } from '../utils/api';
 import { Catalog } from '../utils/catalog';
 import { Clip } from '../utils/clip';
@@ -16,6 +19,15 @@ class AuthBody {
   constructor(name: string, password: string) {
     this.name = name;
     this.password = password;
+  }
+}
+
+/** 华为登录只递交授权码，client_secret 与换 token 全在服务端 */
+class HuaweiBody {
+  code: string = '';
+
+  constructor(code: string) {
+    this.code = code;
   }
 }
 
@@ -38,9 +50,11 @@ export struct AccountPage {
   @State password2: string = '';
   @State agree: boolean = false;
   @State busy: boolean = false;
+  @State hwBusy: boolean = false;
   @State loggedIn: boolean = false;
   @State displayName: string = '';
   @State userAvatar: string = '';
+  @State loginText: string = '已登录 · 藏品云端同步';
   @State holdingsCount: number = 0;
   @State userCount: number = 0;
   @State totalCoins: number = 0;
@@ -64,36 +78,57 @@ export struct AccountPage {
     this.loggedIn = state.user !== null;
     const u: User | null = state.user;
     this.displayName = u !== null ? (u.nickname || u.name) : '';
-    this.userAvatar = u !== null && u.avatar ? Api.imgUrl(u.avatar) : '';
+    // 本站上传的头像优先；没上传过就用华为账号头像（外链，可能失效 → 失败退回首字母）
+    if (u !== null) {
+      const own: string = u.avatar !== undefined && u.avatar !== '' ? u.avatar : '';
+      const hw: string = u.hwAvatar !== undefined ? u.hwAvatar : '';
+      const src: string = own !== '' ? own : hw;
+      this.userAvatar = src !== '' ? Api.imgUrl(src) : '';
+
+      const ways: string[] = [];
+      if (u.hasPassword === true) ways.push('密码');
+      if (u.wx === true) ways.push('微信');
+      if (u.hw === true) ways.push('华为');
+      this.loginText = ways.length > 0 ? '已登录 · ' + ways.join(' / ') : '已登录 · 藏品云端同步';
+    } else {
+      this.userAvatar = '';
+      this.loginText = '已登录 · 藏品云端同步';
+    }
     this.holdingsCount = state.holdings.length;
     this.userCount = state.userCount;
     this.totalCoins = Catalog.total();
     this.seriesCount = Catalog.seriesList.length;
   }
 
+  /** 未同意隐私政策时拦下；用户点「同意并继续」后执行 next */
+  private requireAgree(next: () => void): boolean {
+    if (this.agree) return true;
+    AlertDialog.show({
+      title: '先同意隐私政策',
+      message: '登录需要先同意《隐私政策》与《用户协议》。我们只用账号信息同步你的收藏账本。',
+      primaryButton: {
+        value: '查看协议',
+        action: (): void => {
+          Nav.push(this.stack, Routes.PRIVACY, new RouteParam());
+        }
+      },
+      secondaryButton: {
+        value: '同意并继续',
+        action: (): void => {
+          Privacy.agree();
+          this.agree = true;
+          next();
+        }
+      }
+    });
+    return false;
+  }
+
   private submit(): void {
     if (this.busy) return;
-    if (!this.agree) {
-      AlertDialog.show({
-        title: '先同意隐私政策',
-        message: '登录需要先同意《隐私政策》与《用户协议》。我们只用账号信息同步你的收藏账本。',
-        primaryButton: {
-          value: '查看协议',
-          action: (): void => {
-            Nav.push(this.stack, Routes.PRIVACY, new RouteParam());
-          }
-        },
-        secondaryButton: {
-          value: '同意并继续',
-          action: (): void => {
-            Privacy.agree();
-            this.agree = true;
-            this.submit();
-          }
-        }
-      });
-      return;
-    }
+    if (!this.requireAgree((): void => {
+      this.submit();
+    })) return;
     const name = this.name.trim();
     const password = this.password;
     if (name === '') {
@@ -138,6 +173,73 @@ export struct AccountPage {
         }
       });
     });
+  }
+
+  /**
+   * 华为账号快速登录（Account Kit）。
+   * 客户端只负责拿到 authorizationCode —— 换 access_token、取 OpenID、建号/登录
+   * 全部在服务端完成，Client Secret 不进安装包。
+   * 系统里没登录华为账号时，Account Kit 会自动拉起系统登录页（forceLogin=true）。
+   */
+  private huaweiLogin(): void {
+    if (this.hwBusy) return;
+    if (!this.requireAgree((): void => {
+      this.huaweiLogin();
+    })) return;
+
+    this.hwBusy = true;
+    try {
+      const authRequest = new authentication.HuaweiIDProvider().createLoginWithHuaweiIDRequest();
+      authRequest.forceLogin = true;
+      const controller = new authentication.AuthenticationController(
+        getContext(this) as common.UIAbilityContext);
+
+      controller.executeRequest(authRequest)
+        .then((response: authentication.AuthenticationResponse): Promise<void> => {
+          const detail = response as authentication.LoginWithHuaweiIDResponse;
+          const code: string = detail.data !== undefined && detail.data !== null ? detail.data.authorizationCode : '';
+          if (code === '') {
+            throw new Error('没有拿到华为账号授权码，请重试');
+          }
+          return Api.post<AuthResponse>('/api/auth/huawei/login', new HuaweiBody(code))
+            .then((res: AuthResponse): void => {
+              Store.saveToken(res.token || '');
+            });
+        })
+        .then((): Promise<void> => {
+          return Store.refresh(true).then((): void => {
+          });
+        })
+        .then((): void => {
+          this.hwBusy = false;
+          this.render();
+          promptAction.showToast({ message: '登录成功', duration: 1500 });
+          setTimeout((): void => {
+            Nav.pop(this.stack);
+          }, 500);
+        })
+        .catch((e: Error): void => {
+          this.hwBusy = false;
+          const be = e as BusinessError;
+          let msg: string = e.message !== undefined && e.message !== '' ? e.message : '请稍后重试';
+          // 1001502001：设备上没有登录华为账号（官方错误码）
+          if (be.code === 1001502001) {
+            msg = '设备还没登录华为账号，请先在系统设置里登录华为账号后再试';
+          }
+          AlertDialog.show({
+            title: '华为账号登录失败',
+            message: msg,
+            confirm: {
+              value: '知道了',
+              action: (): void => {
+              }
+            }
+          });
+        });
+    } catch (e) {
+      this.hwBusy = false;
+      promptAction.showToast({ message: '当前设备不支持华为账号登录', duration: 1800 });
+    }
   }
 
   private logout(): void {
@@ -254,6 +356,30 @@ export struct AccountPage {
           this.submit();
         })
 
+      Row() {
+        Divider().layoutWeight(1).strokeWidth(1).color(Theme.line)
+        Text('或')
+          .fontSize(10)
+          .fontColor(Theme.faint)
+          .margin({ left: 8, right: 8 })
+        Divider().layoutWeight(1).strokeWidth(1).color(Theme.line)
+      }
+      .width('100%')
+      .margin({ top: 2 })
+
+      Text(this.hwBusy ? '正在唤起华为账号…' : '华为账号快速登录')
+        .fontSize(14)
+        .fontColor(Theme.up)
+        .textAlign(TextAlign.Center)
+        .width('100%')
+        .height(44)
+        .borderRadius(8)
+        .border({ width: 1, color: Theme.up })
+        .backgroundColor(this.hwBusy ? Theme.goldBg : Color.Transparent)
+        .onClick((): void => {
+          this.huaweiLogin();
+        })
+
       Text('账号与网页版、小程序互通，藏品存在云端')
         .fontSize(10)
         .fontColor(Theme.faint)
@@ -309,7 +435,7 @@ export struct AccountPage {
             .fontSize(17)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.text)
-          Text('已登录 · 藏品云端同步')
+          Text(this.loginText)
             .fontSize(10)
             .fontColor(Theme.muted)
         }
@@ -438,6 +564,10 @@ export struct AccountPage {
           Column().height(30)
         }
         .width('100%')
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
       .scrollBar(BarState.Off)

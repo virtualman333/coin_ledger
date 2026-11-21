@@ -373,6 +373,7 @@ export struct MineView {
                 Nav.push(this.stack, Routes.PROFILE, new RouteParam());
               })
           }
+          .justifyContent(FlexAlign.Start)
           .width('100%')
           .padding({ top: 18, bottom: 12 })
           .alignItems(VerticalAlign.Center)
@@ -551,6 +552,8 @@ export struct MineView {
         }
       }
       .width('100%')
+      .constraintSize({ minHeight: '100%' })
+      .justifyContent(FlexAlign.Start)
       .padding({ left: 16, right: 16 })
     }
     .scrollBar(BarState.Off)

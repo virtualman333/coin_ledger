@@ -590,6 +590,7 @@ export struct AdminPage {
                   this.stat(String(this.stats.tests), '测试号')
                   this.stat(String(this.stats.disabled), '已封禁')
                 }
+                .justifyContent(FlexAlign.Start)
                 .width('100%')
                 .padding(12)
                 .borderRadius(12)
@@ -659,6 +660,8 @@ export struct AdminPage {
               Column().height(30)
             }
             .width('100%')
+            .constraintSize({ minHeight: '100%' })
+            .justifyContent(FlexAlign.Start)
             .padding({ left: 16, right: 16, top: 8 })
           }
           .scrollBar(BarState.Off)
