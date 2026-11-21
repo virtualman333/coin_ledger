@@ -53,13 +53,17 @@ const DDL = [
      last_login DATETIME(3) NULL,
      wx_openid VARCHAR(64) NULL COMMENT '微信 openid，微信登录用',
      wx_unionid VARCHAR(64) NULL,
+     hw_openid VARCHAR(128) NULL COMMENT '华为账号 OpenID，华为账号登录用',
+     hw_unionid VARCHAR(128) NULL,
+     hw_avatar VARCHAR(512) NULL COMMENT '华为账号头像外链（会失效，仅展示兜底）',
      is_test TINYINT(1) NOT NULL DEFAULT 0 COMMENT '测试账号：允许被删除',
      nickname VARCHAR(32) NULL COMMENT '显示昵称（可重复，与登录名无关）',
      avatar VARCHAR(64) NULL COMMENT '头像文件名，存 public/avatar/',
      name_changed_at DATETIME(3) NULL COMMENT '用户名修改时间；非空即已用过改名机会',
      PRIMARY KEY (id),
      UNIQUE KEY uk_name (name),
-     KEY idx_wx (wx_openid)
+     KEY idx_wx (wx_openid),
+     KEY idx_hw (hw_openid)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号'`,
 
   `CREATE TABLE IF NOT EXISTS cl_holdings (
@@ -159,6 +163,10 @@ async function ensureSchema() {
   // 老库升级：v3.0.x 之前的 cl_users 没有微信字段，缺了就补上
   await ensureColumn('cl_users', 'wx_openid', 'VARCHAR(64) NULL');
   await ensureColumn('cl_users', 'wx_unionid', 'VARCHAR(64) NULL');
+  // 华为账号登录：openid 比微信长（MDFA... 一串 Base64），给 128 更安全
+  await ensureColumn('cl_users', 'hw_openid', 'VARCHAR(128) NULL');
+  await ensureColumn('cl_users', 'hw_unionid', 'VARCHAR(128) NULL');
+  await ensureColumn('cl_users', 'hw_avatar', 'VARCHAR(512) NULL');
   await ensureColumn('cl_users', 'is_test', 'TINYINT(1) NOT NULL DEFAULT 0');
   await ensureColumn('cl_users', 'nickname', 'VARCHAR(32) NULL');
   await ensureColumn('cl_users', 'avatar', 'VARCHAR(64) NULL');
@@ -176,6 +184,13 @@ async function ensureSchema() {
   );
   if (!idx[0].n) {
     try { await pool.query('ALTER TABLE cl_users ADD KEY idx_wx (wx_openid)'); } catch (e) { /* 已有索引 */ }
+  }
+  // 华为 openid 也是按登录查找的热路径，没索引就是全表扫
+  const [hwi] = await pool.query(
+    "SELECT COUNT(*) AS n FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cl_users' AND index_name = 'idx_hw'"
+  );
+  if (!hwi[0].n) {
+    try { await pool.query('ALTER TABLE cl_users ADD KEY idx_hw (hw_openid)'); } catch (e) { /* 已有索引 */ }
   }
 }
 
@@ -198,7 +213,7 @@ async function loadDoc() {
   metaRows.forEach((r) => { meta[r.k] = r.v; });
 
   const [userRows] = await pool.query(
-    'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar FROM cl_users ORDER BY created_at, id'
+    'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar FROM cl_users ORDER BY created_at, id'
   );
   const [holdRows] = await pool.query(
     'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit, serials, form, images FROM cl_holdings ORDER BY uid, ord'
@@ -248,6 +263,9 @@ async function loadDoc() {
       lastLogin: iso(r.last_login),
       wxOpenid: r.wx_openid || '',
       wxUnionid: r.wx_unionid || '',
+      hwOpenid: r.hw_openid || '',
+      hwUnionid: r.hw_unionid || '',
+      hwAvatar: r.hw_avatar || '',
       isTest: !!r.is_test,
       nickname: r.nickname || '',
       avatar: r.avatar || '',
@@ -289,14 +307,18 @@ async function syncUsers(conn, doc) {
   }
   for (const u of users) {
     await conn.query(
-      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar, name_changed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar, name_changed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE name = VALUES(name), role = VALUES(role), salt = VALUES(salt),
          hash = VALUES(hash), created_at = VALUES(created_at), last_login = VALUES(last_login),
-         wx_openid = VALUES(wx_openid), wx_unionid = VALUES(wx_unionid), is_test = VALUES(is_test),
+         wx_openid = VALUES(wx_openid), wx_unionid = VALUES(wx_unionid),
+         hw_openid = VALUES(hw_openid), hw_unionid = VALUES(hw_unionid), hw_avatar = VALUES(hw_avatar),
+         is_test = VALUES(is_test),
          nickname = VALUES(nickname), avatar = VALUES(avatar), name_changed_at = VALUES(name_changed_at)`,
       [u.id, u.name, u.role || 'user', u.salt, u.hash, toDate(u.createdAt) || new Date(), toDate(u.lastLogin),
-        u.wxOpenid || null, u.wxUnionid || null, u.isTest ? 1 : 0, u.nickname || null, u.avatar || null,
+        u.wxOpenid || null, u.wxUnionid || null,
+        u.hwOpenid || null, u.hwUnionid || null, u.hwAvatar || null,
+        u.isTest ? 1 : 0, u.nickname || null, u.avatar || null,
         u.nameChangedAt ? toDate(u.nameChangedAt) : null]
     );
   }

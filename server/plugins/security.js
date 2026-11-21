@@ -10,18 +10,22 @@
  *   2. cls 分类：login / adminWrite / read / write / static
  *   3. guard.inspect() 命中 → 原样输出 status + 头 + {"ok":false,"error":message}
  *
- * 之所以用 reply.hijack() 手写响应：legacy 的 sendJSON 会 writeHead 覆盖头部，
+ * 之所以用 reply.hijack() 手写响应：命中限流时要先写 Retry-After 再断，
  * 只有直接写 reply.raw 才能保证头部集合与顺序与改造前一致。
  */
 const url = require('url');
 const fp = require('fastify-plugin');
 
 const guard = require('../guard');
-const { clientIP } = require('../legacy/api-handler');
+const { clientIP } = require('../core/http');
 
 /**
  * 限流桶分类。逐字复刻 server/index.js 里的三元表达式：
  * 管理端批量保存会连发多次写请求，单独给更宽的桶，避免保存到一半被限流打断。
+ *
+ * 华为账号登录的「发起授权」和「用 code 换登录态」都算登录尝试，共用 login 桶
+ * （防止有人拿别人的 code 反复试）。回跳本身走 read 桶：它有 state + 一次性 code
+ * 兜底，且同一出口 IP 下可能有多个真人同时登录，压到 8/分钟容易误伤。
  *
  * @param {string} method HTTP 方法
  * @param {string} pathname 不含 query 的路径
@@ -29,6 +33,8 @@ const { clientIP } = require('../legacy/api-handler');
  */
 function classify(method, pathname) {
   if (pathname === '/api/auth/login') return 'login';
+  if (pathname === '/api/auth/huawei/start') return 'login';
+  if (pathname === '/api/auth/huawei/login') return 'login';
   if (pathname.startsWith('/api/admin/') && method !== 'GET') return 'adminWrite';
   if (pathname.startsWith('/api/')) return method === 'GET' ? 'read' : 'write';
   return 'static';

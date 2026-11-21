@@ -8,7 +8,7 @@
  *   2. /coin/N 的静态正文块（ssrCoinBlock）与 /sitemap 的纯 HTML 链接块；
  *   3. 品种页 JSON-LD（Product + BreadcrumbList）。
  *
- * 数据靠注入：legacy/api-handler 在 loadSeed() 之后调用 setData() 注入同一份对象。
+ * 数据靠注入：state/catalog 在 loadSeed() 之后调用 setData() 注入同一份对象。
  * T03 铁律：下面的渲染逻辑一行都没改 —— 141 个 URL 的 HTML 必须与基线逐字相同。
  * 这样做是为了让下面的渲染代码保持「自由变量 SEED/DESC」的原样写法 ——
  * 141 个 URL 的 HTML 必须逐字不变，把几十处 SEED 改写成 ctx.seed 反而制造漂移风险。

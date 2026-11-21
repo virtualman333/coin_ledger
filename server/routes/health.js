@@ -2,17 +2,13 @@
 /**
  * GET /api/health
  *
- * T01：注册成 Fastify 原生路由，但**输出仍由老处理器产生** —— 逐字一致优先。
- * 这样做的额外好处是路由表里有一条真路由，`tools/api-snapshot.js` 能验证
- * 「静态路由优先于 /* 通配」这条装配假设确实成立。
- *
- * T03 会换成 catalog.service / account.service 的分层实现，
- * 届时允许新增 catalog 子对象（arch 4.1 第 1 条），但 ok/version/uptime/coins/... 必须保留。
+ * 进程存活与版本探针：部署脚本 curl 它就判断新版本是否真的起来了。
+ * 响应体由 services/health.service 汇总，这里只负责挂路由。
  */
-const { delegateToLegacy } = require('./legacy');
+const healthService = require('../services/health.service');
 
 module.exports = async function healthRoutes(app) {
   app.get('/api/health', async function healthHandler(request, reply) {
-    return delegateToLegacy(request, reply);
+    reply.send(healthService.snapshot());
   });
 };

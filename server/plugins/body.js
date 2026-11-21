@@ -2,21 +2,16 @@
 /**
  * 请求体处理。
  *
- * 关键约束：T01 阶段所有 /api/* 仍然由 legacy/api-handler 处理，
- * 而它自己用 `readBody(req)` 直接从 IncomingMessage 读流（每路由 bodyLimit 不同：
- * 4KB / 16KB / 512KB / 6MB / 8MB）。如果 Fastify 先把 body 解析掉，
- * legacy 侧就再也读不到数据（流已 ended），POST 会全部挂住。
+ * 关键约束：各接口的请求体上限差别极大（4KB 的登录 → 13MB 的批量算号），
+ * 而且历史上就是这么卡的。如果 Fastify 先把 body 解析掉，路由层就再也读不到
+ * 原始流（已 ended），也没法按接口自己的 limit 拒绝。
  *
- * 所以这里**不做 JSON 解析**：注册一个 `*` 通配解析器，把原始可读流原样交回。
- * Fastify 因此不会消费请求体，也不会因为「没有对应 content-type 的解析器」而回 415。
- * 效果与改造前逐字一致：
- *   - 空 body → legacy readBody 返回 {}；
+ * 所以这里**不做 JSON 解析**：注册一个 `*` 通配解析器，把原始可读流原样交回，
+ * 路由层用 core/http 的 readBody(raw, limit) 自己读。Fastify 因此不会消费请求体，
+ * 也不会因为「没有对应 content-type 的解析器」而回 415。契约：
+ *   - 空 body → readBody 返回 {}；
  *   - 非法 JSON → 400 {"ok":false,"error":"请求体不是合法 JSON"}；
  *   - 超限 → 400 {"ok":false,"error":"请求体过大"}（由各路由自己的 limit 决定）。
- *
- * T03 会把路由逐个改成 Fastify 原生实现；届时在这里换成真正的 JSON 解析器
- * （空 body → {}、非法 JSON → 400 同一文案），并给 `/api/me/profile`、
- * `/api/admin/image` 用 route 级 bodyLimit 覆写 6MB。
  */
 const fp = require('fastify-plugin');
 

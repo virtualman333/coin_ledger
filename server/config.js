@@ -65,6 +65,27 @@ const DATA_SOURCE = 'db';
 const SUPERADMIN_NAME = str('SUPERADMIN_NAME', 'virtualman');
 const WX_APPID = str('WX_APPID', 'wx905c4968911fa23d');
 
+/* ---------------- 华为账号登录（Account Kit / OAuth 2.0） ---------------- */
+/**
+ * 只走「授权码模式 + 服务端换 token」：客户端（网页、鸿蒙）只拿 authorizationCode，
+ * client_secret 永远留在服务器。两个值都从环境变量取，代码里不留默认值 ——
+ * 没配就等于功能未启用，接口返回 503 而不是把用户带到一个 404 授权页。
+ *
+ * redirect_uri 必须与 AGC「华为账号 - 服务设置」里登记的回调地址逐字一致
+ * （含协议、域名、路径，末尾不带斜杠），否则华为侧直接拒绝授权。
+ */
+const HUAWEI = {
+  clientId: str('HUAWEI_CLIENT_ID', ''),
+  clientSecret: str('HUAWEI_CLIENT_SECRET', ''),
+  redirectUri: str('HUAWEI_REDIRECT_URI', SITE + '/api/auth/huawei/callback'),
+  scope: str('HUAWEI_SCOPE', 'openid profile'),
+  /** 华为 OAuth 网关：默认国内站点；海外站点可整体替换 */
+  oauthBase: str('HUAWEI_OAUTH_BASE', 'https://oauth-login.cloud.huawei.com'),
+  /** 头像昵称接口所在域（与 OAuth 网关不同主机） */
+  accountBase: str('HUAWEI_ACCOUNT_BASE', 'https://account.cloud.huawei.com')
+};
+HUAWEI.enabled = !!(HUAWEI.clientId && HUAWEI.clientSecret);
+
 /* ---------------- MySQL ---------------- */
 const DB = {
   host: str('MYSQL_HOST', '127.0.0.1'),
@@ -114,6 +135,11 @@ function describe() {
     host: HOST,
     nodeEnv: NODE_ENV,
     site: SITE,
+    huawei: {
+      enabled: HUAWEI.enabled,
+      redirectUri: HUAWEI.redirectUri,
+      hasSecret: !!HUAWEI.clientSecret
+    },
     mysql: {
       host: DB.host,
       port: DB.port,
@@ -134,6 +160,13 @@ function selfCheck() {
 
   if (!DB.password) {
     warnings.push('未设置 MYSQL_PASSWORD —— 数据库连接将失败');
+  }
+  // 华为登录是可选能力：配了一半要提示，但不必让进程起不来
+  if (HUAWEI.clientId && !HUAWEI.clientSecret) {
+    warnings.push('已设置 HUAWEI_CLIENT_ID 但缺少 HUAWEI_CLIENT_SECRET —— 华为账号登录不会启用');
+  }
+  if (!HUAWEI.clientId && HUAWEI.clientSecret) {
+    warnings.push('已设置 HUAWEI_CLIENT_SECRET 但缺少 HUAWEI_CLIENT_ID —— 华为账号登录不会启用');
   }
   if (!Number.isInteger(PORT) || PORT <= 0 || PORT > 65535) {
     errors.push('PORT 不合法：' + PORT);
@@ -173,6 +206,7 @@ module.exports = {
 
   SUPERADMIN_NAME: SUPERADMIN_NAME,
   WX_APPID: WX_APPID,
+  HUAWEI: HUAWEI,
 
   DB: DB,
   mysqlOptions: mysqlOptions,

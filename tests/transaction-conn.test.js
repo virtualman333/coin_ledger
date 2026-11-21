@@ -39,6 +39,8 @@ function harness(overrides) {
       async listByCategory() { return pmRow ? [pmRow] : []; },
       async listPublished() { return o.coinRows || []; },
       async countByCategory() { return { commemorative_coin: 137, commemorative_note: 0, precious_metal: pmRow ? 1 : 0 }; },
+      // pm.service.create 会先取下一个可用编号（选填套号用），桩里给个固定值即可
+      async nextNo() { return 500; },
       async findByNo(no, conn) { calls.push(['coins.findByNo', no, conn]); return pmRow; },
       async insert(cols, conn) { calls.push(['coins.insert', cols.no, conn]); return cols.no; },
       async update(no, values, conn) { calls.push(['coins.update', no, conn]); return pmRow; },

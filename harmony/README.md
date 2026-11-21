@@ -94,6 +94,17 @@ npm run harmony:build     # = bash harmony/build.sh
 3. **通知提醒**：不申请 `PUBLISH_AGENT_REMINDER` 等受限权限，预约提醒只在应用内展示，符合最小权限原则。
 4. **分享**：无微信 SDK，改为复制官网链接 + 系统分享面板。
 
+### 6.1 华为账号登录（Account Kit）
+
+登录页的「华为账号快速登录」调用 Account Kit 拿 `authorizationCode`，再交给服务端换登录态（Client Secret 不进安装包）。
+
+启用前必须做两件事，否则会报错或登录失败：
+
+1. `entry/src/main/module.json5` 的 `metadata.client_id` 已填 AGC 的 Client ID（`6917622423763740725`），与服务端 `HUAWEI_CLIENT_ID` 必须一致。
+2. AGC 里为该应用配置**签名证书指纹**（与打包用证书一致），否则 Account Kit 拒绝唤起授权页。
+
+服务端对应的 `HUAWEI_CLIENT_ID` 必须与上面这个 Client ID 相同，`HUAWEI_CLIENT_SECRET` 只配在服务器。详见根目录 README 5.3。
+
 ## 7. 上架
 
 见 [`docs/harmony-release.md`](../docs/harmony-release.md)。

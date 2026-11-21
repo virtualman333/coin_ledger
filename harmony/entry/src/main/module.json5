@@ -44,6 +44,14 @@
           "when": "always"
         }
       }
+    ],
+    // 华为账号登录（Account Kit）必需：AGC「应用信息」里的 Client ID。
+    // 与服务器环境变量 HUAWEI_CLIENT_ID 必须是同一个值；Secret 只配在服务端。
+    "metadata": [
+      {
+        "name": "client_id",
+        "value": "6917622423763740725"
+      }
     ]
   }
 }

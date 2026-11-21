@@ -11,7 +11,7 @@
 const url = require('url');
 const fp = require('fastify-plugin');
 
-const { clientIP } = require('../legacy/api-handler');
+const { clientIP } = require('../core/http');
 
 module.exports = fp(async function loggingPlugin(app) {
   /**

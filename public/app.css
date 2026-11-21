@@ -554,6 +554,17 @@ body:not(.anon) .anon-gate{display:none!important}
 .btn.block{width:100%;margin-top:18px;padding:10px;font-size:13px}
 .btn.danger{color:var(--err);border-color:var(--err-bg)}
 .btn.danger:hover{background:rgba(232,128,128,.12);border-color:rgba(232,128,128,.55)}
+/* 华为账号登录：品牌红描边，弱于主按钮，别抢「登录」的视觉重心 */
+.btn.hw{color:#ff7a72;border-color:rgba(255,122,114,.38);background:rgba(199,0,11,.1)}
+.btn.hw:hover{color:#ffa39c;border-color:rgba(255,122,114,.6);background:rgba(199,0,11,.18)}
+html[data-theme="light"] .btn.hw{color:#c7000b;border-color:rgba(199,0,11,.34);background:rgba(199,0,11,.05)}
+html[data-theme="light"] .btn.hw:hover{color:#9c0008;border-color:rgba(199,0,11,.55);background:rgba(199,0,11,.1)}
+/* 登录卡片里「或」的分隔线：只在华为登录可用时出现 */
+.authalt{margin-top:16px}
+.authsep{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:11px}
+.authsep::before,.authsep::after{content:"";flex:1;height:1px;background:var(--line2)}
+.authalt .authnote{margin-top:10px}
+.authalt .btn.block{margin-top:10px}
 .authside{padding-top:6px}
 .authside h4{font-size:13px;color:var(--text);margin-bottom:10px}
 .authside ul{list-style:none;display:grid;gap:9px}
@@ -577,8 +588,9 @@ body:not(.anon) .anon-gate{display:none!important}
 .pavatar{
   width:44px;height:44px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 34% 30%,#f2d894,#b98f34 58%,#6d5220);
-  color:#191307;font:700 17px/1 "Songti SC",serif
+  color:#191307;font:700 17px/1 "Songti SC",serif;overflow:hidden
 }
+.pavatar img{width:100%;height:100%;object-fit:cover;display:block}
 .pinfo{min-width:0;flex:1}
 .pname{font-size:14.5px;font-weight:600}
 .pmeta{margin-top:5px;font-size:11.5px;color:var(--dim);line-height:1.7}

@@ -16,7 +16,7 @@ const fs = require('fs');
 
 const config = require('../config');
 const audit = require('../audit');
-const legacy = require('../legacy/api-handler');
+const catalogState = require('../state/catalog');
 const seriesSvc = require('../series');
 const coinSchema = require('../schemas/coin');
 const common = require('../schemas/common');
@@ -38,7 +38,7 @@ function create(ctx) {
   const ds = ctx.dataSource;
   const catalog = ctx.catalog;
   const repos = ds.repos;
-  const seed = legacy.state().seed;
+  const seed = catalogState.state().seed;
 
   /**
    * 当前 seed（对象引用稳定，原地改即可）。
@@ -46,7 +46,7 @@ function create(ctx) {
    * @returns {object} SEED
    */
   function currentSeed() {
-    return legacy.state().seed;
+    return catalogState.state().seed;
   }
 
   /**

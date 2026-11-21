@@ -639,3 +639,31 @@ GET https://h5api.m.goofish.com/h5/mtop.taobao.idlemtopsearch.pc.search/1.0/
 - 站点根路径由 nginx 直出，原先 `.js/.css/.json` 的 Content-Type 不带 `charset=utf-8`
 - 修复：`/www/server/panel/vhost/nginx/extension/coin.virtualman.top/charset.conf` 加 `charset utf-8;` + `charset_types`（列出 json/js/css/xml）
 - 验证：`curl -sI https://coin.virtualman.top/app.js` 应返回 `application/javascript; charset=utf-8`
+
+## 后端拆分分层（2026-11-22）
+
+`server/legacy/api-handler.js`（1566 行）此前同时装着 30 个接口、目录全局状态、HTTP 工具与超管初始化，
+新增任何接口都得往这个文件里塞一个 if 分支。本次按域拆完并删除，后端变成四层：
+
+| 层 | 位置 | 职责 |
+|---|---|---|
+| HTTP | `routes/<域>.js`、`routes/admin/*.js` | 读 body/query、挂 `requireLogin`/`requireAdmin`、调 service、发响应 |
+| 业务 | `services/<域>.service.js` | 校验规则、事务、跨模块编排；出错抛 `httpError` |
+| 数据 | `repositories/*.repo.js` | SQL / 文件读写 |
+| 基础设施 | `core/http.js`、`state/catalog.js`、`bootstrap/superadmin.js` | 请求工具、目录运行时数据、启动期初始化 |
+
+新增/迁移的模块：
+
+- `services/auth.service.js` + `routes/auth.js` —— 注册/登录/微信登录/改密/改名/资料（10 个接口）
+- `services/account.service.js` + `routes/account.js` —— state / holdings / holdings-reset / prices
+- `services/admin-users.service.js` + `routes/admin/users.js` —— 用户列表/详情/批量/角色/删除/审计
+- `feedback.service.js`、`visitor.service.js`、`reminder.service.js` + 对应 routes
+- `services/health.service.js` —— `/api/health` 原生实现（字段与顺序不变）
+- `routes/admin/guard.js`、`routes/honeypot.js`、`routes/fallback.js`
+
+行为保持：路径、状态码、错误文案、`Set-Cookie`、响应字段顺序全部照旧；
+`plugins/errors.js` 只增加一条「业务错误可附带额外字段」（微信登录失败的 `wxCode`）。
+
+新增 `tests/modules-api.test.js`（25 条）：注入内存 store 桩 + Fastify inject，不连库即可
+回归全部新路由；已加进 `npm test`。`npm run check` 通过 170 个文件。
+

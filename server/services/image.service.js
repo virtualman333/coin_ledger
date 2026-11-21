@@ -7,7 +7,7 @@
  *   - kind 白名单 main/obverse/reverse/set，同 kind 去重，文件必须真实存在；
  *   - 主图上传时按内容生成 480 / 160 两张方形缩略图
  *     （img/th/<no>.jpg 与 img/th/s/<no>.jpg）；
- *   - 每次换图调用 legacy.touchGallery()：写 gallery.json + 刷新 galleryVer，
+ *   - 每次换图调用 catalogState.touchGallery()：写 gallery.json + 刷新 galleryVer，
  *     否则 /img/* 的 7 天强缓存会让用户一直看到旧图（踩过的坑）；
  *   - 删除主图同时清 th/ 与 th/s/ 下的两张缩略图。
  *
@@ -19,7 +19,7 @@ const path = require('path');
 
 const config = require('../config');
 const audit = require('../audit');
-const legacy = require('../legacy/api-handler');
+const catalogState = require('../state/catalog');
 const catalog = require('../services/catalog.service');
 const common = require('../schemas/common');
 

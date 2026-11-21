@@ -8,7 +8,7 @@
  * 快照独立于 store 的整份文档模型，直接走 app.db（cl_colshare，migration 009）。
  */
 const crypto = require('node:crypto');
-const legacy = require('../legacy/api-handler');
+const { readBody } = require('../core/http');
 const colshare = require('../services/colshare.service');
 
 function newCode() {
@@ -29,7 +29,7 @@ module.exports = async function colshareRoutes(app) {
   /* ---------------- 生成快照 ---------------- */
   app.post('/api/colshare', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
-    const body = await legacy.readBody(request.raw, 512 * 1024);
+    const body = await readBody(request.raw, 512 * 1024);
     const options = colshare.normalizeOptions(body && body.options);
     const items = colshare.sanitizeItems(body && body.items, options);
     if (!items.length) {

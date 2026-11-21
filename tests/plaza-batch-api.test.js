@@ -18,7 +18,7 @@ function inject(file, exportsObj) {
 }
 
 // 在加载路由前注入依赖桩
-inject('server/legacy/api-handler.js', { readBody: async () => BODY });
+inject('server/core/http.js', { readBody: async () => BODY });
 inject('server/wxsec.js', { checkText: async () => ({ ok: true }), checkImage: async () => ({ ok: true }) });
 inject('server/config.js', { PUBLIC_DIR: path.join(ROOT, 'public') });
 

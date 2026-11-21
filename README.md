@@ -69,9 +69,11 @@ npm test                        # 全部
 node --test tests/mp-*.test.js  # 只跑小程序侧
 ```
 
-`tests/` 下 45 个文件、约 196 条用例，绝大多数是**源码级回归**（断言模板结构、样式 token、事件绑定与 JS 方法是否对得上），跑一次几秒钟，不需要起服务。
+`tests/` 下 46 个文件、约 300 条用例，绝大多数是**源码级回归**（断言模板结构、样式 token、事件绑定与 JS 方法是否对得上），跑一次几秒钟，不需要起服务。
 
-> `tests/pm-rules.test.js` 是服务端集成测试，要连库，单独跑会以 exit 2 结束，属正常。
+> `tests/modules-api.test.js` 是后端分层的接口回归：注入内存 store 桩 + Fastify inject，**不连库、不起端口**，
+> 覆盖 auth / account / feedback / visitors / reminders / admin 各域的状态码与错误文案。
+> `tests/pm-rules.test.js`、`tests/contract-smoke.test.js` 等服务端集成测试要连库，单独跑会以 exit 2 结束，属正常。
 
 ---
 
@@ -89,13 +91,24 @@ coin-ledger/
 │  ├─ icons/ · img/             ← 应用图标、导图封面、币面图
 │  └─ robots.txt / sitemap.xml / manifest.webmanifest
 ├─ server/
-│  ├─ index.js                  ← HTTP 服务、路由、静态托管
-│  ├─ legacy/api-handler.js     ← 业务路由（体量最大的一块）
-│  ├─ store.js                  ← 存储门面（选后端 + 写入串行队列）
-│  ├─ store-mysql.js            ← MySQL 后端
-│  ├─ store-json.js             ← JSON 单文档后端（回退 / 本地开发）
-│  ├─ auth.js                   ← 多用户口令 + 签名会话 + 微信登录
-│  └─ guard.js                  ← 限流 / UA 拦截 / 蜜罐
+│  ├─ index.js                  ← 入口（薄壳：启动 / 失败退出）
+│  ├─ app.js                    ← Fastify 装配与生命周期（只接线，不含业务）
+│  ├─ config.js                 ← 环境变量集中处，其他文件一律 require('./config')
+│  ├─ core/http.js              ← readBody / sendJSON / clientIP / httpError
+│  ├─ state/catalog.js          ← 目录运行时数据（SEED / PLAN / GALLERY / PM 白名单）
+│  ├─ bootstrap/superadmin.js   ← 启动期超管初始化 + 默认持仓
+│  ├─ routes/                   ← HTTP 层：一个业务域一个文件
+│  │  ├─ auth.js account.js feedback.js visitors.js reminders.js …
+│  │  └─ admin/                 ← 管理端：coins/series/plan/images/pm/users/guard/feedback/visitors
+│  ├─ services/                 ← 业务层：校验规则、事务、跨模块编排
+│  ├─ repositories/             ← 数据访问层（SQL / 文件读写）
+│  ├─ schemas/                  ← 字段白名单与结构校验
+│  ├─ plugins/                  ← Fastify 插件（logging/security/static/auth/body/db/errors）
+│  ├─ migrations/               ← 数据库迁移
+│  ├─ store.js / store-mysql.js / store-json.js  ← 用户域存储门面与后端
+│  ├─ auth.js                   ← 口令 / 签名会话 / 微信登录原语
+│  ├─ guard.js / wxsec.js       ← 限流与内容安全
+│  └─ visitors.js / feedback.js / reminders.js / series.js / huawei.js  ← 各域存储
 ├─ harmony/                     ← 鸿蒙原生客户端（Stage / ArkTS，API 20）
 │  ├─ entry/src/main/ets/       ← 页面、视图、utils、数据模型
 │  ├─ entry/src/main/resources/rawfile/catalog.json  ← 内置品种目录（同源生成）
@@ -111,6 +124,26 @@ coin-ledger/
 ├─ deploy/                      ← install.sh、备份、证书、nginx 片段
 └─ docs/CHANGELOG.md            ← 逐条变更记录
 ```
+
+### 2.1 后端分层约定（新增接口照这个来）
+
+```
+routes/<域>.js            HTTP 层：读 body/query、挂 app.requireLogin / requireAdmin、发响应
+  ↓
+services/<域>.service.js  业务层：校验规则、事务、跨模块编排；出错抛 core/http 的 httpError
+  ↓
+repositories/*.repo.js    数据访问层：SQL / 文件读写
+```
+
+- **一个业务域一个文件**，不要往某个「总处理器」里加分支。原先那个 1566 行的
+  `legacy/api-handler.js` 已按域拆完删除（auth / account / feedback / visitors /
+  reminders / admin-users / admin-guard / health / honeypot）。
+- 需要目录数据（发行清单、图库、计划）走 `state/catalog.js`，不要在 service 里再读 JSON。
+- 请求体一律 `core/http.readBody(request.raw, limit)`：各接口上限不同（4KB–13MB），
+  空 body → `{}`、非法 JSON → 400、超限 → 400，三条文案由 `tests/modules-api.test.js` 守着。
+- 响应头（`Cache-Control: no-store` / `nosniff`）由 `app.js` 的 onSend 统一加，路由不用管。
+- 启动顺序：`store.init()` → `state.loadSeed()` → `bootstrap/ensureSuperadmin()` →
+  `buildApp()` → `loadPmNames()` → `listen()`，写在 `app.start()` 里。
 
 ---
 
@@ -187,6 +220,10 @@ coin-ledger/
 | POST | `/api/auth/password` | ✔ | 改密码 |
 | GET | `/api/auth/me` | - | 当前会话 |
 | POST | `/api/auth/wx/login` `bind` `unbind` | ✔/- | 微信一键登录与绑定 |
+| GET | `/api/auth/huawei/status` | - | 华为登录是否启用（前端据此显示按钮） |
+| GET | `/api/auth/huawei/start` · `/callback` | - | 网页：302 到华为授权页 / 回跳换登录态 |
+| POST | `/api/auth/huawei/login` | - | 鸿蒙等客户端：`{ code }` → 与微信同一套返回体 |
+| POST | `/api/auth/huawei/bind` `unbind` | ✔ | 华为账号绑定 / 解绑 |
 | POST | `/api/me/profile` | ✔ | 改昵称 / 头像（`avatar: ""` 表示**清除头像**） |
 | PUT | `/api/holdings` · `/api/holdings/reset` | ✔ | 整包替换自己的持仓 / 恢复初始 |
 | POST | `/api/holding/image` | ✔ | 单条藏品传图 |
@@ -204,6 +241,28 @@ coin-ledger/
 `/api/admin/users`（分页 / `q` 搜索 / `role` / `status` / 排序，返回 `stats`）、`users/batch`（批量标记测试 / 禁用 / 删除）、`users/:id/holdings`、`coins`、`coin`、`image`、`categories`、`pm-all`、`series`（含 `image` / `members`）、`plan` / `plan-pm`、`feedback`、`visitors` / `visitors/detail`、`audit`、`guard/bans` / `guard/unban`。
 
 权限：未登录读持仓返回空数组、写接口 `401`；普通用户访问管理端 `403`；登录失败按 IP 累计，10 分钟内超过 8 次锁 `429`。
+
+### 5.3 华为账号登录（Account Kit）
+
+不需要额外申请权限，在 AGC 打开「华为账号 - 服务设置」即可使用。服务端只走**授权码模式**：客户端只递交 `authorizationCode`，换 `access_token`、取 OpenID/UnionID、建号全在服务器完成，`Client Secret` 不进网页也不进安装包。
+
+```bash
+# 服务器环境变量（宝塔：/etc/coin-ledger.env 或 Supervisor 的环境配置）
+HUAWEI_CLIENT_ID=xxx                 # AGC「应用信息 - Client ID」
+HUAWEI_CLIENT_SECRET=xxx             # 同一个 Client ID 的 Secret，只放服务端
+HUAWEI_REDIRECT_URI=https://coin.virtualman.top/api/auth/huawei/callback
+# 可选：HUAWEI_SCOPE="openid profile"、HUAWEI_OAUTH_BASE、HUAWEI_ACCOUNT_BASE
+```
+
+配置要点：
+
+1. **redirect_uri 必须逐字一致**：AGC 里登记的回调地址、`HUAWEI_REDIRECT_URI`、实际访问的域名三者完全相同（含协议、路径，末尾不带 `/`）。默认值会自动取 `SITE + /api/auth/huawei/callback`。
+2. 只要 `CLIENT_ID` 或 `SECRET` 缺一个，功能就整体不启用：`/api/auth/huawei/status` 返回 `enabled:false`，网页不显示按钮，接口返回 503，不影响用户名密码登录。
+3. **鸿蒙端**额外需要在 `harmony/entry/src/main/module.json5` 的 `metadata.client_id` 填入同一个 Client ID，并在 AGC 配置该应用的**签名证书指纹**；否则 Account Kit 会拒绝唤起授权页。
+4. **小程序不支持**：微信不允许小程序跳转第三方 OAuth 授权页，也无法调用 Account Kit；小程序继续用 `wx.login` 那套。
+5. 身份判定以服务端 `getTokenInfo` / `GOpen.User.getInfo` 返回的 OpenID 为准，`id_token` 只用来补昵称头像。昵称头像接口失败时仍能登录（只是默认叫「藏友XXXX」）。
+
+> 头像用的是华为 `headPictureURL` 外链，用户换头像后旧链接立即失效，所以本站只把它当展示兜底：用户在本站传过头像就永远用本站的。
 
 ---
 

@@ -34,16 +34,20 @@ module.exports = fp(async function errorsPlugin(app) {
       return;
     }
 
-    // 413：请求体超限。legacy 用 400 + '请求体过大'，原生路由上线后按语义给 413，
-    // 文案保持中文，避免前端拿到英文堆栈。
+    // 413：请求体超限。readBody 抛的是 400 + '请求体过大'（历史契约），
+    // 这里只兜 Fastify 自己抛的 413，文案保持中文，避免前端拿到英文堆栈。
     let message = err.message || '服务器错误';
     if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE' || status === 413) message = '请求体过大';
     if (err.code === 'FST_ERR_CTP_INVALID_MEDIA_TYPE' || status === 415) message = '请求体不是合法 JSON';
+
+    // err.body：业务层需要额外下发字段时挂在这里（如微信登录失败的 wxCode=0）。
+    // 不放进 message 拼字符串，前端才能按码判断。
+    const extra = (err.body && typeof err.body === 'object') ? err.body : null;
 
     reply
       .code(status === 415 ? 400 : status)
       .type('application/json; charset=utf-8')
       .header('Cache-Control', 'no-store')
-      .send({ ok: false, error: message });
+      .send(Object.assign({ ok: false, error: message }, extra || {}));
   });
 }, { name: 'cl-errors' });

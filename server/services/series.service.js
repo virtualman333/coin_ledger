@@ -24,7 +24,7 @@ const path = require('path');
 const config = require('../config');
 const audit = require('../audit');
 const legacySeries = require('../series');
-const legacy = require('../legacy/api-handler');
+const catalogState = require('../state/catalog');
 const seriesSchema = require('../schemas/series');
 const common = require('../schemas/common');
 
@@ -128,9 +128,9 @@ function create(ctx) {
       if (!rows.some((s) => s.seriesKey === String(key))) return { ok: false, error: '系列不存在' };
 
       if (ds.mode === 'json') {
-        const r = legacySeries.remove(String(key), legacy.state().seed.coins);
+        const r = legacySeries.remove(String(key), catalogState.state().seed.coins);
         if (!r.ok) return r;
-        fs.writeFileSync(config.SEED_FILE, JSON.stringify(legacy.state().seed) + '\n', 'utf8');
+        fs.writeFileSync(config.SEED_FILE, JSON.stringify(catalogState.state().seed) + '\n', 'utf8');
         const result = { ok: true, touched: r.touched, items: await this.listWithCount() };
         audit.log(actor, 'series.delete', String(key), '清理 ' + r.touched + ' 个品种', ip);
         return result;
@@ -188,7 +188,7 @@ function create(ctx) {
 
       if (ds.mode === 'json') {
         // 直接改 loadSeed() 载入的那批对象 —— 改完 bootstrap 立即生效
-        const seed = legacy.state().seed;
+        const seed = catalogState.state().seed;
         seed.coins.forEach((c) => {
           const id = Number(c.i) + 1;
           const cur = Array.isArray(c.seriesKeys) ? c.seriesKeys.slice() : (c.series ? [c.series] : []);

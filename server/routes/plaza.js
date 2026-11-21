@@ -23,7 +23,7 @@ const crypto = require('node:crypto');
 const config = require('../config');
 const wxsec = require('../wxsec');
 const serial = require('../serial');
-const legacy = require('../legacy/api-handler');
+const { readBody } = require('../core/http');
 
 const PUBLIC_DIR = config.PUBLIC_DIR;
 const COLLECTION_DIR = path.join(PUBLIC_DIR, 'collection');
@@ -44,13 +44,13 @@ function toISO(v) {
 module.exports = async function plazaRoutes(app) {
   /* ---------------- 号码分析 ---------------- */
   app.post('/api/serial/analyze', async function (request, reply) {
-    const body = await legacy.readBody(request.raw, 16 * 1024);
+    const body = await readBody(request.raw, 16 * 1024);
     const no = String(body.no == null ? '' : body.no).slice(0, 32);
     reply.send(Object.assign({ ok: true }, serial.analyze(no)));
   });
 
   app.post('/api/serial/analyze-batch', async function (request, reply) {
-    const body = await legacy.readBody(request.raw, 64 * 1024);
+    const body = await readBody(request.raw, 64 * 1024);
     const list = Array.isArray(body.nos) ? body.nos.slice(0, 200) : [];
     const r = serial.analyzeBatch(list);
     reply.send({ ok: true, items: r.items, runs: r.runs });
@@ -59,7 +59,7 @@ module.exports = async function plazaRoutes(app) {
   /* ---------------- 藏品图片上传 ---------------- */
   app.post('/api/holding/image', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
-    const body = await legacy.readBody(request.raw, 3 * 1024 * 1024);
+    const body = await readBody(request.raw, 3 * 1024 * 1024);
     const data = String(body.image || '');
     const m = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(data);
     if (!m) return reply.code(400).send({ ok: false, error: '只支持 JPEG / PNG / WebP' });
@@ -164,7 +164,7 @@ module.exports = async function plazaRoutes(app) {
 
   app.post('/api/shares', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
-    const b = await legacy.readBody(request.raw, 512 * 1024);
+    const b = await readBody(request.raw, 512 * 1024);
     const clean = cleanShareItem(b, me);
     if (clean.error) return reply.code(400).send({ ok: false, error: clean.error });
     const bad = await checkCaption(clean.caption, me);
@@ -180,7 +180,7 @@ module.exports = async function plazaRoutes(app) {
    */
   app.post('/api/shares/batch', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
-    const b = await legacy.readBody(request.raw, 1024 * 1024);
+    const b = await readBody(request.raw, 1024 * 1024);
     const rawItems = Array.isArray(b.items) ? b.items.slice(0, 20) : [];
     if (!rawItems.length) return reply.code(400).send({ ok: false, error: '请先选择要分享的藏品' });
     const globalCaption = String(b.caption || '').trim().slice(0, 280);
@@ -254,7 +254,7 @@ module.exports = async function plazaRoutes(app) {
   app.post('/api/shares/:id/comments', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
     const id = String(request.params.id || '').slice(0, 24);
-    const cb = await legacy.readBody(request.raw, 16 * 1024);
+    const cb = await readBody(request.raw, 16 * 1024);
     const text = String(cb.text || '').trim().slice(0, 280);
     if (!text) return reply.code(400).send({ ok: false, error: '评论不能为空' });
     const chk = await wxsec.checkText(text, me.wxOpenid || '');

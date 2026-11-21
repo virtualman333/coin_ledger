@@ -9,7 +9,7 @@
  * 鉴权用 plugins/auth 的 requireAdmin preHandler：401/403 文案与 legacy 一致。
  * routes 只做参数解析与 service 调用，写规则全在 coin.service。
  */
-const legacy = require('../../legacy/api-handler');
+const { readBody, clientIP } = require('../../core/http');
 const audit = require('../../audit');
 const coinService = require('../../services/coin.service');
 
@@ -29,14 +29,14 @@ module.exports = async function adminCoinRoutes(app) {
   });
 
   app.patch('/api/admin/coins', { preHandler: app.requireAdmin }, async function batch(request, reply) {
-    const body = await legacy.readBody(request.raw, 512 * 1024);
-    const result = await svc(app).batchPatch(body, request.user.name, legacy.clientIP(request.raw));
+    const body = await readBody(request.raw, 512 * 1024);
+    const result = await svc(app).batchPatch(body, request.user.name, clientIP(request.raw));
     reply.code(result.status).send(result.body);
   });
 
   app.patch('/api/admin/coin', { preHandler: app.requireAdmin }, async function one(request, reply) {
-    const body = await legacy.readBody(request.raw, 16384);
-    const result = await svc(app).patchOne(body, request.user.name, legacy.clientIP(request.raw));
+    const body = await readBody(request.raw, 16384);
+    const result = await svc(app).patchOne(body, request.user.name, clientIP(request.raw));
     reply.code(result.status).send(result.body);
   });
 };

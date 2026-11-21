@@ -13,7 +13,7 @@
  *   - 主系列回填由 series.service 复刻，不能简化；
  *   - 卡图保存后要紧接着 series.update({img})，否则列表拿不到新图路径。
  */
-const legacy = require('../../legacy/api-handler');
+const { readBody, clientIP } = require('../../core/http');
 const audit = require('../../audit');
 const seriesService = require('../../services/series.service');
 
@@ -33,16 +33,16 @@ function svc(app) {
 
 module.exports = async function adminSeriesRoutes(app) {
   app.post('/api/admin/series/members', { preHandler: app.requireAdmin }, async function members(request, reply) {
-    const body = await legacy.readBody(request.raw, 65536);
-    const ip = legacy.clientIP(request.raw);
+    const body = await readBody(request.raw, 65536);
+    const ip = clientIP(request.raw);
     const r = await svc(app).setMembers(body.key, body.ids, request.user.name, ip);
     if (!r.ok) { reply.code(400).send({ ok: false, error: r.error }); return; }
     reply.send({ ok: true, key: r.key, count: r.count, changed: r.changed, series: r.series });
   });
 
   app.post('/api/admin/series', { preHandler: app.requireAdmin }, async function create(request, reply) {
-    const body = await legacy.readBody(request.raw, 16384);
-    const ip = legacy.clientIP(request.raw);
+    const body = await readBody(request.raw, 16384);
+    const ip = clientIP(request.raw);
     const r = await svc(app).create(body);
     if (!r.ok) { reply.code(400).send({ ok: false, error: r.error }); return; }
     console.log('[series] 新建系列 ' + r.item.key + ' ' + r.item.name);
@@ -51,8 +51,8 @@ module.exports = async function adminSeriesRoutes(app) {
   });
 
   app.post('/api/admin/series/image', { preHandler: app.requireAdmin }, async function image(request, reply) {
-    const body = await legacy.readBody(request.raw, 6 * 1024 * 1024);
-    const ip = legacy.clientIP(request.raw);
+    const body = await readBody(request.raw, 6 * 1024 * 1024);
+    const ip = clientIP(request.raw);
     const key = String(body.key || '').trim();
     if (!key) { reply.code(400).send({ ok: false, error: '缺少系列 key' }); return; }
 
@@ -64,8 +64,8 @@ module.exports = async function adminSeriesRoutes(app) {
   });
 
   app.patch('/api/admin/series/:key', { preHandler: app.requireAdmin }, async function update(request, reply) {
-    const body = await legacy.readBody(request.raw, 16384);
-    const ip = legacy.clientIP(request.raw);
+    const body = await readBody(request.raw, 16384);
+    const ip = clientIP(request.raw);
     const key = String(request.params.key);
     const r = await svc(app).update(key, body);
     if (!r.ok) { reply.code(404).send({ ok: false, error: r.error }); return; }
@@ -74,7 +74,7 @@ module.exports = async function adminSeriesRoutes(app) {
   });
 
   app.delete('/api/admin/series/:key', { preHandler: app.requireAdmin }, async function remove(request, reply) {
-    const ip = legacy.clientIP(request.raw);
+    const ip = clientIP(request.raw);
     const key = String(request.params.key);
     const r = await svc(app).remove(key, request.user.name, ip);
     if (!r.ok) { reply.code(404).send({ ok: false, error: r.error }); return; }

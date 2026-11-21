@@ -2,14 +2,14 @@
 /**
  * 认证装饰与守卫。
  *
- * T01 阶段所有请求仍然由 legacy/api-handler 自己调 requireLogin/requireAdmin，
- * 所以这里**不挂全局 hook**（挂上去等于每个请求多一次 store 读取，行为也变了）。
- * 它的作用是给 T03 起的原生路由提供同一套语义：
+ * 这里**不挂全局 hook**：绝大多数接口根本不需要登录，全局解析等于每个请求
+ * 多一次 store 读取。需要鉴权的路由在注册时声明 preHandler 即可：
  *
  *   app.requireLogin  → preHandler：未登录 401 {"ok":false,"error":"请先登录","needLogin":true}
  *   app.requireAdmin  → preHandler：未登录 401（同上），非管理员 403 {"ok":false,"error":"需要管理员权限"}
  *
- * 文案与 server/index.js 的 requireLogin / requireAdmin 完全相同，快照会比对。
+ * 通过后 request.user / request.isAdmin 就是路由与 service 拿到的身份。
+ * 两条文案有接口快照守着，不能改。
  */
 const fp = require('fastify-plugin');
 

@@ -51,6 +51,7 @@ export struct AccountPage {
   @State agree: boolean = false;
   @State busy: boolean = false;
   @State hwBusy: boolean = false;
+  @State hwBound: boolean = false;
   @State loggedIn: boolean = false;
   @State displayName: string = '';
   @State userAvatar: string = '';
@@ -90,9 +91,11 @@ export struct AccountPage {
       if (u.wx === true) ways.push('微信');
       if (u.hw === true) ways.push('华为');
       this.loginText = ways.length > 0 ? '已登录 · ' + ways.join(' / ') : '已登录 · 藏品云端同步';
+      this.hwBound = u.hw === true;
     } else {
       this.userAvatar = '';
       this.loginText = '已登录 · 藏品云端同步';
+      this.hwBound = false;
     }
     this.holdingsCount = state.holdings.length;
     this.userCount = state.userCount;
@@ -176,10 +179,43 @@ export struct AccountPage {
   }
 
   /**
-   * 华为账号快速登录（Account Kit）。
-   * 客户端只负责拿到 authorizationCode —— 换 access_token、取 OpenID、建号/登录
-   * 全部在服务端完成，Client Secret 不进安装包。
-   * 系统里没登录华为账号时，Account Kit 会自动拉起系统登录页（forceLogin=true）。
+   * 调 Account Kit 取 authorizationCode。
+   * 客户端只负责这一步 —— 换 access_token、取 OpenID、建号/绑定全在服务端完成，
+   * Client Secret 不进安装包。系统没登录华为账号时会拉起系统登录页（forceLogin）。
+   */
+  private fetchHuaweiCode(): Promise<string> {
+    const authRequest = new authentication.HuaweiIDProvider().createLoginWithHuaweiIDRequest();
+    authRequest.forceLogin = true;
+    const controller = new authentication.AuthenticationController(
+      getContext(this) as common.UIAbilityContext);
+
+    return controller.executeRequest(authRequest)
+      .then((response: authentication.AuthenticationResponse): string => {
+        const detail = response as authentication.LoginWithHuaweiIDResponse;
+        // authorizationCode 在类型上是可选的：没授权成功时不会有值
+        const rawCode: string | undefined = detail.data !== undefined && detail.data !== null
+          ? detail.data.authorizationCode : undefined;
+        const code: string = rawCode !== undefined ? rawCode : '';
+        if (code === '') {
+          throw new Error('没有拿到华为账号授权码，请重试');
+        }
+        return code;
+      });
+  }
+
+  /** 华为相关失败提示：先把官方错误码翻译成人话 */
+  private hwErrorText(e: Error): string {
+    const be = e as BusinessError;
+    // 1001502001：设备上没有登录华为账号（官方错误码）
+    if (be.code === 1001502001) {
+      return '设备还没登录华为账号，请先在系统设置里登录华为账号后再试';
+    }
+    return e.message !== undefined && e.message !== '' ? e.message : '请稍后重试';
+  }
+
+  /**
+   * 华为账号快速登录：客户端只负责拿到 authorizationCode，
+   * 换 access_token、取 OpenID、建号/登录全部在服务端完成。
    */
   private huaweiLogin(): void {
     if (this.hwBusy) return;
@@ -188,61 +224,103 @@ export struct AccountPage {
     })) return;
 
     this.hwBusy = true;
-    try {
-      const authRequest = new authentication.HuaweiIDProvider().createLoginWithHuaweiIDRequest();
-      authRequest.forceLogin = true;
-      const controller = new authentication.AuthenticationController(
-        getContext(this) as common.UIAbilityContext);
-
-      controller.executeRequest(authRequest)
-        .then((response: authentication.AuthenticationResponse): Promise<void> => {
-          const detail = response as authentication.LoginWithHuaweiIDResponse;
-          // authorizationCode 在类型上是可选的：没授权成功时不会有值
-          const rawCode: string | undefined = detail.data !== undefined && detail.data !== null
-            ? detail.data.authorizationCode : undefined;
-          const code: string = rawCode !== undefined ? rawCode : '';
-          if (code === '') {
-            throw new Error('没有拿到华为账号授权码，请重试');
-          }
-          return Api.post<AuthResponse>('/api/auth/huawei/login', new HuaweiBody(code))
-            .then((res: AuthResponse): void => {
-              Store.saveToken(res.token || '');
-            });
-        })
-        .then((): Promise<void> => {
-          return Store.refresh(true).then((): void => {
+    this.fetchHuaweiCode()
+      .then((code: string): Promise<void> => {
+        return Api.post<AuthResponse>('/api/auth/huawei/login', new HuaweiBody(code))
+          .then((res: AuthResponse): void => {
+            Store.saveToken(res.token || '');
           });
-        })
-        .then((): void => {
-          this.hwBusy = false;
-          this.render();
-          promptAction.showToast({ message: '登录成功', duration: 1500 });
-          setTimeout((): void => {
-            Nav.pop(this.stack);
-          }, 500);
-        })
-        .catch((e: Error): void => {
-          this.hwBusy = false;
-          const be = e as BusinessError;
-          let msg: string = e.message !== undefined && e.message !== '' ? e.message : '请稍后重试';
-          // 1001502001：设备上没有登录华为账号（官方错误码）
-          if (be.code === 1001502001) {
-            msg = '设备还没登录华为账号，请先在系统设置里登录华为账号后再试';
-          }
-          AlertDialog.show({
-            title: '华为账号登录失败',
-            message: msg,
-            confirm: {
-              value: '知道了',
-              action: (): void => {
-              }
-            }
-          });
+      })
+      .then((): Promise<void> => {
+        return Store.refresh(true).then((): void => {
         });
-    } catch (e) {
-      this.hwBusy = false;
-      promptAction.showToast({ message: '当前设备不支持华为账号登录', duration: 1800 });
-    }
+      })
+      .then((): void => {
+        this.hwBusy = false;
+        this.render();
+        promptAction.showToast({ message: '登录成功', duration: 1500 });
+        setTimeout((): void => {
+          Nav.pop(this.stack);
+        }, 500);
+      })
+      .catch((e: Error): void => {
+        this.hwBusy = false;
+        AlertDialog.show({
+          title: '华为账号登录失败',
+          message: this.hwErrorText(e),
+          confirm: {
+            value: '知道了',
+            action: (): void => {
+            }
+          }
+        });
+      });
+  }
+
+  /** 给当前已登录账号绑定华为账号 */
+  private huaweiBind(): void {
+    if (this.hwBusy) return;
+    this.hwBusy = true;
+    this.fetchHuaweiCode()
+      .then((code: string): Promise<AuthResponse> => {
+        return Api.post<AuthResponse>('/api/auth/huawei/bind', new HuaweiBody(code));
+      })
+      .then((): Promise<void> => {
+        return Store.refresh(true).then((): void => {
+        });
+      })
+      .then((): void => {
+        this.hwBusy = false;
+        this.render();
+        promptAction.showToast({ message: '已绑定华为账号', duration: 1600 });
+      })
+      .catch((e: Error): void => {
+        this.hwBusy = false;
+        AlertDialog.show({
+          title: '绑定失败',
+          message: this.hwErrorText(e),
+          confirm: {
+            value: '知道了',
+            action: (): void => {
+            }
+          }
+        });
+      });
+  }
+
+  /** 解绑华为账号：只解除华为绑定，密码与藏品不动 */
+  private huaweiUnbind(): void {
+    if (this.hwBusy) return;
+    AlertDialog.show({
+      title: '解绑华为账号',
+      message: '解绑后就不能用华为账号登录这本账本了，用户名密码登录不受影响。确定解绑？',
+      primaryButton: {
+        value: '取消',
+        action: (): void => {
+        }
+      },
+      secondaryButton: {
+        value: '解绑',
+        fontColor: Theme.up,
+        action: (): void => {
+          this.hwBusy = true;
+          Api.post<AuthResponse>('/api/auth/huawei/unbind', new HuaweiBody(''))
+            .then((): Promise<void> => {
+              return Store.refresh(true).then((): void => {
+              });
+            })
+            .then((): void => {
+              this.hwBusy = false;
+              this.render();
+              promptAction.showToast({ message: '已解绑', duration: 1500 });
+            })
+            .catch((e: Error): void => {
+              this.hwBusy = false;
+              promptAction.showToast({ message: this.hwErrorText(e), duration: 2000 });
+            });
+        }
+      }
+    });
   }
 
   private logout(): void {
@@ -473,6 +551,16 @@ export struct AccountPage {
         this.row('隐私政策与用户协议', (): void => {
           Nav.push(this.stack, Routes.PRIVACY, new RouteParam());
         })
+        Divider().color(Theme.lineSoft)
+        if (this.hwBound) {
+          this.row('解绑华为账号', (): void => {
+            this.huaweiUnbind();
+          })
+        } else {
+          this.row('绑定华为账号', (): void => {
+            this.huaweiBind();
+          })
+        }
       }
       .width('100%')
 

@@ -12,7 +12,7 @@
  * 字段级错误统一 `{ok:false,error,field}`（schemas/pm.js 给出 field）。
  * routes 只解析参数、记录审计，规则与事务都在 pm.service / schemas/pm.js。
  */
-const legacy = require('../../legacy/api-handler');
+const { readBody, clientIP } = require('../../core/http');
 const audit = require('../../audit');
 const pmService = require('../../services/pm.service');
 
@@ -89,41 +89,41 @@ module.exports = async function adminPmRoutes(app) {
   });
 
   app.post('/api/admin/pm', { preHandler: app.requireAdmin }, async function create(request, reply) {
-    const body = await legacy.readBody(request.raw, 2 * 1024 * 1024);
+    const body = await readBody(request.raw, 2 * 1024 * 1024);
     const r = await svc(app).create(body);
-    if (r.ok) audit.log(request.user.name, 'pm.create', String(r.row.no), r.row.name, legacy.clientIP(request.raw));
+    if (r.ok) audit.log(request.user.name, 'pm.create', String(r.row.no), r.row.name, clientIP(request.raw));
     send(reply, r);
   });
 
   app.patch('/api/admin/pm/:no', { preHandler: app.requireAdmin }, async function update(request, reply) {
     const no = Number(request.params.no);
-    const body = await legacy.readBody(request.raw, 2 * 1024 * 1024);
+    const body = await readBody(request.raw, 2 * 1024 * 1024);
     const r = await svc(app).update(no, body);
-    if (r.ok) audit.log(request.user.name, 'pm.update', String(no), JSON.stringify(body).slice(0, 200), legacy.clientIP(request.raw));
+    if (r.ok) audit.log(request.user.name, 'pm.update', String(no), JSON.stringify(body).slice(0, 200), clientIP(request.raw));
     send(reply, r);
   });
 
   app.put('/api/admin/pm/:no/pieces', { preHandler: app.requireAdmin }, async function pieces(request, reply) {
     const no = Number(request.params.no);
-    const body = await legacy.readBody(request.raw, 4 * 1024 * 1024);
+    const body = await readBody(request.raw, 4 * 1024 * 1024);
     const r = await svc(app).replacePieces(no, Array.isArray(body.pieces) ? body.pieces : body);
-    if (r.ok) audit.log(request.user.name, 'pm.pieces', String(no), r.count + ' 行规格', legacy.clientIP(request.raw));
+    if (r.ok) audit.log(request.user.name, 'pm.pieces', String(no), r.count + ' 行规格', clientIP(request.raw));
     send(reply, r);
   });
 
   app.post('/api/admin/pm/:no/status', { preHandler: app.requireAdmin }, async function status(request, reply) {
     const no = Number(request.params.no);
-    const body = await legacy.readBody(request.raw, 4096);
+    const body = await readBody(request.raw, 4096);
     const next = body.status === 'published' ? 'published' : 'draft';
     const r = await svc(app).setStatus(no, next);
-    if (r.ok) audit.log(request.user.name, next === 'published' ? 'pm.publish' : 'pm.unpublish', String(no), '', legacy.clientIP(request.raw));
+    if (r.ok) audit.log(request.user.name, next === 'published' ? 'pm.publish' : 'pm.unpublish', String(no), '', clientIP(request.raw));
     send(reply, r);
   });
 
   app.delete('/api/admin/pm/:no', { preHandler: app.requireAdmin }, async function remove(request, reply) {
     const no = Number(request.params.no);
     const r = await svc(app).remove(no);
-    if (r.ok) audit.log(request.user.name, 'pm.delete', String(no), '', legacy.clientIP(request.raw));
+    if (r.ok) audit.log(request.user.name, 'pm.delete', String(no), '', clientIP(request.raw));
     send(reply, r.ok ? { ok: true } : { ok: false, error: r.error });
   });
 };

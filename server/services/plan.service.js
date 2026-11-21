@@ -5,7 +5,7 @@
  * 规则字段从 schemas/plan.js 取（原样从 legacy 搬入），整份替换在**一个事务**里：
  *   · db 模式：repos.plan.replace(conn, next) 在同一次 conn 上写 cl_plan_doc +
  *     清 cl_plan_years + 逐年度插入，事务由 app.withTx 提供；
- *   · json 模式（S0 现状）：原子写 PLAN_FILE 并通知 legacy 的内存 PLAN，
+ *   · json 模式（S0 现状）：原子写 PLAN_FILE 并通知 state/catalog 的内存 PLAN，
  *     /api/bootstrap 与 reminders 立即生效。
  *
  * 成功响应 `{ok:true,years,items}`、错误文案都逐字保持 legacy。
@@ -14,7 +14,7 @@ const fs = require('fs');
 
 const config = require('../config');
 const audit = require('../audit');
-const legacy = require('../legacy/api-handler');
+const catalogState = require('../state/catalog');
 const planSchema = require('../schemas/plan');
 
 /**
@@ -63,7 +63,7 @@ function create(ctx) {
       } else {
         fs.writeFileSync(config.PLAN_FILE, JSON.stringify(next, null, 1) + '\n', 'utf8');
         // 老 reminders 分支还在用内存 PLAN，必须同步；否则「保存后不重启不生效」
-        legacy.setPlan(next);
+        catalogState.setPlan(next);
       }
 
       audit.log(actor, 'plan.update', '', years + ' 个年度 / ' + items + ' 个项目', ip);

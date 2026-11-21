@@ -22,7 +22,7 @@ const fp = require('fastify-plugin');
 
 const config = require('../config');
 const pageRender = require('../services/seo');
-const { clientIP } = require('../legacy/api-handler');
+const { clientIP } = require('../core/http');
 
 const PUBLIC_DIR = config.PUBLIC_DIR;
 

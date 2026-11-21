@@ -12,7 +12,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const config = require('../config');
 const wxsec = require('../wxsec');
-const legacy = require('../legacy/api-handler');
+const { readBody } = require('../core/http');
 const coinCount = require('../services/coin-count.service');
 
 const PUBLIC_DIR = config.PUBLIC_DIR;
@@ -22,7 +22,7 @@ module.exports = async function coinCountRoutes(app) {
   app.post('/api/coin-count', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
     // base64 图片最大 12MB（原图 ≤9MB）；body plugin 是 passthrough，必须读原始流
-    const body = await legacy.readBody(request.raw, 13 * 1024 * 1024);
+    const body = await readBody(request.raw, 13 * 1024 * 1024);
     const data = String(body.image || '');
     const m = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(data);
     if (!m) return reply.code(400).send({ ok: false, error: '只支持 JPEG / PNG / WebP 图片' });

@@ -4401,6 +4401,100 @@ function initTabs(){
 /* =========================================================
    13. 登录 / 注册
    ========================================================= */
+
+/* ---- 华为账号快速登录 ----
+   网页端只负责「跳到授权页」和「回来读结果」：授权码 → token 的交换全在服务端，
+   浏览器拿不到 client_secret，也拿不到华为的 access_token。
+   服务端没配 HUAWEI_CLIENT_ID/SECRET 时 /api/auth/huawei/status 返回 enabled:false，
+   按钮整块不显示 —— 不给用户一个点进去必然失败的入口。 */
+var HW_ERR_TEXT = {
+  denied: '已取消华为账号授权',
+  rejected: '华为账号授权没有完成，请重试',
+  expired: '授权已超时，请重新点击华为账号登录',
+  state: '登录请求已失效，请重新点击华为账号登录',
+  missing_code: '华为账号没有返回授权码，请重试',
+  full: '注册人数已达上限，暂时无法创建新账号',
+  server: '华为账号登录失败，请稍后再试，或用用户名密码登录',
+  config: '华为账号登录还没配置好，请用用户名密码登录',
+  needlogin: '登录状态已失效，请重新登录后再绑定华为账号',
+  bound: '这个华为账号已经绑定过其他账号了'
+};
+
+/** 服务端是否启用华为登录；探测一次后缓存，资料卡据此决定显不显示绑定卡片 */
+var HW_ENABLED = false;
+
+/** 资料卡里的华为账号卡片：已绑定给解绑，未绑定给绑定 */
+function huaweiCardHtml(u){
+  if (u.hw) {
+    return '<div class="pwcard">' +
+      '<h4>华为账号</h4>' +
+      '<div class="authmsg" id="hwMsg">已绑定，可以直接用华为账号一键登录</div>' +
+      '<div class="pwrow"><button class="btn ghost" id="hwUnbindBtn">解绑华为账号</button></div>' +
+      '</div>';
+  }
+  return '<div class="pwcard">' +
+    '<h4>华为账号</h4>' +
+    '<div class="authmsg" id="hwMsg">未绑定。绑定后可在网页和鸿蒙端用华为账号一键登录，免密进入这本账本。</div>' +
+    '<div class="pwrow"><button class="btn hw" id="hwBindBtn">绑定华为账号</button></div>' +
+    '</div>';
+}
+
+/** 读 location.search 里的单个参数（不依赖 URLSearchParams，老浏览器也能跑） */
+function queryParam(name){
+  var s = String(location.search || '').replace(/^\?/, '');
+  if (!s) return '';
+  var parts = s.split('&');
+  for (var i = 0; i < parts.length; i++){
+    var kv = parts[i].split('=');
+    if (decodeURIComponent(kv[0] || '') === name) {
+      return decodeURIComponent(kv.slice(1).join('=') || '');
+    }
+  }
+  return '';
+}
+
+/**
+ * 处理华为回调带回来的 ?hw=1 / ?hwerr=xxx。
+ * 必须在 start() 的 canonical 重写地址之前调用 —— 那一步会把 query 抹掉。
+ */
+function consumeHuaweiCallback(){
+  var ok = queryParam('hw');
+  var err = queryParam('hwerr');
+  if (!ok && !err) return;
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* 隐私模式忽略 */ }
+
+  if (ok === '1') {
+    toast(queryParam('new') === '1' ? '华为账号已登录，账本已创建' : '华为账号登录成功');
+    return;
+  }
+  if (ok === 'bind') {
+    toast('已绑定华为账号');
+    return;
+  }
+  toast(HW_ERR_TEXT[err] || HW_ERR_TEXT.server);
+}
+
+/** 探测服务端是否启用华为登录；启用才显示按钮 */
+function initHuaweiLogin(){
+  var box = document.getElementById('hwLoginBox');
+  var btn = document.getElementById('hwLoginBtn');
+  if (!box || !btn) return;
+
+  api('/api/auth/huawei/status').then(function(r){
+    HW_ENABLED = !!(r && r.enabled);
+    if (!HW_ENABLED) { box.hidden = true; return; }
+    box.hidden = false;
+    // 已登录用户进账户页时要看到「绑定华为账号」卡片
+    if (isLoggedIn()) renderProfile();
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      btn.textContent = '正在跳转华为账号…';
+      // 整页跳转：授权页必须由浏览器承载，state Cookie 也由这一步种下
+      location.href = '/api/auth/huawei/start';
+    });
+  }).catch(function(){ box.hidden = true; });
+}
+
 function showAuthMode(mode){
   var isLogin = mode !== 'register';
   document.getElementById('loginForm').hidden = !isLogin;
@@ -4488,6 +4582,24 @@ function doLogout(){
 /* =========================================================
    14. 账户面板 / 用户管理
    ========================================================= */
+
+/** 登录方式一览：密码 / 微信 / 华为账号，用来在资料卡说明这号怎么进的 */
+function loginWays(u){
+  var ways = [];
+  if (u.hasPassword) ways.push('用户名密码');
+  if (u.wx) ways.push('微信');
+  if (u.hw) ways.push('华为账号');
+  return ways.length ? ways.join(' / ') : '未设置';
+}
+
+/** 头像：本站上传的优先，其次华为账号头像（外链，可能失效 → 加载失败就退回首字母） */
+function avatarHtml(u, cls, initial){
+  var src = u.avatar || u.hwAvatar || '';
+  if (!src) return '<div class="' + cls + '">' + esc(initial) + '</div>';
+  return '<div class="' + cls + '"><img src="' + esc(src) + '" alt="" ' +
+    'onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + esc(initial) + '\'"></div>';
+}
+
 function renderProfile(){
   var box = document.getElementById('profileBox');
   if (!box) return;
@@ -4498,7 +4610,7 @@ function renderProfile(){
 
   box.innerHTML =
     '<div class="pcard">' +
-      '<div class="pavatar">' + esc(initial) + '</div>' +
+      avatarHtml(u, 'pavatar', initial) +
       '<div class="pinfo">' +
         '<div class="pname">' + esc(u.name) +
           '<span class="badge' + (APP.isAdmin ? ' admin' : '') + '">' +
@@ -4507,6 +4619,7 @@ function renderProfile(){
         '<div class="pmeta">注册于 ' + fmtDate(u.createdAt) +
           '　·　最近登录 ' + fmtDate(u.lastLogin) +
           '　·　藏品 ' + coll.length + ' 项</div>' +
+        '<div class="pmeta">登录方式：' + esc(loginWays(u)) + '</div>' +
       '</div>' +
       '<button class="btn ghost" id="logoutBtn">退出登录</button>' +
     '</div>' +
@@ -4531,7 +4644,9 @@ function renderProfile(){
         '<button class="btn" id="pwBtn">保存</button>' +
       '</div>' +
       '<div class="authmsg" id="pwMsg"></div>' +
-    '</div>';
+    '</div>' +
+
+    (HW_ENABLED ? huaweiCardHtml(u) : '');
 
   document.getElementById('logoutBtn').addEventListener('click', doLogout);
 
@@ -4572,6 +4687,35 @@ function renderProfile(){
       })
       .catch(function(e){ m.style.color = ''; m.textContent = e.message; });
   });
+
+  /* 华为账号：绑定走整页跳转（mode=bind），解绑在当前页做 */
+  var hwBind = document.getElementById('hwBindBtn');
+  if (hwBind) {
+    hwBind.addEventListener('click', function(){
+      hwBind.disabled = true;
+      hwBind.textContent = '正在跳转华为账号…';
+      location.href = '/api/auth/huawei/start?mode=bind';
+    });
+  }
+  var hwUnbind = document.getElementById('hwUnbindBtn');
+  if (hwUnbind) {
+    hwUnbind.addEventListener('click', function(){
+      if (!window.confirm('解绑后就不能用华为账号登录这本账本了（用户名密码、微信登录不受影响）。确定解绑？')) return;
+      var m = document.getElementById('hwMsg');
+      hwUnbind.disabled = true;
+      m.textContent = '解绑中…';
+      api('/api/auth/huawei/unbind', { method: 'POST' })
+        .then(function(res){
+          APP.user = (res && res.user) || APP.user;
+          updateChrome();          // 内部会 renderProfile，卡片切成「未绑定」
+          toast('已解绑华为账号');
+        })
+        .catch(function(e){
+          hwUnbind.disabled = false;
+          m.textContent = e.message;
+        });
+    });
+  }
 
   hardenInputs(box);
 }
@@ -4850,6 +4994,7 @@ function finishBoot(failed){
    14. 管理后台（参数 / 图片）
    ========================================================= */
 function start(){
+  consumeHuaweiCallback();
   renderFilters();
   renderKPI();
   renderHoldings();
@@ -4863,6 +5008,7 @@ function start(){
   initSyncRetry();
   initTabs();
   initMisc();
+  initHuaweiLogin();
   hardenInputs();
   // 老 hash 链接先迁到真实路径（#/coin/12 → /coin/12），再按路径渲染
   var legacy = legacyPath();

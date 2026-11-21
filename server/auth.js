@@ -52,10 +52,13 @@ function publicUser(u) {
     createdAt: u.createdAt,
     lastLogin: u.lastLogin || null,
     wx: !!u.wxOpenid,          // 是否绑定微信
+    hw: !!u.hwOpenid,          // 是否绑定华为账号
     isTest: !!u.isTest,        // 测试账号
     disabled: !!u.disabled,    // 被管理员禁用（禁用后会话立即失效）
     nickname: u.nickname || '',           // 显示昵称，没设就用登录名
     avatar: u.avatar ? '/avatar/' + u.avatar : '',
+    // 华为头像是外链（会随用户换头像失效），只作展示兜底；本站 avatar 永远优先
+    hwAvatar: u.hwAvatar || '',
     hasPassword: !!u.hash,
     nameChanged: !!u.nameChangedAt        // 用户名是否已经用过改名机会
   };
