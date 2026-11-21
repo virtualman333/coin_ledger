@@ -103,7 +103,7 @@
   </block>
 
   <!-- 藏友晒单（广场最新，失败自动隐藏） -->
-  <block wx:if="{{feed.length}}">
+  <block wx:if="{{plazaOn && feed.length}}">
     <view class="sec">
       <text class="sec-title">藏友晒单</text>
       <text class="sec-more" hover-class="tap-hover" bindtap="goPlaza">去广场 ›</text>

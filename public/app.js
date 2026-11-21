@@ -2757,6 +2757,243 @@ function reRenderAll(){
   hardenInputs();
 }
 
+/* =========================================================
+   收藏备份：导出 / 导入
+   与小程序共用同一份 JSON 格式（store.exportHoldings / parseImport），
+   所以「电脑导出 → 文件发到微信 → 小程序导入」和反向都能走通。
+   ========================================================= */
+var BACKUP_FIELDS = ['name', 'category', 'id', 'unit', 'rolls', 'cost', 'market',
+  'group', 'thumb', 'serials', 'form', 'images', 'sep'];
+
+function round2(n){
+  return Math.round((Number(n) || 0) * 100) / 100;
+}
+
+function backupPayload(){
+  var holdings = (coll || []).map(function(h){
+    var o = {};
+    BACKUP_FIELDS.forEach(function(k){ if (h[k] !== undefined) o[k] = h[k]; });
+    o.category = h.category === 'pm' ? 'pm' : (h.category || '');
+    o.unit = h.unit === 'piece' ? 'piece' : 'set';
+    o.rolls = Number(h.rolls) || 0;
+    o.cost = round2(h.cost);
+    o.market = round2(h.market);
+    o.group = h.group || '';
+    o.thumb = h.thumb || '';
+    o.id = h.id || '';
+    o.serials = Array.isArray(h.serials) ? h.serials.slice(0, 50) : [];
+    o.form = h.form === 'single' || h.form === 'set' ? h.form : '';
+    o.images = Array.isArray(h.images) ? h.images.slice(0, 20) : [];
+    o.sep = !!h.sep;
+    return o;
+  });
+  return {
+    app: 'coin-ledger', type: 'holdings', version: 1,
+    exportedAt: new Date().toISOString(),
+    count: holdings.length, holdings: holdings
+  };
+}
+
+/** 去重键：贵金属按编号（同名不同年份很常见），其余按名称 */
+function backupKey(h){
+  if (h.category === 'pm' && h.id) return 'pm|' + h.id;
+  return (h.category || 'coin') + '|' + h.name;
+}
+
+/** 解析导入文本；非法条目丢弃并计数 */
+function parseBackup(raw){
+  var text = String(raw == null ? '' : raw).trim();
+  if (!text) return { ok: false, items: [], error: '内容是空的', dropped: 0 };
+  text = text.replace(/^\uFEFF/, '');
+  var fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) text = fence[1].trim();
+
+  var data;
+  try { data = JSON.parse(text); }
+  catch (e) { return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 }; }
+
+  var list = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
+  if (!list) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
+
+  var items = [], dropped = 0;
+  list.forEach(function(it){
+    if (!it || typeof it !== 'object') { dropped++; return; }
+    var name = String(it.name || '').trim();
+    if (!name || name.length > 60) { dropped++; return; }
+    var rolls = Math.floor(Number(it.rolls));
+    if (!(rolls >= 1)) { dropped++; return; }
+    var category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
+    var id = String(it.id || '').trim().slice(0, 40);
+    if (category === 'pm' && !id) { dropped++; return; }
+    var num = function(v){ var n = Number(v); return isFinite(n) && n >= 0 ? round2(n) : 0; };
+    items.push({
+      id: id || '',
+      name: name,
+      category: category,
+      unit: it.unit === 'piece' ? 'piece' : 'set',
+      rolls: Math.min(9999, rolls),
+      cost: num(it.cost),
+      market: num(it.market),
+      group: String(it.group || '').slice(0, 30),
+      thumb: String(it.thumb || '').slice(0, 200),
+      serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
+      form: it.form === 'single' || it.form === 'set' ? it.form : '',
+      images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
+      sep: !!it.sep
+    });
+  });
+  if (!items.length) {
+    return { ok: false, items: [], error: dropped ? '没有一条能识别的收藏' : '收藏是空的', dropped: dropped };
+  }
+  return { ok: true, items: items, error: '', dropped: dropped };
+}
+
+function backupFileName(){
+  var d = new Date();
+  var p2 = function(n){ return (n < 10 ? '0' : '') + n; };
+  return '藏币录-收藏-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '.json';
+}
+
+function closeBackupModal(){
+  var old = document.getElementById('backupMask');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  document.removeEventListener('keydown', backupEsc);
+}
+
+function backupEsc(e){
+  if (e.key === 'Escape') closeBackupModal();
+}
+
+function openBackupModal(){
+  closeBackupModal();
+  var mask = document.createElement('div');
+  mask.className = 'pm-modal-mask';
+  mask.id = 'backupMask';
+  mask.innerHTML =
+    '<div class="pm-modal bk-modal" role="dialog" aria-modal="true" aria-label="收藏备份">' +
+      '<button class="pm-modal-x" type="button" id="bkX" aria-label="关闭">✕</button>' +
+      '<h3 class="bk-h">收藏备份</h3>' +
+      '<p class="bk-p">当前账本 <b>' + (coll || []).length + '</b> 条收藏。</p>' +
+      '<div class="bk-sec">' +
+        '<b class="bk-t">导出</b>' +
+        '<p class="bk-p">存成 .json 文件；在小程序「我的 → 收藏备份 → 从聊天记录选文件」可以直接读取。</p>' +
+        '<div class="bk-row">' +
+          '<button class="btn primary sm" type="button" id="bkDownload">下载 .json</button>' +
+          '<button class="btn ghost sm" type="button" id="bkCopy">复制到剪贴板</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bk-sec">' +
+        '<b class="bk-t">导入</b>' +
+        '<p class="bk-p">选择导出的文件，或把 JSON 内容粘贴进来。与现有收藏重复的会跳过，不会覆盖已有的数量与成本。</p>' +
+        '<input type="file" id="bkFile" class="bk-file" accept=".json,application/json,text/plain">' +
+        '<textarea id="bkText" class="bk-ta" spellcheck="false" placeholder="在这里粘贴 JSON，或先选上面的文件…"></textarea>' +
+        '<div class="bk-row">' +
+          '<button class="btn primary sm" type="button" id="bkImport">合并导入</button>' +
+          '<span class="muted bk-hint" id="bkHint"></span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(mask);
+  document.addEventListener('keydown', backupEsc);
+
+  var hint = mask.querySelector('#bkHint');
+  var ta = mask.querySelector('#bkText');
+
+  mask.addEventListener('click', function(e){ if (e.target === mask) closeBackupModal(); });
+  mask.querySelector('#bkX').addEventListener('click', closeBackupModal);
+
+  mask.querySelector('#bkDownload').addEventListener('click', function(){
+    var data = backupPayload();
+    if (!data.count) { toast('账本还是空的'); return; }
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = backupFileName();
+    document.body.appendChild(a);
+    a.click();
+    if (a.parentNode) a.parentNode.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    toast('已导出 ' + data.count + ' 条');
+  });
+
+  mask.querySelector('#bkCopy').addEventListener('click', function(){
+    var data = backupPayload();
+    if (!data.count) { toast('账本还是空的'); return; }
+    var text = JSON.stringify(data);
+    var done = function(){ toast('已复制 ' + data.count + ' 条'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function(){
+        ta.value = text;
+        ta.select();
+        hint.textContent = '浏览器拦了剪贴板，已填进下面的输入框，手动复制一下';
+      });
+    } else {
+      ta.value = text;
+      ta.select();
+      hint.textContent = '已填进下面的输入框，按 Ctrl+C 复制';
+    }
+  });
+
+  mask.querySelector('#bkFile').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if (!f) return;
+    if (f.size > 4 * 1024 * 1024) { hint.textContent = '文件太大了（超过 4MB）'; return; }
+    var reader = new FileReader();
+    reader.onload = function(){
+      ta.value = String(reader.result || '');
+      var r = parseBackup(ta.value);
+      hint.textContent = r.ok
+        ? ('读到 ' + r.items.length + ' 条收藏' + (r.dropped ? '，忽略 ' + r.dropped + ' 条' : ''))
+        : r.error;
+    };
+    reader.onerror = function(){ hint.textContent = '读取文件失败'; };
+    reader.readAsText(f, 'utf-8');
+  });
+
+  mask.querySelector('#bkImport').addEventListener('click', function(){
+    var r = parseBackup(ta.value);
+    if (!r.ok) { hint.textContent = r.error; return; }
+    var filled = {};
+    (coll || []).forEach(function(h){ filled[backupKey(h)] = true; });
+    var add = 0, skip = 0;
+    r.items.forEach(function(h){
+      var k = backupKey(h);
+      if (filled[k]) { skip++; return; }
+      filled[k] = true;
+      add++;
+    });
+    if (!add) { hint.textContent = '没有新收藏（' + skip + ' 条都已存在）'; return; }
+    var msg = '将新增 ' + add + ' 条收藏' + (skip ? '，跳过 ' + skip + ' 条已存在' : '') +
+      (r.dropped ? '（另有 ' + r.dropped + ' 条无法识别）' : '') + '。继续？';
+    if (!window.confirm(msg)) return;
+
+    var used = {};
+    (coll || []).forEach(function(h){ used[backupKey(h)] = true; });
+    r.items.forEach(function(h){
+      var k = backupKey(h);
+      if (used[k]) return;
+      used[k] = true;
+      var row = Object.assign({}, h);
+      if (!row.id) row.id = 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+      coll.push(row);
+    });
+    rebuildGroupOrder();
+    reRenderAll();
+    hint.textContent = '已导入 ' + add + ' 条';
+    toast('已导入 ' + add + ' 条收藏');
+    setTimeout(closeBackupModal, 700);
+  });
+}
+
+(function initBackup(){
+  var btn = document.getElementById('backupBtn');
+  if (btn) btn.addEventListener('click', function(){
+    if (!isLoggedIn()) { goTab('account'); return; }
+    openBackupModal();
+  });
+})();
+
 document.getElementById('holdingsBox').addEventListener('click', function(e){
   var nmEl = e.target.closest('.name[data-coin]');
   if (nmEl) { goCoin(parseInt(nmEl.getAttribute('data-coin'), 10)); return; }
@@ -3274,6 +3511,8 @@ function fmtDateTime(v){
 /* =========================================================
    12. 页签切换
    ========================================================= */
+/* 藏品广场：先隐藏入口（tab 不渲染、旧链接回落首页）。接口与 DOM 都保留，恢复时改成 true 即可 */
+var PLAZA_ON = false;
 var TABS = ['home','plan','all','series','holdings','plaza','account','admin','myfeedback','sitemap'];
 
 /* 访客记录：会话 ID 存在 sessionStorage（关掉标签页算新访客） */
@@ -3835,6 +4074,7 @@ function goTab(name, opts){
   var prev = currentTab();
   reportVisit(name);                   // 记一条访问（服务端 30 秒内同页去重）
   if (TABS.indexOf(name) < 0) name = 'home';
+  if (name === 'plaza' && !PLAZA_ON) name = 'home';   // 广场下线期间，旧链接直接回落首页
   if (GATED.indexOf(name) >= 0 && !isLoggedIn()) name = 'account';
 
   activatePane(name);
@@ -4766,3 +5006,10 @@ function openShareDialog(presetName){
     });
   };
 }
+
+/* 广场入口隐藏：tab 按钮是静态 HTML，用 .tab[hidden] 的样式关掉 */
+(function hidePlazaEntry(){
+  if (PLAZA_ON) return;
+  var el = document.querySelector('[data-tab="plaza"]');
+  if (el) el.hidden = true;
+})();

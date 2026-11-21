@@ -177,6 +177,139 @@ function requireLogin() {
  */
 let persistTail = null;       // 最后一个未决的写；为空时表示当前没有排队
 
+/* ---------------- 收藏的导出 / 导入 ---------------- */
+
+const HOLDING_EXPORT_FIELDS = [
+  'name', 'category', 'id', 'unit', 'rolls', 'cost', 'market',
+  'group', 'thumb', 'serials', 'form', 'images',
+];
+
+/** 导出：只保留可迁移字段，服务端内部字段一律不带 */
+function exportHoldings() {
+  const holdings = (state.holdings || []).map((h) => {
+    const out = {};
+    HOLDING_EXPORT_FIELDS.forEach((k) => { out[k] = h[k]; });
+    out.category = h.category === 'pm' ? 'pm' : (h.category || '');
+    out.unit = h.unit === 'piece' ? 'piece' : 'set';
+    out.rolls = Number(h.rolls) || 0;
+    out.cost = cat.round2(Number(h.cost) || 0);
+    out.market = cat.round2(Number(h.market) || 0);
+    out.group = h.group || '';
+    out.thumb = h.thumb || '';
+    out.id = h.id || '';
+    out.serials = Array.isArray(h.serials) ? h.serials.slice(0, 50) : [];
+    out.form = h.form === 'single' || h.form === 'set' ? h.form : '';
+    out.images = Array.isArray(h.images) ? h.images.slice(0, 20) : [];
+    return out;
+  });
+  return {
+    app: 'coin-ledger',
+    type: 'holdings',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    count: holdings.length,
+    holdings,
+  };
+}
+
+/** 去重键：贵金属按编号（同名不同年份很常见），普通币/钞按名称 */
+function holdingKey(h) {
+  if (h.category === 'pm' && h.id) return 'pm|' + h.id;
+  return (h.category || 'coin') + '|' + h.name;
+}
+
+/**
+ * 解析导入内容。接受 { holdings: [...] } 的导出包，也接受裸数组；
+ * 容忍 ```json 包裹与 BOM。逐条校验，非法条目丢弃并计数，不让脏数据进账本。
+ * @returns {{ok: boolean, items: Array, error: string, dropped: number}}
+ */
+function parseImport(raw) {
+  let text = String(raw == null ? '' : raw).trim();
+  if (!text) return { ok: false, items: [], error: '内容是空的', dropped: 0 };
+  text = text.replace(/^\uFEFF/, '');
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) text = fence[1].trim();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 };
+  }
+
+  const list = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
+  if (!list) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
+
+  const items = [];
+  let dropped = 0;
+  list.forEach((it) => {
+    if (!it || typeof it !== 'object') { dropped += 1; return; }
+    const name = String(it.name || '').trim();
+    if (!name || name.length > 60) { dropped += 1; return; }
+    const rollsNum = Math.floor(Number(it.rolls));
+    if (!(rollsNum >= 1)) { dropped += 1; return; }
+    const category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
+    // 贵金属必须有编号，否则无法定位到全量库里的那一枚
+    const id = String(it.id || '').trim().slice(0, 40);
+    if (category === 'pm' && !id) { dropped += 1; return; }
+    const num = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0;
+    };
+    items.push({
+      id: id || newId(),
+      name: name,
+      category: category,
+      unit: it.unit === 'piece' ? 'piece' : 'set',
+      rolls: Math.min(9999, rollsNum),
+      cost: num(it.cost),
+      market: num(it.market),
+      group: String(it.group || '').slice(0, 30),
+      thumb: String(it.thumb || '').slice(0, 200),
+      serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
+      form: it.form === 'single' || it.form === 'set' ? it.form : '',
+      images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
+    });
+  });
+  if (!items.length) {
+    return { ok: false, items: [], error: dropped ? '没有一条能识别的收藏' : '收藏是空的', dropped };
+  }
+  return { ok: true, items, error: '', dropped };
+}
+
+/**
+ * 导入收藏并落库。
+ * @param {Array} items parseImport 的产物
+ * @param {'merge'|'replace'} mode merge=跳过已存在，replace=整份替换
+ * @returns {{added: number, skipped: number, total: number}} 调用方据此提示
+ */
+function importHoldings(items, mode) {
+  // 统一返回 Promise：未登录时不抛同步异常，调用方才能用 .catch 提示
+  try {
+    requireLogin();
+  } catch (e) {
+    return Promise.reject(e);
+  }
+  const list = Array.isArray(items) ? items : [];
+  if (mode === 'replace') {
+    state.holdings = list.map((h) => Object.assign({}, h));
+    return persist().then(() => ({ added: list.length, skipped: 0, total: state.holdings.length }));
+  }
+  const seen = {};
+  (state.holdings || []).forEach((h) => { seen[holdingKey(h)] = true; });
+  let added = 0;
+  let skipped = 0;
+  list.forEach((h) => {
+    const k = holdingKey(h);
+    if (seen[k]) { skipped += 1; return; }
+    seen[k] = true;
+    state.holdings.push(Object.assign({}, h));
+    added += 1;
+  });
+  if (!added) return Promise.resolve({ added: 0, skipped, total: state.holdings.length });
+  return persist().then(() => ({ added, skipped, total: state.holdings.length }));
+}
+
 function persist() {
   const payload = state.holdings.map((h) => ({
     id: h.id,
@@ -372,4 +505,7 @@ module.exports = {
   clearUser,
   onSessionExpired,
   persist,
+  exportHoldings,
+  parseImport,
+  importHoldings,
 };

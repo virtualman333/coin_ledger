@@ -1,5 +1,6 @@
 const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
+const feature = require('../../utils/feature');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const privacy = require('../../utils/privacy');

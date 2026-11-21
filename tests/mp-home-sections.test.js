@@ -44,7 +44,8 @@ function setupWx() {
 
 let mockGet = () => Promise.resolve({});
 
-function loadHomePage() {
+function loadHomePage(opts) {
+  const plaza = !(opts && opts.plaza === false);
   install('utils/catalog.js', {
     total: 137, descCount: 1, seriesList: [], coins: [],
     money: (n) => String(n), signed: (n) => String(n),
@@ -57,6 +58,7 @@ function loadHomePage() {
     refresh: () => Promise.resolve(),
   });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
+  install('utils/feature.js', { plaza: plaza });
   install('utils/api.js', {
     BASE: 'https://example.test',
     get: (p) => mockGet(p),
@@ -110,6 +112,16 @@ test('行情板块：接口失败整块隐藏', async () => {
   p.data.metal = { gold: '1', silver: '2' };
   await p.loadMetal();
   assert.equal(p.data.metal, null);
+});
+
+test('晒单板块：广场关闭时连接口都不请求', async () => {
+  setupWx();
+  let called = 0;
+  mockGet = () => { called += 1; return Promise.resolve({ ok: true, items: [] }); };
+  const p = loadHomePage({ plaza: false });
+  await p.loadFeed();
+  assert.equal(called, 0, '广场下线后不该再拉 /api/shares');
+  assert.deepEqual(p.data.feed, []);
 });
 
 test('晒单板块：取前 3 条并归一化图片/时间', async () => {

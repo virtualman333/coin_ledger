@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const api = require('../../utils/api');
+const feature = require('../../utils/feature');
 
 Page({
   data: {
@@ -26,6 +27,7 @@ Page({
     heroImg: '',
     // 内容板块：实时行情 + 广场动态，失败时整块隐藏
     metal: null,
+    plazaOn: feature.plaza,   // 广场下线后连数据都不用拉
     feed: [],
   },
 
@@ -136,6 +138,7 @@ Page({
 
   /** 首页内容板块：广场最新晒单（前 3 条，失败即隐藏整块） */
   loadFeed() {
+    if (!feature.plaza) { this.setData({ feed: [] }); return Promise.resolve(); }
     return api.get('/api/shares?sort=new&limit=3').then((r) => {
       if (!r || !r.ok || !Array.isArray(r.items)) { this.setData({ feed: [] }); return; }
       const feed = r.items.slice(0, 3).map((s) => ({

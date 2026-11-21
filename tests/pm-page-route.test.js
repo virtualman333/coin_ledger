@@ -67,7 +67,11 @@ test('前端：pm 页有专属 pane，卡片点击进独立页而非弹窗', () 
   assert.match(js, /function goPm\(/);
   assert.match(js, /function renderPmDetail\(/);
   assert.match(js, /showPmCard\(code\)[\s\S]{0,160}goPm\(code\)/);
-  assert.ok(!/pm-modal-mask/.test(js.split('function showPmCard')[1] || ''), '详情页渲染不该再创建弹窗遮罩');
+  // 只检查 showPmCard 自己的函数体：app.js 后面还有别的弹层（如收藏备份）也用 pm-modal-mask
+  const rest = js.split('function showPmCard')[1] || '';
+  const cut = rest.search(/\nfunction /);
+  const body = cut >= 0 ? rest.slice(0, cut) : rest;
+  assert.ok(!/pm-modal-mask/.test(body), '详情页渲染不该再创建弹窗遮罩');
 });
 
 test('前端：pm 页 meta 用真实字段，且不写价格', () => {

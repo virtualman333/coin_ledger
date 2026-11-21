@@ -43,7 +43,12 @@
         <text class="menu-v">{{stats.kinds}} 个品种 · {{stats.rolls}} 套</text>
         <text class="menu-arrow">›</text>
       </view>
-      <view class="menu-item" hover-class="tap-hover" bindtap="goPlaza">
+      <view class="menu-item" hover-class="tap-hover" bindtap="onBackup">
+        <text class="menu-k">收藏备份</text>
+        <text class="menu-v">导出 / 导入，换手机不丢</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" wx:if="{{plazaOn}}" hover-class="tap-hover" bindtap="goPlaza">
         <text class="menu-k">藏品广场</text>
         <text class="menu-v">晒靓号 · 和藏友交流</text>
         <text class="menu-arrow">›</text>
