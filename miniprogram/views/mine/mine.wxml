@@ -37,7 +37,7 @@
     <!-- 收藏构成：一眼看出普通纪念币/钞/贵金属各收了多少，点了直接跳对应分类 -->
     <view class="mkinds" wx:if="{{stats.kinds}}">
       <view
-        class="mk"
+        class="mk {{item.n ? '' : 'is-zero'}}"
         wx:for="{{dist}}"
         wx:key="key"
         data-cat="{{item.key}}"
@@ -63,6 +63,7 @@
       </view>
       <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
         <text class="cell-k">更多功能</text>
+        <text class="cell-v">备份 · 关于 · 条款</text>
         <text class="cell-a">›</text>
       </view>
     </view>

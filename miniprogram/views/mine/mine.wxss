@@ -7,8 +7,9 @@
 
 .page {
   padding-top: 24rpx;
-  /* 底部让位给悬浮 tabBar（108rpx）+ 安全区 */
-  padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
+  /* 底部让位给悬浮 tabBar：20rpx 外边距 + 116rpx 高度 + 安全区。
+     196rpx(98px) 在 iPhone 上还差几 px，滚到底时最后一行会被压住一点 */
+  padding-bottom: calc(228rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 身份 ---------- */
@@ -264,6 +265,11 @@
   background: #ffffff;
 }
 
+/* 没有这类的藏品时整格压暗：0 也是信息，但别和数据抢注意力 */
+.mk.is-zero {
+  opacity: 0.5;
+}
+
 .mk-n {
   color: #8a8378;
   font-size: 38rpx;
@@ -303,8 +309,8 @@
 
 .qk-ico {
   display: flex;
-  width: 64rpx;
-  height: 64rpx;
+  width: 72rpx;
+  height: 72rpx;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
@@ -351,7 +357,7 @@
 .rc {
   display: inline-flex;
   flex-direction: column;
-  width: 150rpx;
+  width: 188rpx;
   margin-right: 14rpx;
   vertical-align: top;
 }
@@ -362,8 +368,8 @@
 
 .rc-img,
 .rc-ph {
-  width: 150rpx;
-  height: 150rpx;
+  width: 188rpx;
+  height: 172rpx;
   border-radius: 14rpx;
   background: #ffffff;
   border: 1rpx solid #ece7dc;
@@ -391,7 +397,7 @@
 }
 
 .rc-q {
-  margin-top: 4rpx;
+  margin-top: 6rpx;
   color: #8a8378;
   font-size: 20rpx;
 }
