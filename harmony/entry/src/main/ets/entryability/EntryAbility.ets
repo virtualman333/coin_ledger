@@ -29,12 +29,12 @@ export default class EntryAbility extends UIAbility {
       // 状态栏与页面同色，避免顶部出现一条割裂的白边
       try {
         const win = windowStage.getMainWindowSync();
-        win.setWindowBackgroundColor('#F6F4EF');
+        win.setWindowBackgroundColor('#F6F6F7');
         win.setWindowSystemBarProperties({
-          statusBarColor: '#F6F4EF',
-          statusBarContentColor: '#1D1D1F',
-          navigationBarColor: '#F6F4EF',
-          navigationBarContentColor: '#1D1D1F'
+          statusBarColor: '#F6F6F7',
+          statusBarContentColor: '#1C1C1E',
+          navigationBarColor: '#F6F6F7',
+          navigationBarContentColor: '#1C1C1E'
         }).catch((): void => {
         });
       } catch (e) {

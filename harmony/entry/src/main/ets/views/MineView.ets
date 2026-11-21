@@ -189,6 +189,31 @@ export struct MineView {
   }
 
   @Builder
+  featureLine(title: string, hint: string) {
+    Row({ space: 8 }) {
+      Column()
+        .width(5)
+        .height(5)
+        .borderRadius(3)
+        .backgroundColor(Theme.gold)
+        .margin({ top: 7 })
+      Column({ space: 2 }) {
+        Text(title)
+          .fontSize(13)
+          .fontColor(Theme.textStrong)
+        Text(hint)
+          .fontSize(12)
+          .fontColor(Theme.muted)
+          .lineHeight(18)
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+    }
+    .width('100%')
+    .alignItems(VerticalAlign.Top)
+  }
+
+  @Builder
   cellRow(title: string, value: string, thumbs: string[], route: string, cat: string) {
     Row({ space: 10 }) {
       Text(title)
@@ -547,7 +572,28 @@ export struct MineView {
           .backgroundColor(Theme.card)
           .alignItems(HorizontalAlign.Start)
 
+          // 未登录也先把「能做什么」讲清楚，避免页面大面积留白
+          Column({ space: 10 }) {
+            Text('藏币录能做什么')
+              .fontSize(14)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(Theme.text)
+            this.featureLine('查全 ' + this.totalCoins + ' 个品种', '按年份、系列、面额筛选，含发行量与图案说明')
+            this.featureLine('记数量与成本', '面值、投入、市值、浮动自动算，支持多套与号码')
+            this.featureLine('导出与备份', 'CSV 导出、拍照数币，换设备也能接着记')
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+          .padding(16)
+          .margin({ top: 12 })
+          .borderRadius(Theme.radiusM)
+          .backgroundColor(Theme.card)
+
           Column() {
+            this.cellRow('藏品广场', '', [], Routes.PLAZA, '藏友晒单与号码')
+            Divider().color(Theme.lineSoft)
+            this.cellRow('收藏备份', '', [], Routes.BACKUP, '导出 CSV / 导入恢复')
+            Divider().color(Theme.lineSoft)
             this.cellRow('更多功能', '', [], Routes.MORE_TOOLS, '')
           }
           .width('100%')

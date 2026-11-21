@@ -95,18 +95,14 @@ export struct PrivacyPage {
       Scroll() {
         Column({ space: 10 }) {
           Column({ space: 4 }) {
-            Text('藏币录隐私政策')
-              .fontSize(21)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(Theme.text)
             Text('生效日期：2026 年 1 月 1 日 · 版本 v1')
-              .fontSize(10)
+              .fontSize(12)
               .fontColor(Theme.faint)
             Text('我们只收集提供服务所必需的信息。未同意本政策前，应用不会联网、不会读取账号与账本缓存。')
-              .fontSize(11)
+              .fontSize(13)
               .fontColor(Theme.muted)
-              .lineHeight(19)
-              .margin({ top: 6 })
+              .lineHeight(22)
+              .margin({ top: 4 })
           }
           .justifyContent(FlexAlign.Start)
           .width('100%')
@@ -119,7 +115,7 @@ export struct PrivacyPage {
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.text)
               Text(s.body)
-                .fontSize(11)
+                .fontSize(13)
                 .fontColor('#5A5A5A')
                 .lineHeight(20)
             }
