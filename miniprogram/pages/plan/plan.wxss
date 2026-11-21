@@ -53,6 +53,8 @@
   font-size:20rpx;font-weight:600;background:#fbf1d8;color:#9a6b1f
 }
 
+.more{padding:26rpx 0 6rpx;color:#8a8378;font-size:22rpx;text-align:center}
+
 .foot{margin-top:10rpx}
 .foot-src{display:block;color:#8a8378;font-size:20rpx;line-height:1.6}
 .foot-btn{

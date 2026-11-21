@@ -56,7 +56,8 @@ Page({
     loggedIn: false,
     totalCoins: 0,
     tab: 'coin',                 // coin=普通纪念币（钞） / pm=贵金属
-    pmYears: [],                 // 来自统一 API 的贵金属计划
+    pmYears: [],                 // 当前已渲染的贵金属计划（分批）
+    pmAllCount: 0,               // 贵金属计划总年数
     plansFromApi: null,
     plansError: '',              // wxml 在用，之前没声明，首帧是 undefined
     detail: null,                // 计划项详情弹层
@@ -84,7 +85,7 @@ Page({
   buildPm() {
     const src = this.data.plansFromApi && this.data.plansFromApi.planPm;
     if (!src || !Array.isArray(src.years)) return;
-    const pmYears = src.years.slice(0, 20).map((y) => ({
+    const all = src.years.map((y) => ({
       year: y.year,
       total: y.items.length,
       pieces: y.items.reduce((a, it) => a + (Number(it.pieces) || 0), 0),
@@ -97,7 +98,18 @@ Page({
         announce: it.announce || '',
       })),
     }));
-    this.setData({ pmYears });
+    this._pmAll = all;
+    // 首屏先渲染 2 年，滚到底再续 3 年（贵金属项目上千条，一次性渲染会卡）
+    const shown = Math.min(this.data.pmYears.length || 2, all.length);
+    this.setData({ pmAllCount: all.length, pmYears: all.slice(0, shown) });
+  },
+
+  /** 贵金属分段滚到底继续加载 */
+  onReachBottom() {
+    if (this.data.tab !== 'pm') return;
+    const all = this._pmAll || [];
+    if (this.data.pmYears.length >= all.length) return;
+    this.setData({ pmYears: all.slice(0, Math.min(this.data.pmYears.length + 3, all.length)) });
   },
 
   retryPlans() {

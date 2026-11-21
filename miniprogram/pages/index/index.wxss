@@ -8,7 +8,7 @@
 /* ---------- 顶部品牌 ---------- */
 .hero {
   position: relative;
-  padding: 38rpx 34rpx 104rpx;
+  padding: 38rpx 34rpx 36rpx;
   border-radius: 28rpx;
   overflow: hidden;
   background: linear-gradient(135deg, #221a12 0%, #3c2e1c 58%, #5d4726 100%);
@@ -118,7 +118,7 @@
 .ledger {
   position: relative;
   z-index: 2;
-  margin: -48rpx 10rpx 0;
+  margin: 20rpx 0 0;
   padding: 28rpx 30rpx 24rpx;
   border-radius: 24rpx;
   background: #ffffff;
@@ -545,10 +545,6 @@
   font-size: 21rpx;
 }
 
-.foot-contact {
-  color: #6b6559;
-  font-size: 20rpx;
-}
 
 .foot-warn {
   display: block;

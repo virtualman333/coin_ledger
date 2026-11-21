@@ -122,7 +122,7 @@
 <view class="list" wx:if="{{viewMode === 'list' && category !== 'pm'}}">
   <view
     class="row"
-    wx:for="{{rows}}"
+    wx:for="{{shownRows}}"
     wx:key="id"
     hover-class="row-hover"
     data-id="{{item.id}}"
@@ -158,6 +158,8 @@
   <view class="empty" wx:if="{{count === 0}}">
     {{onlyOwn ? '还没有收藏到符合条件的东西，先取消「只看已收」试试' : '没有匹配的品种，换个关键词试试'}}
   </view>
+  <view class="pm-end" wx:if="{{count > 0 && shownRows.length < rows.length}}">上拉加载更多</view>
+  <view class="pm-end" wx:elif="{{count > 0}}">已显示全部 {{count}} 项</view>
 </view>
 
 <!-- 按系列视图：跟随顶部品类 tab，一次只展示一类，点卡片回顺序清单并定位 -->

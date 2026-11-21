@@ -36,6 +36,8 @@
         <text class="badge done">已发行</text>
       </view>
     </view>
+    <view class="more" wx:if="{{pmYears.length < pmAllCount}}">上拉加载更多</view>
+    <view class="more" wx:elif="{{pmYears.length}}">已经到底了</view>
   </block>
 
   <block wx:if="{{tab === 'coin' && has}}">

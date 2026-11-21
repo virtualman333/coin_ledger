@@ -195,13 +195,6 @@ Page({
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id });
   },
 
-  copyContact() {
-    wx.setClipboardData({
-      data: 'virtualman2001',
-      success: () => wx.showToast({ title: '微信号已复制', icon: 'success' }),
-    });
-  },
-
   onShareAppMessage() {
     return share.appMessage('home');
   },

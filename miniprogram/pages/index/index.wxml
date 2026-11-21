@@ -149,7 +149,6 @@
 
   <view class="foot-note">
     <text class="foot-warn-note">价格均为参考估算，不构成投资建议</text>
-    <text class="foot-contact" hover-class="tap-hover" bindtap="copyContact">微信 virtualman2001</text>
     <text wx:if="{{syncTip}}" class="foot-warn">{{syncTip}}</text>
   </view>
 </view>

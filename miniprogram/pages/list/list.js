@@ -13,6 +13,8 @@ Page({
     searchActive: false,         // 未点击前不渲染 input，彻底避免自动弹输入法
     searchFocus: false,
     rows: [],
+    shownRows: [],   // 分批渲染：137 个品种一次全铺会明显卡住
+    rowLimit: 40,
     category: 'coin',
     allTabs: [], pmTabs: [],   // 两套完全独立的系列：普通币/纪念钞 vs 贵金属发行项目
     categories: [{ code: 'coin', name: '普通纪念币' }, { code: 'note', name: '纪念钞' }, { code: 'pm', name: '贵金属' }],
@@ -464,7 +466,14 @@ Page({
   },
 
   onReachBottom() {
-    if (this.data.category === 'pm') this.loadMorePm();
+    if (this.data.category === 'pm') {
+      this.loadMorePm();
+      return;
+    }
+    const rows = this.data.rows || [];
+    if (this.data.shownRows.length >= rows.length) return;
+    const limit = (this.data.rowLimit || 40) + 40;
+    this.setData({ rowLimit: limit, shownRows: rows.slice(0, limit) });
   },
 
   /** 点贵金属卡片：进详情页（与普通币详情同款布局） */
@@ -516,6 +525,7 @@ Page({
     }));
     this.setData({
       rows,
+      shownRows: rows.slice(0, this.data.rowLimit || 40),
       count: rows.length,
       ownedCount: rows.filter((r) => r.owned).length,
     });
