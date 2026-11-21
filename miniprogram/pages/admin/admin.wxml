@@ -1,10 +1,10 @@
-<!-- 弹层打开时锁住页面滚动：三个 .mask 没加 catchtouchmove（加了会让 .sheet 的
-     overflow-y:auto 失效、滚不动），改用 page-style 关掉页面滚动来防穿透 -->
-<page-meta page-style="{{editing || editingSeries || fbDetail ? 'overflow:hidden' : ''}}"></page-meta>
+<!-- 弹层打开时锁住页面滚动：四个弹层都没加 catchtouchmove（加了会让弹层内部的
+     滚动区失效、滚不动），统一用 page-style 关掉页面滚动来防穿透 -->
+<page-meta page-style="{{editing || editingSeries || fbDetail || vsDetail ? 'overflow:hidden' : ''}}"></page-meta>
 
 <view class="page">
-  <!-- 概览：三个数字都能点，直达对应模块 -->
-  <view class="stats">
+  <!-- 概览：三个数字都能点，直达对应模块。只在首页显示——进模块后它白占 1/3 屏 -->
+  <view class="stats" wx:if="{{viewMode === 'home'}}">
     <view class="stat" data-k="users" bindtap="statTap" hover-class="stat-hover" hover-stay-time="80" aria-role="button" aria-label="进入用户管理">
       <text class="s-num">{{userCount}}</text>
       <text class="s-k">用户</text>
@@ -86,8 +86,8 @@
         <text class="cc-name">{{item.name}}</text>
         <text class="cc-count">{{item.count}} {{item.unit}}</text>
       </view>
-      <view class="cc-sub">我的藏品 {{item.holdings}} 条</view>
-      <view class="cc-bar"><view class="cc-fill" style="width:{{item.code === 'pm' ? 100 : 20}}%"></view></view>
+      <view class="cc-sub">我的藏品 {{item.holdings}} 条<text wx:if="{{item.shareText}}"> · 占比 {{item.shareText}}</text></view>
+      <view class="cc-bar"><view class="cc-fill" style="width:{{item.pct}}%"></view></view>
       <view class="cc-sub" wx:if="{{item.code === 'pm'}}">缩略图 {{item.withThumb}} · 有发行量 {{item.withMintage}}</view>
     </view>
   </block>
@@ -207,6 +207,78 @@
     </view>
   </block>
 
+  <!-- 访客统计 -->
+  <block wx:if="{{tab === 'visitors'}}">
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsClient === item.v ? 'on' : ''}}"
+        wx:for="{{vsClients}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsClient"
+      >{{item.t}}</text>
+    </view>
+
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsRange === item.v ? 'on' : ''}}"
+        wx:for="{{vsRanges}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsRange"
+      >{{item.t}}</text>
+    </view>
+
+    <view class="vs-cards" wx:if="{{visitors}}">
+      <view class="vsc"><text class="vsn">{{visitors.rangePv}}</text><text class="vsk">访问次数</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.rangeUv}}</text><text class="vsk">独立 IP</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.todayPv}}</text><text class="vsk">今日 PV</text></view>
+      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.pv}}</text><text class="vsk">小程序 PV</text></view>
+    </view>
+    <text class="vs-note" wx:if="{{visitors}}">
+      区间 {{visitors.range.from}} 至 {{visitors.range.to}} · 累计 {{visitors.allPv}} 次访问
+    </text>
+
+    <view class="vs-bar">
+      <text
+        class="vchip {{vsView === item.v ? 'on' : ''}}"
+        wx:for="{{vsViews}}"
+        wx:key="v"
+        data-v="{{item.v}}"
+        bindtap="setVsView"
+      >{{item.t}}</text>
+      <text class="vs-hint">点一行看明细</text>
+    </view>
+
+    <view class="loading" wx:if="{{vsLoading}}">加载中…</view>
+    <view class="vs-err" wx:elif="{{vsError}}" bindtap="loadVisitors">{{vsError}}，点击重试</view>
+    <view class="card list" wx:elif="{{visRows.length}}">
+      <view
+        class="vr"
+        wx:for="{{visRows}}"
+        wx:key="key"
+        data-kind="{{item.kind}}"
+        data-key="{{item.key}}"
+        bindtap="openVsDetail"
+        hover-class="tap-hover"
+      >
+        <view class="vr-main">
+          <view class="vr-title">
+            <text>{{item.main}}</text>
+            <text class="vsrc {{item.srcCls}}">{{item.src}}</text>
+            <text class="vdev">{{item.device}}</text>
+          </view>
+          <text class="vr-meta">{{item.meta}}</text>
+        </view>
+        <view class="vr-right">
+          <text class="vr-time">{{item.sub}}</text>
+          <text class="vr-ip">{{item.ip}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty" wx:else>还没有访客记录</view>
+  </block>
+
   <view class="foot-tip">与网页版管理端共用同一套数据</view>
 </view>
 
@@ -288,80 +360,11 @@
   </view>
 </view>
 
-  <!-- 访客统计 -->
-  <block wx:if="{{tab === 'visitors'}}">
-    <view class="vs-bar">
-      <text
-        class="vchip {{vsClient === item.v ? 'on' : ''}}"
-        wx:for="{{vsClients}}"
-        wx:key="v"
-        data-v="{{item.v}}"
-        bindtap="setVsClient"
-      >{{item.t}}</text>
-    </view>
-
-    <view class="vs-bar">
-      <text
-        class="vchip {{vsRange === item.v ? 'on' : ''}}"
-        wx:for="{{vsRanges}}"
-        wx:key="v"
-        data-v="{{item.v}}"
-        bindtap="setVsRange"
-      >{{item.t}}</text>
-    </view>
-
-    <view class="vs-cards" wx:if="{{visitors}}">
-      <view class="vsc"><text class="vsn">{{visitors.rangePv}}</text><text class="vsk">访问次数</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.rangeUv}}</text><text class="vsk">独立 IP</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.todayPv}}</text><text class="vsk">今日 PV</text></view>
-      <view class="vsc"><text class="vsn">{{visitors.byClient.mp.pv}}</text><text class="vsk">小程序 PV</text></view>
-    </view>
-    <text class="vs-note" wx:if="{{visitors}}">
-      区间 {{visitors.range.from}} 至 {{visitors.range.to}} · 累计 {{visitors.allPv}} 次访问
-    </text>
-
-    <view class="vs-bar">
-      <text
-        class="vchip {{vsView === item.v ? 'on' : ''}}"
-        wx:for="{{vsViews}}"
-        wx:key="v"
-        data-v="{{item.v}}"
-        bindtap="setVsView"
-      >{{item.t}}</text>
-      <text class="vs-hint">点一行看明细</text>
-    </view>
-
-    <view class="loading" wx:if="{{vsLoading}}">加载中…</view>
-    <view class="vs-err" wx:elif="{{vsError}}" bindtap="loadVisitors">{{vsError}}，点击重试</view>
-    <view class="card list" wx:elif="{{visRows.length}}">
-      <view
-        class="vr"
-        wx:for="{{visRows}}"
-        wx:key="key"
-        data-kind="{{item.kind}}"
-        data-key="{{item.key}}"
-        bindtap="openVsDetail"
-        hover-class="tap-hover"
-      >
-        <view class="vr-main">
-          <view class="vr-title">
-            <text>{{item.main}}</text>
-            <text class="vsrc {{item.srcCls}}">{{item.src}}</text>
-            <text class="vdev">{{item.device}}</text>
-          </view>
-          <text class="vr-meta">{{item.meta}}</text>
-        </view>
-        <view class="vr-right">
-          <text class="vr-time">{{item.sub}}</text>
-          <text class="vr-ip">{{item.ip}}</text>
-        </view>
-      </view>
-    </view>
-    <view class="empty" wx:else>还没有访客记录</view>
-  </block>
 
   <!-- 访客明细弹层 -->
-  <view class="vdd-mask" wx:if="{{vsDetail}}" catchtouchmove="noop">
+  <!-- 不要再加 catchtouchmove：它会连带取消 .vdd-list 这个 scroll-view 的内部滚动，
+       页面滚动改由上面的 page-meta 关掉 -->
+  <view class="vdd-mask" wx:if="{{vsDetail}}">
     <view class="vdd-sheet" catchtap="noop">
       <view class="vdd-head">
         <text class="vdd-title">{{vsDetail.title}}</text>

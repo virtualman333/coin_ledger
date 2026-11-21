@@ -11,7 +11,7 @@
     <view class="usum">
       <view class="ucell">
         <text class="uk">品种</text>
-        <text class="uv">{{summary.kinds}}</text>
+        <text class="uv">{{summary.kinds}}<text class="uk-in" wx:if="{{summary.pmKinds}}">+{{summary.pmKinds}}</text></text>
       </view>
       <view class="ucell">
         <text class="uk">成本</text>
@@ -28,7 +28,8 @@
     </view>
   </view>
 
-  <view class="tip" wx:if="{{!loading}}">共 {{items.length}} 条持仓 · 仅管理员可见</view>
+  <view class="tip" wx:if="{{!loading}}">共 {{items.length}} 条持仓 · 仅管理员可见<text wx:if="{{summary.pmKinds}}">
+其中 {{summary.pmKinds}} 条贵金属不计入市值与盈亏（成本 ¥{{summary.pmCostText}}）</text></view>
 
   <view class="card list" wx:if="{{items.length}}">
     <view class="hrow" wx:for="{{items}}" wx:key="id">
@@ -38,12 +39,18 @@
       </view>
       <view class="hmain">
         <text class="hname">{{item.name}}</text>
-        <text class="hsub">{{item.qtyLabel}} · 面值 ¥{{item.faceText}}</text>
+        <text class="hsub">{{item.qtyLabel}}<text wx:if="{{item.faceText}}"> · 面值 ¥{{item.faceText}}</text><text wx:else> · 贵金属</text></text>
         <text class="hmeta">成本 ¥{{item.costText}} · 均价 ¥{{item.unitCostText}}</text>
       </view>
       <view class="hright">
-        <text class="hval">¥{{item.marketText}}</text>
-        <text class="hpnl {{item.pnlCls}}">{{item.pnlText}}</text>
+        <block wx:if="{{item.isPm}}">
+          <text class="hval is-none">—</text>
+          <text class="hpnl is-none">不计估值</text>
+        </block>
+        <block wx:else>
+          <text class="hval">¥{{item.marketText}}</text>
+          <text class="hpnl {{item.pnlCls}}">{{item.pnlText}}</text>
+        </block>
       </view>
     </view>
   </view>

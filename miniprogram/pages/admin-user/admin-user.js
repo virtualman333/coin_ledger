@@ -41,8 +41,13 @@ Page({
         const list = res.holdings || [];
         let cost = 0;
         let market = 0;
+        let pmKinds = 0;
+        let pmCost = 0;
         const items = list.map((h) => {
           const coin = cat.byName[h.name];
+          // 本地 catalog 只有普通币/纪念钞，查不到的（贵金属）既没有面值也没有市值；
+          // 以前直接按 0 记账，会让管理员看到「市值 ¥0 / 盈亏 -¥8000」这种假数据
+          const isPm = !coin;
           const rolls = Number(h.rolls) || 1;
           const size = coin ? (coin.setSizeBase || coin.setSize || 1) : 1;
           const qty = rolls * size;
@@ -50,14 +55,20 @@ Page({
           const c = Number(h.cost) || 0;
           const m = Number(h.market) || 0;
           cost += c;
-          market += m;
+          if (isPm) {
+            pmKinds += 1;
+            pmCost += c;
+          } else {
+            market += m;
+          }
           const pnl = Math.round((m - c) * 100) / 100;
           return {
             id: h.id,
             name: h.name,
+            isPm: isPm,
             imgUrl: coin ? (coin.smallUrl || coin.thumbUrl || coin.imgUrl) : '',
             qtyLabel: qty + ' ' + unit,
-            faceText: cat.money((coin ? (coin.setFaceBase || coin.setFace) : 0) * rolls),
+            faceText: coin ? cat.money((coin.setFaceBase || coin.setFace) * rolls) : '',
             costText: cat.money(c),
             marketText: cat.money(m),
             unitCostText: cat.money(Math.round(c / rolls)),
@@ -65,7 +76,8 @@ Page({
             pnlCls: pnl >= 0 ? 'up' : 'down',
           };
         });
-        const pnl = Math.round((market - cost) * 100) / 100;
+        // 市值/盈亏只统计能估值的品种；贵金属成本另算，不参与盈亏
+        const pnl = Math.round((market - (cost - pmCost)) * 100) / 100;
         const nick = user.nickname || user.name || '';
         this.setData({
           loading: false,
@@ -75,7 +87,9 @@ Page({
           createdText: user.createdAt ? String(user.createdAt).slice(0, 10).replace(/-/g, '/') : '—',
           items: items,
           summary: {
-            kinds: items.length,
+            kinds: items.length - pmKinds,
+            pmKinds: pmKinds,
+            pmCostText: cat.money(pmCost),
             costText: cat.money(cost),
             marketText: cat.money(market),
             pnlText: (pnl >= 0 ? '+' : '-') + '¥' + cat.money(Math.abs(pnl)),
