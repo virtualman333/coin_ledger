@@ -108,12 +108,15 @@ test('列表页走 baseline UI，主页面只允许既定暖色，都不用渐�
     assert.match(wxss, /@import "\.\.\/\.\.\/styles\/ui\.wxss"/, slug + ' 没引入 baseline UI');
   }
   const mine = read('pages/mine/mine.wxss');
-  assert.ok(!/gradient/i.test(mine), '主页面不该再用渐变');
+  // 渐变只允许出现在主 CTA 按钮上（与全站 .btn-primary 保持一致），其余地方不许
+  const grads = (mine.match(/linear-gradient\([^)]*\)/g) || []);
+  assert.equal(grads.length, 2, '渐变只该出现在两个主按钮上，实际：' + grads.length);
+  assert.ok(grads.every((g) => g.includes('#b98f43')), '渐变必须是全站的品牌金');
   // 只允许涨跌这两个语义色，其余一律中性
-  // 暖色系：近黑、两级灰、纸白、描边、唯一品牌金，加涨跌两个语义色
-  const ALLOWED = ['#1a1714', '#7a7468', '#b3ab9c', '#8a7a5c', '#6b604c',
-    '#faf8f3', '#f1ece2', '#f1eee7', '#e8e3d8', '#f0ece3',
-    '#b98f43', '#ffffff', '#b3402f', '#1f7a4d'];
+  // 只允许全站既有 token：主/次/弱三级文字、纸白、浅金底、线色、品牌金、涨跌语义色
+  const ALLOWED = ['#2b2926', '#6b6559', '#8a8378', '#8a6420',
+    '#ffffff', '#f6efe0', '#f6f3ec', '#ece7dc', '#f2eee4', '#e6dfd0', '#faf8f3',
+    '#b98f43', '#d9b364', '#9c5850', '#3f7050'];
   const colors = (mine.match(/#[0-9a-fA-F]{6}/g) || []).filter((c) => !ALLOWED.includes(c.toLowerCase()));
   assert.deepEqual([...new Set(colors)], [], '主页面出现了计划外的颜色');
 });

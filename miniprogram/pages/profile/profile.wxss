@@ -33,8 +33,8 @@
   width: 160rpx;
   height: 160rpx;
   border-radius: 999rpx;
-  background: #f1eee7;
-  color: #7a7468;
+  background: #f6efe0;
+  color: #6b6559;
   font-size: 56rpx;
   font-weight: 500;
   line-height: 160rpx;
@@ -52,12 +52,12 @@
   min-height: 108rpx;
   align-items: center;
   gap: 16rpx;
-  border-bottom: 1rpx solid #f0ece3;
+  border-bottom: 1rpx solid #ece7dc;
 }
 
 .f-k {
   width: 150rpx;
-  color: #1a1714;
+  color: #2b2926;
   font-size: 28rpx;
   flex: 0 0 auto;
 }
@@ -65,17 +65,17 @@
 .f-v {
   flex: 1;
   min-width: 0;
-  color: #1a1714;
+  color: #2b2926;
   font-size: 27rpx;
   text-align: right;
 }
 
 .f-ro {
-  color: #7a7468;
+  color: #6b6559;
 }
 
 .ph {
-  color: #b3ab9c;
+  color: #8a8378;
 }
 
 .link-row {

@@ -25,7 +25,7 @@
   width: 92rpx;
   height: 92rpx;
   border-radius: 999rpx;
-  background: #f1eee7;
+  background: #f6efe0;
   flex: 0 0 auto;
 }
 
@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8a7a5c;
+  color: #8a6420;
   font-size: 36rpx;
   font-weight: 500;
 }
@@ -46,7 +46,7 @@
 }
 
 .me-name {
-  color: #1a1714;
+  color: #2b2926;
   font-size: 36rpx;
   font-weight: 600;
   line-height: 1.2;
@@ -57,30 +57,30 @@
 }
 
 .me-sub {
-  color: #7a7468;
+  color: #6b6559;
   font-size: 22rpx;
 }
 
 .me-edit {
   padding: 9rpx 22rpx;
-  border: 1rpx solid #e8e3d8;
+  border: 1rpx solid #e6dfd0;
   border-radius: 999rpx;
-  color: #6b604c;
+  color: #8a6420;
   font-size: 22rpx;
   flex: 0 0 auto;
 }
 
 /* ---------- 主视觉 ---------- */
 .hero {
-  padding: 30rpx 32rpx 28rpx;
-  border: 1rpx solid #f1ece2;
-  border-radius: 26rpx;
-  background: #faf8f3;
+  padding: 28rpx 28rpx 26rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  box-shadow: 0 3rpx 16rpx rgba(74, 55, 20, 0.06);
 }
 
 .hero-k {
   display: block;
-  color: #7a7468;
+  color: #6b6559;
   font-size: 22rpx;
 }
 
@@ -93,17 +93,17 @@
 }
 
 .hero-cur {
-  color: #1a1714;
+  color: #2b2926;
   font-size: 30rpx;
   font-weight: 500;
 }
 
 .hero-v {
-  color: #1a1714;
-  font-size: 72rpx;
-  font-weight: 500;
-  line-height: 1.04;
-  letter-spacing: -2rpx;
+  color: #2b2926;
+  font-size: 54rpx;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -1rpx;
   font-variant-numeric: tabular-nums;
 }
 
@@ -114,13 +114,13 @@
 }
 
 /* 涨跌是语义色，不是装饰色 */
-.hero-d.up { color: #b3402f; }
-.hero-d.down { color: #1f7a4d; }
+.hero-d.up { color: #9c5850; }
+.hero-d.down { color: #3f7050; }
 
 .hero-sub {
   display: block;
   margin-top: 12rpx;
-  color: #7a7468;
+  color: #6b6559;
   font-size: 21rpx;
 }
 
@@ -142,7 +142,7 @@
 .hp-seg {
   flex: 1;
   border-radius: 2rpx;
-  background: rgba(26, 23, 20, 0.09);
+  background: #f2eee4;
 }
 
 .hp-seg.on {
@@ -150,7 +150,7 @@
 }
 
 .hp-t {
-  color: #7a7468;
+  color: #6b6559;
   font-size: 20rpx;
   flex: 0 0 auto;
 }
@@ -162,7 +162,7 @@
 
 .he-t {
   display: block;
-  color: #1a1714;
+  color: #2b2926;
   font-size: 32rpx;
   font-weight: 600;
   letter-spacing: -0.3rpx;
@@ -171,7 +171,7 @@
 .he-s {
   display: block;
   margin-top: 10rpx;
-  color: #7a7468;
+  color: #6b6559;
   font-size: 23rpx;
 }
 
@@ -180,9 +180,10 @@
   margin-top: 24rpx;
   padding: 14rpx 32rpx;
   border-radius: 999rpx;
-  background: #1a1714;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
   color: #ffffff;
   font-size: 25rpx;
+  font-weight: 600;
 }
 
 .he-primary {
@@ -191,10 +192,10 @@
   margin: 28rpx 0 0;
   padding: 0;
   border-radius: 999rpx;
-  background: #1a1714;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
   color: #ffffff;
   font-size: 27rpx;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 84rpx;
 }
 
@@ -204,16 +205,23 @@
 
 /* ---------- 两行入口 ---------- */
 .rows {
-  margin-top: 22rpx;
-  border-top: 1rpx solid #f0ece3;
+  margin-top: 20rpx;
+  padding: 0 24rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  box-shadow: 0 3rpx 16rpx rgba(74, 55, 20, 0.06);
 }
 
 .row {
   display: flex;
-  min-height: 108rpx;
+  min-height: 104rpx;
   align-items: center;
   gap: 14rpx;
-  border-bottom: 1rpx solid #f0ece3;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .row-hover {
@@ -223,18 +231,18 @@
 .row-k {
   flex: 1;
   min-width: 0;
-  color: #1a1714;
+  color: #2b2926;
   font-size: 28rpx;
 }
 
 .row-v {
-  color: #7a7468;
+  color: #6b6559;
   font-size: 23rpx;
   flex: 0 0 auto;
 }
 
 .row-a {
-  color: #b3ab9c;
+  color: #8a8378;
   font-size: 32rpx;
   line-height: 1;
   flex: 0 0 auto;
@@ -252,7 +260,7 @@
   margin-left: -16rpx;
   border: 2rpx solid #ffffff;
   border-radius: 999rpx;
-  background: #f1eee7;
+  background: #f6efe0;
 }
 
 .rt-img:first-child {
@@ -262,7 +270,7 @@
 /* ---------- 页脚 ---------- */
 .foot {
   margin-top: 22rpx;
-  color: #b3ab9c;
+  color: #8a8378;
   font-size: 20rpx;
   text-align: center;
 }
