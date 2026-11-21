@@ -29,13 +29,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "E:/藏币录鸿蒙Key/藏币录—调试.cer",
-          "keyAlias": "coin_ledger",
-          "keyPassword": "000000192E2D52B582B62A5CFBF98F252C25C29E35080C10876F262B88A271E6E9D149B9BE1AA03C08",
-          "profile": "E:/藏币录鸿蒙Key/coin_ledgerDebug.p7b",
-          "signAlg": "SHA256withECDSA",
           "storeFile": "E:/藏币录鸿蒙Key/coin_key.p12",
-          "storePassword": "000000193877FA5A8EF2545922AE44F964DD9CF6FC5388C2951A90BFD0A3E16355E8117EA20EA69943"
+          "storePassword": "0000001905F8D59AB9CBF96B50414A224230FE095E690A1481971620568365D4A9BEC00EA04AF96D09",
+          "keyAlias": "coin_ledger",
+          "keyPassword": "00000019B7D13B3681E2D7FF34B53793E68BDBFE04A682A38DBC75C8B3B9279B07586206D70FADE989",
+          "signAlg": "SHA256withECDSA",
+          "profile": "E:/藏币录鸿蒙Key/coinRelease.p7b",
+          "certpath": "E:/藏币录鸿蒙Key/藏币录-发布.cer"
         }
       }
     ]

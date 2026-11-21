@@ -447,6 +447,34 @@ async function huaweiUnbind(uid) {
  * @param {boolean} secure 是否 HTTPS
  * @returns {{body: object, cookie: string}} 响应体与清除用 Cookie
  */
+/**
+ * 注销账号：删除账号行与账本。cl_holdings 有外键 CASCADE，随账号一起清掉。
+ * 最后一个管理员不允许注销，避免后台锁死。
+ *
+ * @param {object} me 当前用户
+ * @param {boolean} secure 是否 HTTPS（决定清 Cookie 的属性）
+ * @returns {Promise<{body: object, cookie: string}>}
+ */
+async function deleteAccount(me, secure) {
+  const d = store.load();
+  const admins = d.users.filter((u) => u.role === 'admin');
+  if (me.role === 'admin' && admins.length <= 1) {
+    throw httpError(400, '唯一的管理员账号不能注销');
+  }
+  await store.commit((draft) => {
+    draft.users = draft.users.filter((u) => u.id !== me.id);
+    if (draft.holdings) delete draft.holdings[me.id];
+    if (Array.isArray(draft.shares)) {
+      draft.shares = draft.shares.filter((s) => !s || s.uid !== me.id);
+    }
+    return true;
+  });
+  return {
+    body: { ok: true },
+    cookie: auth.sessionCookie('', { clear: true, secure })
+  };
+}
+
 function logout(secure) {  return {
     body: { ok: true },
     cookie: auth.sessionCookie('', { clear: true, secure })
@@ -530,8 +558,12 @@ async function updateProfile(me, body) {
     patch.nickname = nick;
   }
 
-  if (body.avatar === '') {
-    // 显式传空 = 清除头像
+  /**
+   * 头像清除必须显式说清楚（avatarClear: true）。
+   * 历史坑：老客户端「只改昵称」时也会带 avatar:''，服务端把它当清除指令，
+   * 于是点一次保存本站头像就没了。所以 avatar:'' 现在一律忽略，不再当清除。
+   */
+  if (body.avatarClear === true) {
     if (me.avatar) {
       try { fs.unlinkSync(path.join(PUBLIC_DIR, 'avatar', me.avatar)); } catch (e) { /* ignore */ }
     }
@@ -578,6 +610,7 @@ module.exports = {
   huaweiLogin: huaweiLogin,
   huaweiBind: huaweiBind,
   huaweiUnbind: huaweiUnbind,
+  deleteAccount: deleteAccount,
   logout: logout,
   changePassword: changePassword,
   rename: rename,

@@ -1,4 +1,5 @@
 import { promptAction } from '@kit.ArkUI';
+import { Api } from '../utils/api';
 import { Config } from '../utils/config';
 import { Nav, RouteParam, Routes } from '../utils/router';
 import { Store } from '../utils/store';
@@ -67,6 +68,33 @@ export struct MoreToolsPage {
       return;
     }
     Nav.push(this.stack, route, new RouteParam());
+  }
+
+  /** 应用市场合规：账号自助注销（二次确认 + 服务端删除账号与账本） */
+  private deleteAccount(): void {
+    AlertDialog.show({
+      title: '注销账号',
+      message: '将永久删除你的账号、藏品与成本记录，且无法恢复。',
+      primaryButton: {
+        value: '再想想',
+        action: (): void => {
+        }
+      },
+      secondaryButton: {
+        value: '确认注销',
+        fontColor: Theme.up,
+        action: (): void => {
+          Api.post<Object>('/api/account/delete', new Object()).then((): void => {
+            Store.logout().then((): void => {
+              promptAction.showToast({ message: '账号已注销', duration: 1600 });
+              Nav.pop(this.stack);
+            });
+          }).catch((e: Error): void => {
+            promptAction.showToast({ message: e.message || '注销失败，请稍后再试', duration: 1800 });
+          });
+        }
+      }
+    });
   }
 
   private logout(): void {
@@ -255,6 +283,27 @@ export struct MoreToolsPage {
           }
 
           if (this.loggedIn) {
+            Row() {
+              Text('注销账号')
+                .fontSize(15)
+                .fontColor(Theme.muted)
+              Blank()
+              Text('永久删除账号与账本 ›')
+                .fontSize(12)
+                .fontColor(Theme.faint)
+            }
+            .width('100%')
+            .height(52)
+            .padding({ left: 16, right: 16 })
+            .borderRadius(Theme.radiusM)
+            .backgroundColor(Theme.card)
+            .border({ width: 1, color: Theme.lineSoft })
+            .margin({ top: 10 })
+            .onClick((): void => {
+              this.deleteAccount();
+            })
+
+
             Text('退出登录')
               .fontSize(13)
               .fontColor(Theme.up)

@@ -4,9 +4,9 @@
     "type": "entry",
     "description": "$string:module_desc",
     "mainElement": "EntryAbility",
+    // 只声明手机：平板布局尚未适配，声明了会被要求提供平板素材与适配
     "deviceTypes": [
-      "phone",
-      "tablet"
+      "phone"
     ],
     "deliveryWithInstall": true,
     "installationFree": false,

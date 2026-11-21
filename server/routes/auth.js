@@ -204,6 +204,12 @@ module.exports = async function authRoutes(app) {
     reply.send(await authService.huaweiUnbind(request.user.id));
   });
 
+  // 应用市场合规要求：账号必须能在应用内自助注销（不用等人工）
+  app.post('/api/account/delete', { preHandler: app.requireLogin }, async function deleteAccount(request, reply) {
+    const r = await authService.deleteAccount(request.user, isSecure(request.raw));
+    reply.header('Set-Cookie', r.cookie).send(r.body);
+  });
+
   app.post('/api/auth/logout', async function logout(request, reply) {
     const r = authService.logout(isSecure(request.raw));
     reply.header('Set-Cookie', r.cookie).send(r.body);
