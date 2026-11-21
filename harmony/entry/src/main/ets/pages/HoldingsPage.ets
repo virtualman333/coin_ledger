@@ -692,7 +692,10 @@ export struct HoldingsPage {
           .width('100%')
           .padding(20)
           .borderRadius(16)
-          .backgroundColor(Theme.card)
+          .backgroundColor(Theme.glass)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+          .border({ width: 1, color: Theme.glassBorder })
+          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
           .margin({ top: 12 })
         } else {
@@ -724,7 +727,10 @@ export struct HoldingsPage {
                 .width('100%')
                 .padding(18)
                 .borderRadius(14)
-                .backgroundColor(Theme.card)
+                .backgroundColor(Theme.glass)
+                .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+                .border({ width: 1, color: Theme.glassBorder })
+                .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
                 .alignItems(HorizontalAlign.Start)
               } else if (this.catEmpty) {
                 Text('这个分类下还没有藏品，换个分类看看')
@@ -795,7 +801,10 @@ export struct HoldingsPage {
                 .width('100%')
                 .padding({ left: 12, right: 12 })
                 .borderRadius(12)
-                .backgroundColor(Theme.card)
+                .backgroundColor(Theme.glass)
+                .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+                .border({ width: 1, color: Theme.glassBorder })
+                .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
               }, (g: HoldGroup) => g.name)
 
               Column({ space: 4 }) {

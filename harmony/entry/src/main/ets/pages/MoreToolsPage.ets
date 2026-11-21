@@ -160,7 +160,10 @@ export struct MoreToolsPage {
     .width('100%')
     .padding({ left: 12, right: 12 })
     .borderRadius(14)
-    .backgroundColor(Theme.card)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
   }
 
   build() {
@@ -204,7 +207,10 @@ export struct MoreToolsPage {
           .width('100%')
           .padding(14)
           .borderRadius(14)
-          .backgroundColor(Theme.card)
+          .backgroundColor(Theme.glass)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+          .border({ width: 1, color: Theme.glassBorder })
+          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
           .alignItems(VerticalAlign.Center)
 
           this.group(this.tools)
@@ -239,7 +245,10 @@ export struct MoreToolsPage {
             .height(56)
             .padding({ left: 12, right: 12 })
             .borderRadius(14)
-            .backgroundColor(Theme.card)
+            .backgroundColor(Theme.glass)
+            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+            .border({ width: 1, color: Theme.glassBorder })
+            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
             .onClick((): void => {
               Nav.push(this.stack, Routes.ADMIN, new RouteParam());
             })
@@ -276,6 +285,6 @@ export struct MoreToolsPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

@@ -314,7 +314,10 @@ export struct SeriesDetailPage {
           .width('100%')
           .padding({ left: 12, right: 12 })
           .borderRadius(12)
-          .backgroundColor(Theme.card)
+          .backgroundColor(Theme.glass)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+          .border({ width: 1, color: Theme.glassBorder })
+          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
 
           if (this.pmError.length > 0) {
             Text(this.pmError)
@@ -355,6 +358,6 @@ export struct SeriesDetailPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

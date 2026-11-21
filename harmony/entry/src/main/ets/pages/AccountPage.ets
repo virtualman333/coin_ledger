@@ -197,7 +197,10 @@ export struct AccountPage {
       controller.executeRequest(authRequest)
         .then((response: authentication.AuthenticationResponse): Promise<void> => {
           const detail = response as authentication.LoginWithHuaweiIDResponse;
-          const code: string = detail.data !== undefined && detail.data !== null ? detail.data.authorizationCode : '';
+          // authorizationCode 在类型上是可选的：没授权成功时不会有值
+          const rawCode: string | undefined = detail.data !== undefined && detail.data !== null
+            ? detail.data.authorizationCode : undefined;
+          const code: string = rawCode !== undefined ? rawCode : '';
           if (code === '') {
             throw new Error('没有拿到华为账号授权码，请重试');
           }
@@ -390,7 +393,10 @@ export struct AccountPage {
     .width('100%')
     .padding(16)
     .borderRadius(16)
-    .backgroundColor(Theme.card)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
   }
 
   @Builder
@@ -485,7 +491,10 @@ export struct AccountPage {
     .width('100%')
     .padding(16)
     .borderRadius(16)
-    .backgroundColor(Theme.card)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
   }
 
   @Builder
@@ -558,7 +567,10 @@ export struct AccountPage {
           .width('100%')
           .padding(16)
           .borderRadius(16)
-          .backgroundColor(Theme.card)
+          .backgroundColor(Theme.glass)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+          .border({ width: 1, color: Theme.glassBorder })
+          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
 
           Column().height(30)
@@ -575,6 +587,6 @@ export struct AccountPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

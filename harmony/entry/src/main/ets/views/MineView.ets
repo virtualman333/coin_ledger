@@ -192,7 +192,7 @@ export struct MineView {
   cellRow(title: string, value: string, thumbs: string[], route: string, cat: string) {
     Row({ space: 10 }) {
       Text(title)
-        .fontSize(14)
+        .fontSize(15)
         .fontColor(Theme.textStrong)
       if (thumbs.length > 0) {
         Row({ space: 2 }) {
@@ -209,11 +209,11 @@ export struct MineView {
       Blank()
       if (value.length > 0) {
         Text(value)
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.muted)
       }
       Text('›')
-        .fontSize(18)
+        .fontSize(16)
         .fontColor(Theme.faint)
     }
     .width('100%')
@@ -240,7 +240,7 @@ export struct MineView {
             .borderRadius(14)
             .backgroundColor(Theme.card)
           Text(item.name)
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(Theme.muted)
         }
         .layoutWeight(1)
@@ -259,12 +259,12 @@ export struct MineView {
       Column() {
         Row() {
           Text('最近添加')
-            .fontSize(13)
+            .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.text)
           Blank()
           Text('全部 ›')
-            .fontSize(11)
+            .fontSize(12)
             .fontColor(Theme.gold)
             .onClick((): void => {
               Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
@@ -290,18 +290,18 @@ export struct MineView {
                     .height(66)
                     .borderRadius(8)
                     .textAlign(TextAlign.Center)
-                    .fontSize(20)
+                    .fontSize(18)
                     .fontColor(Theme.gold)
                     .backgroundColor(Theme.goldBg)
                 }
                 Text(item.name)
-                  .fontSize(10)
+                  .fontSize(12)
                   .fontColor(Theme.textStrong)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .width(66)
                 Text(item.qtyText)
-                  .fontSize(9)
+                  .fontSize(11)
                   .fontColor(Theme.faint)
                   .width(66)
               }
@@ -347,7 +347,7 @@ export struct MineView {
                 .height(46)
                 .borderRadius(23)
                 .textAlign(TextAlign.Center)
-                .fontSize(18)
+                .fontSize(16)
                 .fontColor(Theme.goldDeep)
                 .backgroundColor(Theme.goldBg)
             }
@@ -357,14 +357,14 @@ export struct MineView {
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.text)
               Text(this.kinds > 0 ? (this.kinds + ' 个品种 · ' + this.rolls + ' 套') : '还没有记录')
-                .fontSize(10)
+                .fontSize(12)
                 .fontColor(Theme.muted)
             }
             .layoutWeight(1)
             .alignItems(HorizontalAlign.Start)
 
             Text('编辑')
-              .fontSize(11)
+              .fontSize(12)
               .fontColor(Theme.goldDeep)
               .padding({ left: 12, right: 12, top: 6, bottom: 6 })
               .borderRadius(14)
@@ -381,24 +381,24 @@ export struct MineView {
           if (this.kinds > 0) {
             Column({ space: 8 }) {
               Text('参考市值')
-                .fontSize(11)
+                .fontSize(12)
                 .fontColor(Theme.muted)
               Row({ space: 8 }) {
                 Text('¥')
-                  .fontSize(14)
+                  .fontSize(13)
                   .fontColor(Theme.goldDeep)
                 Text(this.marketText)
                   .fontSize(30)
                   .fontWeight(FontWeight.Bold)
                   .fontColor(Theme.text)
                 Text(this.pnlText + ' · ' + this.pnlPct + '%')
-                  .fontSize(11)
+                  .fontSize(12)
                   .fontColor(this.profitUp ? Theme.up : Theme.down)
                   .margin({ bottom: 4 })
               }
               .alignItems(VerticalAlign.Bottom)
               Text('已投入 ¥' + this.costText + ' · 面值 ¥' + this.faceText)
-                .fontSize(10)
+                .fontSize(12)
                 .fontColor(Theme.muted)
 
               Stack({ alignContent: Alignment.Start }) {
@@ -419,11 +419,11 @@ export struct MineView {
 
               Row() {
                 Text('收藏进度')
-                  .fontSize(9)
+                  .fontSize(11)
                   .fontColor(Theme.faint)
                 Blank()
                 Text(this.kinds + ' / ' + this.totalCoins)
-                  .fontSize(9)
+                  .fontSize(11)
                   .fontColor(Theme.gold)
               }
               .width('100%')
@@ -431,20 +431,21 @@ export struct MineView {
             .width('100%')
             .padding(16)
             .borderRadius(16)
-            .linearGradient({ angle: 135, colors: [['#FBF7EE', 0], ['#F3EAD7', 1]] })
-            .border({ width: 1, color: '#EFE3C8' })
+            .linearGradient({ angle: 140, colors: [['#FFFFFFF0', 0], ['#F6E9CC', 0.62], ['#EFDFBE', 1]] })
+            .border({ width: 1, color: '#FFFFFFE6' })
+            .shadow({ radius: 30, color: 'rgba(150,110,50,0.12)', offsetY: 12 })
             .alignItems(HorizontalAlign.Start)
           } else {
             Column({ space: 6 }) {
               Text('还没有藏品')
-                .fontSize(15)
+                .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.text)
               Text('去挑第一枚，账本会自己长出来')
-                .fontSize(10)
+                .fontSize(12)
                 .fontColor(Theme.muted)
               Text('去清单 ›')
-                .fontSize(12)
+                .fontSize(13)
                 .fontColor(Theme.gold)
                 .margin({ top: 4 })
                 .onClick((): void => {
@@ -463,17 +464,19 @@ export struct MineView {
               ForEach(this.dist, (d: DistItem) => {
                 Column({ space: 3 }) {
                   Text(String(d.n))
-                    .fontSize(17)
+                    .fontSize(18)
                     .fontWeight(FontWeight.Medium)
                     .fontColor(d.n > 0 ? Theme.goldDeep : Theme.faint)
                   Text(d.name)
-                    .fontSize(9)
+                    .fontSize(11)
                     .fontColor(Theme.faint)
                 }
                 .layoutWeight(1)
-                .padding({ top: 10, bottom: 10 })
-                .borderRadius(12)
-                .backgroundColor(Theme.card)
+                .padding({ top: 12, bottom: 12 })
+                .borderRadius(Theme.radiusM)
+                .backgroundColor(Theme.glass)
+                .backgroundBlurStyle(BlurStyle.COMPONENT_THIN)
+                .border({ width: 1, color: Theme.glassBorder })
                 .onClick((): void => {
                   const p = new RouteParam();
                   p.cat = d.key;
@@ -492,8 +495,11 @@ export struct MineView {
           }
           .width('100%')
           .margin({ top: 10 })
-          .borderRadius(14)
-          .backgroundColor(Theme.card)
+          .borderRadius(Theme.radiusM)
+          .backgroundColor(Theme.glass)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+          .border({ width: 1, color: Theme.glassBorder })
+          .shadow({ radius: 20, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
 
           this.quickRow()
           this.recentList()
@@ -505,22 +511,22 @@ export struct MineView {
                 .fontColor(Theme.up)
             }
             Text('价格为参考估算，不构成投资建议')
-              .fontSize(10)
+              .fontSize(11)
               .fontColor(Theme.faint)
           }
           .width('100%')
-          .margin({ top: 16, bottom: 24 })
+          .margin({ top: 16, bottom: 88 })
         } else {
           Column({ space: 8 }) {
             Text('登录后才有账本')
-              .fontSize(18)
+              .fontSize(20)
               .fontWeight(FontWeight.Medium)
               .fontColor(Theme.text)
             Text('藏品存在云端，换设备也能接着记')
-              .fontSize(11)
+              .fontSize(13)
               .fontColor(Theme.muted)
             Text('登录 / 注册')
-              .fontSize(14)
+              .fontSize(15)
               .fontColor(Color.White)
               .textAlign(TextAlign.Center)
               .width('100%')
@@ -548,7 +554,7 @@ export struct MineView {
           .backgroundColor(Theme.card)
 
           Column()
-            .height(24)
+            .height(88)
         }
       }
       .width('100%')
@@ -560,6 +566,6 @@ export struct MineView {
     .edgeEffect(EdgeEffect.Spring)
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

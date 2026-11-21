@@ -570,23 +570,23 @@ export struct ListView {
   viewSwitch() {
     Row({ space: 8 }) {
       Text('顺序清单')
-        .fontSize(12)
+        .fontSize(13)
         .fontColor(this.viewMode === 'list' ? Color.White : Theme.muted)
         .textAlign(TextAlign.Center)
         .layoutWeight(1)
-        .height(32)
-        .borderRadius(16)
+        .height(36)
+        .borderRadius(Theme.radiusS)
         .backgroundColor(this.viewMode === 'list' ? Theme.gold : Theme.card)
         .onClick((): void => {
           this.toggleViewMode('list');
         })
       Text('按系列')
-        .fontSize(12)
+        .fontSize(13)
         .fontColor(this.viewMode === 'series' ? Color.White : Theme.muted)
         .textAlign(TextAlign.Center)
         .layoutWeight(1)
-        .height(32)
-        .borderRadius(16)
+        .height(36)
+        .borderRadius(Theme.radiusS)
         .backgroundColor(this.viewMode === 'series' ? Theme.gold : Theme.card)
         .onClick((): void => {
           this.toggleViewMode('series');
@@ -594,8 +594,8 @@ export struct ListView {
     }
     .width('100%')
     .padding(4)
-    .borderRadius(18)
-    .backgroundColor('#EFEAE0')
+    .borderRadius(Theme.radiusM)
+    .backgroundColor(Theme.bgDeep)
   }
 
   @Builder
@@ -612,10 +612,10 @@ export struct ListView {
   @Builder
   catChip(label: string, key: string) {
     Text(label)
-      .fontSize(12)
+      .fontSize(13)
       .fontColor(this.category === key ? Theme.goldDeep : Theme.muted)
-      .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-      .borderRadius(14)
+      .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+      .borderRadius(Theme.radiusS)
       .backgroundColor(this.category === key ? Theme.goldBg : Theme.card)
       .border({ width: 1, color: this.category === key ? Theme.goldLine : Color.Transparent })
       .onClick((): void => {
@@ -633,56 +633,46 @@ export struct ListView {
     Row({ space: 10 }) {
       if (row.imgUrl.length > 0) {
         Image(row.imgUrl)
-          .width(62)
-          .height(62)
-          .borderRadius(7)
+          .width(64)
+          .height(64)
+          .borderRadius(Theme.radiusThumb)
           .objectFit(ImageFit.Contain)
           .backgroundColor('#F4F1E9')
       } else {
         Text('无图')
-          .width(62)
-          .height(62)
-          .borderRadius(7)
+          .width(64)
+          .height(64)
+          .borderRadius(Theme.radiusThumb)
           .textAlign(TextAlign.Center)
           .fontSize(9)
           .fontColor(Theme.faint)
           .backgroundColor('#F4F1E9')
       }
       Column({ space: 4 }) {
-        Row({ space: 6 }) {
-          Text(row.name)
-            .fontSize(13)
-            .fontColor(Theme.textStrong)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-          if (row.owned) {
-            Text('已收')
-              .fontSize(9)
-              .fontColor(Theme.goldDeep)
-              .padding({ left: 5, right: 5, top: 1, bottom: 1 })
-              .backgroundColor(Theme.goldBg)
-              .borderRadius(4)
-          }
-        }
-        .width('100%')
+        Text(row.name)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Theme.textStrong)
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .width('100%')
 
         Text(row.metaText)
-          .fontSize(10)
+          .fontSize(12)
           .fontColor(Theme.muted)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
         Row({ space: 4 }) {
           if (row.mintageLabel.length > 0) {
             Text(row.mintageLabel)
-              .fontSize(9)
+              .fontSize(11)
               .fontColor(Theme.faint)
             Text('·')
-              .fontSize(9)
+              .fontSize(11)
               .fontColor(Theme.faint)
           }
           Text(row.setLabel)
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.faint)
         }
       }
@@ -690,17 +680,26 @@ export struct ListView {
       .alignItems(HorizontalAlign.Start)
 
       Column({ space: 4 }) {
+        if (row.owned) {
+          Text('已收')
+            .fontSize(11)
+            .fontColor(Theme.goldDeep)
+            .padding({ left: 8, right: 8, top: 2, bottom: 2 })
+            .backgroundColor(Theme.goldBg)
+            .borderRadius(Theme.radiusS)
+        }
         Text(String(row.year))
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.muted)
         Text(row.priceText)
-          .fontSize(10)
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
           .fontColor(Theme.gold)
       }
       .alignItems(HorizontalAlign.End)
     }
     .width('100%')
-    .padding({ top: 10, bottom: 10 })
+    .padding({ top: 12, bottom: 12 })
     .alignItems(VerticalAlign.Center)
     .onClick((): void => {
       Nav.push(this.stack, Routes.DETAIL, RouteParam.of(row.id));
@@ -730,20 +729,21 @@ export struct ListView {
       Column({ space: 5 }) {
         Row() {
           Text(card.name)
-            .fontSize(13)
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
             .fontColor(Theme.textStrong)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .layoutWeight(1)
           Text(card.count + ' ' + card.unit)
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.faint)
         }
         .width('100%')
 
         if (card.yearText.length > 0 || card.matText.length > 0) {
           Text([card.yearText, card.matText].filter((x: string): boolean => x !== '').join(' · '))
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.faint)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -751,11 +751,11 @@ export struct ListView {
         Row() {
           Text(card.cat === 'pm' ? '查看目录'
             : (card.own > 0 ? ('已藏 ' + card.own + ' / ' + card.count) : '还没收藏'))
-            .fontSize(10)
+            .fontSize(12)
             .fontColor(card.own > 0 ? Theme.gold : Theme.faint)
           Blank()
           Text('›')
-            .fontSize(16)
+            .fontSize(15)
             .fontColor(Theme.faint)
         }
         .width('100%')
@@ -780,10 +780,13 @@ export struct ListView {
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
-    .padding(12)
-    .margin({ bottom: 8 })
-    .borderRadius(12)
-    .backgroundColor(Theme.card)
+    .padding(14)
+    .margin({ bottom: 10 })
+    .borderRadius(Theme.radiusM)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 18, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
     .onClick((): void => {
       this.goSeriesDetail(card.code, card.cat, card.name);
     })
@@ -805,28 +808,29 @@ export struct ListView {
           .height(96)
           .borderRadius(8)
           .textAlign(TextAlign.Center)
-          .fontSize(22)
+          .fontSize(20)
           .fontColor(row.metalClass === 'gold' ? '#B08A3E'
             : (row.metalClass === 'silver' ? '#8A9099' : '#9A8F7A'))
           .backgroundColor('#F7F4EC')
       }
       Text(row.name)
-        .fontSize(12)
+        .fontSize(13)
+        .fontWeight(FontWeight.Medium)
         .fontColor(Theme.textStrong)
         .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
         .height(34)
       Text(row.metaText)
-        .fontSize(9)
+        .fontSize(11)
         .fontColor(Theme.muted)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
       Text('面额 ' + row.faceText + ' · 成色 ' + (row.fineness || '—') + '%')
-        .fontSize(9)
+        .fontSize(11)
         .fontColor(Theme.faint)
         .maxLines(1)
       Text(row.code)
-        .fontSize(9)
+        .fontSize(11)
         .fontColor(Theme.faint)
     }
     .width('48%')
@@ -845,12 +849,18 @@ export struct ListView {
   build() {
     Scroll() {
       Column() {
-        Text('全套清单')
-          .fontSize(22)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(Theme.text)
-          .width('100%')
-          .padding({ left: 16, right: 16, top: 16, bottom: 8 })
+        Column({ space: 4 }) {
+          Text('全套清单')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Theme.text)
+          Text('137 个品种 · 按系列整理')
+            .fontSize(12)
+            .fontColor(Theme.muted)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .padding({ left: Theme.pagePadding, right: Theme.pagePadding, top: 16, bottom: 12 })
 
         Column() {
           this.viewSwitch()
@@ -860,12 +870,12 @@ export struct ListView {
             Row({ space: 8 }) {
               Row({ space: 6 }) {
                 Text('⌕')
-                  .fontSize(14)
+                  .fontSize(13)
                   .fontColor(Theme.faint)
                 TextInput({ text: $$this.keyword, placeholder: '搜品种 / 年份' })
                   .layoutWeight(1)
-                  .height(34)
-                  .fontSize(12)
+                  .height(40)
+                  .fontSize(13)
                   .backgroundColor(Color.Transparent)
                   .placeholderColor(Theme.faint)
                   .onChange((value: string): void => {
@@ -882,16 +892,16 @@ export struct ListView {
                 }
               }
               .layoutWeight(1)
-              .height(36)
-              .padding({ left: 10, right: 10 })
-              .borderRadius(18)
+              .height(44)
+              .padding({ left: 12, right: 12 })
+              .borderRadius(Theme.radiusM)
               .backgroundColor(Theme.card)
 
               Text(this.extraCount > 0 ? '筛选 ' + this.extraCount : '筛选')
-                .fontSize(11)
+                .fontSize(12)
                 .fontColor(this.filterOpen || this.extraCount > 0 ? Theme.goldDeep : Theme.muted)
-                .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-                .borderRadius(16)
+                .padding({ left: 14, right: 14, top: 12, bottom: 12 })
+                .borderRadius(Theme.radiusS)
                 .backgroundColor(this.filterOpen || this.extraCount > 0 ? Theme.goldBg : Theme.card)
                 .onClick((): void => {
                   this.filterOpen = !this.filterOpen;
@@ -968,10 +978,10 @@ export struct ListView {
               Row({ space: 6 }) {
                 ForEach(this.tabs, (t: Chip) => {
                   Text(t.name)
-                    .fontSize(11)
+                    .fontSize(12)
                     .fontColor(this.code === t.code ? Theme.goldDeep : Theme.muted)
-                    .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-                    .borderRadius(12)
+                    .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+                    .borderRadius(Theme.radiusS)
                     .backgroundColor(this.code === t.code ? Theme.goldBg : Color.Transparent)
                     .border({ width: 1, color: this.code === t.code ? Theme.goldLine : Color.Transparent })
                     .onClick((): void => {
@@ -990,11 +1000,11 @@ export struct ListView {
             if (this.category !== 'pm') {
               Row() {
                 Text(this.count + ' 个品种 · 已收 ' + this.ownedCount)
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.faint)
                 Blank()
                 Text('年份 ' + (this.desc ? '↓' : '↑'))
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.gold)
                   .padding({ left: 8, right: 8, top: 3, bottom: 3 })
                   .borderRadius(10)
@@ -1016,7 +1026,7 @@ export struct ListView {
           if (this.viewMode === 'series') {
             Text(this.category === 'coin' ? '普通纪念币'
               : (this.category === 'note' ? '纪念钞' : '贵金属纪念币'))
-              .fontSize(12)
+              .fontSize(11)
               .fontColor(Theme.muted)
               .width('100%')
               .margin({ top: 8, bottom: 8 })
@@ -1091,7 +1101,7 @@ export struct ListView {
               EmptyTip({ text: '没有匹配的贵金属品种，换个关键词或放宽筛选条件' })
             } else if (this.pmLoaded && this.pmPage < this.pmPages) {
               Text('加载更多（' + this.pmPage + '/' + this.pmPages + '）')
-                .fontSize(12)
+                .fontSize(11)
                 .fontColor(Theme.gold)
                 .width('100%')
                 .textAlign(TextAlign.Center)
@@ -1117,9 +1127,12 @@ export struct ListView {
               }, (row: ListRow) => String(row.id))
             }
             .width('100%')
-            .padding({ left: 12, right: 12 })
-            .borderRadius(12)
-            .backgroundColor(Theme.card)
+            .padding({ left: 14, right: 14 })
+            .borderRadius(Theme.radiusM)
+            .backgroundColor(Theme.glass)
+            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+            .border({ width: 1, color: Theme.glassBorder })
+            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
 
             if (this.count === 0) {
               EmptyTip({
@@ -1127,7 +1140,7 @@ export struct ListView {
               })
             } else if (this.rows.length > this.rowLimit) {
               Text('加载更多（' + this.rowLimit + '/' + this.rows.length + '）')
-                .fontSize(12)
+                .fontSize(13)
                 .fontColor(Theme.gold)
                 .width('100%')
                 .textAlign(TextAlign.Center)
@@ -1137,7 +1150,7 @@ export struct ListView {
                 })
             } else {
               Text('已显示全部 ' + this.count + ' 项')
-                .fontSize(10)
+                .fontSize(11)
                 .fontColor(Theme.faint)
                 .width('100%')
                 .textAlign(TextAlign.Center)
@@ -1146,7 +1159,7 @@ export struct ListView {
           }
         }
         .width('100%')
-        .padding({ left: 16, right: 16, bottom: 24 })
+        .padding({ left: 16, right: 16, bottom: 88 })
         .margin({ top: 4 })
       }
       .width('100%')
@@ -1160,6 +1173,6 @@ export struct ListView {
     })
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

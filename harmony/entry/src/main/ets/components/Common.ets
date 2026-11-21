@@ -12,18 +12,17 @@ export struct SectionHead {
     Row({ space: 8 }) {
       Row()
         .width(3)
-        .height(14)
+        .height(18)
         .borderRadius(2)
         .linearGradient({ angle: 180, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
       Text(this.title)
-        .fontSize(15)
+        .fontSize(18)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.text)
-        .letterSpacing(0.3)
       Blank()
       if (this.more) {
         Text(this.more)
-          .fontSize(Theme.fontSmall)
+          .fontSize(13)
           .fontColor(Theme.gold)
           .padding({ left: 12 })
           .onClick((): void => {
@@ -111,6 +110,6 @@ export struct PageShell {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

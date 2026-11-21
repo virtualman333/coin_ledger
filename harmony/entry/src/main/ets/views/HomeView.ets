@@ -210,23 +210,23 @@ export struct HomeView {
     Row() {
       Column({ space: 6 }) {
         Text('藏币录')
-          .fontSize(28)
+          .fontSize(26)
           .fontWeight(FontWeight.Bold)
           .fontColor(Theme.goldDeep)
           .letterSpacing(1.5)
         Text('中国纪念币图鉴')
-          .fontSize(12)
+          .fontSize(13)
           .fontColor(Theme.muted)
-          .letterSpacing(1.2)
+          .letterSpacing(1)
         Text('1984—2026 · ' + this.totalCoins + ' 个品种')
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.faint)
           .margin({ top: 2 })
         Text('复制分享链接')
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.goldDeep)
-          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-          .borderRadius(14)
+          .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+          .borderRadius(Theme.radiusS)
           .backgroundColor('#FFFFFFB3')
           .border({ width: 1, color: Theme.goldLine })
           .margin({ top: 10 })
@@ -273,9 +273,11 @@ export struct HomeView {
     .padding({ left: 20, right: 16, top: 18, bottom: 18 })
     .alignItems(VerticalAlign.Center)
     .justifyContent(FlexAlign.SpaceBetween)
-    .borderRadius(20)
+    .borderRadius(Theme.radiusL)
     .clip(true)
-    .linearGradient({ angle: 135, colors: [['#FCF7EA', 0], ['#F0E3C8', 1]] })
+    .linearGradient({ angle: 140, colors: [['#FFFFFFF0', 0], ['#F6E9CC', 0.62], ['#EFDFBE', 1]] })
+    .border({ width: 1, color: '#FFFFFFE6' })
+    .shadow({ radius: 34, color: 'rgba(150,110,50,0.14)', offsetY: 14 })
   }
 
   @Builder
@@ -284,16 +286,16 @@ export struct HomeView {
       Column({ space: 10 }) {
         Row() {
           Text('我的收藏')
-            .fontSize(14)
+            .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.text)
           Blank()
           Text(String(this.owned))
-            .fontSize(22)
+            .fontSize(20)
             .fontWeight(FontWeight.Bold)
             .fontColor(Theme.goldDeep)
           Text(' / ' + this.totalCoins)
-            .fontSize(11)
+            .fontSize(12)
             .fontColor(Theme.faint)
         }
         .width('100%')
@@ -317,11 +319,11 @@ export struct HomeView {
 
         Row() {
           Text(this.kinds + ' 个品种 · ' + this.rolls + ' 套')
-            .fontSize(11)
+            .fontSize(12)
             .fontColor(Theme.muted)
           Blank()
           Text('已收 ' + this.pct + '%')
-            .fontSize(11)
+            .fontSize(12)
             .fontColor(Theme.gold)
         }
         .width('100%')
@@ -339,24 +341,27 @@ export struct HomeView {
         .margin({ top: 4 })
       }
       .width('100%')
-      .padding(16)
-      .borderRadius(16)
-      .backgroundColor(Theme.card)
-      .shadow({ radius: 8, color: 'rgba(60,48,26,0.06)', offsetY: 2 })
+      .padding(18)
+      .borderRadius(Theme.radiusL)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 30, color: 'rgba(120,90,40,0.10)', offsetY: 10 })
       .onClick((): void => {
         Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
       })
     } else {
       Column({ space: 6 }) {
         Text('登录后开始记你的藏品')
-          .fontSize(15)
+          .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
         Text('与网页版同一账号，藏品云端同步')
-          .fontSize(11)
+          .fontSize(12)
           .fontColor(Theme.muted)
+          .margin({ top: 2 })
         Text('登录 / 注册')
-          .fontSize(14)
+          .fontSize(15)
           .fontColor(Color.White)
           .textAlign(TextAlign.Center)
           .width('100%')
@@ -369,10 +374,12 @@ export struct HomeView {
           })
       }
       .width('100%')
-      .padding(16)
-      .borderRadius(16)
-      .backgroundColor(Theme.card)
-      .shadow({ radius: 8, color: 'rgba(60,48,26,0.06)', offsetY: 2 })
+      .padding(18)
+      .borderRadius(Theme.radiusL)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 30, color: 'rgba(120,90,40,0.10)', offsetY: 10 })
     }
   }
 
@@ -380,10 +387,10 @@ export struct HomeView {
   numCell(k: string, v: string, color: string) {
     Column({ space: 3 }) {
       Text(k)
-        .fontSize(10)
+        .fontSize(11)
         .fontColor(Theme.faint)
       Text(v)
-        .fontSize(14)
+        .fontSize(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(color)
         .maxLines(1)
@@ -401,9 +408,9 @@ export struct HomeView {
           Column({ space: 4 }) {
             Stack({ alignContent: Alignment.TopStart }) {
               Image(item.imgUrl)
-                .width(112)
-                .height(112)
-                .borderRadius(12)
+                .width(88)
+                .height(88)
+                .borderRadius(Theme.radiusInner)
                 .backgroundColor('#F4F1E9')
                 .objectFit(ImageFit.Cover)
               Text(String(item.year))
@@ -414,11 +421,11 @@ export struct HomeView {
                 .borderRadius(6)
                 .margin({ left: 5, top: 5 })
             }
-            .width(112)
-            .height(112)
+            .width(88)
+            .height(88)
 
             Text(item.name)
-              .fontSize(12)
+              .fontSize(11)
               .fontColor(Theme.textStrong)
               .maxLines(2)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -435,6 +442,11 @@ export struct HomeView {
               .width(112)
           }
           .alignItems(HorizontalAlign.Start)
+          .padding(8)
+          .borderRadius(Theme.radiusM)
+          .backgroundColor(Theme.glassSoft)
+          .backgroundBlurStyle(BlurStyle.COMPONENT_THIN)
+          .border({ width: 1, color: '#FFFFFFB3' })
           .onClick((): void => {
             this.goDetail(item.id);
           })
@@ -442,7 +454,7 @@ export struct HomeView {
       }, (item: LatestCard) => String(item.id))
     }
     .listDirection(Axis.Horizontal)
-    .height(212)
+    .height(196)
     .scrollBar(BarState.Off)
     .width('100%')
   }
@@ -454,15 +466,15 @@ export struct HomeView {
         Row() {
           Column({ space: 2 }) {
             Text('黄金')
-              .fontSize(11)
+              .fontSize(12)
               .fontColor(Theme.muted)
             Row() {
               Text('¥' + this.metal.gold)
-                .fontSize(22)
+                .fontSize(20)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.goldDeep)
               Text(' 元/克')
-                .fontSize(9)
+                .fontSize(11)
                 .fontColor(Theme.faint)
             }
             .alignItems(VerticalAlign.Bottom)
@@ -472,15 +484,15 @@ export struct HomeView {
 
           Column({ space: 2 }) {
             Text('白银')
-              .fontSize(11)
+              .fontSize(12)
               .fontColor(Theme.muted)
             Row() {
               Text('¥' + this.metal.silver)
-                .fontSize(22)
+                .fontSize(20)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#7C7F86')
               Text(' 元/克')
-                .fontSize(9)
+                .fontSize(11)
                 .fontColor(Theme.faint)
             }
             .alignItems(VerticalAlign.Bottom)
@@ -492,20 +504,21 @@ export struct HomeView {
 
         Row() {
           Text((this.metal.stale ? '延时行情 · ' : '') + this.metal.timeText)
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(Theme.faint)
           Blank()
           Text('仅材料价值，随行情浮动')
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(Theme.faint)
         }
         .width('100%')
       }
       .width('100%')
-      .padding(16)
-      .borderRadius(16)
-      .linearGradient({ angle: 120, colors: [['#FBF6EA', 0], ['#F3EAD7', 1]] })
-      .border({ width: 1, color: '#EFE3C8' })
+      .padding(18)
+      .borderRadius(Theme.radiusL)
+      .linearGradient({ angle: 130, colors: [['#FFFFFFE6', 0], ['#FBF1DC', 1]] })
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
       .onClick((): void => {
         const p = new RouteParam();
         p.cat = 'pm';
@@ -521,13 +534,13 @@ export struct HomeView {
       ForEach(this.seriesTop, (item: SeriesCard) => {
         Column({ space: 5 }) {
           Text(item.name)
-            .fontSize(14)
+            .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.textStrong)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
           Text(item.label)
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(item.own > 0 ? Theme.gold : Theme.faint)
           Stack({ alignContent: Alignment.Start }) {
             Row()
@@ -545,10 +558,13 @@ export struct HomeView {
         }
         .width('48%')
         .alignItems(HorizontalAlign.Start)
-        .padding(14)
-        .margin({ bottom: 10 })
-        .borderRadius(16)
-        .backgroundColor(Theme.card)
+        .padding(16)
+        .margin({ bottom: 12 })
+        .borderRadius(Theme.radiusM)
+        .backgroundColor(Theme.glass)
+        .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+        .border({ width: 1, color: Theme.glassBorder })
+        .shadow({ radius: 18, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
         .onClick((): void => {
           this.goSeries(item.code, item.cat, item.name);
         })
@@ -566,34 +582,34 @@ export struct HomeView {
           }
           .justifyContent(FlexAlign.Start)
           .width('100%')
-          .padding({ left: 12, right: 12 })
+          .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
           .margin({ top: 10 })
 
           Column() {
             this.ledger()
           }
           .width('100%')
-          .padding({ left: 12, right: 12 })
+          .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
           .margin({ top: 12 })
 
           SectionHead({ title: '最新发行', more: '全部 ›', onMore: (): void => this.onSwitchTab(1) })
             .width('100%')
-            .padding({ left: 12, right: 12 })
+            .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
           Column() {
             this.latestRow()
           }
           .width('100%')
-          .padding({ left: 12, right: 12 })
+          .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
 
           if (this.metal !== null) {
             SectionHead({ title: '今日金银价', more: '贵金属目录 ›', onMore: (): void => this.onSwitchTab(2) })
               .width('100%')
-              .padding({ left: 12, right: 12 })
+              .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
             Column() {
               this.metalCard()
             }
             .width('100%')
-            .padding({ left: 12, right: 12 })
+            .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
           }
 
           SectionHead({
@@ -604,26 +620,26 @@ export struct HomeView {
             }
           })
             .width('100%')
-            .padding({ left: 12, right: 12 })
+            .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
           Column() {
             this.seriesGrid()
           }
           .width('100%')
-          .padding({ left: 12, right: 12 })
+          .padding({ left: Theme.pagePadding, right: Theme.pagePadding })
 
           Column({ space: 4 }) {
             Text('价格均为参考估算，不构成投资建议')
-              .fontSize(10)
+              .fontSize(11)
               .fontColor(Theme.faint)
             if (this.syncTip.length > 0) {
               Text(this.syncTip)
-                .fontSize(10)
+                .fontSize(11)
                 .fontColor(Theme.up)
             }
           }
           .width('100%')
           .alignItems(HorizontalAlign.Center)
-          .margin({ top: 10, bottom: 24 })
+          .margin({ top: 10, bottom: 88 })
         }
         .width('100%')
         .constraintSize({ minHeight: '100%' })
@@ -639,6 +655,6 @@ export struct HomeView {
     })
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

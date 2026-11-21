@@ -420,34 +420,35 @@ export struct PlanView {
     Row({ space: 10 }) {
       Column({ space: 4 }) {
         Text(row.name)
-          .fontSize(13)
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
           .fontColor(Theme.textStrong)
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
         Row({ space: 6 }) {
           Text(row.kindText)
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.goldDeep)
             .padding({ left: 5, right: 5, top: 1, bottom: 1 })
             .backgroundColor(Theme.goldBg)
             .borderRadius(4)
           if (row.extra) {
             Text('增发')
-              .fontSize(9)
+              .fontSize(11)
               .fontColor(Theme.up)
           }
           Text(row.face + ' 元')
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(Theme.muted)
           if (row.mintageText.length > 0) {
             Text(row.mintageText + row.unit)
-              .fontSize(10)
+              .fontSize(11)
               .fontColor(Theme.muted)
           }
         }
         if (row.note.length > 0) {
           Text(row.note)
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(Theme.faint)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -456,7 +457,7 @@ export struct PlanView {
           Text((row.reserveText.length > 0 ? row.reserveText + ' 预约' : '')
             + (row.reserveText.length > 0 && row.exchangeText.length > 0 ? ' · ' : '')
             + (row.exchangeText.length > 0 ? row.exchangeText + ' 兑换' : ''))
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.faint)
         }
       }
@@ -466,16 +467,16 @@ export struct PlanView {
       Column({ space: 4 }) {
         this.badge(row.badgeText, row.badgeCls)
         Text(row.dateText + ' 发行')
-          .fontSize(9)
+          .fontSize(11)
           .fontColor(Theme.faint)
         if (row.cdText.length > 0) {
           Text(row.cdText)
-            .fontSize(10)
+            .fontSize(12)
             .fontColor(row.cdCls === 'now' ? Theme.up : (row.cdCls === 'end' ? Theme.faint : Theme.goldDeep))
         }
         if (row.canRemind) {
           Text(this.reminded[row.key] !== undefined ? '已设提醒' : '提醒我')
-            .fontSize(10)
+            .fontSize(11)
             .fontColor(this.reminded[row.key] !== undefined ? Theme.goldDeep : Theme.gold)
             .padding({ left: 8, right: 8, top: 3, bottom: 3 })
             .borderRadius(10)
@@ -487,14 +488,14 @@ export struct PlanView {
         }
         if (this.reminded[row.key] !== undefined) {
           Text(this.reminded[row.key])
-            .fontSize(9)
+            .fontSize(11)
             .fontColor(Theme.faint)
         }
       }
       .alignItems(HorizontalAlign.End)
     }
     .width('100%')
-    .padding({ top: 11, bottom: 11 })
+    .padding({ top: 14, bottom: 14 })
     .alignItems(VerticalAlign.Top)
     .onClick((): void => {
       if (row.coinId > 0) {
@@ -519,12 +520,12 @@ export struct PlanView {
       Column() {
         Row() {
           Text(row.name)
-            .fontSize(16)
+            .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.text)
             .layoutWeight(1)
           Text('✕')
-            .fontSize(16)
+            .fontSize(15)
             .fontColor(Theme.muted)
             .onClick((): void => {
               this.detail = null;
@@ -536,7 +537,7 @@ export struct PlanView {
         Scroll() {
           Column({ space: 10 }) {
             Text(row.isUp ? ('待发行 · ' + (row.cdText || row.dateFull)) : '已发行')
-              .fontSize(12)
+              .fontSize(11)
               .fontColor(row.isUp ? Theme.goldDeep : Theme.muted)
               .padding({ left: 8, right: 8, top: 3, bottom: 3 })
               .backgroundColor(row.isUp ? Theme.goldBg : '#F1EEE6')
@@ -547,11 +548,11 @@ export struct PlanView {
                 ForEach(row.schedule, (s: PlanSchedule) => {
                   Row() {
                     Text(s.k)
-                      .fontSize(12)
+                      .fontSize(11)
                       .fontColor(Theme.faint)
                       .width(72)
                     Text(s.v)
-                      .fontSize(12)
+                      .fontSize(11)
                       .fontColor(Theme.textStrong)
                       .layoutWeight(1)
                   }
@@ -561,19 +562,19 @@ export struct PlanView {
                 }, (s: PlanSchedule) => s.k)
               } else {
                 Row() {
-                  Text('发行日').fontSize(12).fontColor(Theme.faint).width(72)
-                  Text(row.dateFull || '待定').fontSize(12).fontColor(Theme.textStrong).layoutWeight(1)
+                  Text('发行日').fontSize(11).fontColor(Theme.faint).width(72)
+                  Text(row.dateFull || '待定').fontSize(11).fontColor(Theme.textStrong).layoutWeight(1)
                 }
                 if (row.reserveText.length > 0) {
                   Row() {
-                    Text('预约').fontSize(12).fontColor(Theme.faint).width(72)
-                    Text(row.reserveText).fontSize(12).fontColor(Theme.textStrong).layoutWeight(1)
+                    Text('预约').fontSize(11).fontColor(Theme.faint).width(72)
+                    Text(row.reserveText).fontSize(11).fontColor(Theme.textStrong).layoutWeight(1)
                   }
                 }
                 if (row.exchangeText.length > 0) {
                   Row() {
-                    Text('兑换').fontSize(12).fontColor(Theme.faint).width(72)
-                    Text(row.exchangeText).fontSize(12).fontColor(Theme.textStrong).layoutWeight(1)
+                    Text('兑换').fontSize(11).fontColor(Theme.faint).width(72)
+                    Text(row.exchangeText).fontSize(11).fontColor(Theme.textStrong).layoutWeight(1)
                   }
                 }
               }
@@ -590,7 +591,7 @@ export struct PlanView {
 
             if (row.banks.length > 0) {
               Column({ space: 4 }) {
-                Text('承办银行').fontSize(12).fontColor(Theme.text).fontWeight(FontWeight.Medium)
+                Text('承办银行').fontSize(11).fontColor(Theme.text).fontWeight(FontWeight.Medium)
                 Text(row.banks).fontSize(11).fontColor(Theme.muted).lineHeight(18)
               }
               .width('100%')
@@ -599,7 +600,7 @@ export struct PlanView {
 
             if (row.limitText.length > 0) {
               Column({ space: 4 }) {
-                Text('限额').fontSize(12).fontColor(Theme.text).fontWeight(FontWeight.Medium)
+                Text('限额').fontSize(11).fontColor(Theme.text).fontWeight(FontWeight.Medium)
                 Text(row.limitText + (row.proxy > 0 ? ('，最多代 ' + row.proxy + ' 人办理') : ''))
                   .fontSize(11)
                   .fontColor(Theme.muted)
@@ -611,7 +612,7 @@ export struct PlanView {
 
             if (row.ob.length > 0) {
               Column({ space: 4 }) {
-                Text('正面图案').fontSize(12).fontColor(Theme.text).fontWeight(FontWeight.Medium)
+                Text('正面图案').fontSize(11).fontColor(Theme.text).fontWeight(FontWeight.Medium)
                 Text(row.ob).fontSize(11).fontColor(Theme.muted).lineHeight(18)
               }
               .width('100%')
@@ -619,7 +620,7 @@ export struct PlanView {
             }
             if (row.rev.length > 0) {
               Column({ space: 4 }) {
-                Text('背面图案').fontSize(12).fontColor(Theme.text).fontWeight(FontWeight.Medium)
+                Text('背面图案').fontSize(11).fontColor(Theme.text).fontWeight(FontWeight.Medium)
                 Text(row.rev).fontSize(11).fontColor(Theme.muted).lineHeight(18)
               }
               .width('100%')
@@ -640,7 +641,7 @@ export struct PlanView {
 
         if (row.sourceUrl.length > 0) {
           Text('复制公告链接')
-            .fontSize(14)
+            .fontSize(13)
             .fontColor(Color.White)
             .textAlign(TextAlign.Center)
             .width('100%')
@@ -666,12 +667,12 @@ export struct PlanView {
   @Builder
   tabButton(label: string, key: string) {
     Text(label)
-      .fontSize(12)
+      .fontSize(13)
       .fontColor(this.tab === key ? Color.White : Theme.muted)
       .textAlign(TextAlign.Center)
       .layoutWeight(1)
-      .height(34)
-      .borderRadius(17)
+      .height(38)
+      .borderRadius(Theme.radiusS)
       .backgroundColor(this.tab === key ? Theme.gold : Theme.card)
       .onClick((): void => {
         this.tab = key;
@@ -695,8 +696,8 @@ export struct PlanView {
               .width('100%')
               if (this.source.length > 0) {
                 Text(this.source)
-                  .fontSize(10)
-                  .fontColor(Theme.faint)
+                  .fontSize(12)
+                  .fontColor(Theme.muted)
               }
             }
             .width('100%')
@@ -706,13 +707,13 @@ export struct PlanView {
             if (this.hasNext) {
               Row({ space: 8 }) {
                 Text('下一枚')
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.goldDeep)
-                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                  .padding({ left: 8, right: 8, top: 3, bottom: 3 })
                   .backgroundColor('#FFFFFFCC')
                   .borderRadius(5)
                 Text(this.nextName)
-                  .fontSize(13)
+                  .fontSize(14)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(Theme.goldDeep)
                 Blank()
@@ -721,9 +722,11 @@ export struct PlanView {
                   .fontColor(Theme.muted)
               }
               .width('100%')
-              .padding(12)
-              .borderRadius(12)
-              .backgroundColor('#F6EFE0')
+              .padding(14)
+              .borderRadius(Theme.radiusM)
+              .linearGradient({ angle: 130, colors: [['#FFFFFFE6', 0], ['#FBF1DC', 1]] })
+              .border({ width: 1, color: Theme.glassBorder })
+              .shadow({ radius: 18, color: 'rgba(120,90,40,0.08)', offsetY: 6 })
               .margin({ left: 16, right: 16, bottom: 12 })
             }
 
@@ -736,7 +739,7 @@ export struct PlanView {
 
             if (this.plansError.length > 0) {
               Text(this.plansError)
-                .fontSize(12)
+                .fontSize(11)
                 .fontColor(Theme.up)
                 .padding(12)
                 .onClick((): void => {
@@ -753,12 +756,12 @@ export struct PlanView {
                 Column() {
                   Row() {
                     Text(String(g.year) + ' 年')
-                      .fontSize(14)
+                      .fontSize(16)
                       .fontWeight(FontWeight.Medium)
                       .fontColor(Theme.text)
                     Blank()
                     Text(g.total + ' 个项目 · ' + g.pieces + ' 枚')
-                      .fontSize(10)
+                      .fontSize(11)
                       .fontColor(Theme.faint)
                   }
                   .width('100%')
@@ -769,20 +772,21 @@ export struct PlanView {
                       Row({ space: 8 }) {
                         Column({ space: 3 }) {
                           Text(it.name)
-                            .fontSize(13)
+                            .fontSize(15)
+                            .fontWeight(FontWeight.Medium)
                             .fontColor(Theme.textStrong)
                             .maxLines(1)
                             .textOverflow({ overflow: TextOverflow.Ellipsis })
                           Row({ space: 8 }) {
                             Text(it.code)
-                              .fontSize(9)
+                              .fontSize(11)
                               .fontColor(Theme.goldDeep)
                             Text(it.pieces + ' 枚')
-                              .fontSize(9)
+                              .fontSize(11)
                               .fontColor(Theme.muted)
                             if (it.dateText.length > 0) {
                               Text(it.dateText + ' 发行')
-                                .fontSize(9)
+                                .fontSize(11)
                                 .fontColor(Theme.faint)
                             }
                           }
@@ -791,7 +795,7 @@ export struct PlanView {
                         .alignItems(HorizontalAlign.Start)
 
                         Text('已发行')
-                          .fontSize(9)
+                          .fontSize(11)
                           .fontColor(Theme.muted)
                           .padding({ left: 6, right: 6, top: 2, bottom: 2 })
                           .backgroundColor('#F1EEE6')
@@ -803,9 +807,12 @@ export struct PlanView {
                     }, (it: PmRowView) => it.key)
                   }
                   .width('100%')
-                  .padding({ left: 12, right: 12 })
-                  .borderRadius(12)
-                  .backgroundColor(Theme.card)
+                  .padding({ left: 14, right: 14 })
+                  .borderRadius(Theme.radiusM)
+                  .backgroundColor(Theme.glass)
+                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+                  .border({ width: 1, color: Theme.glassBorder })
+                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16 })
@@ -837,13 +844,13 @@ export struct PlanView {
                 Column() {
                   Row() {
                     Text(String(g.year) + ' 年')
-                      .fontSize(14)
+                      .fontSize(16)
                       .fontWeight(FontWeight.Medium)
                       .fontColor(Theme.text)
                     Blank()
                     Text(g.planCount + ' 项' + (g.extraCount > 0 ? ' · 增发 ' + g.extraCount : '')
                       + ' · 已发 ' + g.doneCount)
-                      .fontSize(10)
+                      .fontSize(11)
                       .fontColor(Theme.faint)
                   }
                   .width('100%')
@@ -858,9 +865,12 @@ export struct PlanView {
                     }, (row: PlanRow) => row.key)
                   }
                   .width('100%')
-                  .padding({ left: 12, right: 12 })
-                  .borderRadius(12)
-                  .backgroundColor(Theme.card)
+                  .padding({ left: 14, right: 14 })
+                  .borderRadius(Theme.radiusM)
+                  .backgroundColor(Theme.glass)
+                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+                  .border({ width: 1, color: Theme.glassBorder })
+                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16 })
@@ -868,17 +878,17 @@ export struct PlanView {
 
               Column({ space: 10 }) {
                 Text('来源：中国人民银行年度公告，以发行前公告为准')
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.faint)
                 Text('去看已发行的 ' + this.totalCoins + ' 个品种 ›')
-                  .fontSize(12)
+                  .fontSize(13)
                   .fontColor(Theme.gold)
                   .onClick((): void => {
                     this.onSwitchTab(2);
                   })
               }
               .width('100%')
-              .padding({ top: 18, bottom: 24 })
+              .padding({ top: 18, bottom: 88 })
             }
           }
           .width('100%')
@@ -901,6 +911,6 @@ export struct PlanView {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
   }
 }

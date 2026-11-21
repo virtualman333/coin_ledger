@@ -466,7 +466,10 @@ export struct DetailPage {
     .width('100%')
     .padding(14)
     .borderRadius(14)
-    .backgroundColor(Theme.card)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -500,7 +503,10 @@ export struct DetailPage {
     .width('100%')
     .padding(14)
     .borderRadius(14)
-    .backgroundColor(Theme.card)
+    .backgroundColor(Theme.glass)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+    .border({ width: 1, color: Theme.glassBorder })
+    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
   }
 
   @Builder
@@ -523,7 +529,10 @@ export struct DetailPage {
       .width('100%')
       .padding(14)
       .borderRadius(14)
-      .backgroundColor(Theme.card)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -562,7 +571,10 @@ export struct DetailPage {
       .width('100%')
       .padding(14)
       .borderRadius(14)
-      .backgroundColor(Theme.card)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -639,7 +651,10 @@ export struct DetailPage {
       .width('100%')
       .padding(14)
       .borderRadius(14)
-      .backgroundColor(Theme.card)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -746,7 +761,10 @@ export struct DetailPage {
       .width('90%')
       .padding(18)
       .borderRadius(16)
-      .backgroundColor(Theme.card)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -834,7 +852,10 @@ export struct DetailPage {
       .width('86%')
       .padding(18)
       .borderRadius(14)
-      .backgroundColor(Theme.card)
+      .backgroundColor(Theme.glass)
+      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -956,7 +977,7 @@ export struct DetailPage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor(Theme.bg)
+      .backgroundColor(Color.Transparent)
 
       if (this.addSheet) {
         this.addSheetView()

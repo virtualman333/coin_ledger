@@ -1,5 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { promptAction, SymbolGlyphModifier } from '@kit.ArkUI';
+import { AppTabBar } from '../components/TabBar';
 import { HomeView } from '../views/HomeView';
 import { PlanView } from '../views/PlanView';
 import { ListView } from '../views/ListView';
@@ -157,9 +158,11 @@ struct Index {
         .margin({ top: 4 })
       }
       .width('88%')
-      .padding(20)
-      .borderRadius(18)
+      .padding(22)
+      .borderRadius(Theme.radiusL)
       .backgroundColor(Theme.card)
+      .border({ width: 1, color: Theme.glassBorder })
+      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
       .shadow({ radius: 30, color: 'rgba(0,0,0,0.25)', offsetY: 10 })
     }
     .width('100%')
@@ -224,7 +227,7 @@ struct Index {
       }
     }
     .hideTitleBar(true)
-    .backgroundColor(Theme.bg)
+    .backgroundColor(Color.Transparent)
     // 不写尺寸时 NavDestination 会按内容自适应，出现「页面比屏幕窄、左侧露出下页」的残影
     .width('100%')
     .height('100%')
@@ -232,8 +235,38 @@ struct Index {
 
   build() {
     Stack() {
+      // 远景：暖白 → 米金 的三段渐变
+      Column()
+        .width('100%')
+        .height('100%')
+        .linearGradient({
+          angle: 165,
+          colors: [[Theme.skyTop, 0], [Theme.skyMid, 0.52], [Theme.skyBottom, 1]]
+        })
+
+      // 左上方主光源（暖金光斑，大半径模糊）
+      Column()
+        .width(320)
+        .height(320)
+        .borderRadius(160)
+        .backgroundColor(Theme.glowWarm)
+        .opacity(0.5)
+        .blur(72)
+        .position({ x: -110, y: -90 })
+
+      // 右侧辅助光（更淡，形成景深）
+      Column()
+        .width(240)
+        .height(240)
+        .borderRadius(120)
+        .backgroundColor(Theme.glowLight)
+        .opacity(0.45)
+        .blur(64)
+        .position({ x: 250, y: 120 })
+
       if (this.agreed) {
         Navigation(this.stack) {
+          Stack({ alignContent: Alignment.Bottom }) {
           Tabs({ barPosition: BarPosition.End, index: this.currentTab }) {
             TabContent() {
               HomeView({
@@ -269,16 +302,27 @@ struct Index {
           }
           .width('100%')
           .height('100%')
-          // 系统原生底部栏：白底 + 顶部分隔线 + 图标/文字着色，不做悬浮胶囊
-          .barHeight(58)
-          .barBackgroundColor(Theme.card)
-          .divider({ strokeWidth: 0.5, color: Theme.line })
-          .fadingEdge(false)
+          // 隐藏系统 bar，改由浮动玻璃胶囊承担导航
+          .barHeight(0)
           .scrollable(false)
           .animationDuration(220)
           .onChange((index: number): void => {
             this.currentTab = index;
           })
+
+          Column() {
+            AppTabBar({
+              current: this.currentTab,
+              onSelect: (index: number): void => this.switchTab(index)
+            })
+              .width('100%')
+          }
+          .width('100%')
+          .padding({ left: 20, right: 20, bottom: 10 })
+          .zIndex(2)
+          }
+          .width('100%')
+          .height('100%')
         }
       .hideTitleBar(true)
       .mode(NavigationMode.Stack)
@@ -289,7 +333,7 @@ struct Index {
         Column()
           .width('100%')
           .height('100%')
-          .backgroundColor(Theme.bg)
+          .backgroundColor(Color.Transparent)
       }
 
       if (this.privacySheet) {
@@ -298,6 +342,5 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Theme.bg)
   }
 }
