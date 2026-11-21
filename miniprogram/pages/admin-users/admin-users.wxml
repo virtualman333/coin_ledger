@@ -1,0 +1,23 @@
+<view class="page">
+
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{users}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="userActions"
+        hover-class="tap-hover"
+      >
+        <view class="r-main">
+          <view class="r-title">
+            <text>{{item.name}}</text>
+            <text class="badge {{item.role === 'admin' ? 'admin' : ''}}">{{item.role === 'admin' ? '管理员' : '用户'}}</text>
+            <text class="badge test" wx:if="{{item.isTest}}">测试</text>
+          </view>
+          <text class="r-sub">藏品 {{item.holdings}} 条 · 注册 {{item.createdAtText}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+</view>

@@ -132,9 +132,19 @@ test('遮罩带 catchtouchmove 时，弹层主体必须是 scroll-view 而不是
   }
 });
 
-test('admin 三个弹层用 page-style 锁页面滚动，不靠 catchtouchmove', () => {
-  const s = readFile(path.join(MP, 'pages/admin/admin.wxml'));
-  assert.match(s, /<page-meta[^>]*page-style="\{\{editing \|\| editingSeries \|\| fbDetail/, 'admin 缺 page-meta 滚动锁');
+test('管理端每个带弹层的页面各自用 page-style 锁页面滚动', () => {
+  const cases = {
+    'admin-params': 'editing',
+    'admin-series': 'editingSeries',
+    'admin-feedback': 'fbDetail',
+    'admin-visitors': 'vsDetail',
+  };
+  for (const slug of Object.keys(cases)) {
+    const s = readFile(path.join(MP, 'pages', slug, slug + '.wxml'));
+    const meta = s.match(/<page-meta[^>]*page-style="\{\{([^}]*)\}\}"/);
+    assert.ok(meta, slug + ' 缺 page-meta 滚动锁');
+    assert.ok(meta[1].includes(cases[slug]), slug + ' 的锁定条件里没有 ' + cases[slug]);
+  }
 });
 
 // -------------------------------------------------------------- 字号下限
@@ -198,11 +208,11 @@ test('深色 hero 上的文字不能是深灰', () => {
 
 // ------------------------------------------------------- wxml/wxss 一致性
 test('admin 用到的 .loading 有样式定义', () => {
-  const wxml = readFile(path.join(MP, 'pages/admin/admin.wxml'));
+  const wxml = readFile(path.join(MP, 'pages/admin-visitors/admin-visitors.wxml'));
   assert.match(wxml, /class="loading"/);
-  const wxss = readFile(path.join(MP, 'pages/admin/admin.wxss'));
+  const common = readFile(path.join(MP, 'pages/admin/admin-common.wxss'));
   const app = readFile(path.join(MP, 'app.wxss'));
-  assert.ok(/\.loading\s*\{/.test(wxss) || /\.loading\s*\{/.test(app), 'admin.wxml 用了 .loading 但没有任何样式定义');
+  assert.ok(/\.loading\s*\{/.test(common) || /\.loading\s*\{/.test(app), '访客页用了 .loading 但没有任何样式定义');
 });
 
 test('不出现 px 单位的尺寸（除 constant 兼容兜底）', () => {
@@ -294,8 +304,8 @@ test('关闭按钮（✕）用伪元素扩热区，不靠放大盒子', () => {
     ['pages/detail/detail.wxss', '.peek-x'],
     ['pages/detail/detail.wxss', '.ai-formula-x'],
     ['pages/plan/plan.wxss', '.pd-x'],
-    ['pages/admin/admin.wxss', '.sheet-x'],
-    ['pages/admin/admin.wxss', '.vdd-x'],
+    ['pages/admin/admin-common.wxss', '.sheet-x'],
+    ['pages/admin/admin-common.wxss', '.vdd-x'],
     ['pages/account/account.wxss', '.policy-close'],
   ];
   for (const [f, cls] of cases) {

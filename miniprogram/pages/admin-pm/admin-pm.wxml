@@ -1,0 +1,19 @@
+<view class="page">
+
+    <view class="pm-search">
+      <input value="{{pmQ}}" bindinput="onPmQ" bindconfirm="pmSearch" placeholder="搜名称 / 编号" confirm-type="search"></input>
+      <button bindtap="pmSearch">搜索</button>
+    </view>
+    <view class="pm-total">共 {{pmTotal}} 枚 · 第 {{pmPage}}/{{pmPages}} 页</view>
+    <view class="pm-row" wx:for="{{pmAll}}" wx:key="code">
+      <image wx:if="{{item.thumbUrl}}" src="{{item.thumbUrl}}" mode="aspectFill"></image>
+      <view class="pm-r-b">
+        <text class="pm-r-n">{{item.name}}</text>
+        <text class="pm-r-m">{{item.code}} · {{item.year}} · {{item.face}}元 · {{item.circulation}}枚</text>
+      </view>
+    </view>
+    <view class="pm-nav">
+      <button bindtap="pmPrev" disabled="{{pmPage <= 1}}">上一页</button>
+      <button bindtap="pmNext" disabled="{{pmPage >= pmPages}}">下一页</button>
+    </view>
+</view>

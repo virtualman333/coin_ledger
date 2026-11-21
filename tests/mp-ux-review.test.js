@@ -17,27 +17,24 @@ const ROOT = path.join(__dirname, '..');
 const MP = path.join(ROOT, 'miniprogram');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
-test('admin.wxml：反馈弹层正确闭合，访客统计不在 fbDetail 条件内', () => {
-  const s = read('miniprogram/pages/admin/admin.wxml');
-  // 去掉注释后按标签栈算深度：访客 block 起始处必须已回到根级
-  const clean = s.replace(/<!--[\s\S]*?-->/g, '');
-  const stack = [];
-  const lines = clean.split('\n');
-  let depthAtVisitors = null;
-  for (let i = 0; i < lines.length; i++) {
-    const re = /<(\/?)(view|block|scroll-view)\b[^>]*?(\/?)>/g;
-    let m;
-    while ((m = re.exec(lines[i]))) {
+test('反馈与访客已拆成独立页面：各自标签闭合，互不牵扯', () => {
+  const pages = {
+    'admin-feedback': 'miniprogram/pages/admin-feedback/admin-feedback.wxml',
+    'admin-visitors': 'miniprogram/pages/admin-visitors/admin-visitors.wxml',
+  };
+  for (const name of Object.keys(pages)) {
+    const clean = read(pages[name]).replace(/<!--[\s\S]*?-->/g, '');
+    const stack = [];
+    for (const m of clean.matchAll(/<(\/?)(view|block|scroll-view)\b[^>]*?(\/?)>/g)) {
       if (m[3]) continue;
-      if (m[1]) { if (stack.length) stack.pop(); }
-      else stack.push(m[2]);
+      if (m[1]) { if (stack.length) stack.pop(); } else stack.push(m[2]);
     }
-    if (lines[i].indexOf('<block wx:if="{{tab === \'visitors\'}}"') >= 0) {
-      depthAtVisitors = stack.length;
-    }
+    assert.equal(stack.length, 0, name + ' 标签未闭合');
   }
-  assert.equal(stack.length, 0, '所有标签必须闭合');
-  assert.equal(depthAtVisitors, 1, '访客统计应处在根容器层级，而非反馈弹层内部');
+  // 当年「访客统计被嵌在 fbDetail 条件里」的坑，拆分后结构上不可能再现
+  const vs = read(pages['admin-visitors']);
+  assert.ok(!vs.includes('fbDetail'), '访客页不该再被反馈弹层的条件牵扯');
+  assert.ok(!read(pages['admin-feedback']).includes('tab ==='), '页面里不该再靠 tab 条件切换');
 });
 
 test('store.refresh：请求序号防止旧响应覆盖；force 后旧回包作废', async () => {

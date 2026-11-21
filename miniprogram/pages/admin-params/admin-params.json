@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "参数管理",
+  "navigationBarBackgroundColor": "#f6f4ef",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f4ef",
+  "enablePullDownRefresh": true
+}

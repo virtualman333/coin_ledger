@@ -1,0 +1,58 @@
+<page-meta page-style="{{fbDetail ? 'overflow:hidden' : ''}}"></page-meta>
+
+<view class="page">
+
+    <view class="filters">
+      <text class="fchip {{fbStatus === 'open' ? 'on' : ''}}" data-s="open" bindtap="setFbStatus">待处理</text>
+      <text class="fchip {{fbStatus === 'done' ? 'on' : ''}}" data-s="done" bindtap="setFbStatus">已处理</text>
+      <text class="fchip {{fbStatus === 'all' ? 'on' : ''}}" data-s="all" bindtap="setFbStatus">全部</text>
+    </view>
+    <view class="card list">
+      <view
+        class="row fb"
+        wx:for="{{feedbacks}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="fbActions"
+        hover-class="tap-hover"
+      >
+        <view class="r-main">
+          <view class="r-title">
+            <text>{{item.coinName || '通用反馈'}}</text>
+            <text class="badge {{item.status === 'open' ? 'warn' : ''}}">{{item.status === 'open' ? '待处理' : '已处理'}}</text>
+          </view>
+          <text class="r-text">{{item.text}}</text>
+          <text class="r-sub">{{item.createdAtText}} · {{item.userName}}</text>
+        </view>
+      </view>
+      <view class="empty" wx:if="{{!feedbacks.length}}">这里还没有反馈</view>
+    </view>
+</view>
+
+<!-- 反馈详情 -->
+<view class="mask" wx:if="{{fbDetail}}" bindtap="closeFb">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{fbDetail.coinName || '反馈'}}</text>
+      <text class="sheet-x" bindtap="closeFb">✕</text>
+    </view>
+    <text class="fb-text">{{fbDetail.text}}</text>
+    <image
+      class="fb-img"
+      wx:for="{{fbDetail.images}}"
+      wx:key="*this"
+      src="{{item}}"
+      mode="widthFix"
+      data-src="{{item}}"
+      bindtap="previewFbImage"
+    ></image>
+    <view class="fb-prev-reply" wx:if="{{fbDetail.reply}}">上次回复：{{fbDetail.reply}}</view>
+    <text class="fb-meta">{{fbDetail.userName}} · {{fbDetail.createdAtText}}</text>
+    <textarea class="fb-reply" placeholder="回复用户（用户可在自己的反馈里看到）" maxlength="800" value="{{fbReply}}" bindinput="onFbReplyInput"></textarea>
+    <view class="fb-actions">
+      <button class="btn-primary half" bindtap="saveFbReply">回复并处理</button>
+      <button class="btn-ghost half" bindtap="toggleFb">{{fbDetail.status === 'open' ? '仅标已处理' : '改回待处理'}}</button>
+      <button class="btn-danger half" bindtap="deleteFb">删除</button>
+    </view>
+  </view>
+</view>

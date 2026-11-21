@@ -1,0 +1,56 @@
+<page-meta page-style="{{editing ? 'overflow:hidden' : ''}}"></page-meta>
+
+<view class="page">
+
+    <view class="search">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜品种名 / 年份"
+        placeholder-class="ph"
+        confirm-type="search"
+        bindinput="onKeyword"
+      />
+      <text class="search-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</text>
+    </view>
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{coins}}"
+        wx:key="i"
+        data-i="{{item.i}}"
+        bindtap="editCoin"
+        hover-class="tap-hover"
+      >
+        <image class="r-thumb" src="{{item.smallUrl}}" mode="aspectFill" lazy-load></image>
+        <view class="r-main">
+          <text class="r-title-text">{{item.name}}</text>
+          <text class="r-sub">{{item.year}} · 面额 {{item.face}} 元 · 发行 {{item.mintage}} 万 · 参考价 ¥{{item.est}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+</view>
+
+<!-- 编辑品种 -->
+<view class="mask" wx:if="{{editing}}" bindtap="closeEdit">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{editName}}</text>
+      <text class="sheet-x" bindtap="closeEdit">✕</text>
+    </view>
+    <view class="field" wx:for="{{editFields}}" wx:key="k">
+      <text class="f-label">{{item.label}}</text>
+      <input
+        class="f-input"
+        type="{{item.type}}"
+        value="{{item.value}}"
+        data-k="{{item.k}}"
+        bindinput="onEditInput"
+        placeholder="{{item.ph}}"
+        placeholder-class="ph"
+      />
+    </view>
+    <button class="btn-primary" bindtap="saveEdit" loading="{{saving}}">保存</button>
+  </view>
+</view>

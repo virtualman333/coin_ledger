@@ -1,0 +1,12 @@
+<view class="page">
+
+    <view class="cat-card" wx:for="{{cats}}" wx:key="code">
+      <view class="cc-top">
+        <text class="cc-name">{{item.name}}</text>
+        <text class="cc-count">{{item.count}} {{item.unit}}</text>
+      </view>
+      <view class="cc-sub">我的藏品 {{item.holdings}} 条<text wx:if="{{item.shareText}}"> · 占比 {{item.shareText}}</text></view>
+      <view class="cc-bar"><view class="cc-fill" style="width:{{item.pct}}%"></view></view>
+      <view class="cc-sub" wx:if="{{item.code === 'pm'}}">缩略图 {{item.withThumb}} · 有发行量 {{item.withMintage}}</view>
+    </view>
+</view>

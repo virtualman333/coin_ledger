@@ -1,0 +1,52 @@
+<page-meta page-style="{{editingSeries ? 'overflow:hidden' : ''}}"></page-meta>
+
+<view class="page">
+
+    <view class="tip">一个品种可属于多个系列；卡图可单独替换</view>
+    <button class="btn-primary new-btn" bindtap="newSeries">＋ 新建系列</button>
+    <view class="card list">
+      <view
+        class="row"
+        wx:for="{{series}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="seriesActions"
+        hover-class="tap-hover"
+      >
+        <image class="r-thumb" src="{{item.imgUrl}}" mode="aspectFill" wx:if="{{item.imgUrl}}"></image>
+        <view class="r-thumb ph2" wx:else></view>
+        <view class="r-main">
+          <text class="r-title-text">{{item.name}}</text>
+          <text class="r-sub">{{item.count}} 个品种 · 排序 {{item.sort}}</text>
+        </view>
+        <text class="r-more">›</text>
+      </view>
+    </view>
+</view>
+
+<!-- 系列编辑 -->
+<view class="mask" wx:if="{{editingSeries}}" bindtap="closeSeries">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{seriesForm.isNew ? '新建系列' : '编辑系列'}}</text>
+      <text class="sheet-x" bindtap="closeSeries">✕</text>
+    </view>
+    <view class="field" wx:for="{{seriesFields}}" wx:key="k">
+      <text class="f-label">{{item.label}}</text>
+      <input
+        class="f-input"
+        type="{{item.type}}"
+        value="{{item.value}}"
+        data-k="{{item.k}}"
+        bindinput="onSeriesInput"
+        placeholder="{{item.ph}}"
+        placeholder-class="ph"
+      />
+    </view>
+    <view class="series-ops">
+      <button class="btn-ghost half" bindtap="uploadSeriesImg" wx:if="{{!seriesForm.isNew}}">换卡图</button>
+      <button class="btn-danger half" bindtap="deleteSeries" wx:if="{{!seriesForm.isNew}}">删除系列</button>
+    </view>
+    <button class="btn-primary" bindtap="saveSeries" loading="{{saving}}">保存</button>
+  </view>
+</view>

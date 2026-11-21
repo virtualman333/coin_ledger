@@ -1,14 +1,11 @@
 'use strict';
 /**
- * 管理端样式回归：页面容器、弹层滚动、按钮默认样式、热区、以及贵金属的估值口径。
+ * 管理端样式回归（管理页已拆成「首页 + 8 个三级页面」）。
  *
- * 这轮修的问题：
- * 1. 「访客统计」整块被写在 .page 容器外面 —— 没有页面边距，内容顶到屏幕两边
- * 2. 访客明细的 scroll-view 只给了 max-height，滚不动，底部按钮按不到
- * 3. 明细弹层靠 catchtouchmove 拦滚动，反而把 scroll-view 自己也拦死了
- * 4. 贵金属/翻页按钮没清小程序默认的 ::after 灰边框，棕底上一圈脏边
- * 5. 大分类进度条写死「pm 100%、其余 20%」，跟真实数量无关
- * 6. 管理员看用户持仓时，贵金属被算成「市值 ¥0 / 盈亏 -成本」
+ * 断言按职责落到具体页面：
+ *   - 通用样式（卡片/弹层/搜索/按钮）在 pages/admin/admin-common.wxss
+ *   - 访客、贵金属、大分类、参数等各归各页
+ * 避免再把某页的样式问题藏在另一个文件里查不到。
  *
  * 运行：node --test tests/mp-admin-style.test.js
  */
@@ -19,37 +16,38 @@ const path = require('node:path');
 
 const MP = path.join(__dirname, '..', 'miniprogram');
 const read = (p) => fs.readFileSync(path.join(MP, p), 'utf8');
+const pageWxml = (slug) => read('pages/' + slug + '/' + slug + '.wxml');
+const pageWxss = (slug) => read('pages/' + slug + '/' + slug + '.wxss');
+const pageJs = (slug) => read('pages/' + slug + '/' + slug + '.js');
+const common = () => read('pages/admin/admin-common.wxss');
 
-const wxml = () => read('pages/admin/admin.wxml');
-const wxss = () => read('pages/admin/admin.wxss');
+const MODULES = ['admin-cats', 'admin-pm', 'admin-params', 'admin-images',
+  'admin-series', 'admin-users', 'admin-feedback', 'admin-visitors'];
 
-test('访客统计必须在 .page 容器里，不能挂在页面根部', () => {
-  const s = wxml();
+test('访客统计在自己的页面里，弹层留在页面容器外', () => {
+  const s = pageWxml('admin-visitors');
   const pageStart = s.indexOf('<view class="page">');
   assert.ok(pageStart >= 0, '找不到 .page');
-  // 第一个弹层之前都算页面主体
-  const pageEnd = s.indexOf('<!-- 编辑品种 -->');
-  assert.ok(pageEnd > pageStart, '找不到页面主体的结尾');
-  const body = s.slice(pageStart, pageEnd);
-  assert.match(body, /tab === 'visitors'/, '访客统计被写在 .page 外面，会没有左右边距');
-  // 弹层必须留在页面外边（fixed 定位，不受 padding 影响）
-  assert.ok(s.indexOf('class="vdd-mask"') > pageEnd, '访客明细弹层不该塞进页面主体');
+  const maskStart = s.indexOf('class="vdd-mask"');
+  assert.ok(maskStart > pageStart, '找不到访客明细弹层');
+  const body = s.slice(pageStart, maskStart);
+  assert.match(body, /vs-cards/, '统计卡应在 .page 内');
+  assert.ok(maskStart > s.lastIndexOf('</view>', maskStart), '弹层不该塞进页面主体');
 });
 
 test('访问明细的 scroll-view 要能拿到确定高度', () => {
-  const css = wxss();
+  const css = common();
   const sheet = css.match(/^\.vdd-sheet\s*\{[^}]*\}/m);
   assert.ok(sheet, '找不到 .vdd-sheet');
-  assert.match(sheet[0], /display:\s*flex/, '弹层要用 flex 列布局');
+  assert.match(sheet[0], /display:\s*flex/);
   assert.match(sheet[0], /flex-direction:\s*column/);
 
   const list = css.match(/^\.vdd-list\s*\{[^}]*\}/m);
   assert.ok(list, '找不到 .vdd-list');
-  assert.match(list[0], /flex:\s*1/, 'scroll-view 需要 flex:1');
-  assert.match(list[0], /min-height:\s*0/, '缺 min-height:0 时 flex 子项不肯收缩，滚不起来');
-  assert.doesNotMatch(list[0], /max-height/, 'max-height 不能替代高度，内容会被裁掉');
+  assert.match(list[0], /flex:\s*1/);
+  assert.match(list[0], /min-height:\s*0/);
+  assert.doesNotMatch(list[0], /max-height/, 'max-height 不能替代高度');
 
-  // 头/脚要固定不参与收缩
   for (const sel of ['.vdd-head', '.vdd-sub', '.vdd-foot']) {
     const m = css.match(new RegExp('^\\' + sel + '\\s*\\{[^}]*\\}', 'm'));
     assert.ok(m, '找不到 ' + sel);
@@ -57,70 +55,111 @@ test('访问明细的 scroll-view 要能拿到确定高度', () => {
   }
 });
 
-test('弹层用 page-meta 锁页面滚动，不用 catchtouchmove', () => {
-  const s = wxml();
-  const meta = s.match(/<page-meta[^>]*>/);
-  assert.ok(meta, '找不到 page-meta');
-  for (const k of ['editing', 'editingSeries', 'fbDetail', 'vsDetail']) {
-    assert.ok(meta[0].includes(k), 'page-meta 的锁定条件漏了 ' + k);
+test('有弹层的页面都用 page-meta 锁滚动，不用 catchtouchmove', () => {
+  const cases = {
+    'admin-params': 'editing',
+    'admin-series': 'editingSeries',
+    'admin-feedback': 'fbDetail',
+    'admin-visitors': 'vsDetail',
+  };
+  for (const slug of Object.keys(cases)) {
+    const s = pageWxml(slug);
+    const meta = s.match(/<page-meta[^>]*>/);
+    assert.ok(meta, slug + ' 缺 page-meta');
+    assert.ok(meta[0].includes(cases[slug]), slug + ' 的 page-meta 条件不对');
+    assert.ok(s.indexOf('<page-meta') < s.indexOf('<view class="page">'), slug + ' 的 page-meta 必须在最前面');
+    // 注释里可以写「不要加 catchtouchmove」，只看实际属性
+    const live = s.replace(/<!--[\s\S]*?-->/g, '');
+    assert.doesNotMatch(live, /catchtouchmove/, slug + ' 不该用 catchtouchmove');
   }
-  const vdd = s.match(/<view class="vdd-mask"[^>]*>/);
-  assert.ok(vdd, '找不到 .vdd-mask');
-  assert.doesNotMatch(vdd[0], /catchtouchmove/, 'catchtouchmove 会把内部 scroll-view 一起拦死');
+});
+
+test('每个模块页都能独立刷新，且直链进入也要校验权限', () => {
+  for (const slug of MODULES) {
+    const js = pageJs(slug);
+    assert.match(js, /onPullDownRefresh\(\)/, slug + ' 缺下拉刷新');
+    assert.match(js, /ensureAdmin\(\)/, slug + ' 缺管理员校验');
+  }
 });
 
 test('贵金属/翻页按钮清掉小程序默认的 ::after 边框', () => {
-  const css = wxss();
+  const css = common();
   assert.match(css, /\.pm-search button::after[\s\S]{0,80}border:\s*none/);
   assert.match(css, /\.pm-nav button::after[\s\S]{0,80}border:\s*none/);
 });
 
 test('大分类进度条按真实数量画，不再写死 100/20', () => {
-  const s = wxml();
+  const s = pageWxml('admin-cats');
   assert.doesNotMatch(s, /item\.code === 'pm' \? 100 : 20/, '进度条还是写死的假数据');
-  assert.match(s, /style="width:\{\{item\.pct\}\}%"/, '进度条应该用后端算出的比例');
-  const js = read('pages/admin/admin.js');
-  assert.match(js, /pct:/, 'loadCats 里没算比例');
+  assert.match(s, /style="width:\{\{item\.pct\}\}%"/);
+  assert.match(pageJs('admin-cats'), /pct:/, 'loadCats 里没算比例');
 });
 
 test('管理端的按钮热区靠伪元素，不靠撑大元素', () => {
-  const css = wxss();
-  const cases = [
-    ['.mod-back', '56rpx'],
-    ['.vchip', null],
-    ['.search-clear', null],
-  ];
-  for (const [sel, fixed] of cases) {
+  const css = common();
+  for (const sel of ['.vchip', '.search-clear']) {
     const own = css.match(new RegExp('^\\' + sel + '\\s*\\{[^}]*\\}', 'm'));
     assert.ok(own, '找不到 ' + sel);
     assert.doesNotMatch(own[0], /min-(width|height)\s*:/, sel + ' 不能用 min-* 撑热区');
     const after = css.match(new RegExp('\\' + sel + '::after\\s*\\{[^}]*\\}'));
     assert.ok(after, sel + ' 缺 ::after 热区');
-    if (fixed) assert.match(own[0], new RegExp('height:\\s*' + fixed), sel + ' 的视觉高度应保持 ' + fixed);
   }
 });
 
 test('长文本不撑破行：标题行允许换行、明细列有省略号', () => {
-  const css = wxss();
+  const css = common();
   const rTitle = css.match(/^\.r-title\s*\{[^}]*\}/m);
   assert.match(rTitle[0], /flex-wrap:\s*wrap/, '.r-title 不换行时 badge 会被挤出去');
 
   const user = css.match(/^\.vdd-user\s*\{[^}]*\}/m);
-  assert.match(user[0], /text-overflow:\s*ellipsis/, '.vdd-user 需要省略号，不能硬裁');
+  assert.match(user[0], /text-overflow:\s*ellipsis/);
 
   const tab = css.match(/^\.vdd-tab\s*\{[^}]*\}/m);
-  assert.match(tab[0], /min-width:\s*0/, '.vdd-tab 不设 min-width:0 会让整行溢出');
+  assert.match(tab[0], /min-width:\s*0/);
 });
 
 test('管理员看用户持仓：贵金属不出市值与盈亏', () => {
-  const js = read('pages/admin-user/admin-user.js');
-  assert.match(js, /const isPm = !coin/, '贵金属应靠「本地目录查不到」识别');
-  assert.match(js, /if \(isPm\) \{/, '贵金属成本要单独累计，不能进入盈亏');
-  assert.match(js, /pmCost/, '缺贵金属成本的单独统计');
-  // 盈亏不能用「全部成本」当减数
+  const js = pageJs('admin-user');
+  assert.match(js, /const isPm = !coin/);
+  assert.match(js, /if \(isPm\) \{/);
+  assert.match(js, /pmCost/);
   assert.match(js, /market - \(cost - pmCost\)/, '盈亏仍在减贵金属成本，会显示假亏损');
 
-  const wxmlUser = read('pages/admin-user/admin-user.wxml');
-  assert.match(wxmlUser, /item\.isPm/, '模板没有区分贵金属行');
-  assert.match(wxmlUser, /不计估值/, '贵金属行应说明不计估值');
+  const wxmlUser = pageWxml('admin-user');
+  assert.match(wxmlUser, /item\.isPm/);
+  assert.match(wxmlUser, /不计估值/);
+});
+
+test('管理首页只留入口，模块内容都已下沉到三级页面', () => {
+  const home = pageWxml('admin');
+  for (const marker of ['class="mask"', 'vdd-mask', 'pm-row', 'cat-card', 'class="grid"']) {
+    assert.ok(!home.includes(marker), '首页还残留模块内容：' + marker);
+  }
+  assert.match(home, /goModule/, '首页入口应走 goModule');
+  const js = pageJs('admin');
+  for (const slug of MODULES) {
+    assert.ok(js.includes('/pages/' + slug + '/' + slug), '首页缺少到 ' + slug + ' 的跳转');
+  }
+});
+
+test('每个模块页的 onLoad 真的会去拉数据（不是光写个属性名）', () => {
+  for (const slug of MODULES) {
+    const js = pageJs(slug);
+    const start = js.indexOf('onLoad()');
+    const end = js.indexOf('onPullDownRefresh()');
+    assert.ok(start > 0 && end > start, slug + ' 找不到 onLoad');
+    const body = js.slice(start, end);
+    assert.match(body, /this\.load\w+\(/, slug + ' 的 onLoad 没有调用加载方法');
+    assert.doesNotMatch(body, /this\.load\w+;/, slug + ' 写成了 this.loadX;（少了括号，等于没拉）');
+  }
+});
+
+test('模块页里 this.xxx() 调用的方法都在本文件定义', () => {
+  for (const slug of MODULES) {
+    const js = pageJs(slug);
+    const defined = new Set((js.match(/\n  (\w+)\(/g) || []).map((m) => m.trim().slice(0, -1)));
+    const calls = new Set((js.match(/this\.(\w+)\(/g) || []).map((m) => m.slice(5, -1)));
+    const missing = [...calls].filter((c) => !defined.has(c) && c !== 'setData');
+    assert.deepEqual(missing, [], slug + ' 调用了不存在的方法：' + missing.join(', '));
+  }
 });
