@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const tabbar = require('../../utils/tabbar');
 
 // 订阅消息模板（日程提醒）。后台改模板时要同步这里
 const TMPL_ID = 'VbGee94SWDa5DUBkHx2Kii8Dp0OobE1PneOJg9Id_ao';
@@ -118,6 +119,7 @@ Page({
   },
 
   onShow() {
+    tabbar.syncSelected(this, 1);
     this.build();
     this.loadReminders();
     this.startTicker();

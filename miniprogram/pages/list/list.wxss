@@ -181,7 +181,7 @@
 }
 
 .list {
-  padding: 0 24rpx calc(40rpx + env(safe-area-inset-bottom));
+  padding: 0 24rpx calc(196rpx + env(safe-area-inset-bottom));
 }
 
 .row {
@@ -323,7 +323,7 @@
 
 /* ===== 贵金属全量库（金币云集 2823 条）卡片网格 ===== */
 /* 本页根节点没有 .page，安全区得自己补，否则最后一行卡片会被小白条压住 */
-.pm-full { padding: 8rpx 24rpx calc(40rpx + env(safe-area-inset-bottom)); }
+.pm-full { padding: 8rpx 24rpx calc(196rpx + env(safe-area-inset-bottom)); }
 .pm-bar {
   display: flex;
   align-items: center;
@@ -434,7 +434,7 @@
 }
 
 /* ===== 按系列视图 ===== */
-.series-view { padding: 12rpx 24rpx calc(48rpx + env(safe-area-inset-bottom)); }
+.series-view { padding: 12rpx 24rpx calc(196rpx + env(safe-area-inset-bottom)); }
 .sv-intro { margin: 12rpx 4rpx 20rpx; }
 .sv-intro-t {
   display: block;

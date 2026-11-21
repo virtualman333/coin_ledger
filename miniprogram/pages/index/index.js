@@ -3,6 +3,7 @@ const store = require('../../utils/store');
 const share = require('../../utils/share');
 const api = require('../../utils/api');
 const feature = require('../../utils/feature');
+const tabbar = require('../../utils/tabbar');
 
 Page({
   data: {
@@ -32,6 +33,7 @@ Page({
   },
 
   onShow() {
+    tabbar.syncSelected(this, 0);
     this.render();
     this.loadMetal();
     this.loadFeed();

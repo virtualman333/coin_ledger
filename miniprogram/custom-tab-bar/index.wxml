@@ -1,0 +1,25 @@
+<!-- 自定义 tabBar：鸿蒙风悬浮玻璃胶囊。
+     selected 由各 tab 页在 onShow 里同步，切换时不闪。 -->
+<view class="tabbar" aria-role="tablist">
+  <!-- 玻璃顶部高光（3D 反光面），必须在最底层 -->
+  <view class="tb-gloss"></view>
+  <!-- 选中态滑片：宽度固定为 1/4，靠 translateX 位移，弹性跟随 -->
+  <view class="tb-pill" style="transform: translateX({{selected * 100}}%)"></view>
+
+  <view
+    class="tb-item {{selected === index ? 'on' : ''}}"
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    data-index="{{index}}"
+    bindtap="switchTab"
+    hover-class="tb-item-press"
+    hover-start-time="0"
+    hover-stay-time="90"
+    aria-role="tab"
+    aria-selected="{{selected === index}}"
+    aria-label="{{item.text}}"
+  >
+    <view class="tb-ico ico-{{item.icon}}"></view>
+    <text class="tb-txt">{{item.text}}</text>
+  </view>
+</view>

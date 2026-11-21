@@ -1,7 +1,8 @@
 /* ============ 首页 ============ */
 .home {
-  /* 这一层是 .page 本体，简写 padding-bottom 会抹掉全局的安全区留白 */
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  /* 这一层是 .page 本体，简写 padding-bottom 会抹掉全局的安全区留白。
+     196rpx = 悬浮 tabBar 的 108rpx 高度 + 底部间距 + 一点透气余量 */
+  padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 顶部品牌 ---------- */

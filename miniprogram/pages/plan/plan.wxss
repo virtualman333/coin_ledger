@@ -1,4 +1,4 @@
-.page{padding:24rpx 24rpx calc(40rpx + env(safe-area-inset-bottom))}
+.page{padding:24rpx 24rpx calc(196rpx + env(safe-area-inset-bottom))}
 
 .head{margin-bottom:20rpx}
 .head-title{display:flex;align-items:baseline;gap:14rpx;flex-wrap:wrap}
@@ -46,14 +46,16 @@
   font-size:20rpx;font-weight:600;background:#fbf1d8;color:#9a6b1f
 }
 .badge.done{background:#f3f0e9;color:#6b6559;font-weight:500}
-.it-date{display:block;font-size:21rpx;color:#6b6559;margin-top:4rpx}
+.it-when{display:flex;margin-top:4rpx;align-items:center;justify-content:flex-end;gap:8rpx;font-size:21rpx;color:#6b6559}
+.it-sched{display:block;margin-top:2rpx;font-size:20rpx;color:#8a8378;line-height:1.4}
 .it-reserve{display:block;font-size:21rpx;color:#6b6559}
 .cd{
   display:inline-block;margin-top:6rpx;padding:1rpx 12rpx;border-radius:999rpx;
   font-size:20rpx;font-weight:600;background:#fbf1d8;color:#9a6b1f
 }
 
-.foot{margin-top:10rpx;font-size:21rpx;color:#6b6559;line-height:1.7}
+.foot{margin-top:10rpx}
+.foot-src{display:block;color:#8a8378;font-size:20rpx;line-height:1.6}
 .foot-btn{
   margin-top:18rpx;padding:22rpx;border-radius:16rpx;text-align:center;
   border:1rpx solid #e6d3a3;background:#fdf8e9;color:#9a6b1f;font-size:26rpx;font-weight:600

@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const api = require('../../utils/api');
+const tabbar = require('../../utils/tabbar');
 
 Page({
   data: {
@@ -55,6 +56,7 @@ Page({
   },
 
   onShow() {
+    tabbar.syncSelected(this, 2);
     // 每次显示都回到「假框」状态：不渲染 input，就不会弹输入法
     if (this.data.searchActive || this.data.searchFocus) {
       this.setData({ searchActive: false, searchFocus: false });
