@@ -45,9 +45,10 @@ module.exports = async function colshareRoutes(app) {
     const u = users[0] || {};
     const nickname = String(u.nickname || u.name || '藏友').slice(0, 64);
     await app.db.query(
-      'INSERT INTO cl_colshare (code, uid, nickname, items, kinds, total, created_at) '
-      + 'VALUES (?, ?, ?, ?, ?, ?, NOW(3))',
-      [code, String(me.id), nickname, JSON.stringify(storedItems), stats.kinds, stats.total]);
+      'INSERT INTO cl_colshare (code, uid, nickname, items, kinds, total, face_total, ai_total, created_at) '
+      + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(3))',
+      [code, String(me.id), nickname, JSON.stringify(storedItems), stats.kinds, stats.total,
+        stats.faceTotal, stats.aiTotal]);
     reply.send({ ok: true, code, kinds: stats.kinds, total: stats.total });
   });
 
@@ -56,7 +57,7 @@ module.exports = async function colshareRoutes(app) {
     const code = String((request.params && request.params.code) || '').slice(0, 32);
     if (!code) return reply.code(400).send({ ok: false, error: '缺少分享码' });
     const [rows] = await app.db.query(
-      'SELECT code, nickname, items, kinds, total, created_at FROM cl_colshare WHERE code = ? LIMIT 1',
+      'SELECT code, nickname, items, kinds, total, face_total, ai_total, created_at FROM cl_colshare WHERE code = ? LIMIT 1',
       [code]);
     const r = rows[0];
     if (!r) return reply.code(404).send({ ok: false, error: '分享不存在或已失效' });
@@ -71,8 +72,9 @@ module.exports = async function colshareRoutes(app) {
       total: Number(r.total) || 0,
       // 有品种但没明细 = 分享者选择不公开清单
       listHidden: (Number(r.kinds) || 0) > 0 && items.length === 0,
-      faceTotal: stats.faceTotal,
-      aiTotal: stats.aiTotal,
+      // 老快照没有这两列，回退到按 items 现算
+      faceTotal: Number(r.face_total) || stats.faceTotal,
+      aiTotal: Number(r.ai_total) || stats.aiTotal,
       createdAt: r.created_at ? new Date(r.created_at).toISOString() : '',
     });
   });

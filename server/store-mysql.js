@@ -164,6 +164,9 @@ async function ensureSchema() {
   await ensureColumn('cl_users', 'avatar', 'VARCHAR(64) NULL');
   // 用户名只允许改一次：记录首次改名时间，非空即锁死
   await ensureColumn('cl_users', 'name_changed_at', 'DATETIME(3) NULL');
+  // 收藏分享快照的汇总：不公开清单时 items 是空的，面值/推理价只能靠这两列带出去
+  await ensureColumn('cl_colshare', 'face_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
+  await ensureColumn('cl_colshare', 'ai_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
   // 藏品增强（migration 008）：号码 / 形态 / 图片，缺省不影响既有藏品
   await ensureColumn('cl_holdings', 'serials', 'TEXT NULL');
   await ensureColumn('cl_holdings', 'form', "VARCHAR(8) NOT NULL DEFAULT ''");
