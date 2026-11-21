@@ -1,7 +1,7 @@
 /* 更多功能：分组卡片 + 行首图标 */
 
 .page {
-  padding-top: 4rpx;
+  padding-top: 24rpx;
 }
 
 .grp {

@@ -2,7 +2,7 @@
    不用渐变、不叠阴影，靠留白、字重和一处品牌金建立层次。 */
 
 .page {
-  padding-top: 4rpx;
+  padding-top: 24rpx;
   /* 底部让位给悬浮 tabBar（108rpx）+ 安全区 */
   padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
 }

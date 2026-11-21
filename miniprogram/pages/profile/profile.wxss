@@ -1,7 +1,7 @@
 /* 个人资料：行样式走全局 .cell，这里只留头像与输入框 */
 
 .page {
-  padding-top: 12rpx;
+  padding-top: 24rpx;
 }
 
 .ava-wrap {
