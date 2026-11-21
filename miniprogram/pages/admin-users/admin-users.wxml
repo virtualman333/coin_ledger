@@ -41,15 +41,22 @@
       bindtap="userActions"
       hover-class="tap-hover"
     >
-      <view class="uava {{item.role === 'admin' ? 'adm' : ''}} {{item.disabled ? 'off' : ''}}">{{item.initial}}</view>
+      <image
+        class="uava uava-img {{item.disabled ? 'off' : ''}}"
+        src="{{item.avatarUrl}}" mode="aspectFill"
+        wx:if="{{item.avatarUrl}}"
+      />
+      <view class="uava {{item.role === 'admin' ? 'adm' : ''}} {{item.disabled ? 'off' : ''}}" wx:else>{{item.initial}}</view>
       <view class="r-main">
         <view class="r-title">
           <text class="r-title-text">{{item.displayName}}</text>
+          <text class="badge wx" wx:if="{{item.wx}}">微信</text>
           <text class="badge admin" wx:if="{{item.role === 'admin'}}">管理员</text>
           <text class="badge test" wx:if="{{item.isTest}}">测试</text>
           <text class="badge off" wx:if="{{item.disabled}}">已禁用</text>
         </view>
-        <text class="r-sub">{{item.name}} · {{item.holdings}} 条藏品 · {{item.createdAtText}}</text>
+        <text class="r-sub">账号 {{item.accountName}}</text>
+        <text class="r-sub r-sub2">{{item.metaText}}</text>
       </view>
       <text class="r-more">›</text>
     </view>

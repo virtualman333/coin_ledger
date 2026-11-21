@@ -58,11 +58,26 @@ Page({
         this.setData({ loading: false });
         return;
       }
-      const rows = (r.users || []).map((u) => Object.assign({}, u, {
-        createdAtText: dayText(u.createdAt),
-        displayName: u.nickname || u.name,
-        initial: String(u.nickname || u.name || '?').slice(0, 1),
-      }));
+      const rows = (r.users || []).map((u) => {
+        const display = u.nickname || u.name || '用户';
+        // 头像存的是站内相对路径（/avatar/xxx.jpg），小程序要拼上接口域名
+        const avatar = u.avatar
+          ? (String(u.avatar).indexOf('http') === 0 ? u.avatar : api.BASE + u.avatar)
+          : '';
+        const statusText = u.disabled ? '已禁用' : (u.isTest ? '测试账号' : '正常');
+        return Object.assign({}, u, {
+          displayName: display,
+          accountName: u.name || '',
+          initial: String(display).slice(0, 1),
+          avatarUrl: avatar,
+          statusText,
+          roleText: u.role === 'admin' ? '管理员' : '普通用户',
+          createdText: dayText(u.createdAt),
+          lastLoginText: dayText(u.lastLogin),
+          metaText: u.holdings + ' 条藏品 · 注册 ' + dayText(u.createdAt)
+            + (u.lastLogin ? ' · 最近登录 ' + dayText(u.lastLogin) : ''),
+        });
+      });
       const users = reset ? rows : this.data.users.concat(rows);
       this.setData({
         users,

@@ -1,14 +1,27 @@
 const api = require('../../utils/api');
 const cat = require('../../utils/catalog');
+const { dayText } = require('../../utils/datetime');
 const store = require('../../utils/store');
 
 Page({
   data: {
     loading: true,
     userName: '',
+    accountName: '',
     avatarText: '藏',
+    avatarUrl: '',
     roleText: '用户',
+    isAdmin: false,
+    isTest: false,
+    disabled: false,
+    wx: false,
+    nameChanged: false,
+    loginText: '—',
+    nameChangedText: '未改过名',
     createdText: '—',
+    lastLoginText: '—',
+    metaText: '',
+    user: {},
     items: [],
     summary: { kinds: 0, costText: '0', marketText: '0', pnlText: '¥0', up: true },
   },
@@ -79,12 +92,35 @@ Page({
         // 市值/盈亏只统计能估值的品种；贵金属成本另算，不参与盈亏
         const pnl = Math.round((market - (cost - pmCost)) * 100) / 100;
         const nick = user.nickname || user.name || '';
+        const isAdmin = user.role === 'admin';
+        const roleText = isAdmin ? '管理员' : (user.isTest ? '测试账号' : '普通用户');
+        // 头像存相对路径（/avatar/xxx.jpg），小程序要拼接口域名才能显示
+        const avatarUrl = user.avatar
+          ? (String(user.avatar).indexOf('http') === 0 ? user.avatar : api.BASE + user.avatar)
+          : '';
+        const createdText = dayText(user.createdAt);
+        const lastLoginText = dayText(user.lastLogin);
+        const loginText = ((user.hasPassword ? '账号密码' : '')
+          + (user.hasPassword && user.wx ? ' + ' : '')
+          + (user.wx ? '微信' : '')) || '—';
         this.setData({
           loading: false,
+          user,
           userName: nick || this.data.userName,
+          accountName: user.name || '',
           avatarText: nick ? nick.slice(0, 1) : '藏',
-          roleText: user.role === 'admin' ? '管理员' : (user.isTest ? '测试账号' : '普通用户'),
-          createdText: user.createdAt ? String(user.createdAt).slice(0, 10).replace(/-/g, '/') : '—',
+          avatarUrl,
+          roleText,
+          isAdmin,
+          isTest: !!user.isTest,
+          disabled: !!user.disabled,
+          wx: !!user.wx,
+          nameChanged: !!user.nameChanged,
+          loginText,
+          nameChangedText: user.nameChanged ? '已用过改名机会' : '未改过名',
+          createdText,
+          lastLoginText,
+          metaText: roleText + ' · ' + (user.disabled ? '已禁用' : '正常') + ' · 注册 ' + createdText,
           items: items,
           summary: {
             kinds: items.length - pmKinds,

@@ -67,12 +67,12 @@
           <el-table-column label="用户" min-width="180">
             <template #default="{ row }">
               <div class="u-cell">
-                <el-avatar :size="28" :src="row.avatar || undefined">
+                <el-avatar :size="32" :src="row.avatar || undefined">
                   {{ (row.nickname || row.name || '?').slice(0, 1) }}
                 </el-avatar>
                 <div class="u-cell-txt">
-                  <b>{{ row.name }}</b>
-                  <small v-if="row.nickname && row.nickname !== row.name">{{ row.nickname }}</small>
+                  <b>{{ row.nickname || row.name }}</b>
+                  <small class="u-acc">账号 {{ row.name }}</small>
                 </div>
                 <el-tag v-if="row.wx" size="small" effect="plain">微信</el-tag>
               </div>
@@ -131,22 +131,47 @@
     </AsyncState>
 
     <!-- 详情抽屉 -->
-    <el-drawer v-model="drawerOpen" :title="'用户详情 · ' + (detail.name || '')" size="560px">
+    <el-drawer v-model="drawerOpen" :title="'用户详情 · ' + (detail.nickname || detail.name || '')" size="560px">
       <div v-loading="detailLoading">
+        <!-- 头像 + 用户名 + 账号名：管理员核对账号时先看这三样 -->
+        <div class="u-detail-head">
+          <el-avatar :size="56" :src="detail.avatar || undefined">
+            {{ (detail.nickname || detail.name || '?').slice(0, 1) }}
+          </el-avatar>
+          <div class="u-detail-txt">
+            <div class="u-detail-name">{{ detail.nickname || detail.name || '—' }}</div>
+            <div class="u-detail-acc">账号 {{ detail.name || '—' }}</div>
+            <div class="u-detail-tags">
+              <el-tag :type="detail.role === 'admin' ? 'warning' : 'info'" size="small" effect="dark">
+                {{ detail.role === 'admin' ? '超级管理员' : '普通用户' }}
+              </el-tag>
+              <el-tag :type="statusOf(detail).type" size="small">{{ statusOf(detail).text }}</el-tag>
+              <el-tag v-if="detail.wx" size="small" effect="plain">微信</el-tag>
+              <el-tag v-if="detail.nameChanged" size="small" effect="plain" type="info">已改过名</el-tag>
+            </div>
+          </div>
+        </div>
+
         <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="用户 ID">{{ detail.id }}</el-descriptions-item>
-          <el-descriptions-item label="用户名">{{ detail.name }}</el-descriptions-item>
-          <el-descriptions-item label="昵称">{{ detail.nickname || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="用户 ID"><span class="cl-mono">{{ detail.id || '—' }}</span></el-descriptions-item>
+          <el-descriptions-item label="账号名">{{ detail.name || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="用户名（昵称）">{{ detail.nickname || '—' }}</el-descriptions-item>
           <el-descriptions-item label="角色">{{ detail.role === 'admin' ? '超级管理员' : '普通用户' }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusOf(detail).text }}</el-descriptions-item>
           <el-descriptions-item label="登录方式">
-            {{ detail.hasPassword ? '口令' : '—' }}{{ detail.wx ? ' + 微信' : '' }}
+            {{ (detail.hasPassword ? '账号密码' : '') + (detail.hasPassword && detail.wx ? ' + ' : '') + (detail.wx ? '微信' : '') || '—' }}
           </el-descriptions-item>
+          <el-descriptions-item label="微信绑定">{{ detail.wx ? '已绑定' : '未绑定' }}</el-descriptions-item>
+          <el-descriptions-item label="改名">{{ detail.nameChanged ? '已用过（不可再改）' : '未用过' }}</el-descriptions-item>
           <el-descriptions-item label="注册时间">{{ fmt(detail.createdAt) }}</el-descriptions-item>
           <el-descriptions-item label="最近登录">{{ fmt(detail.lastLogin) }}</el-descriptions-item>
+          <el-descriptions-item label="藏品条数">{{ detail.holdings ?? holdings.length }}</el-descriptions-item>
+          <el-descriptions-item label="测试账号">{{ detail.isTest ? '是' : '否' }}</el-descriptions-item>
         </el-descriptions>
 
-        <el-divider content-position="left">藏品明细</el-divider>
+        <el-divider content-position="left">
+          {{ (detail.nickname || detail.name || '该用户') }} 的藏品
+        </el-divider>
         <div v-if="holdings.length" class="cl-stat-grid">
           <div class="cl-stat"><b>{{ summary.rolls }}</b><span>套数合计</span></div>
           <div class="cl-stat"><b>¥{{ summary.cost.toFixed(0) }}</b><span>投入成本</span></div>
@@ -397,6 +422,16 @@ async function openDetail(row) {
 .u-cell-txt { min-width: 0; display: flex; flex-direction: column; }
 .u-cell-txt b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .u-cell-txt small { color: var(--cl-dim); font-size: 11px; }
+.u-acc { margin-top: 1px; }
+.u-detail-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px; padding: 12px 14px;
+  border-radius: 10px; background: var(--cl-soft, #f7f4ed);
+}
+.u-detail-txt { min-width: 0; }
+.u-detail-name { font-size: 16px; font-weight: 700; line-height: 1.3; }
+.u-detail-acc { margin-top: 2px; font-size: 12px; color: var(--cl-dim); }
+.u-detail-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
 .cl-up { color: var(--cl-success); }
 .cl-down { color: var(--cl-danger); }
 </style>

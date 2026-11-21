@@ -124,3 +124,19 @@
   font-size: 24rpx;
   text-align: center;
 }
+
+/* 真头像：和字母头像同一个圆形尺寸，别让列表行高跳动 */
+.uava-img {
+  background: #f2efe7;
+}
+
+/* 账号名单独一行，和昵称/徽标拉开层次（昵称可能和账号名完全不同） */
+.r-sub2 {
+  color: #8a8378;
+  font-size: 21rpx;
+}
+
+.badge.wx {
+  background: #eaf4ea;
+  color: #4a7a4a;
+}

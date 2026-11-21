@@ -2,10 +2,18 @@
   <!-- 用户与汇总 -->
   <view class="uhead">
     <view class="uinfo">
-      <view class="uavatar">{{avatarText}}</view>
+      <image class="uavatar uavatar-img" src="{{avatarUrl}}" mode="aspectFill" wx:if="{{avatarUrl}}" />
+      <view class="uavatar" wx:else>{{avatarText}}</view>
       <view class="umain">
-        <text class="uname">{{userName}}</text>
-        <text class="usub">{{roleText}} · 注册 {{createdText}}</text>
+        <view class="uname-row">
+          <text class="uname">{{userName}}</text>
+          <text class="ubadge adm" wx:if="{{isAdmin}}">管理员</text>
+          <text class="ubadge test" wx:if="{{isTest}}">测试</text>
+          <text class="ubadge off" wx:if="{{disabled}}">已禁用</text>
+          <text class="ubadge wx" wx:if="{{wx}}">微信</text>
+        </view>
+        <text class="uaccount">账号 {{accountName}}</text>
+        <text class="usub">{{metaText}}</text>
       </view>
     </view>
     <view class="usum">
@@ -25,6 +33,30 @@
         <text class="uk">盈亏</text>
         <text class="uv {{summary.up ? 'up' : 'down'}}">{{summary.pnlText}}</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 账号信息：能显示的都在这里，管理员核对账号时不用再切页 -->
+  <view class="ucard">
+    <view class="urow">
+      <text class="uk2">用户 ID</text>
+      <text class="uv2 mono">{{user.id || '—'}}</text>
+    </view>
+    <view class="urow">
+      <text class="uk2">登录方式</text>
+      <text class="uv2">{{loginText}}</text>
+    </view>
+    <view class="urow">
+      <text class="uk2">改过名</text>
+      <text class="uv2">{{nameChangedText}}</text>
+    </view>
+    <view class="urow">
+      <text class="uk2">注册时间</text>
+      <text class="uv2">{{createdText}}</text>
+    </view>
+    <view class="urow">
+      <text class="uk2">最近登录</text>
+      <text class="uv2">{{lastLoginText}}</text>
     </view>
   </view>
 
