@@ -34,6 +34,24 @@
       <view class="he-btn" hover-class="tap-hover" bindtap="goList">去挑第一枚</view>
     </view>
 
+    <!-- 收藏构成：一眼看出普通纪念币/钞/贵金属各收了多少，点了直接跳对应分类 -->
+    <view class="mkinds" wx:if="{{stats.kinds}}">
+      <view
+        class="mk"
+        wx:for="{{dist}}"
+        wx:key="key"
+        data-cat="{{item.key}}"
+        hover-class="tap-hover"
+        hover-stay-time="80"
+        bindtap="goCat"
+        aria-role="button"
+        aria-label="{{item.name}} {{item.n}} 个"
+      >
+        <text class="mk-n {{item.n ? 'on' : ''}}">{{item.n}}</text>
+        <text class="mk-t">{{item.name}}</text>
+      </view>
+    </view>
+
     <view class="rows">
       <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
         <text class="cell-k">我的藏品</text>
@@ -47,6 +65,47 @@
         <text class="cell-k">更多功能</text>
         <text class="cell-a">›</text>
       </view>
+    </view>
+
+    <!-- 快捷动作：都是要再点两三层才到的入口，直接放出来 -->
+    <view class="quick">
+      <view
+        class="qk"
+        wx:for="{{quick}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        hover-class="tap-hover"
+        hover-stay-time="80"
+        bindtap="onQuick"
+        aria-role="button"
+        aria-label="{{item.name}}"
+      >
+        <view class="qk-ico">{{item.icon}}</view>
+        <text class="qk-t">{{item.name}}</text>
+      </view>
+    </view>
+
+    <!-- 最近添加：数组尾部就是最后加入的，点直接进详情 -->
+    <view class="recent" wx:if="{{recent.length}}">
+      <view class="sec-h">
+        <text class="sec-t">最近添加</text>
+        <text class="sec-more" hover-class="tap-hover" bindtap="goHoldings">全部 ›</text>
+      </view>
+      <scroll-view class="rc-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+        <view
+          class="rc"
+          wx:for="{{recent}}"
+          wx:key="index"
+          data-idx="{{index}}"
+          hover-class="tap-hover"
+          bindtap="goRecent"
+        >
+          <image class="rc-img" src="{{item.img}}" mode="aspectFit" lazy-load wx:if="{{item.img}}"></image>
+          <view class="rc-ph" wx:else>{{item.initial}}</view>
+          <text class="rc-n">{{item.name}}</text>
+          <text class="rc-q">{{item.qtyText}}</text>
+        </view>
+      </scroll-view>
     </view>
 
     <view class="foot" wx:if="{{syncTip}}">{{syncTip}}</view>

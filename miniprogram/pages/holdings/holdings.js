@@ -50,6 +50,11 @@ Page({
       wx.redirectTo({ url: '/pages/colshare/colshare?code=' + encodeURIComponent(code) });
       return;
     }
+    // 「我的」页点品类格进来时带着分类，直接落到对应页签
+    const cat = String((q && q.cat) || '');
+    if (['all', 'coin', 'note', 'pm'].indexOf(cat) >= 0) {
+      this.setData({ holdCat: cat });
+    }
   },
 
   onShow() {
