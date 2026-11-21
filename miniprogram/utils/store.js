@@ -429,7 +429,8 @@ function setCost(id, unitCost) {
 /** 调整套数（同时按单价重算成本与市值） */
 function setRolls(id, rolls) {
   requireLogin();
-  const next = Math.max(1, Math.min(99, Number(rolls) || 1));
+  // 按单枚记时数量可能过百（一套 20 枚），上限不能卡在 99
+  const next = Math.max(1, Math.min(999, Number(rolls) || 1));
   const target = state.holdings.filter((h) => h.id === id)[0];
   if (!target) return Promise.resolve(null);
   const oldRolls = Number(target.rolls) || 1;
@@ -441,6 +442,40 @@ function setRolls(id, rolls) {
   return persist();
 }
 
+/**
+ * 切换记账口径：整套 ↔ 单个。
+ *
+ * 为什么不能复用 setRolls —— 它按「新旧 rolls 之比」缩放市值，
+ * 1 套改成 20 枚时会把市值放大 20 倍。这里按「件数」换算：
+ * 同一批货件数没变，市值就该一分不动。
+ *
+ * @param {string} id
+ * @param {'piece'|'set'} unit 目标口径
+ * @param {number} rolls 目标口径下的数量（枚 / 套）
+ * @param {number} totalCost 这一批货的总成本
+ */
+function setUnitForm(id, unit, rolls, totalCost) {
+  requireLogin();
+  const target = state.holdings.filter((h) => h.id === id)[0];
+  if (!target) return Promise.resolve(null);
+
+  const coin = cat.byName[target.name];
+  const size = Math.max(1, Number(coin ? (coin.setSizeBase || coin.setSize) : 1) || 1);
+  const oldRolls = Math.max(1, Number(target.rolls) || 1);
+  const oldQty = target.unit === 'piece' ? oldRolls : oldRolls * size;
+
+  const nextUnit = unit === 'piece' ? 'piece' : 'set';
+  const nextRolls = Math.max(1, Math.min(999, Math.floor(Number(rolls) || 1)));
+  const nextQty = nextUnit === 'piece' ? nextRolls : nextRolls * size;
+  const oldMarket = Number(target.market) || 0;
+
+  target.unit = nextUnit;
+  target.rolls = nextRolls;
+  target.cost = cat.round2(Math.max(0, Number(totalCost) || 0));
+  target.market = oldQty > 0 ? cat.round2((oldMarket / oldQty) * nextQty) : oldMarket;
+  return persist();
+}
+
 /** 局部更新藏品的可选字段（号码/形态/图片），白名单收敛后落库 */
 function patchHolding(id, patch) {
   requireLogin();
@@ -449,6 +484,8 @@ function patchHolding(id, patch) {
   const p = patch || {};
   if (Array.isArray(p.serials)) target.serials = p.serials.slice(0, 200).map((s) => String(s || '').trim()).filter(Boolean);
   if (p.form === 'single' || p.form === 'set' || p.form === '') target.form = p.form;
+  // 整套 / 单个的记账口径：单位是数据本身，不能只存展示标记
+  if (p.unit === 'piece' || p.unit === 'set') target.unit = p.unit;
   if (Array.isArray(p.images)) target.images = p.images.slice(0, 3);
   return persist();
 }
@@ -500,6 +537,7 @@ module.exports = {
   removeHolding,
   setRolls,
   setCost,
+  setUnitForm,
   patchHolding,
   uploadImage,
   clearUser,

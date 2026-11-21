@@ -165,6 +165,7 @@ Page({
         aiText: aiTotal ? cat.money(aiTotal) : '',
         // 藏品增强字段
         isNote: !!(coin && coin.kind === 'note') || h.category === 'note',
+        setSize: size,               // 一套几件，面板里切形态时按它换算
         serials: Array.isArray(h.serials) ? h.serials : [],
         form: h.form || '',
         images: Array.isArray(h.images) ? h.images : [],
@@ -266,9 +267,13 @@ Page({
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),
         // 藏品增强：号码 / 形态 / 图片
         isNote: !!(item.isNote),
+        setSize: Number(item.setSize) || 1,
+        costLabel: item.unitWord === '套' ? '每套成本' : '单个成本',
         serialsText: (item.serials || []).join('\n'),
         luckyTags: item.luckyTags || [],
-        form: item.form || '',
+        // 形态以真实记账口径（unit）为准：老数据里 form 和 unit 可能对不上
+        form: item.unitWord === '套' ? '' : 'single',
+        origForm: item.unitWord === '套' ? '' : 'single',
         images: item.images || [],
         focus: ds.focus || '',
       },
@@ -293,9 +298,54 @@ Page({
     this.setData({ 'sheet.serialsText': e.detail.value });
   },
 
+  /**
+   * 整套 / 单个切换。
+   * 这套账的口径是「1 套 = N 件」：整套按套数记，单个按枚/张记。
+   * 切换时必须同时换单位、并按 N 换算数量与单价 —— 只改标签不改数，账就错了。
+   * 总价保持不变：1 套 200 元 → 20 枚 × 10 元。
+   */
   setForm(e) {
     const form = e.currentTarget.dataset.form || '';
-    this.setData({ 'sheet.form': form });
+    const sheet = this.data.sheet;
+    if (!sheet) return;
+
+    const next = form === 'single' ? 'single' : 'set';
+    const cur = sheet.form === 'single' ? 'single' : 'set';
+    if (next === cur) return;
+
+    const size = Math.max(1, Number(sheet.setSize) || 1);   // 一套几件
+    const noteWord = sheet.isNote ? '张' : '枚';
+    let rolls = Number(sheet.rolls) || 1;
+    let unitCost = Number(sheet.unitCost) || 0;
+
+    if (next === 'single') {
+      // 套 → 件：数量放大，单价摊薄
+      rolls = rolls * size;
+      unitCost = unitCost ? Math.round((unitCost / size) * 100) / 100 : 0;
+    } else {
+      // 件 → 套：必须凑得成整
+      const sets = Math.floor(rolls / size);
+      if (sets < 1) {
+        wx.showToast({ title: '不满 ' + size + ' ' + noteWord + '，凑不成一套', icon: 'none' });
+        return;
+      }
+      if (rolls % size !== 0) {
+        wx.showToast({ title: '按 ' + sets + ' 套计，多的 ' + (rolls - sets * size) + ' ' + noteWord + ' 舍去', icon: 'none' });
+      }
+      rolls = sets;
+      unitCost = unitCost ? Math.round(unitCost * size * 100) / 100 : 0;
+    }
+
+    this.setData({
+      'sheet.form': next === 'single' ? 'single' : '',
+      'sheet.rolls': rolls,
+      'sheet.unitCost': String(unitCost),
+      'sheet.unitWord': next === 'single' ? noteWord : '套',
+      'sheet.costLabel': next === 'single' ? '单个成本' : '每套成本',
+      'sheet.qtyLabel': next === 'single'
+        ? (rolls + ' ' + noteWord)
+        : (rolls + ' 套 · ' + (rolls * size) + ' ' + noteWord),
+    });
   },
 
   addImage() {
@@ -473,7 +523,7 @@ Page({
     const sheet = this.data.sheet;
     if (!sheet) return;
     const delta = Number(e.currentTarget.dataset.delta);
-    const next = Math.max(1, Math.min(99, sheet.rolls + delta));
+    const next = Math.max(1, Math.min(999, sheet.rolls + delta));
     if (next === sheet.rolls) return;
     this.setData({ 'sheet.rolls': next });
   },
@@ -485,12 +535,31 @@ Page({
   saveSheet() {
     const sheet = this.data.sheet;
     if (!sheet) return;
-    const unit = Number(sheet.unitCost) || 0;
+    const unitCost = Number(sheet.unitCost) || 0;
+    const rolls = Number(sheet.rolls) || 1;
     const serials = (sheet.serialsText || '').split(/[\n,，\s]+/).map((s) => s.trim()).filter(Boolean).slice(0, 200);
     const tasks = [];
-    if (sheet.rolls !== sheet.origRolls) tasks.push(store.setRolls(sheet.id, sheet.rolls));
-    tasks.push(store.setCost(sheet.id, unit));
-    tasks.push(store.patchHolding(sheet.id, { serials, form: sheet.form || '', images: sheet.images || [] }));
+
+    // 形态换了就不能按套数缩放 —— setRolls 会按新旧 rolls 之比缩放市值，
+    // 1 套改成 20 枚时市值会被放大 20 倍。换口径走 setUnitForm，按件数换算。
+    const formChanged = !sheet.isPm && (sheet.form === 'single') !== (sheet.origForm === 'single');
+    if (formChanged) {
+      tasks.push(store.setUnitForm(
+        sheet.id,
+        sheet.form === 'single' ? 'piece' : 'set',
+        rolls,
+        Math.round(unitCost * rolls * 100) / 100
+      ));
+    } else {
+      if (rolls !== sheet.origRolls) tasks.push(store.setRolls(sheet.id, rolls));
+      tasks.push(store.setCost(sheet.id, unitCost));
+    }
+
+    tasks.push(store.patchHolding(sheet.id, {
+      serials,
+      form: sheet.form || '',
+      images: sheet.images || [],
+    }));
     wx.showLoading({ title: '保存中', mask: true });
     Promise.all(tasks)
       .then(() => store.refresh({ force: true }))

@@ -169,7 +169,7 @@
       </view>
 
       <view class="sheet-row">
-        <text class="sr-k">每套成本</text>
+        <text class="sr-k">{{sheet.costLabel || '每套成本'}}</text>
         <view class="sr-input">
           <text class="sr-cur">¥</text>
           <input
@@ -196,8 +196,8 @@
         </view>
       </view>
 
-      <!-- 整套 / 单个 -->
-      <view class="sheet-row ex-row">
+      <!-- 整套 / 单个（贵金属入账就是按枚，没有套的概念） -->
+      <view class="sheet-row ex-row" wx:if="{{!sheet.isPm}}">
         <text class="sr-k">形态</text>
         <view class="sr-segs">
           <text class="sr-seg {{sheet.form !== 'single' ? 'on' : ''}}" data-form="" bindtap="setForm">整套</text>
