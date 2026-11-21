@@ -1,0 +1,74 @@
+<view class="page">
+  <view class="tip">工具与小功能都收在这里，主页只留最常用的入口。</view>
+
+  <view class="grp">
+    <text class="grp-t">工具</text>
+    <view class="grp-card">
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="onBackup" aria-role="button" aria-label="收藏备份">
+        <view class="ico ico-gold"><text>⇅</text></view>
+        <view class="tool-main">
+          <text class="tool-k">收藏备份</text>
+          <text class="tool-v">导出 / 导入 JSON，换手机不丢</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goCount" aria-role="button" aria-label="拍照数币">
+        <view class="ico ico-blue"><text>◎</text></view>
+        <view class="tool-main">
+          <text class="tool-k">拍照数币</text>
+          <text class="tool-v">拍张照自动数硬币数量</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="grp">
+    <text class="grp-t">反馈与说明</text>
+    <view class="grp-card">
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goMyFeedback" aria-role="button" aria-label="我的反馈">
+        <view class="ico ico-green"><text>✎</text></view>
+        <view class="tool-main">
+          <text class="tool-k">我的反馈</text>
+          <text class="tool-v">查看处理结果与回复</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAbout" aria-role="button" aria-label="关于藏币录">
+        <view class="ico ico-grey"><text>❖</text></view>
+        <view class="tool-main">
+          <text class="tool-k">关于藏币录</text>
+          <text class="tool-v">版本 v{{appVersion}}</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="grp" wx:if="{{isAdmin}}">
+    <text class="grp-t">管理</text>
+    <view class="grp-card">
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAdmin" aria-role="button" aria-label="管理端">
+        <view class="ico ico-red"><text>⚙</text></view>
+        <view class="tool-main">
+          <text class="tool-k">管理端</text>
+          <text class="tool-v">用户 · 参数 · 图片 · 反馈 · 访客</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="grp" wx:if="{{plazaOn}}">
+    <view class="grp-card">
+      <view class="tool-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goPlaza" aria-role="button" aria-label="藏品广场">
+        <view class="ico ico-gold"><text>✦</text></view>
+        <view class="tool-main">
+          <text class="tool-k">藏品广场</text>
+          <text class="tool-v">晒靓号 · 和藏友交流</text>
+        </view>
+        <text class="tool-arrow">›</text>
+      </view>
+    </view>
+  </view>
+</view>

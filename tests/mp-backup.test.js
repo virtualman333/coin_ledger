@@ -232,8 +232,10 @@ test('广场开关默认关闭，且只在一处定义', () => {
 });
 
 test('小程序的广场入口都受开关控制', () => {
-  assert.match(readMp('pages/mine/mine.wxml'), /wx:if="\{\{plazaOn\}\}"[^>]*bindtap="goPlaza"/,
-    '「我的」里的广场菜单没有开关');
+  // 广场入口从「我的」收进了「更多功能」页
+  assert.match(readMp('pages/more-tools/more-tools.wxml'), /wx:if="\{\{plazaOn\}\}"[\s\S]{0,120}goPlaza/,
+    '「更多功能」里的广场入口没有开关');
+  assert.doesNotMatch(readMp('pages/mine/mine.wxml'), /goPlaza/, '「我的」不该再直接挂广场入口');
   assert.match(readMp('pages/index/index.wxml'), /plazaOn && feed\.length/, '首页晒单板块没有开关');
   const holdings = readMp('pages/holdings/holdings.wxml');
   assert.match(holdings, /wx:if="\{\{plazaOn\}\}"[^>]*shareToPlaza/, '弹层里的「分享广场」没有开关');

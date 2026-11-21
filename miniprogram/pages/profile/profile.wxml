@@ -1,0 +1,51 @@
+<view class="page">
+  <view class="ava-wrap">
+    <button class="ava-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" hover-class="tap-hover" aria-label="更换头像">
+      <image class="ava" src="{{showAvatar}}" mode="aspectFill" wx:if="{{showAvatar}}"></image>
+      <view class="ava ava-ph" wx:else>{{nick ? nick[0] : '藏'}}</view>
+    </button>
+    <text class="ava-tip">点击更换头像</text>
+  </view>
+
+  <view class="form">
+    <view class="field">
+      <text class="f-k">昵称</text>
+      <input
+        class="f-v"
+        type="nickname"
+        value="{{nick}}"
+        placeholder="点这里可用微信昵称"
+        placeholder-class="ph"
+        maxlength="16"
+        bindinput="onNick"
+        bindchange="onNick"
+      />
+    </view>
+    <view class="field">
+      <text class="f-k">账号</text>
+      <text class="f-v f-ro">{{loginName}}</text>
+    </view>
+    <view class="field" wx:if="{{joinedText}}">
+      <text class="f-k">注册时间</text>
+      <text class="f-v f-ro">{{joinedText}}</text>
+    </view>
+    <view class="field" wx:if="{{isTest}}">
+      <text class="f-k">账号类型</text>
+      <text class="f-v f-ro">测试账号</text>
+    </view>
+  </view>
+
+  <view class="link-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAccount" aria-role="button" aria-label="账户与安全">
+    <view class="lr-main">
+      <text class="lr-k">账户与安全</text>
+      <text class="lr-v">登录密码 · 微信绑定</text>
+    </view>
+    <text class="lr-arrow">›</text>
+  </view>
+
+  <text class="hint">昵称和头像会显示在分享卡片与评论里；昵称留空则用账号名。收藏数据不受影响。</text>
+
+  <button class="btn-primary save-btn" bindtap="save" loading="{{saving}}" disabled="{{saving || !dirty}}">
+    {{dirty ? '保存' : '未做修改'}}
+  </button>
+</view>

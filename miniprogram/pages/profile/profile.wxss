@@ -1,0 +1,139 @@
+/* 个人资料 */
+
+.ava-wrap {
+  display: flex;
+  padding: 28rpx 0 32rpx;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ava-btn {
+  width: 168rpx;
+  height: 168rpx;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999rpx;
+  background: transparent;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.ava-btn::after {
+  border: none;
+}
+
+.ava {
+  display: block;
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #b98f43, #d9b364);
+  color: #ffffff;
+  font-size: 60rpx;
+  font-weight: 600;
+  line-height: 168rpx;
+  text-align: center;
+}
+
+.ava-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ava-tip {
+  margin-top: 14rpx;
+  color: #6b6559;
+  font-size: 21rpx;
+}
+
+.form {
+  border-radius: 22rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 14rpx rgba(74, 55, 20, 0.05);
+  overflow: hidden;
+}
+
+.field {
+  display: flex;
+  min-height: 104rpx;
+  padding: 0 26rpx;
+  align-items: center;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.field:last-child {
+  border-bottom: none;
+}
+
+.f-k {
+  width: 150rpx;
+  color: #6b6559;
+  font-size: 24rpx;
+  flex: 0 0 auto;
+}
+
+.f-v {
+  flex: 1;
+  min-width: 0;
+  color: #2b2926;
+  font-size: 27rpx;
+  text-align: right;
+}
+
+.f-ro {
+  color: #6b6559;
+}
+
+.ph {
+  color: #8a8378;
+}
+
+.link-row {
+  display: flex;
+  margin-top: 18rpx;
+  padding: 24rpx 26rpx;
+  align-items: center;
+  gap: 16rpx;
+  border-radius: 22rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 12rpx rgba(74, 55, 20, 0.04);
+}
+
+.lr-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.lr-k {
+  color: #2b2926;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.lr-v {
+  color: #6b6559;
+  font-size: 21rpx;
+}
+
+.lr-arrow {
+  color: #8a8378;
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.hint {
+  display: block;
+  margin: 20rpx 8rpx 0;
+  color: #6b6559;
+  font-size: 21rpx;
+  line-height: 1.7;
+}
+
+.save-btn {
+  margin-top: 36rpx;
+}
