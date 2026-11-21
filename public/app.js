@@ -535,27 +535,6 @@ initAdvFilters();
   });
 })();
 
-/* 页脚微信号：点一下复制 */
-(function bindWxCopy(){
-  var el = document.getElementById('wxId');
-  if (!el) return;
-  function copy(){
-    var id = 'virtualman2001';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(id).then(function(){ tip('微信号已复制：' + id); }, fallback);
-    } else { fallback(); }
-    function fallback(){
-      var ta = document.createElement('textarea');
-      ta.value = id; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); tip('微信号已复制：' + id); } catch (e) { tip('请手动复制：' + id); }
-      document.body.removeChild(ta);
-    }
-  }
-  el.addEventListener('click', copy);
-  el.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(); } });
-})();
-
 /* =========================================================
    4. 格式化
    ========================================================= */
