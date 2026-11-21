@@ -110,7 +110,9 @@ function update(id, patch) {
 /** 某用户自己的反馈（含管理员回复），按时间倒序 */
 function listByUser(uid) {
   return load().items
-    .filter((x) => Number(x.uid) === Number(uid))
+    // uid 是 'u1' 这种字符串：Number('u1') 是 NaN，而 NaN !== NaN，
+    // 用数字比较会让这条查询永远返回空（「我的反馈」一条都不显示）
+    .filter((x) => String(x.uid) === String(uid))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
     .map((x) => ({
       id: x.id, coinId: x.coinId, coinName: x.coinName, text: x.text,
