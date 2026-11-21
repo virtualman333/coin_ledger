@@ -31,20 +31,22 @@ SQ_RX = 30.0              # 方孔圆角
 SS = 4                    # 超采样倍数
 
 
-def draw_seal(size, fit="contain"):
+def draw_seal(size, fit="contain", corner=R_CORNER):
     """绘制一枚红色印章，输出 size×size 的 RGBA。
     fit='contain'：印章完整显示在画布内（四角透明，等同 logo.svg 渲染）。
+    corner：外框圆角半径（相对 922 画布）。传 0 = 直角满幅方图（App/小程序
+            头像自带圆角裁切时用，避免出现「双重圆角」）。
     """
     S = size * SS
     scale = S / ART
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    # 圆角红底
+    # 红底（corner=0 时是满幅直角方块）
     pad = 0
     d.rounded_rectangle(
         [pad, pad, S - 1 - pad, S - 1 - pad],
-        radius=R_CORNER * scale, fill=RED + (255,),
+        radius=corner * scale, fill=RED + (255,),
     )
     # 外圆环（画粗圆即可，SVG 里 fill=none stroke=58）
     cx = cy = S / 2.0
@@ -135,10 +137,26 @@ def main():
         draw_seal(n).save(p)
         print("wrote", p)
 
+    # 直角版：满幅方图、四角不切（平台自己会切圆角时用）
+    for n in (1024, 512, 256, 144):
+        p = os.path.join(BRAND, "logo-square-%d.png" % n)
+        draw_seal(n, corner=0.0).save(p)
+        print("wrote", p)
+
     # 横版 lockup
     p = os.path.join(BRAND, "logo-lockup-1320.png")
     make_lockup((1320, 360)).save(p)
     print("wrote", p)
+
+    # —— 站点 / PWA 图标：必须满幅直角 ——
+    # 旧图四角透明（圆角切掉了底色），iOS/Android 桌面图标自己会再切一次圆角，
+    # 结果出现「双圆角 + 白边」。平台图标一律给直角满幅，圆角交给系统。
+    icons = os.path.join(ROOT, "public", "icons")
+    os.makedirs(icons, exist_ok=True)
+    for name, n in (("apple-touch-icon.png", 180), ("icon-192.png", 192), ("icon-512.png", 512)):
+        p = os.path.join(icons, name)
+        draw_seal(n, corner=0.0).convert("RGB").save(p)
+        print("wrote", p)
 
 
 if __name__ == "__main__":
