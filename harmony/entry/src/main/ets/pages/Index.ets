@@ -218,7 +218,7 @@ struct Index {
       }
     }
     .hideTitleBar(true)
-    .backgroundColor(Color.Transparent)
+    .backgroundColor(Theme.bg)
     // 不写尺寸时 NavDestination 会按内容自适应，出现「页面比屏幕窄、左侧露出下页」的残影
     .width('100%')
     .height('100%')
@@ -310,7 +310,7 @@ struct Index {
         Column()
           .width('100%')
           .height('100%')
-          .backgroundColor(Color.Transparent)
+          .linearGradient({ angle: 165, colors: [[Theme.skyTop, 0], [Theme.skyMid, 0.5], [Theme.skyBottom, 1]] })
       }
 
       if (this.privacySheet) {

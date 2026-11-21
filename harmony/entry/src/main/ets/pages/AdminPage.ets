@@ -682,7 +682,7 @@ export struct AdminPage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor(Color.Transparent)
+      .linearGradient({ angle: 165, colors: [[Theme.skyTop, 0], [Theme.skyMid, 0.5], [Theme.skyBottom, 1]] })
 
       if (this.editOpen) {
         this.editSheet()

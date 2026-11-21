@@ -9,7 +9,21 @@ import { Store } from '../utils/store';
 import { Theme } from '../utils/theme';
 import { User } from '../model/types';
 
+/**
+ * 只改昵称的请求体：**不能带 avatar 字段**。
+ * 服务端把 avatar:'' 当作「清除头像」，以前这里恒传真空串，
+ * 结果点一次保存本站头像就没了。
+ */
 class ProfileBody {
+  nickname: string = '';
+
+  constructor(nickname: string) {
+    this.nickname = nickname;
+  }
+}
+
+/** 选了新头像才带 avatar（data:image/...;base64,...） */
+class ProfileBodyWithAvatar {
   nickname: string = '';
   avatar: string = '';
 
@@ -116,8 +130,16 @@ export struct ProfilePage {
     this.saving = true;
     const tasks: Promise<void>[] = [];
     if (nick !== '' || this.avatarData !== '') {
-      tasks.push(Api.post<SimpleOk>('/api/me/profile', new ProfileBody(nick, this.avatarData)).then((): void => {
-      }));
+      // 没选新图就不带 avatar 字段，否则服务端会按「清除头像」处理
+      if (this.avatarData !== '') {
+        tasks.push(Api.post<SimpleOk>('/api/me/profile',
+          new ProfileBodyWithAvatar(nick, this.avatarData)).then((): void => {
+        }));
+      } else {
+        tasks.push(Api.post<SimpleOk>('/api/me/profile',
+          new ProfileBody(nick)).then((): void => {
+        }));
+      }
     }
     if (this.name.trim() !== '' && this.name.trim() !== this.origName && !this.nameLocked) {
       tasks.push(Api.post<SimpleOk>('/api/user/name', new NameBody(this.name.trim())).then((): void => {
@@ -484,7 +506,7 @@ export struct ProfilePage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor(Color.Transparent)
+      .linearGradient({ angle: 165, colors: [[Theme.skyTop, 0], [Theme.skyMid, 0.5], [Theme.skyBottom, 1]] })
 
       if (this.pwdOpen) {
         this.pwdSheet()
