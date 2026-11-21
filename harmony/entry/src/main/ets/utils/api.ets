@@ -116,6 +116,8 @@ export class Api {
   /** 图片地址：服务端可能返回相对路径 */
   static imgUrl(path: string): string {
     if (!path) return '';
-    return path.indexOf('http') === 0 ? path : Api.BASE + path;
+    const u = path.indexOf('http') === 0 ? path : Api.BASE + path;
+    // CDN 原图文件名带空格（…/3克铂正 0916.png），不编码会整张图加载失败
+    return u.replace(/ /g, '%20');
   }
 }

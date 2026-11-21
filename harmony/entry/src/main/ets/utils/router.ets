@@ -62,6 +62,11 @@ export class Nav {
     return arr[arr.length - 1] as RouteParam;
   }
 
+  /** 替换当前页：从同系列跳到另一枚时用，避免详情页越叠越深 */
+  static replace(stack: NavPathStack, name: string, param: RouteParam): void {
+    stack.replacePathByName(name, param);
+  }
+
   static pop(stack: NavPathStack): void {
     stack.pop();
   }

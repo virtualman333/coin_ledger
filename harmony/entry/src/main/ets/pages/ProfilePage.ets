@@ -107,7 +107,11 @@ export struct ProfilePage {
     this.hasPassword = !!u.hasPassword;
     this.hwBound = u.hw === true;
     this.joinedText = u.createdAt ? String(u.createdAt).slice(0, 10).replace(/-/g, '/') : '';
-    this.avatarUrl = u.avatar ? Api.imgUrl(u.avatar) : '';
+    // 本站上传的头像优先；没上传过就用华为账号头像（外链），与账号页保持一致
+    const own: string = u.avatar !== undefined && u.avatar !== '' ? u.avatar : '';
+    const hw: string = u.hwAvatar !== undefined ? u.hwAvatar : '';
+    const src: string = own !== '' ? own : hw;
+    this.avatarUrl = src !== '' ? Api.imgUrl(src) : '';
   }
 
   private pickAvatar(): void {

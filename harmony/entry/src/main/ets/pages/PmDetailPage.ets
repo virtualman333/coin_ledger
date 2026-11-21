@@ -33,13 +33,46 @@ class PmDetail {
   categories: string = '';
   theme: string = '';
   series: string = '';
-  metalValue: number = 0;
+  /** 服务端返回的是对象：{value, name, cnyPerGram, pureGram, grossGram, fineness} */
+  metalValue: PmMetal | null = null;
+}
+
+class PmMetal {
+  value: number = 0;
+  name: string = '';
+  cnyPerGram: number = 0;
+  pureGram: number = 0;
+  grossGram: number = 0;
+  fineness: number = 0;
+}
+
+class SiblingItem {
+  code: string = '';
+  name: string = '';
+  year: string = '';
+  weightText: string = '';
+  thumbUrl: string = '';
 }
 
 class PmDetailResponse {
   ok: boolean = false;
   item: PmDetail | null = null;
   error: string = '';
+}
+
+class SibRaw {
+  code: string = '';
+  name: string = '';
+  year: string = '';
+  weightG: number = 0;
+  thumb: string = '';
+  frontPicture: string = '';
+}
+
+class SibResponse {
+  ok: boolean = false;
+  items: SibRaw[] = [];
+  total: number = 0;
 }
 
 class FactRow {
@@ -63,6 +96,9 @@ export struct PmDetailPage {
 
   @State item: PmDetail | null = null;
   @State facts: FactRow[] = [];
+  @State siblings: SiblingItem[] = [];
+  @State siblingTotal: number = 0;
+  @State announceOpen: boolean = false;
   @State imgIdx: number = 0;
   @State notFound: boolean = false;
   @State owned: boolean = false;
@@ -99,28 +135,73 @@ export struct PmDetailPage {
       const it = res.item;
       it.frontUrl = Api.imgUrl(it.frontUrl);
       it.backUrl = Api.imgUrl(it.backUrl);
-      // 服务端 metalValue 可能是对象（含金银拆分），统一折成数字，拿不到就 0
-      it.metalValue = Number(it.metalValue) || 0;
+      // metalValue 是对象；此前用 Number() 折成 NaN 再兜 0，导致材料价值永远不显示
+      if (it.metalValue === undefined) {
+        it.metalValue = null;
+      }
       this.item = it;
       const facts: FactRow[] = [];
-      if (it.material) facts.push(this.fact('材质', it.material));
+      const materialText = this.txt(it.material as Object);
+      const weightText = this.txt(it.weight as Object);
+      const craftText = this.txt(it.craft as Object);
+      if (materialText !== '') facts.push(this.fact('材质', materialText));
       if (it.fineness) facts.push(this.fact('成色', it.fineness + '%'));
-      if (it.weight) facts.push(this.fact('重量', it.weight));
+      if (weightText !== '') facts.push(this.fact('重量', weightText + (weightText.indexOf('克') >= 0 ? '' : ' 克')));
       if (it.face) facts.push(this.fact('面额', it.face + ' 元'));
       if (it.spec) facts.push(this.fact('规格', it.spec));
       if (it.quality) facts.push(this.fact('品质', it.quality));
-      if (it.craft) facts.push(this.fact('工艺', it.craft));
-      if (it.circulation) facts.push(this.fact('发行量', it.circulation));
+      if (craftText !== '') facts.push(this.fact('工艺', craftText));
+      if (it.circulation) facts.push(this.fact('发行量', this.txt(it.circulation as Object) + ' 枚'));
       if (it.castingUnit) facts.push(this.fact('铸造单位', it.castingUnit));
       if (it.designer) facts.push(this.fact('设计', it.designer));
       if (it.sculptor) facts.push(this.fact('雕刻', it.sculptor));
       if (it.theme) facts.push(this.fact('主题', it.theme));
       if (it.categories) facts.push(this.fact('类别', it.categories));
       this.facts = facts;
+      this.loadSiblings(it.projectCode, it.code);
       this.checkOwned();
     }).catch((): void => {
       this.notFound = true;
     });
+  }
+
+  /** 同系列 = 同一发行项目下的其他币 */
+  private loadSiblings(projectCode: string, code: string): void {
+    if (projectCode === '') return;
+    Api.get<SibResponse>('/api/series/detail?category=pm&code=' + encodeURIComponent(projectCode)
+      + '&page=1&size=24').then((res: SibResponse): void => {
+      if (!res || !res.ok || !Array.isArray(res.items)) return;
+      const out: SiblingItem[] = [];
+      for (let i = 0; i < res.items.length; i++) {
+        const x = res.items[i];
+        if (!x || x.code === code) continue;
+        const it = new SiblingItem();
+        it.code = x.code;
+        it.name = x.name;
+        it.year = x.year || '';
+        it.weightText = x.weightG ? (x.weightG + ' 克') : '';
+        it.thumbUrl = x.thumb ? Api.imgUrl(x.thumb) : (x.frontPicture ? Api.imgUrl(x.frontPicture) : '');
+        out.push(it);
+      }
+      this.siblings = out;
+      this.siblingTotal = Math.max(0, Number(res.total) || 0);
+    }).catch((): void => {
+    });
+  }
+
+  /** 服务端 material/weight/craft 是数组，直接拼字符串会变成空 */
+  private txt(v: Object): string {
+    if (v === null || v === undefined) return '';
+    if (Array.isArray(v)) {
+      const arr = v as Object[];
+      const parts: string[] = [];
+      for (let i = 0; i < arr.length; i++) {
+        const one = String(arr[i]);
+        if (one !== '') parts.push(one);
+      }
+      return parts.join(' · ');
+    }
+    return String(v);
   }
 
   private fact(k: string, v: string): FactRow {
@@ -333,6 +414,10 @@ export struct PmDetailPage {
                   .border({ width: 1, color: Theme.glassBorder })
                   .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
 
+                  if ((this.item as PmDetail).metalValue !== null) {
+                    this.metalCard()
+                  }
+
                   Column({ space: 8 }) {
                     if ((this.item as PmDetail).frontDesc) {
                       Text('正面图案')
@@ -359,9 +444,19 @@ export struct PmDetailPage {
                         .fontColor(Theme.gold)
                         .margin({ top: 4 })
                       Text((this.item as PmDetail).announce)
-                        .fontSize(11)
+                        .fontSize(12)
                         .fontColor(Theme.muted)
-                        .lineHeight(19)
+                        .lineHeight(21)
+                        .maxLines(this.announceOpen ? 400 : 6)
+                        .textOverflow({ overflow: TextOverflow.Ellipsis })
+                        .width('100%')
+                      Text(this.announceOpen ? '收起' : '展开全文 ›')
+                        .fontSize(12)
+                        .fontColor(Theme.gold)
+                        .margin({ top: 2 })
+                        .onClick((): void => {
+                          this.announceOpen = !this.announceOpen;
+                        })
                     }
                   }
                   .width('100%')
@@ -406,6 +501,23 @@ export struct PmDetailPage {
               }
               .padding({ left: 12, right: 12 })
 
+              Column() {
+                this.siblingsCard()
+              }
+              .padding({ left: 12, right: 12 })
+
+              Column({ space: 4 }) {
+                Text('资料来源：中国人民银行发行公告 · 中国金币集团')
+                  .fontSize(11)
+                  .fontColor(Theme.faint)
+                Text('贵金属纪念币无稳定二级市场报价，本站不提供市场估值。')
+                  .fontSize(11)
+                  .fontColor(Theme.faint)
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Start)
+              .padding({ left: 16, right: 16, top: 6 })
+
               Column().height(30)
             }
             .width('100%')
@@ -444,6 +556,128 @@ export struct PmDetailPage {
   }
 
   @Builder
+  metalCard() {
+    if (this.item !== null && (this.item as PmDetail).metalValue !== null
+      && (this.item as PmDetail).metalValue !== undefined) {
+      Column({ space: 8 }) {
+        Text('克重价')
+          .fontSize(12)
+          .fontColor(Theme.faint)
+        Row() {
+          Text('≈ ¥' + money((this.item as PmDetail).metalValue!.value))
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Theme.gold)
+          Blank()
+          Text((this.item as PmDetail).metalValue!.name + ' ¥'
+            + (this.item as PmDetail).metalValue!.cnyPerGram + '/克')
+            .fontSize(11)
+            .fontColor(Theme.faint)
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Bottom)
+        Text('按今日' + (this.item as PmDetail).metalValue!.name + '价 × 净重 '
+          + (this.item as PmDetail).metalValue!.pureGram + ' 克（'
+          + (this.item as PmDetail).metalValue!.grossGram + ' 克 × 成色 '
+          + (this.item as PmDetail).metalValue!.fineness + '%）估算。仅材料价值，不含铸造成本与纪念溢价。')
+          .fontSize(11)
+          .lineHeight(18)
+          .fontColor(Theme.faint)
+          .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .padding(16)
+      .borderRadius(Theme.radiusM)
+      .backgroundColor(Theme.card)
+      .border({ width: 1, color: Theme.lineSoft })
+      .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
+    }
+  }
+
+  @Builder
+  siblingsCard() {
+    if (this.siblings.length > 0) {
+      Column({ space: 10 }) {
+        Row() {
+          Text('同系列')
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(Theme.text)
+          Blank()
+          if (this.item !== null) {
+            Text((this.item as PmDetail).projectName + ' · ' + this.siblingTotal + ' 枚 ›')
+              .fontSize(11)
+              .fontColor(Theme.gold)
+              .onClick((): void => {
+                const p = new RouteParam();
+                p.cat = 'pm';
+                p.code = (this.item as PmDetail).projectCode;
+                Nav.push(this.stack, Routes.SERIES_DETAIL, p);
+              })
+          }
+        }
+        .width('100%')
+
+        List({ space: 10 }) {
+          ForEach(this.siblings, (it: SiblingItem) => {
+            ListItem() {
+              Column({ space: 4 }) {
+                if (it.thumbUrl.length > 0) {
+                  Image(it.thumbUrl)
+                    .width(84)
+                    .height(84)
+                    .borderRadius(Theme.radiusThumb)
+                    .backgroundColor('#FBF9F4')
+                    .objectFit(ImageFit.Contain)
+                } else {
+                  Text('暂无图')
+                    .width(84)
+                    .height(84)
+                    .borderRadius(Theme.radiusThumb)
+                    .textAlign(TextAlign.Center)
+                    .fontSize(11)
+                    .fontColor(Theme.faint)
+                    .backgroundColor('#FBF9F4')
+                }
+                Text(it.name)
+                  .fontSize(11)
+                  .fontColor(Theme.textStrong)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width(84)
+                Text(it.year + (it.weightText ? ' · ' + it.weightText : ''))
+                  .fontSize(10)
+                  .fontColor(Theme.faint)
+                  .maxLines(1)
+                  .width(84)
+              }
+              .alignItems(HorizontalAlign.Start)
+              .onClick((): void => {
+                const p = new RouteParam();
+                p.code = it.code;
+                // 替换当前页，避免同系列之间来回点把详情栈堆满
+                Nav.replace(this.stack, Routes.PM_DETAIL, p);
+              })
+            }
+          }, (it: SiblingItem) => it.code)
+        }
+        .listDirection(Axis.Horizontal)
+        .height(136)
+        .scrollBar(BarState.Off)
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .padding(14)
+      .borderRadius(Theme.radiusM)
+      .backgroundColor(Theme.card)
+      .border({ width: 1, color: Theme.lineSoft })
+      .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
+    }
+  }
+
+  @Builder
   factsTable() {
     Column({ space: 0 }) {
       if (this.facts.length === 0) {
@@ -465,20 +699,6 @@ export struct PmDetailPage {
         .width('100%')
         .padding({ top: 7, bottom: 7 })
       }, (f: FactRow) => f.k)
-      if ((this.item as PmDetail).metalValue > 0) {
-        Row() {
-          Text('材料价值')
-            .fontSize(12)
-            .fontColor(Theme.faint)
-            .width(76)
-          Text('¥' + money((this.item as PmDetail).metalValue) + ' 起')
-            .fontSize(12)
-            .fontColor(Theme.gold)
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .padding({ top: 7, bottom: 7 })
-      }
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)

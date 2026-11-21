@@ -28,6 +28,8 @@ class SameCard {
   year: number = 0;
   imgUrl: string = '';
   faceText: string = '';
+  mintageText: string = '';
+  desc: string = '';
   owned: boolean = false;
 }
 
@@ -58,11 +60,11 @@ export struct DetailPage {
   @State descBlocks: DescBlock[] = [];
   @State notFound: boolean = false;
   @State previewOpen: boolean = false;
+  @State peek: SameCard | null = null;
   @State addSheet: boolean = false;
   @State addUnit: string = 'set';
   @State addQty: number = 1;
   @State busy: boolean = false;
-  @State peek: SameCard | null = null;
 
   aboutToAppear(): void {
     this.render();
@@ -115,6 +117,8 @@ export struct DetailPage {
       card.year = c.year;
       card.imgUrl = c.smallUrl || c.thumbUrl || c.imgUrl;
       card.faceText = c.face ? (Number(c.face) + ' 元') : '';
+      card.mintageText = c.mintage ? (c.mintage + ' 万枚') : '';
+      card.desc = (c.desc || '').slice(0, 180);
       card.owned = !!ownedMap[c.name];
       same.push(card);
     }
@@ -603,38 +607,38 @@ export struct DetailPage {
               Column({ space: 3 }) {
                 if (c.imgUrl.length > 0) {
                   Image(c.imgUrl)
-                    .width(72)
-                    .height(72)
-                    .borderRadius(6)
+                    .width(76)
+                    .height(76)
+                    .borderRadius(Theme.radiusThumb)
                     .objectFit(ImageFit.Contain)
                     .backgroundColor('#F7F4EC')
                 } else {
                   Text(c.name.slice(0, 2))
-                    .width(72)
-                    .height(72)
-                    .borderRadius(6)
+                    .width(76)
+                    .height(76)
+                    .borderRadius(Theme.radiusThumb)
                     .textAlign(TextAlign.Center)
                     .fontSize(11)
                     .fontColor(Theme.goldDeep)
                     .backgroundColor(Theme.goldBg)
                 }
                 Text(c.name)
-                  .fontSize(10)
+                  .fontSize(11)
                   .fontColor(Theme.textStrong)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .width(72)
+                  .width(76)
                 Row({ space: 3 }) {
                   Text(String(c.year))
-                    .fontSize(8)
+                    .fontSize(10)
                     .fontColor(Theme.faint)
                   if (c.owned) {
                     Text('已收')
-                      .fontSize(8)
+                      .fontSize(10)
                       .fontColor(Theme.gold)
                   }
                 }
-                .width(72)
+                .width(76)
               }
               .alignItems(HorizontalAlign.Start)
               .onClick((): void => {
@@ -644,7 +648,7 @@ export struct DetailPage {
           }, (c: SameCard) => String(c.id))
         }
         .listDirection(Axis.Horizontal)
-        .height(116)
+        .height(124)
         .scrollBar(BarState.Off)
         .width('100%')
       }
@@ -811,55 +815,131 @@ export struct DetailPage {
   }
 
   @Builder
-  peekDialog() {
-    Stack() {
+  peekSheet() {
+    Stack({ alignContent: Alignment.Bottom }) {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor('rgba(20,16,10,0.42)')
+        .backgroundColor('rgba(0,0,0,0.35)')
         .onClick((): void => {
           this.peek = null;
         })
-      Column({ space: 10 }) {
-        Row() {
+
+      Column() {
+        Row({ space: 12 }) {
           Text(this.peek !== null ? (this.peek as SameCard).name : '')
-            .fontSize(15)
+            .fontSize(17)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.text)
             .layoutWeight(1)
           Text('✕')
-            .fontSize(15)
+            .fontSize(16)
             .fontColor(Theme.muted)
+            .width(Theme.touch)
+            .height(Theme.touch)
+            .textAlign(TextAlign.Center)
             .onClick((): void => {
               this.peek = null;
             })
         }
         .width('100%')
+        .alignItems(VerticalAlign.Top)
+
         if (this.peek !== null) {
-          Text(String((this.peek as SameCard).year) + ' 年 · ' + (this.peek as SameCard).faceText)
-            .fontSize(11)
+          Scroll() {
+            Column({ space: 12 }) {
+              if ((this.peek as SameCard).imgUrl.length > 0) {
+                Image((this.peek as SameCard).imgUrl)
+                  .width(140)
+                  .height(140)
+                  .borderRadius(Theme.radiusInner)
+                  .backgroundColor('#FBF9F4')
+                  .objectFit(ImageFit.Contain)
+                  .alignSelf(ItemAlign.Start)
+              }
+
+              Row({ space: 8 }) {
+                Text(String((this.peek as SameCard).year) + ' 年')
+                  .fontSize(12)
+                  .fontColor(Theme.muted)
+                  .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                  .backgroundColor(Theme.bg)
+                  .borderRadius(Theme.radiusS)
+                if ((this.peek as SameCard).faceText.length > 0) {
+                  Text('面额 ' + (this.peek as SameCard).faceText)
+                    .fontSize(12)
+                    .fontColor(Theme.muted)
+                    .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                    .backgroundColor(Theme.bg)
+                    .borderRadius(Theme.radiusS)
+                }
+                if ((this.peek as SameCard).mintageText.length > 0) {
+                  Text((this.peek as SameCard).mintageText)
+                    .fontSize(12)
+                    .fontColor(Theme.muted)
+                    .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                    .backgroundColor(Theme.bg)
+                    .borderRadius(Theme.radiusS)
+                }
+              }
+              .width('100%')
+
+              Text((this.peek as SameCard).desc.length > 0
+                ? (this.peek as SameCard).desc
+                : '这枚还没有收录详细介绍，可以进去看面额、发行量与套系进度。')
+                .fontSize(13)
+                .lineHeight(22)
+                .fontColor((this.peek as SameCard).desc.length > 0 ? Theme.textStrong : Theme.faint)
+                .width('100%')
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Start)
+            .alignItems(HorizontalAlign.Start)
+            .padding({ top: 4, bottom: 8 })
+          }
+          .width('100%')
+          .constraintSize({ maxHeight: 320 })
+          .scrollBar(BarState.Off)
+        }
+
+        Row({ space: 10 }) {
+          Text('再看看')
+            .fontSize(14)
             .fontColor(Theme.muted)
-          Text('查看详情 ›')
-            .fontSize(13)
-            .fontColor(Theme.gold)
+            .textAlign(TextAlign.Center)
+            .layoutWeight(1)
+            .height(46)
+            .borderRadius(Theme.radiusInner)
+            .backgroundColor(Theme.bg)
             .onClick((): void => {
-              const id = (this.peek as SameCard).id;
+              this.peek = null;
+            })
+          Text('查看详情')
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(Color.White)
+            .textAlign(TextAlign.Center)
+            .layoutWeight(2)
+            .height(46)
+            .borderRadius(Theme.radiusInner)
+            .backgroundColor(Theme.gold)
+            .onClick((): void => {
+              const id = this.peek !== null ? (this.peek as SameCard).id : 0;
               this.peek = null;
               Nav.push(this.stack, Routes.DETAIL, RouteParam.of(id));
             })
         }
+        .width('100%')
+        .margin({ top: 10 })
       }
-      .width('86%')
-      .padding(18)
-      .borderRadius(14)
-      .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
-      .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .width('100%')
+      .padding({ left: 20, right: 20, top: 16, bottom: 24 })
+      .borderRadius({ topLeft: Theme.radiusL, topRight: Theme.radiusL })
+      .backgroundColor(Theme.card)
+      .shadow({ radius: 30, color: 'rgba(0,0,0,0.18)', offsetY: -6 })
     }
     .width('100%')
     .height('100%')
-    .alignContent(Alignment.Center)
   }
 
   build() {
@@ -982,11 +1062,11 @@ export struct DetailPage {
       if (this.addSheet) {
         this.addSheetView()
       }
-      if (this.peek !== null) {
-        this.peekDialog()
-      }
       if (this.previewOpen) {
         this.previewView()
+      }
+      if (this.peek !== null) {
+        this.peekSheet()
       }
     }
     .width('100%')
