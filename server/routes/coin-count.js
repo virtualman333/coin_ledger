@@ -78,6 +78,10 @@ module.exports = async function coinCountRoutes(app) {
     if (!/^cnt-[A-Za-z0-9_-]{1,80}\.png$/.test(f)) {
       return reply.code(400).send({ ok: false, error: '参数不对' });
     }
+    // 只能取自己那张：文件名是 cnt-<userId>-<ts>-<rand>.png
+    if (f.indexOf('cnt-' + request.user.id + '-') !== 0) {
+      return reply.code(404).send({ ok: false, error: '标注图已过期，重新拍一张吧' });
+    }
     const file = path.join(OUT_DIR, f);
     if (!fs.existsSync(file)) {
       return reply.code(404).send({ ok: false, error: '标注图已过期，重新拍一张吧' });

@@ -274,7 +274,8 @@ Page({
     const bandY = 600, bandH = 562, bandW = POSTER_W - 144;
     const pad = 14;
     if (photo) {
-      const scale = Math.min(bandW / photo.width, bandH / photo.height);
+      // 卡片含内边距也不能超出文字栏（72px 起、936 宽），否则横图会顶到页边
+      const scale = Math.min((bandW - pad * 2) / photo.width, (bandH - pad * 2) / photo.height);
       const dw = Math.round(photo.width * scale);
       const dh = Math.round(photo.height * scale);
       const cardW = dw + pad * 2;
