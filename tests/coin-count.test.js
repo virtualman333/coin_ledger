@@ -367,3 +367,39 @@ test('空桌面（木纹 + 噪点）不会被小半径搜索带出假圆', () =>
   const r = svc.count(sc.buf);
   assert.equal(r.count, 0, '实际 ' + r.count);
 });
+
+/**
+ * 标注图编号必须按「阅读顺序」：从上到下、每行从左到右。
+ * 检测内部是按得分/票数排序的，拿来直接编号会 1 在右下、2 在左上，用户没法核对。
+ */
+test('标注图编号按行优先排序（上→下、左→右）', () => {
+  // 3 行 × 3 列，故意打乱输入顺序
+  const seeds = [
+    { x: 300, y: 210, r: 20 }, { x: 100, y: 100, r: 20 }, { x: 200, y: 105, r: 20 },
+    { x: 300, y: 100, r: 20 }, { x: 100, y: 205, r: 20 }, { x: 200, y: 200, r: 20 },
+    { x: 100, y: 300, r: 20 }, { x: 300, y: 305, r: 20 }, { x: 200, y: 300, r: 20 }
+  ];
+  const ordered = svc.readingOrder(seeds);
+  assert.deepEqual(ordered.map(function (s) { return [s.x, s.y]; }), [
+    [100, 100], [200, 105], [300, 100],
+    [100, 205], [200, 200], [300, 210],
+    [100, 300], [200, 300], [300, 305]
+  ]);
+});
+
+test('轻微歪斜的平铺照片不会把一个币判到隔壁行', () => {
+  // 同一行内的 y 抖动 ±6px（币半径 30，容差 21px），仍应保持行内顺序
+  const seeds = [];
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      seeds.push({ x: 100 + col * 100, y: 100 + row * 100 + (col % 2 ? 6 : -6), r: 30 });
+    }
+  }
+  seeds.reverse();
+  const ordered = svc.readingOrder(seeds);
+  for (let i = 0; i < ordered.length; i++) {
+    assert.equal(ordered[i].y >= 100 + Math.floor(i / 4) * 100 - 10, true, '第 ' + i + ' 个跨行了');
+  }
+  const rowIdx = ordered.map(function (s) { return Math.round(s.y / 100); });
+  assert.deepEqual(rowIdx, [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]);
+});

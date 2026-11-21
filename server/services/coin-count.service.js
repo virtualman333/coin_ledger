@@ -487,6 +487,37 @@ function drawNumber(data, w, h, num, cx, cy, scale) {
   }
 }
 
+/**
+ * 把种子排成「阅读顺序」：先按行（同一行的 y 差不超过 0.7 倍中位半径，
+ * 容忍平铺时的轻微歪斜），行内再按 x 从左到右。
+ *
+ * 检测阶段（霍夫票数 / 圆周得分）出来的顺序跟位置无关，直接拿来编号
+ * 会是「1 在右下、2 在左上」这种乱序，用户没法逐枚核对。
+ */
+function readingOrder(seeds) {
+  if (!seeds.length) return [];
+  const list = seeds.slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; });
+  const medR = median(list.map(function (s) { return s.r; })) || 20;
+  const rowTol = Math.max(6, medR * 0.7);
+  const rows = [];
+  let cur = null;
+  for (const s of list) {
+    if (cur && Math.abs(s.y - cur.y) <= rowTol) {
+      cur.items.push(s);
+      cur.y = (cur.y * (cur.items.length - 1) + s.y) / cur.items.length;   // 行心滚动平均
+    } else {
+      cur = { y: s.y, items: [s] };
+      rows.push(cur);
+    }
+  }
+  const out = [];
+  rows.forEach(function (row) {
+    row.items.sort(function (a, b) { return a.x - b.x; });
+    for (const s of row.items) out.push(s);
+  });
+  return out;
+}
+
 /** 在结果上画圈 + 序号生成标注图（PNG buffer），方便用户逐枚核对 */
 function annotate(r, buf) {
   const img = decode(buf);
@@ -494,7 +525,7 @@ function annotate(r, buf) {
   const png = new PNG({ width: w, height: h });
   for (let i = 0; i < png.data.length; i++) png.data[i] = img.data[i];
   const C = [255, 60, 60];
-  r.seeds.forEach(function (s, idx) {
+  readingOrder(r.seeds).forEach(function (s, idx) {
     const rr = Math.max(4, Math.round(s.r));
     // 红色圆环
     for (let a = 0; a < 360; a += 2) {
@@ -507,8 +538,8 @@ function annotate(r, buf) {
         png.data[i] = C[0]; png.data[i + 1] = C[1]; png.data[i + 2] = C[2]; png.data[i + 3] = 255;
       }
     }
-    // 中心序号底盘 + 白色数字
-    const badge = 13;
+    // 中心序号底盘 + 白色数字：底盘随币半径缩放，小币（密铺时 r≈15）不至于被盖住
+    const badge = Math.max(6, Math.min(15, Math.round(s.r * 0.62)));
     for (let dy = -badge; dy <= badge; dy++) {
       for (let dx = -badge; dx <= badge; dx++) {
         if (dx * dx + dy * dy > badge * badge) continue;
@@ -518,7 +549,10 @@ function annotate(r, buf) {
         png.data[i] = 190; png.data[i + 1] = 45; png.data[i + 2] = 45; png.data[i + 3] = 255;
       }
     }
-    drawNumber(png.data, w, h, idx + 1, s.x, s.y, 3);
+    // 数字按底盘大小收缩：3 位数的密铺图不会把数字糊到隔壁币上
+    const label = String(idx + 1);
+    const dscale = Math.max(1, Math.min(3, Math.floor((badge * 2) / (4 * label.length - 1))));
+    drawNumber(png.data, w, h, idx + 1, s.x, s.y, dscale);
   });
   return PNG.sync.write(png);
 }
@@ -584,4 +618,4 @@ function distanceTransform(bin, w, h) {
   return D;
 }
 
-module.exports = { count, decode, binarize, distanceTransform, annotate, MAX_SIDE };
+module.exports = { count, decode, binarize, distanceTransform, annotate, readingOrder, MAX_SIDE };
