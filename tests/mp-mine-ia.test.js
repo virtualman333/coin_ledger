@@ -99,3 +99,18 @@ test('账户与安全没丢：从个人资料页进', () => {
   const js = read('pages/profile/profile.js');
   assert.match(js, /\/pages\/account\/account/);
 });
+
+test('三个页面统一走 baseline UI，不用渐变与装饰色', () => {
+  for (const slug of ['mine', 'profile', 'more-tools']) {
+    const wxss = read('pages/' + slug + '/' + slug + '.wxss');
+    assert.match(wxss, /@import "\.\.\/\.\.\/styles\/ui\.wxss"/, slug + ' 没引入 baseline UI');
+  }
+  const mine = read('pages/mine/mine.wxss');
+  assert.ok(!/gradient/i.test(mine), '主页面不该再用渐变');
+  // 只允许涨跌这两个语义色，其余一律中性
+  const colors = (mine.match(/#[0-9a-fA-F]{6}/g) || []).filter((c) => {
+    const v = c.toLowerCase();
+    return !['#151515', '#757575', '#a5a5a5', '#ededed', '#f0f0f0', '#ffffff', '#c0392b', '#1e7b4d'].includes(v);
+  });
+  assert.deepEqual([...new Set(colors)], [], '主页面出现了计划外的颜色');
+});

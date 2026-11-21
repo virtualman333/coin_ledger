@@ -1,0 +1,123 @@
+/* =========================================================
+   Baseline UI —— 参考 ibelick/ui-skills 的 DESIGN.md
+   要点：安静、编辑式；白表面 + 极浅阴影；用细线分区；
+   不用渐变、不用发光、中性样式够用时不上装饰色。
+   颜色只用文字层级（#151515 / #757575 / #A5A5A5）与线色 #EDEDED。
+   ========================================================= */
+
+.u-h1 {
+  color: #151515;
+  font-size: 44rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.6rpx;
+}
+
+.u-h2 {
+  color: #151515;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.2rpx;
+}
+
+.u-label {
+  color: #757575;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.u-muted {
+  color: #a5a5a5;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.u-num {
+  color: #151515;
+  font-size: 64rpx;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -1.4rpx;
+}
+
+/* 细分割线：代替一块块卡片的堆叠 */
+.u-hr {
+  height: 1rpx;
+  margin: 0;
+  background: #ededed;
+}
+
+/* 全宽列表行：左标题、右值、箭头 */
+.u-row {
+  display: flex;
+  min-height: 108rpx;
+  align-items: center;
+  gap: 16rpx;
+  border-bottom: 1rpx solid #ededed;
+}
+
+.u-row:last-child {
+  border-bottom: none;
+}
+
+.u-row-k {
+  flex: 1;
+  min-width: 0;
+  color: #151515;
+  font-size: 28rpx;
+  line-height: 1.4;
+}
+
+.u-row-v {
+  color: #757575;
+  font-size: 24rpx;
+  flex: 0 0 auto;
+}
+
+.u-row-a {
+  color: #a5a5a5;
+  font-size: 32rpx;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+/* 主按钮：反色（深底白字），不用品牌色渐变 */
+.u-primary {
+  display: flex;
+  width: 100%;
+  height: 88rpx;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  background: #151515;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.u-primary::after {
+  border: none;
+}
+
+.u-primary[disabled] {
+  background: #ededed;
+  color: #a5a5a5;
+}
+
+/* 细进度条 */
+.u-bar {
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.u-bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #151515;
+}

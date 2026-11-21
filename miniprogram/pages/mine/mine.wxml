@@ -1,99 +1,80 @@
 <view class="page">
   <block wx:if="{{loggedIn}}">
-    <!-- 身份：头像 + 昵称，点任意处进个人资料 -->
+    <!-- 身份：点昵称或「编辑」都进个人资料（不再单独列一个入口） -->
     <view class="me">
       <view class="me-id" hover-class="tap-hover" hover-stay-time="80" bindtap="goProfile" aria-role="button" aria-label="个人资料">
         <image class="me-ava" src="{{userAvatar}}" mode="aspectFill" wx:if="{{userAvatar}}"></image>
         <view class="me-ava me-ava-ph" wx:else>{{displayName ? displayName[0] : '藏'}}</view>
         <view class="me-txt">
-          <text class="me-name">{{displayName}}</text>
-          <text class="me-sub">{{stats.kinds ? ('已收 ' + stats.kinds + ' 个品种 · ' + stats.rolls + ' 套') : '还没有开始记录'}}</text>
+          <text class="u-h2">{{displayName}}</text>
+          <text class="u-label">{{stats.kinds ? (stats.kinds + ' 个品种 · ' + stats.rolls + ' 套') : '还没有记录'}}</text>
         </view>
       </view>
       <view class="me-edit" hover-class="tap-hover" bindtap="goProfile">编辑</view>
     </view>
 
-    <!-- 空账本：不摆一堆 0，直接给入口 -->
-    <view class="blank" wx:if="{{!stats.kinds}}">
-      <text class="blank-t">账本还是空的</text>
-      <text class="blank-s">挑第一枚，开始记录你的收藏</text>
-      <view class="blank-btn" hover-class="tap-hover" bindtap="goList">去全套清单</view>
+    <view class="u-hr"></view>
+
+    <view class="kpi" wx:if="{{stats.kinds}}">
+      <text class="u-label">参考市值</text>
+      <view class="kpi-row">
+        <text class="u-num">¥{{stats.marketText}}</text>
+        <text class="kpi-d {{stats.up ? 'up' : 'down'}}">{{stats.pnlText}} · {{stats.pnlPct}}%</text>
+      </view>
     </view>
 
-    <block wx:else>
-      <!-- 主数字 -->
-      <view class="kpi">
-        <text class="kpi-k">参考市值</text>
-        <view class="kpi-row">
-          <text class="kpi-cur">¥</text>
-          <text class="kpi-v">{{stats.marketText}}</text>
-          <text class="kpi-pnl {{stats.up ? 'up' : 'down'}}">{{stats.pnlText}} · {{stats.pnlPct}}%</text>
-        </view>
-      </view>
+    <view class="blank" wx:else>
+      <text class="blank-t">账本还是空的</text>
+      <view class="blank-btn" hover-class="tap-hover" bindtap="goList">去挑第一枚</view>
+    </view>
 
+    <block wx:if="{{stats.kinds}}">
       <view class="duo">
         <view class="duo-cell">
-          <text class="d-k">已投入</text>
-          <text class="d-v">¥{{stats.costText}}</text>
+          <text class="u-label">已投入</text>
+          <text class="duo-v">¥{{stats.costText}}</text>
         </view>
         <view class="duo-cell">
-          <text class="d-k">总面值</text>
-          <text class="d-v">¥{{stats.faceText}}</text>
+          <text class="u-label">总面值</text>
+          <text class="duo-v">¥{{stats.faceText}}</text>
         </view>
       </view>
 
       <view class="prog">
         <view class="prog-top">
-          <text class="prog-k">收藏进度</text>
+          <text class="u-label">收藏进度</text>
           <text class="prog-v">{{stats.kinds}} / {{totalCoins}}</text>
         </view>
-        <view class="prog-bar">
-          <view class="prog-fill" style="width:{{progPct}}%;min-width:{{stats.kinds ? 6 : 0}}rpx"></view>
-        </view>
+        <view class="u-bar"><view class="u-bar-fill" style="width:{{progPct}}%"></view></view>
       </view>
     </block>
 
-    <!-- 主入口 -->
-    <view class="entry" hover-class="tap-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
-      <view class="entry-ico"><text>▤</text></view>
-      <view class="entry-txt">
-        <text class="entry-k">我的藏品</text>
-        <text class="entry-s">{{stats.kinds}} 个品种 · {{stats.rolls}} 套 · 改数量与成本</text>
-      </view>
-      <text class="entry-arrow">›</text>
+    <view class="u-hr"></view>
+
+    <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
+      <text class="u-row-k">我的藏品</text>
+      <text class="u-row-v">{{stats.kinds}} 个品种</text>
+      <text class="u-row-a">›</text>
+    </view>
+    <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
+      <text class="u-row-k">更多功能</text>
+      <text class="u-row-a">›</text>
     </view>
 
-    <!-- 两个次要入口 -->
-    <view class="grid">
-      <view class="gcell" hover-class="tap-hover" hover-stay-time="80" bindtap="goProfile" aria-role="button" aria-label="个人资料">
-        <view class="gcell-ico"><text>☺</text></view>
-        <text class="gcell-k">个人资料</text>
-        <text class="gcell-s">头像与昵称</text>
-      </view>
-      <view class="gcell" hover-class="tap-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
-        <view class="gcell-ico"><text>⋯</text></view>
-        <text class="gcell-k">更多功能</text>
-        <text class="gcell-s">备份 · 数币 · 反馈</text>
-      </view>
-    </view>
-
-    <view class="foot-note" wx:if="{{syncTip}}">{{syncTip}}</view>
-    <view class="foot-note">价格数据为参考估算，不构成投资建议</view>
+    <view class="foot" wx:if="{{syncTip}}">{{syncTip}}</view>
+    <view class="foot">价格为参考估算，不构成投资建议</view>
   </block>
 
   <block wx:else>
     <view class="guest">
-      <text class="guest-t">登录后才有账本</text>
-      <text class="guest-s">藏品存在云端，换设备也能接着记</text>
-      <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
+      <text class="u-h2">登录后才有账本</text>
+      <text class="u-label">藏品存在云端，换设备也能接着记</text>
+      <button class="u-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
     </view>
 
-    <view class="grid">
-      <view class="gcell" hover-class="tap-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
-        <view class="gcell-ico"><text>⋯</text></view>
-        <text class="gcell-k">更多功能</text>
-        <text class="gcell-s">关于 · 反馈</text>
-      </view>
+    <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
+      <text class="u-row-k">更多功能</text>
+      <text class="u-row-a">›</text>
     </view>
   </block>
 </view>

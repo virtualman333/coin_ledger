@@ -1,14 +1,15 @@
-/* ============ 我的 ============ */
-/* 统一的白卡语言：圆角 26rpx、极浅阴影、克制的分割线 */
+@import "../../styles/ui.wxss";
+
+/* 我的：一条主线从身份到数据再到入口，中间只用细线分隔，不堆卡片 */
 
 .page {
-  padding-top: 8rpx;
+  padding-top: 6rpx;
 }
 
 /* ---------- 身份 ---------- */
 .me {
   display: flex;
-  padding: 6rpx 4rpx 26rpx;
+  padding: 4rpx 0 28rpx;
   align-items: center;
   gap: 16rpx;
 }
@@ -22,10 +23,10 @@
 }
 
 .me-ava {
-  width: 96rpx;
-  height: 96rpx;
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 999rpx;
-  background: #f3efe6;
+  background: #f0f0f0;
   flex: 0 0 auto;
 }
 
@@ -33,317 +34,133 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #b98f43, #d9b364);
-  color: #ffffff;
-  font-size: 38rpx;
-  font-weight: 600;
+  color: #757575;
+  font-size: 34rpx;
+  font-weight: 500;
 }
 
 .me-txt {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 6rpx;
-}
-
-.me-name {
-  color: #2b2926;
-  font-size: 34rpx;
-  font-weight: 700;
-  line-height: 1.2;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.me-sub {
-  color: #6b6559;
-  font-size: 22rpx;
+  gap: 4rpx;
 }
 
 .me-edit {
-  padding: 10rpx 24rpx;
-  border: 1rpx solid #e6dfd0;
+  padding: 8rpx 22rpx;
+  border: 1rpx solid #ededed;
   border-radius: 999rpx;
-  color: #8a6420;
+  color: #151515;
   font-size: 22rpx;
   flex: 0 0 auto;
 }
 
-/* ---------- 空账本 ---------- */
-.blank {
-  padding: 54rpx 32rpx 48rpx;
-  border-radius: 26rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 14rpx rgba(74, 55, 20, 0.05);
-  text-align: center;
-}
-
-.blank-t {
-  display: block;
-  color: #2b2926;
-  font-size: 30rpx;
-  font-weight: 600;
-}
-
-.blank-s {
-  display: block;
-  margin-top: 10rpx;
-  color: #6b6559;
-  font-size: 23rpx;
-}
-
-.blank-btn {
-  display: inline-block;
-  margin-top: 28rpx;
-  padding: 14rpx 44rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(135deg, #b98f43, #d9b364);
-  color: #ffffff;
-  font-size: 26rpx;
-}
-
 /* ---------- 主数字 ---------- */
 .kpi {
-  padding: 28rpx 28rpx 26rpx;
-  border-radius: 26rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 14rpx rgba(74, 55, 20, 0.05);
-}
-
-.kpi-k {
-  display: block;
-  color: #6b6559;
-  font-size: 22rpx;
+  padding: 30rpx 0 26rpx;
 }
 
 .kpi-row {
   display: flex;
+  flex-wrap: wrap;
   margin-top: 10rpx;
   align-items: baseline;
-  gap: 8rpx;
+  gap: 6rpx 16rpx;
 }
 
-.kpi-cur {
-  color: #2b2926;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.kpi-v {
-  color: #2b2926;
-  font-size: 56rpx;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.5rpx;
-}
-
-.kpi-pnl {
+.kpi-d {
   margin-left: auto;
   font-size: 22rpx;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.kpi-pnl.up { color: #9c5850; }
-.kpi-pnl.down { color: #3f7050; }
+/* 涨跌是语义色，不属于装饰色 */
+.kpi-d.up { color: #c0392b; }
+.kpi-d.down { color: #1e7b4d; }
+
+/* ---------- 空账本 ---------- */
+.blank {
+  padding: 44rpx 0 46rpx;
+}
+
+.blank-t {
+  display: block;
+  color: #151515;
+  font-size: 30rpx;
+  font-weight: 600;
+  letter-spacing: -0.2rpx;
+}
+
+.blank-btn {
+  display: inline-block;
+  margin-top: 22rpx;
+  padding: 12rpx 28rpx;
+  border: 1rpx solid #151515;
+  border-radius: 10rpx;
+  color: #151515;
+  font-size: 24rpx;
+}
 
 /* ---------- 两格 ---------- */
 .duo {
   display: flex;
-  margin-top: 16rpx;
-  gap: 16rpx;
+  padding: 2rpx 0 26rpx;
+  gap: 24rpx;
 }
 
 .duo-cell {
   flex: 1;
   min-width: 0;
-  padding: 22rpx 24rpx;
-  border-radius: 22rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 12rpx rgba(74, 55, 20, 0.04);
 }
 
-.d-k {
-  display: block;
-  color: #6b6559;
-  font-size: 21rpx;
-}
-
-.d-v {
+.duo-v {
   display: block;
   margin-top: 6rpx;
-  color: #2b2926;
+  color: #151515;
   font-size: 34rpx;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.6rpx;
   line-height: 1.2;
 }
 
 /* ---------- 进度 ---------- */
 .prog {
-  margin-top: 16rpx;
-  padding: 22rpx 24rpx 24rpx;
-  border-radius: 22rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 12rpx rgba(74, 55, 20, 0.04);
+  padding: 0 0 30rpx;
 }
 
 .prog-top {
   display: flex;
+  margin-bottom: 12rpx;
   align-items: baseline;
   justify-content: space-between;
 }
 
-.prog-k {
-  color: #6b6559;
-  font-size: 21rpx;
-}
-
 .prog-v {
-  color: #2b2926;
+  color: #151515;
   font-size: 22rpx;
-  font-weight: 600;
-}
-
-.prog-bar {
-  height: 8rpx;
-  margin-top: 14rpx;
-  border-radius: 999rpx;
-  background: #f2eee4;
-  overflow: hidden;
-}
-
-.prog-fill {
-  height: 100%;
-  border-radius: 999rpx;
-  background: linear-gradient(90deg, #b98f43, #d9b364);
-}
-
-/* ---------- 主入口 ---------- */
-.entry {
-  display: flex;
-  margin-top: 22rpx;
-  padding: 24rpx 26rpx;
-  align-items: center;
-  gap: 20rpx;
-  border-radius: 24rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 14rpx rgba(74, 55, 20, 0.05);
-}
-
-.entry-ico {
-  display: flex;
-  width: 72rpx;
-  height: 72rpx;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20rpx;
-  background: #f6efe0;
-  color: #8a6420;
-  font-size: 32rpx;
-  flex: 0 0 auto;
-}
-
-.entry-txt {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.entry-k {
-  color: #2b2926;
-  font-size: 29rpx;
-  font-weight: 600;
-}
-
-.entry-s {
-  color: #6b6559;
-  font-size: 21rpx;
-}
-
-.entry-arrow {
-  color: #8a8378;
-  font-size: 36rpx;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-
-/* ---------- 两个入口 ---------- */
-.grid {
-  display: flex;
-  margin-top: 16rpx;
-  gap: 16rpx;
-}
-
-.gcell {
-  flex: 1;
-  min-width: 0;
-  padding: 26rpx 24rpx;
-  border-radius: 24rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 12rpx rgba(74, 55, 20, 0.04);
-}
-
-.gcell-ico {
-  display: flex;
-  width: 64rpx;
-  height: 64rpx;
-  margin-bottom: 16rpx;
-  align-items: center;
-  justify-content: center;
-  border-radius: 18rpx;
-  background: #f5f2ea;
-  color: #6b6559;
-  font-size: 30rpx;
-}
-
-.gcell-k {
-  display: block;
-  color: #2b2926;
-  font-size: 27rpx;
-  font-weight: 600;
-}
-
-.gcell-s {
-  display: block;
-  margin-top: 4rpx;
-  color: #6b6559;
-  font-size: 20rpx;
+  font-weight: 500;
 }
 
 /* ---------- 未登录 ---------- */
 .guest {
-  padding: 56rpx 36rpx 48rpx;
-  border-radius: 26rpx;
-  background: #ffffff;
-  box-shadow: 0 2rpx 14rpx rgba(74, 55, 20, 0.05);
+  padding: 64rpx 0 44rpx;
   text-align: center;
 }
 
-.guest-t {
+.guest .u-label {
   display: block;
-  color: #2b2926;
-  font-size: 30rpx;
-  font-weight: 600;
-}
-
-.guest-s {
-  display: block;
-  margin: 12rpx 0 28rpx;
-  color: #6b6559;
-  font-size: 23rpx;
+  margin-top: 10rpx;
 }
 
 .guest-btn {
-  width: 320rpx;
-  margin: 0 auto;
+  width: 300rpx;
+  margin: 30rpx auto 0;
 }
 
 /* ---------- 页脚 ---------- */
-.foot-note {
-  margin-top: 24rpx;
-  color: #6b6559;
+.foot {
+  margin-top: 22rpx;
+  color: #a5a5a5;
   font-size: 20rpx;
   text-align: center;
 }
