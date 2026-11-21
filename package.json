@@ -1,6 +1,6 @@
 {
   "name": "coin-ledger",
-  "version": "3.0.73",
+  "version": "3.0.74",
   "private": true,
   "description": "藏币录 · 1984—2026 纪念币收藏管理（多用户，Node + MySQL 后端 + 静态前端）",
   "main": "server/index.js",

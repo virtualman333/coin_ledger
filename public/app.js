@@ -2402,7 +2402,51 @@ function renderPmCoin(d, i){
   box.onclick = function(e){ var b = e.target.closest('[data-goto]'); if (b) goTab(b.getAttribute('data-goto')); };
 }
 
+/* 系列 / 年份下拉只列当前品类真实出现过的选项。
+   以前是全量填充，切到「纪念钞」下面还挂着纪念币的系列，选中必然 0 条。
+   只在品类变化时重建，避免每帧重排下拉并丢掉用户的选择。 */
+var LAST_SERIES_CAT = null;
+function rebuildFilterOptions(){
+  if (LAST_SERIES_CAT === VIEW_CATEGORY) return;
+  LAST_SERIES_CAT = VIEW_CATEGORY;
+  var rows = activeCatalog();
+
+  var sSel = document.getElementById('fSeries');
+  if (sSel) {
+    var keepSeries = sSel.value;
+    var used = {};
+    rows.forEach(function(d){
+      (d.seriesKeys && d.seriesKeys.length ? d.seriesKeys : [d.series]).forEach(function(k){ if (k) used[k] = true; });
+    });
+    sSel.innerHTML = '<option value="">全部系列</option>';
+    Object.keys(SERIES).forEach(function(k){
+      if (!used[k]) return;
+      var o = document.createElement('option');
+      o.value = k;
+      o.textContent = SERIES[k];
+      sSel.appendChild(o);
+    });
+    sSel.value = used[keepSeries] ? keepSeries : '';
+  }
+
+  var ySel = document.getElementById('fYear');
+  if (ySel) {
+    var keepYear = ySel.value;
+    var years = {};
+    rows.forEach(function(d){ if (d.year) years[d.year] = true; });
+    ySel.innerHTML = '<option value="">全部年份</option>';
+    Object.keys(years).sort().reverse().forEach(function(y){
+      var o = document.createElement('option');
+      o.value = y;
+      o.textContent = y + ' 年';
+      ySel.appendChild(o);
+    });
+    ySel.value = years[keepYear] ? keepYear : '';
+  }
+}
+
 function renderTable(){
+  rebuildFilterOptions();
   // 贵金属分段：走金币云集 2823 条全量库（分页接口），不走本地表格
   if (VIEW_CATEGORY === 'pm') {
     var pane = document.getElementById('pane-all');
