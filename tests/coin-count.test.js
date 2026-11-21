@@ -282,3 +282,88 @@ test('强浮雕/纹理币即使圆内灰度方差很大也不被误杀', () => {
   assert.ok(r.seeds.some(function (s) { return s.std > 70; }),
     '该场景本应出现高圆内方差的真币，强证据豁免逻辑可能失效');
 });
+
+/**
+ * 回归（2026-11-21 用户照片：130 枚小币平铺，只数出 13）：
+ *
+ * 旧版霍夫半径下限是 max(20, 短边 × 0.055)。手机竖幅照片等比缩到最长边 1000 后
+ * 短边 750 → 下限 41px，而 5 角/1 角币的半径只有 15~20px —— 真正该搜的尺度
+ * 整个落在搜索区间之外，最后筛出来的只是「跨两枚币」的幽灵大圆（圈比币大一倍）。
+ *
+ * 新口径：半径下限只兜底小图（max(8, 短边 × 0.02)），再用「票数最高的候选」
+ * 估参考半径做尺度筛，压掉小尺度的文字/花纹假圆与大尺度的幽灵圆。
+ */
+function makeRealisticScene(cols, rows, r, gap, W, H, top) {
+  const png = new PNG({ width: W, height: H });
+  let seed = 7;
+  const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      const grain = Math.sin(x * 0.31 + Math.sin(y * 0.07) * 3) * 6
+        + Math.sin(y * 0.9) * 2 + (rnd() - 0.5) * 10;
+      png.data[i] = Math.max(0, Math.min(255, 48 + grain));
+      png.data[i + 1] = Math.max(0, Math.min(255, 36 + grain));
+      png.data[i + 2] = Math.max(0, Math.min(255, 28 + grain));
+      png.data[i + 3] = 255;
+    }
+  }
+  const put = function (x, y, c) {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2];
+  };
+  const coins = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = 80 + col * (2 * r + gap);
+      const cy = top + row * (2 * r + gap);
+      const face = row >= rows - 3 ? [176, 150, 96] : [158, 160, 162];
+      coins.push({ x: cx, y: cy, r: r });
+      for (let y = Math.round(cy - r - 2); y <= cy + r + 2; y++) {
+        for (let x = Math.round(cx - r - 2); x <= cx + r + 2; x++) {
+          const d = Math.hypot(x - cx, y - cy);
+          if (d > r) continue;
+          if (d > r - 2.5) { put(x, y, [226, 224, 216]); continue; }   // 边郭高光
+          const grad = -14 + 12 * (d / r);                              // 中心亮、边缘暗
+          const relief = (Math.abs(x - cx) < r * 0.12 && Math.abs(y - cy) < r * 0.55) ? 22 : 0;
+          const ring2 = Math.abs(d - r * 0.62) < 1.5 ? 16 : 0;
+          const spec = Math.max(0, 1 - Math.hypot(x - cx + r * 0.4, y - cy + r * 0.4) / (r * 0.5)) * 30;
+          put(x, y, face.map(function (q) {
+            return Math.max(0, Math.min(255, Math.round(q + grad + relief + ring2 + spec)));
+          }));
+        }
+      }
+    }
+  }
+  return { buf: PNG.sync.write(png), coins: coins };
+}
+
+test('竖幅密铺小币：16x10=160 枚（半径 19）全部数出', () => {
+  const sc = makeRealisticScene(16, 10, 19, 2, 750, 1000, 200);
+  const r = svc.count(sc.buf);
+  assert.equal(r.count, 160, '实际 ' + r.count);
+  const missed = sc.coins.filter(function (c) {
+    return !r.seeds.some(function (s) { return Math.hypot(s.x - c.x, s.y - c.y) < c.r * 0.7; });
+  });
+  assert.equal(missed.length, 0, '漏检 ' + missed.length + ' 枚，首枚在 (' + (missed[0] || {}).x + ',' + (missed[0] || {}).y + ')');
+});
+
+test('密铺更小币：20x14=280 枚（半径 14）全部数出', () => {
+  const sc = makeRealisticScene(20, 14, 14, 2, 750, 1000, 150);
+  const r = svc.count(sc.buf);
+  assert.equal(r.count, 280, '实际 ' + r.count);
+});
+
+test('半径不随画幅膨胀：同一批小币在横图与竖图里结果一致', () => {
+  const wide = svc.count(makeRealisticScene(16, 10, 19, 2, 700, 520, 70).buf);
+  const tall = svc.count(makeRealisticScene(16, 10, 19, 2, 750, 1000, 200).buf);
+  assert.equal(wide.count, 160, '横图实际 ' + wide.count);
+  assert.equal(tall.count, 160, '竖图实际 ' + tall.count);
+});
+
+test('空桌面（木纹 + 噪点）不会被小半径搜索带出假圆', () => {
+  const sc = makeRealisticScene(0, 0, 20, 0, 700, 1000, 0);
+  const r = svc.count(sc.buf);
+  assert.equal(r.count, 0, '实际 ' + r.count);
+});

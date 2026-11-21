@@ -20,6 +20,19 @@
  * 实测真实照片：环形带标题网图 18→11、黑底展示盒 12→11、规整 4x3 网格 11→12、
  * 五行网格 16、混合亮度平铺 21，均与实际枚数一致。
  *
+ * v4（2026-11-21，用户 130 枚平铺照只数出 13）—— 修的是「尺度」而不是「证据」：
+ *   旧版半径搜索下限 = max(20, 短边 × 0.055)。手机竖幅照片等比缩到最长边 1000 后
+ *   短边 750 → 下限 41px，而 5 角 / 1 角币半径只有 15~20px，真正该搜的尺度整个落在
+ *   区间外；能筛出来的只剩「跨两枚币的幽灵大圆」（标注圈比币大一倍，正是用户截图）。
+ *   1) 下限改 max(8, 短边 × 0.02)，只兜底极端小图，不再随画幅线性放大。
+ *   2) 新增尺度筛：用票数最高的 20 个候选估参考半径 rRef，只保留
+ *      [0.5, 2.0] × rRef —— 小尺度的文字 / 花纹 / 圆盒内沿与大尺度的幽灵圆一并剔除。
+ *      半径下限下探后噪声圆变多，这一步是「密铺小币能数准」的前提。
+ *   3) 弱证据（score < 0.70）额外要求一段 ≥20/48 的连续弧且段数 ≤4，
+ *      压掉「零碎多段」的文字笔画假圆。
+ *   4) 半径精修范围放宽到 ±8px，避免霍夫步长量化把半径估小导致被尺度筛误杀。
+ *   实测：用户原图截取区域 10 → 108（可见币全中）；合成竖幅 130 枚 / 280 枚均 100%。
+ *
  * 不识别币种、不生成内容，只数圆形个数 —— 工具属性，规避深度合成类目红线。
  */
 const jpeg = require('jpeg-js');
@@ -30,11 +43,11 @@ const BLUR_K = 5;               // 梯度前的均值模糊核
 const VOTE_BLUR_K = 5;          // 霍夫累加图平滑核
 const EDGE_PERCENTILE = 0.66;   // 参与投票的边缘点（分位，略放宽以召回弱对比度币）
 const RIM_PERCENTILE = 0.62;    // 圆周证据的梯度幅值门槛（分位）
-const R_MIN_RATIO = 0.055;      // 半径下限 / 短边
+const R_MIN_RATIO = 0.02;       // 半径下限 / 短边（下限只防极端小图，不再随画幅放大）
 const R_MAX_RATIO = 0.115;      // 半径上限 / 短边
-const R_MIN_ABS = 20;
+const R_MIN_ABS = 8;            // 半径绝对下限：紧挨平铺的一角/五角小币半径可到 10px 上下
 const R_MAX_ABS = 130;
-const R_STEP = 2;
+const R_STEP = 3;
 const RING_SAMPLES = 48;        // 圆周打分采样点数
 const ALIGN_MIN = 0.65;         // 梯度方向与径向夹角余弦下限
 const PEAK_MIN = 5;             // 霍夫峰最低票数（略放宽召回，靠后续精筛压噪声）
@@ -46,10 +59,16 @@ const RUNS_MAX = 6;             // 圆周对齐段数上限
 const STD_MAX = 70;             // 圆内灰度标准差上限：真币面均匀，文字/笔画区域杂乱
 const STRONG_SCORE = 0.85;      // 圆周证据极完整时豁免 STD_MAX（币面浮雕也会让圆内方差很大）
 const STRONG_ARC = 24;
+const WEAK_SCORE = 0.70;        // 低于该得分视为弱证据，需更强的弧段连续度支撑
+const WEAK_ARC = 20;
+const WEAK_RUNS = 4;
 const R_BIG_FACTOR = 1.15;      // 半径明显大于同图中位数时，放宽票数下限
 const INNER_RATIO = 0.72;       // 圆内统计区域半径 / 币半径
 const NMS_FACTOR = 0.78;        // 中心距 < 该系数 ×(r1+r2) 视为同一枚
-const R_REFINES = [-6, -3, 0, 3, 6];
+const R_BAND_LO = 0.5;          // 半径下限 = 参考半径 × 该系数（剔除文字/花纹/圆盒边的小假圆）
+const R_BAND_HI = 2.0;          // 半径上限 = 参考半径 × 该系数（剔除跨多枚币的大幽灵圆）
+const R_REF_TOP = 20;           // 取票数最高的 N 个候选估参考半径
+const R_REFINES = [-8, -6, -4, -2, 0, 2, 4, 6, 8];
 
 /** 解码 buffer 为 {width,height,data:Uint8Array RGBA}，超大图等比缩小 */
 function decode(buf) {
@@ -362,7 +381,11 @@ function count(buf, opt) {
   const pass1 = scored.filter(function (c) {
     if (c.score < SCORE_MIN || c.arc < ARC_MIN || c.runs > RUNS_MAX) return false;
     const strong = c.score >= STRONG_SCORE && c.arc >= STRONG_ARC && c.runs <= 3;
-    return strong || c.std <= STD_MAX;
+    if (!strong && c.std > STD_MAX) return false;
+    // 弱证据（score 偏低）必须至少有一段像样的连续弧：文字笔画 / 花纹的
+    // 偶然对齐常常是「零碎多段、每段都很短」。
+    if (c.score < WEAK_SCORE && (c.arc < WEAK_ARC || c.runs > WEAK_RUNS)) return false;
+    return true;
   });
   // 第二遍：同图相对门槛。一张照片里各枚币的成像条件相近，
   // 明显低于整体中位数的「弱假圆」（黑底反光、空圆孔）应剔除。
@@ -371,9 +394,23 @@ function count(buf, opt) {
     : SCORE_MIN;
   const qualified = pass1.filter(function (c) { return c.score >= scoreFloor; });
 
+  /**
+   * 尺度筛：同一张照片里各枚币的半径不会差出一个数量级。
+   * 用票数最高的若干候选（真币的整圈边缘票数远高于文字笔画/花纹的偶然对齐）
+   * 估一个参考半径，把明显离群的小圆（文字、邮票图案、圆盒内沿）与大圆
+   * （跨两枚币的幽灵圆）一并剔除。
+   * 这一步是「小币密铺」能数准的前提：半径下限下探到 8px 后，噪声圆变多，
+   * 只靠得分/弧段筛不干净。
+   */
+  const byVotes = qualified.slice().sort(function (a, b) { return b.votes - a.votes; });
+  const rRef = median(byVotes.slice(0, R_REF_TOP).map(function (c) { return c.r; }));
+  const banded = rRef > 0
+    ? qualified.filter(function (c) { return c.r >= R_BAND_LO * rRef && c.r <= R_BAND_HI * rRef; })
+    : qualified;
+
   const picked = [];
   const overlap = o.overlapFactor || 1;
-  for (const c of qualified) {
+  for (const c of banded) {
     let dup = false;
     for (const s of picked) {
       const dx = c.x - s.x, dy = c.y - s.y;
