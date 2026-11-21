@@ -36,7 +36,9 @@ module.exports = async function planRoutes(app) {
     const code = String(request.params.code || '').toUpperCase();
     const CDN = 'https://chngc-prod-c2c-cdn.ecgci.com';
     let raw = null;
-    const rows = await app.db.query('SELECT raw, thumb, thumb_back, weight_g FROM cl_ecgci_pm WHERE code = ? LIMIT 1', [code]);
+    // project_code 一起取：前端要靠它拉「同系列」的其他币
+    const rows = await app.db.query(
+      'SELECT raw, thumb, thumb_back, weight_g, project_code FROM cl_ecgci_pm WHERE code = ? LIMIT 1', [code]);
     if (rows[0] && rows[0][0]) {
       if (rows[0][0].raw) raw = rows[0][0].raw;
       var thumb = rows[0][0].thumb || '';
@@ -61,6 +63,7 @@ module.exports = async function planRoutes(app) {
       ok: true,
       item: {
         code: raw.code, name: raw.name, projectName: raw.projectName,
+        projectCode: (rows[0] && rows[0][0] && rows[0][0].project_code) || raw.projectCode || '',
         year: raw.projectYear || raw.year,
         frontUrl: img(raw.frontPicture), backUrl: img(raw.backPicture),
         thumbUrl: typeof thumb !== 'undefined' ? thumb : '',

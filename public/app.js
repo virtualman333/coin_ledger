@@ -2253,6 +2253,7 @@ function renderPmDetail(code){
         + (figs ? '<div class="pm-figs">' + figs + '</div>' : '')
         + (more.length ? '<div class="pm-more-facts">' + more.map(function(x){ return fact(x[0], x[1]); }).join('') + '</div>' : '')
         + annHtml
+        + '<div class="pm-sib" id="pmSib"></div>'
         + '<div class="pm-detail-actions">'
         + '<button type="button" class="btn ' + (isOwned ? 'ghost pm-fav-owned' : 'primary') + '" data-pmfav="' + esc(code) + '">'
         + (isOwned ? '✓ 已在藏品 · 点此取消' : '＋ 加入我的藏品') + '</button>'
@@ -2263,6 +2264,7 @@ function renderPmDetail(code){
         + '</article>';
       syncPmSeo(code, d);
       bindPmPageActions(box, code, it);
+      loadPmSiblings(d.projectCode, code);
     })
     .catch(function(){ if (currentPmCode() === code) renderPmDetailError(code, '详情加载失败'); });
 }
@@ -2325,8 +2327,54 @@ function bindPmPageActions(box, code, it){
       return;
     }
     var retry = e.target.closest('[data-pmretry]');
-    if (retry) renderPmDetail(code);
+    if (retry) { renderPmDetail(code); return; }
+
+    var go = e.target.closest('[data-pmgo]');
+    if (go) {
+      e.preventDefault();
+      var next = go.getAttribute('data-pmgo');
+      if (next && next !== code) {
+        history.pushState(null, '', pathOf('pm', next));
+        renderPmDetail(next);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
   };
+}
+
+/**
+ * 同系列：贵金属的「系列」就是发行项目（project_code）。
+ * 复用 /api/series/detail，剔除当前这枚；拿不到就整块不显示。
+ */
+function loadPmSiblings(projectCode, current){
+  var host = document.getElementById('pmSib');
+  if (!host) return;
+  if (!projectCode) { host.remove(); return; }
+  var abs = function(u){ return (!u ? '' : (String(u).indexOf('http') === 0 ? u : u)); };
+  fetch('/api/series/detail?category=pm&code=' + encodeURIComponent(projectCode) + '&page=1&size=24', { credentials: 'same-origin' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!host.isConnected) return;              // 页面已经切走
+      if (!j || !j.ok || !Array.isArray(j.items)) { host.remove(); return; }
+      var list = j.items.filter(function(x){ return x && x.code && x.code !== current; });
+      if (!list.length) { host.remove(); return; }
+      host.innerHTML = '<div class="pm-sib-h"><h2>同系列</h2><span>' +
+          esc(j.series && j.series.name ? j.series.name : '') +
+          (j.total ? ' · 共 ' + j.total + ' 枚' : '') + '</span></div>' +
+        '<div class="pm-sib-list">' +
+        list.map(function(x){
+          var img = abs(x.thumb) || abs(x.frontPicture);
+          return '<a class="pm-sib-item" href="' + esc(pathOf('pm', x.code)) + '" data-pmgo="' + esc(x.code) + '">' +
+            '<span class="pm-sib-img">' + (img
+              ? '<img src="' + esc(img) + '" alt="' + esc(x.name) + '" loading="lazy">'
+              : '<i class="pm-sib-na">无图</i>') + '</span>' +
+            '<b>' + esc(x.name) + '</b>' +
+            '<i>' + esc([x.year, x.weightG ? x.weightG + ' 克' : ''].filter(Boolean).join(' · ')) + '</i>' +
+          '</a>';
+        }).join('') +
+        '</div>';
+    })
+    .catch(function(){ /* 同系列失败不影响详情 */ });
 }
 
 /** 从贵金属模式切回时，恢复表格显示、藏起卡片区 */

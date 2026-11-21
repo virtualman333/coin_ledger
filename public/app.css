@@ -2989,3 +2989,89 @@ html[data-theme="light"] .pz-modal-mask{background:rgba(0,0,0,.35)}
 
 /* 贵金属：已收藏态可点击（点击=取消收藏），不再灰化禁用 */
 .pm-add.is-owned{background:var(--gold-soft);color:var(--gold);border-color:var(--gold);cursor:pointer}
+
+/* ---------- 贵金属单枚页：同系列 ---------- */
+.pm-sib {
+  margin: 26px 0 4px;
+}
+
+.pm-sib-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pm-sib-h h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2b2926;
+}
+
+.pm-sib-h span {
+  font-size: 12px;
+  color: #8a8378;
+}
+
+.pm-sib-list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pm-sib-item {
+  flex: 0 0 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.pm-sib-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 132px;
+  border-radius: 10px;
+  background: #f6f3ec;
+  overflow: hidden;
+}
+
+.pm-sib-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pm-sib-na {
+  font-size: 12px;
+  color: #8a8378;
+  font-style: normal;
+}
+
+.pm-sib-item b {
+  display: -webkit-box;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #2b2926;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.pm-sib-item i {
+  font-size: 12px;
+  color: #8a8378;
+  font-style: normal;
+}
+
+.pm-sib-item:hover b {
+  color: #9a6b1f;
+}

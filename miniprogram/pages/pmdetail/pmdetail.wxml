@@ -44,6 +44,33 @@
       <text class="ann">{{item.announceText}}</text>
     </view>
 
+    <!-- 同系列：贵金属的「系列」= 发行项目，横向列出同项目其他币 -->
+    <view class="card sib-card" wx:if="{{siblings.length}}">
+      <view class="sib-head">
+        <text class="card-h">同系列</text>
+        <text class="sib-more" hover-class="tap-hover" bindtap="goSeries" wx:if="{{item.projectCode}}">
+          {{item.projectName}} · {{siblingTotal}} 枚 ›
+        </text>
+      </view>
+      <scroll-view class="sib-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+        <view
+          class="sib"
+          wx:for="{{siblings}}"
+          wx:key="code"
+          data-code="{{item.code}}"
+          hover-class="tap-hover"
+          bindtap="goSibling"
+        >
+          <view class="sib-img-w">
+            <image class="sib-img" src="{{item.thumbUrl}}" mode="aspectFit" lazy-load wx:if="{{item.thumbUrl}}"></image>
+            <view class="sib-ph" wx:else>暂无图</view>
+          </view>
+          <text class="sib-name">{{item.name}}</text>
+          <text class="sib-meta">{{item.year}}{{item.weight ? ' · ' + item.weight : ''}}</text>
+        </view>
+      </scroll-view>
+    </view>
+
     <button class="pm-fav {{owned ? 'is-owned' : ''}}" bindtap="toggleFav" disabled="{{busy}}">{{busy ? '处理中…' : (owned ? '✓ 已在藏品 · 点此取消' : '＋ 加入我的藏品')}}</button>
     <button class="pm-share" open-type="share" hover-class="tap-hover">分享给朋友</button>
     <view class="foot">资料来源：中国人民银行发行公告 · 中国金币集团</view>

@@ -3,7 +3,11 @@ const store = require('../../utils/store');
 const share = require('../../utils/share');
 
 Page({
-  data: { code: '', item: null, loading: true, err: '', owned: false, busy: false, retryable: false },
+  data: {
+    code: '', item: null, loading: true, err: '', owned: false, busy: false, retryable: false,
+    siblings: [],       // 同系列的其他币（不含当前这枚）
+    siblingTotal: 0,    // 同系列总枚数（含当前）
+  },
 
   onLoad(q) {
     const code = String((q && q.code) || '').toUpperCase();
@@ -45,7 +49,51 @@ Page({
         item: Object.assign({}, d, { facts, announceText: String(d.announce || '').trim(), metalValue: mv }),
         loading: false,
       });
+      this.loadSiblings(d.projectCode);
     }).catch(() => this.setData({ loading: false, err: '详情加载失败，检查网络后重试', retryable: true }));
+  },
+
+  /**
+   * 同系列：贵金属的「系列」就是发行项目（project_code）。
+   * 复用 /api/series/detail，按项目取成员，剔掉当前这枚。
+   */
+  loadSiblings(projectCode) {
+    if (!projectCode) return;
+    api.get('/api/series/detail?category=pm&code=' + encodeURIComponent(projectCode) + '&page=1&size=24')
+      .then((res) => {
+        if (!res || !res.ok || !Array.isArray(res.items)) return;
+        const abs = (u) => (!u ? '' : (String(u).indexOf('http') === 0 ? u : api.BASE + u));
+        const list = res.items
+          .filter((x) => x && x.code && x.code !== this.data.code)
+          .map((x) => ({
+            code: x.code,
+            name: x.name,
+            year: x.year || '',
+            weight: x.weightG ? x.weightG + ' 克' : '',
+            thumbUrl: abs(x.thumb) || abs(x.frontPicture),
+          }));
+        this.setData({
+          siblings: list,
+          siblingTotal: Math.max(0, Number(res.total) || 0),
+        });
+      })
+      .catch(() => { /* 同系列加载失败不影响主信息 */ });
+  },
+
+  /** 点同系列里的另一枚：替换当前页，避免详情页越叠越深 */
+  goSibling(e) {
+    const code = String(e.currentTarget.dataset.code || '');
+    if (!code || code === this.data.code) return;
+    wx.redirectTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(code) });
+  },
+
+  /** 看整个项目 */
+  goSeries() {
+    const item = this.data.item;
+    if (!item || !item.projectCode) return;
+    wx.navigateTo({
+      url: '/pages/series-detail/series-detail?category=pm&code=' + encodeURIComponent(item.projectCode),
+    });
   },
 
   /** 从「我的藏品」移出后再返回本页，按钮状态要跟着更新 */
