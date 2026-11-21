@@ -1088,7 +1088,19 @@ async function handleApi(req, res, pathname) {
     const range = ['today', 'week', 'month', 'year', 'all'].indexOf(String(dq.range || '')) >= 0 ? String(dq.range) : 'all';
     if (!ip && !sid) return sendJSON(res, 400, { ok: false, error: '缺少 ip 或 sid' });
     const scoped = visitors.filterByRange(visitors.load().items, range);
-    return sendJSON(res, 200, Object.assign({ ok: true }, visitors.detail(scoped, { ip, sid })));
+    const detail = visitors.detail(scoped, { ip, sid });
+    // 埋点从 3.0.85 才记昵称，老记录只有用户名 —— 这里用用户表按 uid 补一层，
+    // 否则管理端会一直看到"只有用户名、没有昵称"的旧数据
+    const byId = {};
+    (d.users || []).forEach((u) => { byId[u.id] = u; });
+    (detail.rows || []).forEach((row) => {
+      const u = byId[row.uid];
+      if (u) {
+        if (!row.nickName) row.nickName = u.nickname || '';
+        if (!row.name) row.name = u.name || '';
+      }
+    });
+    return sendJSON(res, 200, Object.assign({ ok: true }, detail));
   }
 
   /* ---------------- 功能建议（更多功能页） ---------------- */

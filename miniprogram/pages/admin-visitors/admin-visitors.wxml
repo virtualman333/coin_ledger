@@ -88,7 +88,10 @@
           <text class="vdd-time">{{item.at}}</text>
           <text class="vdd-tab">{{item.tab}}</text>
           <text class="vdd-src {{item.srcCls}}">{{item.src}}</text>
-          <text class="vdd-user">{{item.user}}</text>
+          <view class="vdd-user">
+            <text class="vdd-uname">{{item.user}}</text>
+            <text class="vdd-nick" wx:if="{{item.nick && item.nick !== item.user}}">{{item.nick}}</text>
+          </view>
         </view>
       </scroll-view>
       <view class="vdd-foot" bindtap="closeVsDetail">关闭</view>

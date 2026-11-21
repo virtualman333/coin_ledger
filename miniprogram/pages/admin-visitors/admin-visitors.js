@@ -130,6 +130,7 @@ Page({
             src: x.client === 'mp' ? '小程序' : '网页',
             srcCls: x.client === 'mp' ? 'mp' : 'web',
             user: x.name || '未登录',
+            nick: x.nickName || '',
           })),
         },
       });

@@ -601,6 +601,9 @@
   flex-direction: column;
   width: 100%;
   max-height: 82vh;
+  /* 只有 max-height 时，flex:1 的子项仍会被内容撑高、整体溢出而不滚。
+     overflow:hidden 把容器封住，子项才按「剩余高度」分配，内部才能滚 */
+  overflow: hidden;
   padding: 0 28rpx calc(24rpx + env(safe-area-inset-bottom));
   border-radius: 26rpx 26rpx 0 0;
   background: #ffffff;
@@ -631,7 +634,7 @@
 .vdd-sub { display: block; flex: 0 0 auto; padding-bottom: 14rpx; color: #6b6559; font-size: 20rpx; }
 /* scroll-view 只给 max-height 是滚不动的（内容会被裁掉、底部按钮也按不到），
    必须在 flex 列里拿到确定高度：flex:1 + min-height:0 */
-.vdd-list { flex: 1 1 auto; min-height: 0; }
+.vdd-list { flex: 1 1 0; min-height: 0; }
 .vdd-row {
   display: flex;
   padding: 16rpx 0;
@@ -643,6 +646,33 @@
 .vdd-time { color: #6b6559; width: 190rpx; flex: 0 0 auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .vdd-tab { min-width: 0; color: #2b2926; font-weight: 600; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .vdd-src { font-size: 21rpx; }
+/* 用户名（账号）在上、昵称在下：认账号靠用户名，认人靠昵称 */
+.vdd-user {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2rpx;
+  max-width: 170rpx;
+}
+.vdd-uname {
+  color: #2b2926;
+  font-size: 21rpx;
+  line-height: 1.3;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 170rpx;
+}
+.vdd-nick {
+  color: #8a8378;
+  font-size: 19rpx;
+  line-height: 1.3;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 170rpx;
+}
 .vdd-src.mp { color: #06793f; }
 .vdd-src.web { color: #1a63c9; }
 .vdd-user { color: #6b6559; width: 130rpx; text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
