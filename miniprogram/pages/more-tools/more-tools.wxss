@@ -25,3 +25,8 @@
 .group .cell {
   min-height: 116rpx;
 }
+
+/* 退出登录：危险动作用红字，和普通入口区分开 */
+.cell-danger {
+  color: #c0392b;
+}

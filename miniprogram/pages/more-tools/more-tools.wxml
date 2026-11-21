@@ -33,6 +33,17 @@
     </view>
   </view>
 
+  <block wx:if="{{loggedIn}}">
+    <text class="grp">账号</text>
+    <view class="group">
+      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="onLogout" aria-role="button" aria-label="退出登录">
+        <view class="cell-ico"><text>⏻</text></view>
+        <text class="cell-k cell-danger">退出登录</text>
+        <text class="cell-a">›</text>
+      </view>
+    </view>
+  </block>
+
   <block wx:if="{{isAdmin}}">
     <text class="grp">管理</text>
     <view class="group">

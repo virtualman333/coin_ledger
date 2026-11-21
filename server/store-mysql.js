@@ -56,6 +56,7 @@ const DDL = [
      is_test TINYINT(1) NOT NULL DEFAULT 0 COMMENT '测试账号：允许被删除',
      nickname VARCHAR(32) NULL COMMENT '显示昵称（可重复，与登录名无关）',
      avatar VARCHAR(64) NULL COMMENT '头像文件名，存 public/avatar/',
+     name_changed_at DATETIME(3) NULL COMMENT '用户名修改时间；非空即已用过改名机会',
      PRIMARY KEY (id),
      UNIQUE KEY uk_name (name),
      KEY idx_wx (wx_openid)
@@ -161,6 +162,8 @@ async function ensureSchema() {
   await ensureColumn('cl_users', 'is_test', 'TINYINT(1) NOT NULL DEFAULT 0');
   await ensureColumn('cl_users', 'nickname', 'VARCHAR(32) NULL');
   await ensureColumn('cl_users', 'avatar', 'VARCHAR(64) NULL');
+  // 用户名只允许改一次：记录首次改名时间，非空即锁死
+  await ensureColumn('cl_users', 'name_changed_at', 'DATETIME(3) NULL');
   // 藏品增强（migration 008）：号码 / 形态 / 图片，缺省不影响既有藏品
   await ensureColumn('cl_holdings', 'serials', 'TEXT NULL');
   await ensureColumn('cl_holdings', 'form', "VARCHAR(8) NOT NULL DEFAULT ''");
@@ -244,7 +247,8 @@ async function loadDoc() {
       wxUnionid: r.wx_unionid || '',
       isTest: !!r.is_test,
       nickname: r.nickname || '',
-      avatar: r.avatar || ''
+      avatar: r.avatar || '',
+      nameChangedAt: iso(r.name_changed_at) || null
     })),
     holdings,
     prices,
@@ -282,14 +286,15 @@ async function syncUsers(conn, doc) {
   }
   for (const u of users) {
     await conn.query(
-      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, is_test, nickname, avatar, name_changed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE name = VALUES(name), role = VALUES(role), salt = VALUES(salt),
          hash = VALUES(hash), created_at = VALUES(created_at), last_login = VALUES(last_login),
          wx_openid = VALUES(wx_openid), wx_unionid = VALUES(wx_unionid), is_test = VALUES(is_test),
-         nickname = VALUES(nickname), avatar = VALUES(avatar)`,
+         nickname = VALUES(nickname), avatar = VALUES(avatar), name_changed_at = VALUES(name_changed_at)`,
       [u.id, u.name, u.role || 'user', u.salt, u.hash, toDate(u.createdAt) || new Date(), toDate(u.lastLogin),
-        u.wxOpenid || null, u.wxUnionid || null, u.isTest ? 1 : 0, u.nickname || null, u.avatar || null]
+        u.wxOpenid || null, u.wxUnionid || null, u.isTest ? 1 : 0, u.nickname || null, u.avatar || null,
+        u.nameChangedAt ? toDate(u.nameChangedAt) : null]
     );
   }
 }

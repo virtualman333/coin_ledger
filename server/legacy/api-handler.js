@@ -775,6 +775,40 @@ async function handleApi(req, res, pathname) {
     return sendJSON(res, 200, { ok: true });
   }
 
+  /**
+   * 改用户名（登录名）。
+   * 规则：不能重名、只能改一次（改过之后 name_changed_at 非空，接口直接拒绝）。
+   * 昵称不占这个名额 —— 昵称随时可改，那个走 /api/profile。
+   */
+  if (pathname === '/api/user/name' && method === 'POST') {
+    const me = requireLogin(req, res, d);
+    if (!me) return;
+    const body = await readBody(req, 2048);
+    const v = auth.validateName(body.name);
+    if (!v.ok) return sendJSON(res, 400, { ok: false, error: v.error });
+
+    // 和现在一样就直接返回，别白占一次改名机会
+    if (v.name === me.name) return sendJSON(res, 200, { ok: true, user: auth.publicUser(me) });
+
+    if (me.nameChangedAt) {
+      return sendJSON(res, 400, { ok: false, error: '用户名只能修改一次' });
+    }
+
+    // 大小写也算重复：MySQL 的 uk_name 是大小写不敏感的，这里对齐，免得报数据库错
+    const lower = v.name.toLowerCase();
+    const dup = (d.users || []).filter((u) => u.id !== me.id && String(u.name || '').toLowerCase() === lower)[0];
+    if (dup) return sendJSON(res, 400, { ok: false, error: '该用户名已被占用' });
+
+    const now = new Date().toISOString();
+    await store.commit((draft) => {
+      const t = auth.findByID(draft, me.id);
+      if (t) { t.name = v.name; t.nameChangedAt = now; }
+    });
+    const fresh = await store.load();
+    const mine = auth.findByID(fresh, me.id);
+    return sendJSON(res, 200, { ok: true, user: auth.publicUser(mine) });
+  }
+
   /* ---------------- 持仓（按用户隔离） ---------------- */
   if (pathname === '/api/holdings' && method === 'PUT') {
     const me = requireLogin(req, res, d);

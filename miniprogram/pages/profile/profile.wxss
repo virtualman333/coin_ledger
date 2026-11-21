@@ -69,3 +69,86 @@
 .save-btn {
   margin-top: 48rpx;
 }
+
+/* ---------- 用户名提示 ---------- */
+.row-tip {
+  margin: -6rpx 0 6rpx;
+  padding: 0 4rpx;
+  color: #9a6b1f;
+  font-size: 20rpx;
+  line-height: 1.5;
+}
+
+.row-tip-lock {
+  color: #8a8378;
+}
+
+/* ---------- 改密码面板 ---------- */
+.pwd-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(24, 20, 14, 0.45);
+}
+
+.pwd-sheet {
+  width: 100%;
+  padding: 32rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  border-radius: 28rpx 28rpx 0 0;
+  background: #ffffff;
+}
+
+.pwd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.pwd-title {
+  color: #2b2926;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.pwd-x {
+  padding: 10rpx 14rpx;
+  color: #8a8378;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.pwd-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.pwd-k {
+  width: 140rpx;
+  flex: 0 0 auto;
+  color: #2b2926;
+  font-size: 27rpx;
+}
+
+.pwd-i {
+  flex: 1;
+  min-width: 0;
+  color: #2b2926;
+  font-size: 27rpx;
+}
+
+.pwd-tip {
+  display: block;
+  margin: 20rpx 0 24rpx;
+  color: #8a8378;
+  font-size: 20rpx;
+  line-height: 1.5;
+}

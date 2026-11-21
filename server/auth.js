@@ -56,7 +56,8 @@ function publicUser(u) {
     disabled: !!u.disabled,    // 被管理员禁用（禁用后会话立即失效）
     nickname: u.nickname || '',           // 显示昵称，没设就用登录名
     avatar: u.avatar ? '/avatar/' + u.avatar : '',
-    hasPassword: !!u.hash
+    hasPassword: !!u.hash,
+    nameChanged: !!u.nameChangedAt        // 用户名是否已经用过改名机会
   };
 }
 
@@ -69,6 +70,17 @@ function validateRegister(name, password) {
   if (p.length > MAX_PW) return { ok: false, error: `密码最多 ${MAX_PW} 位` };
   if (/^\d+$/.test(p)) return { ok: false, error: '密码不能是纯数字' };
   return { ok: true, name: n, password: p };
+}
+
+/**
+ * 只校验用户名（改名的接口复用注册那套规则，但不碰密码）。
+ * 注册和改名共用同一套规则，避免两边限制不一致。
+ */
+function validateName(name) {
+  const n = String(name || '').trim();
+  if (!NAME_RE.test(n)) return { ok: false, error: '用户名需 2–20 位，仅限中文、字母、数字、下划线' };
+  if (n.toLowerCase() === 'admin' || n.toLowerCase() === 'root') return { ok: false, error: '该用户名不可用' };
+  return { ok: true, name: n };
 }
 
 /** 生成不与现有冲突的用户 ID（u1, u2, ...） */
@@ -172,7 +184,7 @@ function clearFail(ip) { fails.delete(ip); }
 module.exports = {
   COOKIE, TTL_MS, MIN_PW, MAX_USERS,
   hashPassword, verifyPassword,
-  findByName, findByID, publicUser, validateRegister, nextID,
+  findByName, findByID, publicUser, validateRegister, validateName, nextID,
   issueToken, verifyToken, currentUser, sessionCookie,
   ipFails, markFail, clearFail, MAX_FAIL
 };

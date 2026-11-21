@@ -4318,6 +4318,18 @@ function renderProfile(){
     '</div>' +
 
     '<div class="pwcard">' +
+      '<h4>用户名</h4>' +
+      '<div class="pwrow">' +
+        '<input type="text" id="unameNew" value="' + esc(u.name) + '" maxlength="20" placeholder="2–20 位，中文/字母/数字/下划线"' +
+          (u.nameChanged ? ' disabled' : '') + '>' +
+        '<button class="btn" id="unameBtn"' + (u.nameChanged ? ' disabled' : '') + '>保存</button>' +
+      '</div>' +
+      '<div class="authmsg" id="unameMsg">' +
+        (u.nameChanged ? '用户名已修改过，不可再改' : '用户名是登录名，只能修改一次') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="pwcard">' +
       '<h4>修改密码</h4>' +
       '<div class="pwrow">' +
         '<input type="password" id="pwOld" placeholder="原密码" autocomplete="off" data-nofill="1" data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>' +
@@ -4328,6 +4340,28 @@ function renderProfile(){
     '</div>';
 
   document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+  var unameBtn = document.getElementById('unameBtn');
+  if (unameBtn && !unameBtn.disabled) {
+    unameBtn.addEventListener('click', function(){
+      var input = document.getElementById('unameNew');
+      var m = document.getElementById('unameMsg');
+      var v = String(input.value || '').trim();
+      if (!v) { m.style.color = ''; m.textContent = '请输入用户名'; return; }
+      if (v === APP.user.name) { m.style.color = ''; m.textContent = '用户名没有变化'; return; }
+      m.style.color = '';
+      m.textContent = '保存中…';
+      api('/api/user/name', { method: 'POST', body: JSON.stringify({ name: v }) })
+        .then(function(res){
+          APP.user = (res && res.user) || APP.user;
+          m.style.color = '#7fc9a2';
+          m.textContent = '已更新，下次登录请用新用户名';
+          updateChrome();
+          setTimeout(function(){ renderProfile(); }, 1200);
+        })
+        .catch(function(e){ m.style.color = ''; m.textContent = e.message; });
+    });
+  }
   document.getElementById('pwBtn').addEventListener('click', function(){
     var oldPw = document.getElementById('pwOld').value;
     var newPw = document.getElementById('pwNew').value;

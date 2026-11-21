@@ -20,9 +20,22 @@
     />
   </view>
 
+  <!-- 用户名：登录名，只能改一次。改过之后服务端也会拒绝，这里提前说明 -->
   <view class="cell">
-    <text class="cell-k">账号</text>
-    <text class="f-v f-ro">{{loginName}}</text>
+    <text class="cell-k">用户名</text>
+    <input
+      wx:if="{{!nameLocked}}"
+      class="f-v"
+      value="{{name}}"
+      placeholder="2–20 位，中文/字母/数字/下划线"
+      placeholder-class="ph"
+      maxlength="20"
+      bindinput="onName"
+    />
+    <text class="f-v f-ro" wx:else>{{name}}</text>
+  </view>
+  <view class="row-tip {{nameLocked ? 'row-tip-lock' : ''}}">
+    {{nameLocked ? '用户名已修改过，不可再改' : '用户名是登录名，只能修改一次，确认后再保存'}}
   </view>
 
   <view class="cell" wx:if="{{joinedText}}">
@@ -35,13 +48,48 @@
     <text class="f-v f-ro">测试账号</text>
   </view>
 
+  <view class="cell link-row" hover-class="tap-hover" hover-stay-time="80" bindtap="openPwd" aria-role="button" aria-label="修改密码">
+    <text class="cell-k">登录密码</text>
+    <text class="cell-v">{{hasPassword ? '已设置' : '未设置'}}</text>
+    <text class="cell-a">›</text>
+  </view>
+
   <view class="cell link-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAccount" aria-role="button" aria-label="账户与安全">
     <text class="cell-k">账户与安全</text>
-    <text class="cell-v">密码 · 微信</text>
+    <text class="cell-v">微信绑定 · 注销</text>
     <text class="cell-a">›</text>
   </view>
 
   <button class="btn-primary save-btn" bindtap="save" loading="{{saving}}" disabled="{{saving || !dirty}}">
     {{dirty ? '保存' : '未做修改'}}
   </button>
+</view>
+
+<!-- 改密码：底部面板。微信建号本来没密码，此时是「设置」，之后改才验原密码 -->
+<view class="pwd-mask" wx:if="{{pwdOpen}}" bindtap="closePwd" catchtouchmove="noop">
+  <view class="pwd-sheet" catchtap="noop">
+    <view class="pwd-head">
+      <text class="pwd-title">{{hasPassword ? '修改密码' : '设置密码'}}</text>
+      <text class="pwd-x" hover-class="tap-hover" bindtap="closePwd">✕</text>
+    </view>
+
+    <view class="pwd-row" wx:if="{{hasPassword}}">
+      <text class="pwd-k">原密码</text>
+      <input class="pwd-i" password value="{{oldPwd}}" bindinput="onOldPwd" placeholder="当前密码" placeholder-class="ph" />
+    </view>
+
+    <view class="pwd-row">
+      <text class="pwd-k">新密码</text>
+      <input class="pwd-i" password value="{{newPwd}}" bindinput="onNewPwd" placeholder="至少 8 位，不能纯数字" placeholder-class="ph" />
+    </view>
+
+    <view class="pwd-row">
+      <text class="pwd-k">确认密码</text>
+      <input class="pwd-i" password value="{{newPwd2}}" bindinput="onNewPwd2" placeholder="再输一次" placeholder-class="ph" />
+    </view>
+
+    <text class="pwd-tip">改完请记住，小程序和网页端登录都用它</text>
+
+    <button class="btn-primary pwd-save" bindtap="submitPwd" loading="{{pwdBusy}}" disabled="{{pwdBusy}}">保存密码</button>
+  </view>
 </view>
