@@ -177,14 +177,17 @@ function requireLogin() {
  */
 let persistTail = null;       // 最后一个未决的写；为空时表示当前没有排队
 
-/* ---------------- 收藏的导出 / 导入 ---------------- */
+/* ---------------- 收藏的导出 / 导入（CSV 表格） ---------------- */
 
 const HOLDING_EXPORT_FIELDS = [
   'name', 'category', 'id', 'unit', 'rolls', 'cost', 'market',
   'group', 'thumb', 'serials', 'form', 'images',
 ];
 
-/** 导出：只保留可迁移字段，服务端内部字段一律不带 */
+/**
+ * 旧版 JSON 导出（全字段、含图片数组），只保留给兼容与测试；
+ * 界面上的「导出收藏」已经改成 CSV 表格。
+ */
 function exportHoldings() {
   const holdings = (state.holdings || []).map((h) => {
     const out = {};
@@ -212,15 +215,213 @@ function exportHoldings() {
   };
 }
 
+/* 列顺序固定；导入按表头名匹配，用户调换列顺序也能读 */
+const CSV_COLUMNS = [
+  ['name', '名称'], ['category', '类别'], ['id', '编号'], ['unit', '单位'],
+  ['rolls', '数量'], ['cost', '成本合计'], ['market', '市值合计'], ['group', '分组'],
+  ['serials', '冠号'], ['form', '形态'], ['thumb', '缩略图'], ['images', '图片'], ['sep', '独立'],
+];
+
+const CSV_HEAD_ALIAS = {
+  '名称': 'name', '品种': 'name', 'name': 'name',
+  '类别': 'category', '品类': 'category', 'category': 'category',
+  '编号': 'id', '代码': 'id', 'id': 'id',
+  '单位': 'unit', 'unit': 'unit',
+  '数量': 'rolls', '份数': 'rolls', '套数': 'rolls', 'rolls': 'rolls',
+  '成本': 'cost', '成本合计': 'cost', 'cost': 'cost',
+  '市值': 'market', '市值合计': 'market', 'market': 'market',
+  '分组': 'group', 'group': 'group',
+  '冠号': 'serials', '号码': 'serials', 'serials': 'serials',
+  '形态': 'form', 'form': 'form',
+  '缩略图': 'thumb', 'thumb': 'thumb',
+  '图片': 'images', 'images': 'images',
+  '独立': 'sep', 'sep': 'sep',
+};
+
+const CSV_CAT_LABEL = { coin: '普通纪念币', note: '纪念钞', pm: '贵金属纪念币' };
+const CSV_UNIT_LABEL = { piece: '枚', set: '套' };
+const CSV_FORM_LABEL = { single: '单个', set: '整套' };
+
+/** 单元格转义：含逗号 / 引号 / 换行的加引号，内部引号翻倍（RFC4180） */
+function csvCell(v) {
+  const s = (v == null) ? '' : String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvCatLabel(c) {
+  return CSV_CAT_LABEL[c === 'pm' ? 'pm' : (c === 'note' ? 'note' : 'coin')];
+}
+
+function csvFormLabel(f) {
+  return f === 'single' ? '单个' : (f === 'set' ? '整套' : '');
+}
+
+/** 当前账本 → CSV 文本（不含 BOM，落文件时再加） */
+function holdingsCsv() {
+  const lines = [CSV_COLUMNS.map((c) => c[1])];
+  (state.holdings || []).forEach((h) => {
+    lines.push(CSV_COLUMNS.map((col) => {
+      const k = col[0];
+      if (k === 'category') return csvCatLabel(h.category);
+      if (k === 'unit') return CSV_UNIT_LABEL[h.unit === 'piece' ? 'piece' : 'set'];
+      if (k === 'form') return csvFormLabel(h.form);
+      if (k === 'serials') return Array.isArray(h.serials) ? h.serials.slice(0, 50).join('|') : '';
+      if (k === 'images') return Array.isArray(h.images) ? h.images.slice(0, 20).join('|') : '';
+      if (k === 'sep') return h.sep ? '是' : '';
+      if (k === 'rolls') return Number(h.rolls) || 0;
+      if (k === 'cost' || k === 'market') return cat.round2(Number(h[k]) || 0);
+      return h[k] == null ? '' : String(h[k]);
+    }).map(csvCell));
+  });
+  return lines.map((r) => r.join(',')).join('\r\n') + '\r\n';
+}
+
+/** 导出成表格：{ count, csv } */
+function exportCsv() {
+  return { count: (state.holdings || []).length, csv: holdingsCsv() };
+}
+
 /** 去重键：贵金属按编号（同名不同年份很常见），普通币/钞按名称 */
 function holdingKey(h) {
   if (h.category === 'pm' && h.id) return 'pm|' + h.id;
   return (h.category || 'coin') + '|' + h.name;
 }
 
+/** CSV 文本 → 二维数组。逗号 / 制表符自适应（Excel 复制粘贴是制表符） */
+function parseCsvRows(raw) {
+  const src = String(raw == null ? '' : raw).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+  const head = src.split('\n')[0] || '';
+  const commas = (head.match(/,/g) || []).length;
+  const tabs = (head.match(/\t/g) || []).length;
+  const sep = tabs > commas ? '\t' : ',';
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src.charAt(i);
+    if (quoted) {
+      if (ch === '"') {
+        if (src.charAt(i + 1) === '"') { cell += '"'; i++; } else { quoted = false; }
+      } else { cell += ch; }
+      continue;
+    }
+    if (ch === '"') { quoted = true; continue; }
+    if (ch === sep) { row.push(cell); cell = ''; continue; }
+    if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; continue; }
+    cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter((r) => r.some((c) => String(c).trim() !== ''));
+}
+
+function csvCategory(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (/贵金属|^pm$/i.test(s)) return 'pm';
+  if (/纪念钞|^note$/i.test(s)) return 'note';
+  if (/普通|纪念币|^coin$/i.test(s)) return 'coin';
+  return '';
+}
+
+function csvUnitOf(v) {
+  return /枚|piece/i.test(String(v == null ? '' : v)) ? 'piece' : 'set';
+}
+
+function csvFormOf(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (/单个|单枚|single/i.test(s)) return 'single';
+  if (/整套|set|^套$/i.test(s)) return 'set';
+  return '';
+}
+
+function csvNumber(v) {
+  const s = String(v == null ? '' : v).replace(/[,，\s¥￥元]/g, '');
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0;
+}
+
+function csvList(v) {
+  return String(v == null ? '' : v)
+    .split(/[|｜、;；\n]+/)
+    .map((x) => x.trim())
+    .filter((x) => x !== '');
+}
+
+/** 逐条校验并归一化；JSON 与 CSV 共用，非法条目丢弃计数 */
+function normalizeItem(it) {
+  if (!it || typeof it !== 'object') return null;
+  const name = String(it.name || '').trim();
+  if (!name || name.length > 60) return null;
+  const rollsNum = Math.floor(Number(it.rolls));
+  if (!(rollsNum >= 1)) return null;
+  const category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
+  // 贵金属必须有编号，否则无法定位到全量库里的那一枚
+  const id = String(it.id || '').trim().slice(0, 40);
+  if (category === 'pm' && !id) return null;
+  return {
+    id: id || newId(),
+    name,
+    category,
+    unit: it.unit === 'piece' ? 'piece' : 'set',
+    rolls: Math.min(9999, rollsNum),
+    cost: csvNumber(it.cost),
+    market: csvNumber(it.market),
+    group: String(it.group || '').slice(0, 30),
+    thumb: String(it.thumb || '').slice(0, 200),
+    serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
+    form: it.form === 'single' || it.form === 'set' ? it.form : '',
+    images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
+  };
+}
+
+function collectItems(list) {
+  const items = [];
+  let dropped = 0;
+  (list || []).forEach((it) => {
+    const ok = normalizeItem(it);
+    if (ok) items.push(ok); else dropped += 1;
+  });
+  if (!items.length) {
+    return { ok: false, items: [], error: dropped ? '没有一条能识别的收藏' : '收藏是空的', dropped };
+  }
+  return { ok: true, items, error: '', dropped };
+}
+
+/** CSV → 收藏条目 */
+function csvToItems(raw) {
+  const rows = parseCsvRows(raw);
+  if (rows.length < 2) return { ok: false, items: [], error: '表格里没有数据行', dropped: 0 };
+  const head = rows[0].map((h) => CSV_HEAD_ALIAS[String(h).trim()] || '');
+  if (head.indexOf('name') < 0) {
+    return { ok: false, items: [], error: '表格缺少「名称」列，第一行要是表头', dropped: 0 };
+  }
+  const list = [];
+  for (let r = 1; r < rows.length; r++) {
+    const item = {};
+    const row = rows[r];
+    for (let i = 0; i < row.length; i++) {
+      const k = head[i];
+      if (!k) continue;
+      const v = String(row[i] == null ? '' : row[i]).trim();
+      if (k === 'category') item.category = csvCategory(v);
+      else if (k === 'unit') item.unit = csvUnitOf(v);
+      else if (k === 'form') item.form = csvFormOf(v);
+      else if (k === 'serials') item.serials = csvList(v);
+      else if (k === 'images') item.images = csvList(v);
+      else if (k === 'sep') item.sep = /^(是|y|yes|true|1)$/i.test(v);
+      else if (k === 'rolls' || k === 'cost' || k === 'market') item[k] = csvNumber(v);
+      else item[k] = v;
+    }
+    list.push(item);
+  }
+  return collectItems(list);
+}
+
 /**
- * 解析导入内容。接受 { holdings: [...] } 的导出包，也接受裸数组；
- * 容忍 ```json 包裹与 BOM。逐条校验，非法条目丢弃并计数，不让脏数据进账本。
+ * 解析导入内容。CSV 表格为主；旧版 { holdings: [...] } JSON 备份照样能读。
+ * 逐条校验，非法条目丢弃并计数，不让脏数据进账本。
  * @returns {{ok: boolean, items: Array, error: string, dropped: number}}
  */
 function parseImport(raw) {
@@ -230,59 +431,20 @@ function parseImport(raw) {
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) text = fence[1].trim();
 
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch (e) {
-    return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 };
+  if (text.charAt(0) === '{' || text.charAt(0) === '[') {
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 };
+    }
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
+    if (!arr) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
+    return collectItems(arr);
   }
-
-  const list = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
-  if (!list) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
-
-  const items = [];
-  let dropped = 0;
-  list.forEach((it) => {
-    if (!it || typeof it !== 'object') { dropped += 1; return; }
-    const name = String(it.name || '').trim();
-    if (!name || name.length > 60) { dropped += 1; return; }
-    const rollsNum = Math.floor(Number(it.rolls));
-    if (!(rollsNum >= 1)) { dropped += 1; return; }
-    const category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
-    // 贵金属必须有编号，否则无法定位到全量库里的那一枚
-    const id = String(it.id || '').trim().slice(0, 40);
-    if (category === 'pm' && !id) { dropped += 1; return; }
-    const num = (v) => {
-      const n = Number(v);
-      return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0;
-    };
-    items.push({
-      id: id || newId(),
-      name: name,
-      category: category,
-      unit: it.unit === 'piece' ? 'piece' : 'set',
-      rolls: Math.min(9999, rollsNum),
-      cost: num(it.cost),
-      market: num(it.market),
-      group: String(it.group || '').slice(0, 30),
-      thumb: String(it.thumb || '').slice(0, 200),
-      serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
-      form: it.form === 'single' || it.form === 'set' ? it.form : '',
-      images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
-    });
-  });
-  if (!items.length) {
-    return { ok: false, items: [], error: dropped ? '没有一条能识别的收藏' : '收藏是空的', dropped };
-  }
-  return { ok: true, items, error: '', dropped };
+  return csvToItems(text);
 }
 
-/**
- * 导入收藏并落库。
- * @param {Array} items parseImport 的产物
- * @param {'merge'|'replace'} mode merge=跳过已存在，replace=整份替换
- * @returns {{added: number, skipped: number, total: number}} 调用方据此提示
- */
 function importHoldings(items, mode) {
   // 统一返回 Promise：未登录时不抛同步异常，调用方才能用 .catch 提示
   try {
@@ -544,6 +706,9 @@ module.exports = {
   onSessionExpired,
   persist,
   exportHoldings,
+  exportCsv,
+  holdingsCsv,
+  parseCsvRows,
   parseImport,
   importHoldings,
 };

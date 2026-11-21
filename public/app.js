@@ -2849,36 +2849,68 @@ function reRenderAll(){
    与小程序共用同一份 JSON 格式（store.exportHoldings / parseImport），
    所以「电脑导出 → 文件发到微信 → 小程序导入」和反向都能走通。
    ========================================================= */
-var BACKUP_FIELDS = ['name', 'category', 'id', 'unit', 'rolls', 'cost', 'market',
-  'group', 'thumb', 'serials', 'form', 'images', 'sep'];
+var CSV_COLUMNS = [
+  ['name', '名称'], ['category', '类别'], ['id', '编号'], ['unit', '单位'],
+  ['rolls', '数量'], ['cost', '成本合计'], ['market', '市值合计'], ['group', '分组'],
+  ['serials', '冠号'], ['form', '形态'], ['thumb', '缩略图'], ['images', '图片'], ['sep', '独立']
+];
+
+var CSV_HEAD_ALIAS = {
+  '名称': 'name', '品种': 'name', 'name': 'name',
+  '类别': 'category', '品类': 'category', 'category': 'category',
+  '编号': 'id', '代码': 'id', 'id': 'id',
+  '单位': 'unit', 'unit': 'unit',
+  '数量': 'rolls', '份数': 'rolls', '套数': 'rolls', 'rolls': 'rolls',
+  '成本': 'cost', '成本合计': 'cost', 'cost': 'cost',
+  '市值': 'market', '市值合计': 'market', 'market': 'market',
+  '分组': 'group', 'group': 'group',
+  '冠号': 'serials', '号码': 'serials', 'serials': 'serials',
+  '形态': 'form', 'form': 'form',
+  '缩略图': 'thumb', 'thumb': 'thumb',
+  '图片': 'images', 'images': 'images',
+  '独立': 'sep', 'sep': 'sep'
+};
+
+var CSV_CAT_LABEL = { coin: '普通纪念币', note: '纪念钞', pm: '贵金属纪念币' };
+var CSV_UNIT_LABEL = { piece: '枚', set: '套' };
+var CSV_FORM_LABEL = { single: '单个', set: '整套' };
 
 function round2(n){
   return Math.round((Number(n) || 0) * 100) / 100;
 }
 
-function backupPayload(){
-  var holdings = (coll || []).map(function(h){
-    var o = {};
-    BACKUP_FIELDS.forEach(function(k){ if (h[k] !== undefined) o[k] = h[k]; });
-    o.category = h.category === 'pm' ? 'pm' : (h.category || '');
-    o.unit = h.unit === 'piece' ? 'piece' : 'set';
-    o.rolls = Number(h.rolls) || 0;
-    o.cost = round2(h.cost);
-    o.market = round2(h.market);
-    o.group = h.group || '';
-    o.thumb = h.thumb || '';
-    o.id = h.id || '';
-    o.serials = Array.isArray(h.serials) ? h.serials.slice(0, 50) : [];
-    o.form = h.form === 'single' || h.form === 'set' ? h.form : '';
-    o.images = Array.isArray(h.images) ? h.images.slice(0, 20) : [];
-    o.sep = !!h.sep;
-    return o;
+/** 单元格转义：含逗号 / 引号 / 换行的加引号，内部引号翻倍（RFC4180） */
+function csvCell(v){
+  var s = (v == null) ? '' : String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvCatLabel(c){
+  return CSV_CAT_LABEL[c === 'pm' ? 'pm' : (c === 'note' ? 'note' : 'coin')];
+}
+
+function csvFormLabel(f){
+  return f === 'single' ? '单个' : (f === 'set' ? '整套' : '');
+}
+
+/** 当前账本 → CSV 文本（不含 BOM，落文件时再加） */
+function holdingsCsv(){
+  var lines = [CSV_COLUMNS.map(function(c){ return c[1]; })];
+  (coll || []).forEach(function(h){
+    lines.push(CSV_COLUMNS.map(function(col){
+      var k = col[0];
+      if (k === 'category') return csvCatLabel(h.category);
+      if (k === 'unit') return CSV_UNIT_LABEL[h.unit === 'piece' ? 'piece' : 'set'];
+      if (k === 'form') return csvFormLabel(h.form);
+      if (k === 'serials') return Array.isArray(h.serials) ? h.serials.slice(0, 50).join('|') : '';
+      if (k === 'images') return Array.isArray(h.images) ? h.images.slice(0, 20).join('|') : '';
+      if (k === 'sep') return h.sep ? '是' : '';
+      if (k === 'rolls') return Number(h.rolls) || 0;
+      if (k === 'cost' || k === 'market') return round2(h[k]);
+      return h[k] == null ? '' : String(h[k]);
+    }).map(csvCell));
   });
-  return {
-    app: 'coin-ledger', type: 'holdings', version: 1,
-    exportedAt: new Date().toISOString(),
-    count: holdings.length, holdings: holdings
-  };
+  return lines.map(function(r){ return r.join(','); }).join('\r\n') + '\r\n';
 }
 
 /** 去重键：贵金属按编号（同名不同年份很常见），其余按名称 */
@@ -2887,47 +2919,99 @@ function backupKey(h){
   return (h.category || 'coin') + '|' + h.name;
 }
 
-/** 解析导入文本；非法条目丢弃并计数 */
-function parseBackup(raw){
-  var text = String(raw == null ? '' : raw).trim();
-  if (!text) return { ok: false, items: [], error: '内容是空的', dropped: 0 };
-  text = text.replace(/^\uFEFF/, '');
-  var fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) text = fence[1].trim();
+/** CSV 文本 → 二维数组。逗号 / 制表符自适应（Excel 复制粘贴是制表符） */
+function parseCsvRows(raw){
+  var src = String(raw == null ? '' : raw).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+  var head = src.split('\n')[0] || '';
+  var commas = (head.match(/,/g) || []).length;
+  var tabs = (head.match(/\t/g) || []).length;
+  var sep = tabs > commas ? '\t' : ',';
+  var rows = [], row = [], cell = '', quoted = false;
+  for (var i = 0; i < src.length; i++) {
+    var ch = src.charAt(i);
+    if (quoted) {
+      if (ch === '"') {
+        if (src.charAt(i + 1) === '"') { cell += '"'; i++; } else { quoted = false; }
+      } else { cell += ch; }
+      continue;
+    }
+    if (ch === '"') { quoted = true; continue; }
+    if (ch === sep) { row.push(cell); cell = ''; continue; }
+    if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; continue; }
+    cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(function(r){
+    return r.some(function(c){ return String(c).trim() !== ''; });
+  });
+}
 
-  var data;
-  try { data = JSON.parse(text); }
-  catch (e) { return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 }; }
+function csvCategory(v){
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (/贵金属|^pm$/i.test(s)) return 'pm';
+  if (/纪念钞|^note$/i.test(s)) return 'note';
+  if (/普通|纪念币|^coin$/i.test(s)) return 'coin';
+  return '';
+}
 
-  var list = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
-  if (!list) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
+function csvUnitOf(v){
+  return /枚|piece/i.test(String(v == null ? '' : v)) ? 'piece' : 'set';
+}
 
+function csvFormOf(v){
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (/单个|单枚|single/i.test(s)) return 'single';
+  if (/整套|set|^套$/i.test(s)) return 'set';
+  return '';
+}
+
+function csvNumber(v){
+  var s = String(v == null ? '' : v).replace(/[,，\s¥￥元]/g, '');
+  var n = Number(s);
+  return isFinite(n) && n >= 0 ? round2(n) : 0;
+}
+
+function csvList(v){
+  return String(v == null ? '' : v)
+    .split(/[|｜、;；\n]+/)
+    .map(function(x){ return x.trim(); })
+    .filter(function(x){ return x !== ''; });
+}
+
+/** 逐条校验并归一化；JSON 与 CSV 共用，非法条目丢弃计数 */
+function normalizeBackupItem(it){
+  if (!it || typeof it !== 'object') return null;
+  var name = String(it.name || '').trim();
+  if (!name || name.length > 60) return null;
+  var rolls = Math.floor(Number(it.rolls));
+  if (!(rolls >= 1)) return null;
+  var category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
+  var id = String(it.id || '').trim().slice(0, 40);
+  if (category === 'pm' && !id) return null;
+  return {
+    id: id || '',
+    name: name,
+    category: category,
+    unit: it.unit === 'piece' ? 'piece' : 'set',
+    rolls: Math.min(9999, rolls),
+    cost: csvNumber(it.cost),
+    market: csvNumber(it.market),
+    group: String(it.group || '').slice(0, 30),
+    thumb: String(it.thumb || '').slice(0, 200),
+    serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
+    form: it.form === 'single' || it.form === 'set' ? it.form : '',
+    images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
+    sep: !!it.sep
+  };
+}
+
+function collectBackupItems(list){
   var items = [], dropped = 0;
-  list.forEach(function(it){
-    if (!it || typeof it !== 'object') { dropped++; return; }
-    var name = String(it.name || '').trim();
-    if (!name || name.length > 60) { dropped++; return; }
-    var rolls = Math.floor(Number(it.rolls));
-    if (!(rolls >= 1)) { dropped++; return; }
-    var category = it.category === 'pm' ? 'pm' : (it.category === 'note' ? 'note' : (it.category === 'coin' ? 'coin' : ''));
-    var id = String(it.id || '').trim().slice(0, 40);
-    if (category === 'pm' && !id) { dropped++; return; }
-    var num = function(v){ var n = Number(v); return isFinite(n) && n >= 0 ? round2(n) : 0; };
-    items.push({
-      id: id || '',
-      name: name,
-      category: category,
-      unit: it.unit === 'piece' ? 'piece' : 'set',
-      rolls: Math.min(9999, rolls),
-      cost: num(it.cost),
-      market: num(it.market),
-      group: String(it.group || '').slice(0, 30),
-      thumb: String(it.thumb || '').slice(0, 200),
-      serials: Array.isArray(it.serials) ? it.serials.slice(0, 50).map(String) : [],
-      form: it.form === 'single' || it.form === 'set' ? it.form : '',
-      images: Array.isArray(it.images) ? it.images.slice(0, 20).map(String) : [],
-      sep: !!it.sep
-    });
+  (list || []).forEach(function(it){
+    var okItem = normalizeBackupItem(it);
+    if (okItem) items.push(okItem); else dropped++;
   });
   if (!items.length) {
     return { ok: false, items: [], error: dropped ? '没有一条能识别的收藏' : '收藏是空的', dropped: dropped };
@@ -2935,10 +3019,59 @@ function parseBackup(raw){
   return { ok: true, items: items, error: '', dropped: dropped };
 }
 
+/** CSV → 收藏条目 */
+function csvToBackup(raw){
+  var rows = parseCsvRows(raw);
+  if (rows.length < 2) return { ok: false, items: [], error: '表格里没有数据行', dropped: 0 };
+  var head = rows[0].map(function(h){ return CSV_HEAD_ALIAS[String(h).trim()] || ''; });
+  if (head.indexOf('name') < 0) {
+    return { ok: false, items: [], error: '表格缺少「名称」列，第一行要是表头', dropped: 0 };
+  }
+  var list = [];
+  for (var r = 1; r < rows.length; r++) {
+    var item = {};
+    var row = rows[r];
+    for (var i = 0; i < row.length; i++) {
+      var k = head[i];
+      if (!k) continue;
+      var v = String(row[i] == null ? '' : row[i]).trim();
+      if (k === 'category') item.category = csvCategory(v);
+      else if (k === 'unit') item.unit = csvUnitOf(v);
+      else if (k === 'form') item.form = csvFormOf(v);
+      else if (k === 'serials') item.serials = csvList(v);
+      else if (k === 'images') item.images = csvList(v);
+      else if (k === 'sep') item.sep = /^(是|y|yes|true|1)$/i.test(v);
+      else if (k === 'rolls' || k === 'cost' || k === 'market') item[k] = csvNumber(v);
+      else item[k] = v;
+    }
+    list.push(item);
+  }
+  return collectBackupItems(list);
+}
+
+/** 解析导入内容：CSV 表格为主，旧版 JSON 备份照样能读 */
+function parseBackup(raw){
+  var text = String(raw == null ? '' : raw).trim();
+  if (!text) return { ok: false, items: [], error: '内容是空的', dropped: 0 };
+  text = text.replace(/^\uFEFF/, '');
+  var fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) text = fence[1].trim();
+
+  if (text.charAt(0) === '{' || text.charAt(0) === '[') {
+    var data;
+    try { data = JSON.parse(text); }
+    catch (e) { return { ok: false, items: [], error: '不是合法的 JSON', dropped: 0 }; }
+    var arr = Array.isArray(data) ? data : (data && Array.isArray(data.holdings) ? data.holdings : null);
+    if (!arr) return { ok: false, items: [], error: '找不到 holdings 列表', dropped: 0 };
+    return collectBackupItems(arr);
+  }
+  return csvToBackup(text);
+}
+
 function backupFileName(){
   var d = new Date();
   var p2 = function(n){ return (n < 10 ? '0' : '') + n; };
-  return '藏币录-收藏-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '.json';
+  return '藏币录-收藏-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '.csv';
 }
 
 function closeBackupModal(){
@@ -2963,17 +3096,18 @@ function openBackupModal(){
       '<p class="bk-p">当前账本 <b>' + (coll || []).length + '</b> 条收藏。</p>' +
       '<div class="bk-sec">' +
         '<b class="bk-t">导出</b>' +
-        '<p class="bk-p">存成 .json 文件；在小程序「我的 → 收藏备份 → 从聊天记录选文件」可以直接读取。</p>' +
+        '<p class="bk-p">存成 .csv 表格，Excel / WPS / Numbers 都能直接打开；也能发到微信，在小程序「更多功能 → 收藏备份 → 从聊天记录选文件」导入。</p>' +
+        '<p class="bk-p muted">成本合计 / 市值合计是整条藏品的总金额（单件价 × 数量）。</p>' +
         '<div class="bk-row">' +
-          '<button class="btn primary sm" type="button" id="bkDownload">下载 .json</button>' +
-          '<button class="btn ghost sm" type="button" id="bkCopy">复制到剪贴板</button>' +
+          '<button class="btn primary sm" type="button" id="bkDownload">下载 .csv</button>' +
+          '<button class="btn ghost sm" type="button" id="bkCopy">复制表格</button>' +
         '</div>' +
       '</div>' +
       '<div class="bk-sec">' +
         '<b class="bk-t">导入</b>' +
-        '<p class="bk-p">选择导出的文件，或把 JSON 内容粘贴进来。与现有收藏重复的会跳过，不会覆盖已有的数量与成本。</p>' +
-        '<input type="file" id="bkFile" class="bk-file" accept=".json,application/json,text/plain">' +
-        '<textarea id="bkText" class="bk-ta" spellcheck="false" placeholder="在这里粘贴 JSON，或先选上面的文件…"></textarea>' +
+        '<p class="bk-p">选 .csv 表格文件，或把表格内容粘贴进来（Excel 里选中区域复制也能直接粘）。与现有收藏重复的会跳过，不会覆盖已有的数量与成本。</p>' +
+        '<input type="file" id="bkFile" class="bk-file" accept=".csv,.txt,text/csv,text/plain">' +
+        '<textarea id="bkText" class="bk-ta" spellcheck="false" placeholder="把 CSV 表格内容粘到这里，或先选上面的文件…"></textarea>' +
         '<div class="bk-row">' +
           '<button class="btn primary sm" type="button" id="bkImport">合并导入</button>' +
           '<span class="muted bk-hint" id="bkHint"></span>' +
@@ -2990,9 +3124,10 @@ function openBackupModal(){
   mask.querySelector('#bkX').addEventListener('click', closeBackupModal);
 
   mask.querySelector('#bkDownload').addEventListener('click', function(){
-    var data = backupPayload();
-    if (!data.count) { toast('账本还是空的'); return; }
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    if (!(coll || []).length) { toast('账本还是空的'); return; }
+    var csv = holdingsCsv();
+    // BOM 不能省：Excel 不认 UTF-8 BOM 会拿 GBK 解中文，全是乱码
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -3001,14 +3136,14 @@ function openBackupModal(){
     a.click();
     if (a.parentNode) a.parentNode.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
-    toast('已导出 ' + data.count + ' 条');
+    toast('已导出 ' + (coll || []).length + ' 条');
   });
 
   mask.querySelector('#bkCopy').addEventListener('click', function(){
-    var data = backupPayload();
-    if (!data.count) { toast('账本还是空的'); return; }
-    var text = JSON.stringify(data);
-    var done = function(){ toast('已复制 ' + data.count + ' 条'); };
+    if (!(coll || []).length) { toast('账本还是空的'); return; }
+    var text = holdingsCsv();
+    var count = (coll || []).length;
+    var done = function(){ toast('已复制 ' + count + ' 条'); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, function(){
         ta.value = text;

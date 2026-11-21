@@ -128,7 +128,7 @@ test('解析：导出包 / 裸数组 / ```json 包裹 都能吃', () => {
 test('解析：非法输入给出可读原因', () => {
   const store = loadStore();
   assert.equal(store.parseImport('').ok, false);
-  assert.match(store.parseImport('不是 json').error, /JSON/);
+  assert.match(store.parseImport('不是表格也不是 json').error, /表格|名称/);
   assert.match(store.parseImport('{"a":1}').error, /holdings/);
 });
 
@@ -256,12 +256,100 @@ test('网站端：广场 tab 隐藏且旧链接回落首页', () => {
   assert.match(css, /\.tab\[hidden\]\{display:none\}/, 'hidden 需要样式兜底');
 });
 
-test('网站端也提供同一份格式的导入导出', () => {
+test('网站端也提供同一份 CSV 格式的导入导出', () => {
   const js = readWeb('app.js');
-  assert.match(js, /function backupPayload\(\)/, '缺导出');
+  assert.match(js, /function holdingsCsv\(\)/, '缺导出');
   assert.match(js, /function parseBackup\(/, '缺解析');
-  assert.match(js, /app: 'coin-ledger', type: 'holdings', version: 1/, '导出格式要与小程序一致');
+  assert.match(js, /function parseCsvRows\(/, '缺 CSV 解析');
+  assert.match(js, /'成本合计'/, '表头要和小程序一致');
   assert.match(js, /if \(h\.category === 'pm' && h\.id\) return 'pm\|' \+ h\.id/, '去重键要与小程序一致');
+  assert.match(js, /下载 \.csv/, '导出按钮还写着 json');
   const html = readWeb('index.html');
   assert.match(html, /id="backupBtn"/, '藏品页没有入口按钮');
+});
+
+/* ---------------- CSV 表格（2026-11-21 起的主格式） ---------------- */
+
+function sampleStore() {
+  const store = loadStore();
+  store.state.holdings = [
+    { id: 'h1', name: '泰山纪念币', category: 'coin', unit: 'set', rolls: 2, cost: 120.456,
+      market: 200, group: '世界文化遗产', serials: ['A1', 'A2'], form: 'set', images: [] },
+    { id: 'G20240101', name: '熊猫金币', category: 'pm', thumb: '/img/pm/1.jpg',
+      unit: 'piece', rolls: 1, cost: 8000, market: 0, group: '贵金属' },
+  ];
+  return store;
+}
+
+test('CSV 导出：中文表头、中文枚举、合计金额、数组用 | 分隔', () => {
+  const out = sampleStore().exportCsv();
+  assert.equal(out.count, 2);
+  const lines = out.csv.trim().split('\r\n');
+  assert.equal(lines[0], '名称,类别,编号,单位,数量,成本合计,市值合计,分组,冠号,形态,缩略图,图片,独立',
+    '表头固定，Excel 里一眼能看懂');
+  assert.equal(lines[1], '泰山纪念币,普通纪念币,h1,套,2,120.46,200,世界文化遗产,A1|A2,整套,,,');
+  assert.equal(lines[2], '熊猫金币,贵金属纪念币,G20240101,枚,1,8000,0,贵金属,,,/img/pm/1.jpg,,');
+});
+
+test('CSV 往返：导出再导入，数量 / 金额 / 冠号 / 形态都不变形', () => {
+  const store = sampleStore();
+  const csv = store.exportCsv().csv;
+  const r = store.parseImport(csv);
+  assert.equal(r.ok, true);
+  assert.equal(r.items.length, 2);
+  const a = r.items.find((x) => x.name === '泰山纪念币');
+  assert.equal(a.category, 'coin');
+  assert.equal(a.unit, 'set');
+  assert.equal(a.rolls, 2);
+  assert.equal(a.cost, 120.46);
+  assert.equal(a.market, 200);
+  assert.deepEqual(a.serials, ['A1', 'A2']);
+  assert.equal(a.form, 'set');
+  const b = r.items.find((x) => x.name === '熊猫金币');
+  assert.equal(b.category, 'pm');
+  assert.equal(b.id, 'G20240101');
+  assert.equal(b.unit, 'piece');
+  assert.equal(b.thumb, '/img/pm/1.jpg');
+});
+
+test('CSV 导入：Excel 复制出来的制表符表格也能吃', () => {
+  const store = loadStore();
+  const tsv = '名称\t类别\t数量\t成本合计\n泰山纪念币\t普通纪念币\t3\t99.5\n';
+  const r = store.parseImport(tsv);
+  assert.equal(r.ok, true);
+  assert.equal(r.items[0].rolls, 3);
+  assert.equal(r.items[0].cost, 99.5);
+  assert.equal(r.items[0].category, 'coin');
+});
+
+test('CSV 导入：带逗号的名称（引号转义）不会被拆列', () => {
+  const store = loadStore();
+  const r = store.parseImport('名称,数量\n"泰山, 纪念币",2\n');
+  assert.equal(r.ok, true);
+  assert.equal(r.items[0].name, '泰山, 纪念币');
+  assert.equal(r.items[0].rolls, 2);
+});
+
+test('CSV 导入：列顺序可以调换，按表头名匹配', () => {
+  const store = loadStore();
+  const r = store.parseImport('数量,名称,类别\n2,泰山纪念币,纪念钞\n');
+  assert.equal(r.ok, true);
+  assert.equal(r.items[0].name, '泰山纪念币');
+  assert.equal(r.items[0].rolls, 2);
+  assert.equal(r.items[0].category, 'note');
+});
+
+test('CSV 导入：Excel 存出来的 BOM 不影响第一列表头', () => {
+  const store = loadStore();
+  const r = store.parseImport('\uFEFF名称,数量\n泰山纪念币,1\n');
+  assert.equal(r.ok, true);
+  assert.equal(r.items[0].name, '泰山纪念币');
+});
+
+test('CSV 导入：贵金属缺编号照样被挡下', () => {
+  const store = loadStore();
+  const r = store.parseImport('名称,类别,数量\n熊猫金币,贵金属纪念币,1\n');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /识别/);
+  assert.equal(r.dropped, 1);
 });

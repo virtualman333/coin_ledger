@@ -87,13 +87,13 @@ Page({
   },
 
   exportHoldings() {
-    const data = store.exportHoldings();
+    const data = store.exportCsv();
     if (!data.count) {
       wx.showToast({ title: '账本还是空的', icon: 'none' });
       return;
     }
     wx.showActionSheet({
-      itemList: ['复制到剪贴板', '存成文件发到微信'],
+      itemList: ['复制表格', '存成 .csv 文件发到微信'],
       success: (r) => {
         if (r.tapIndex === 0) this.copyExport(data);
         else this.fileExport(data);
@@ -104,23 +104,24 @@ Page({
 
   copyExport(data) {
     wx.setClipboardData({
-      data: JSON.stringify(data),
+      data: data.csv,
       success: () => wx.showToast({ title: '已复制 ' + data.count + ' 条收藏', icon: 'none' }),
       fail: () => wx.showToast({ title: '复制失败，请重试', icon: 'none' }),
     });
   },
 
-  /** 写进用户目录再用「发送给聊天」导出成 .json；不支持就退回剪贴板 */
+  /** 写进用户目录再用「发送给聊天」导出成 .csv（Excel / WPS 直接打开）；不支持就退回剪贴板 */
   fileExport(data) {
     if (!wx.shareFileMessage || !wx.env || !wx.env.USER_DATA_PATH) {
       this.copyExport(data);
       return;
     }
     const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const fileName = '藏币录-收藏-' + day + '.json';
+    const fileName = '藏币录-收藏-' + day + '.csv';
     const filePath = wx.env.USER_DATA_PATH + '/' + fileName;
     try {
-      wx.getFileSystemManager().writeFileSync(filePath, JSON.stringify(data), 'utf8');
+      // BOM 不能省：Excel 双击打开 CSV 时不认 BOM 会把中文按 GBK 解成乱码
+      wx.getFileSystemManager().writeFileSync(filePath, '\uFEFF' + data.csv, 'utf8');
     } catch (e) {
       this.copyExport(data);
       return;
@@ -155,7 +156,7 @@ Page({
     wx.chooseMessageFile({
       count: 1,
       type: 'file',
-      extension: ['json', 'txt'],
+      extension: ['csv', 'txt', 'json'],
       success: (res) => {
         const f = res.tempFiles && res.tempFiles[0];
         if (!f || !f.path) return;
