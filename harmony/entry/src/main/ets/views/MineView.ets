@@ -120,7 +120,6 @@ export struct MineView {
     quick.push(this.quickItem('backup', '收藏备份', $r('sys.symbol.arrow_clockwise')));
     quick.push(this.quickItem('count', '拍照数币', $r('sys.symbol.camera')));
     quick.push(this.quickItem('feedback', '意见反馈', $r('sys.symbol.doc_text')));
-    quick.push(this.quickItem('plaza', '藏品广场', $r('sys.symbol.star')));
     this.quick = quick;
 
     const rec: RecentItem[] = [];
@@ -589,8 +588,6 @@ export struct MineView {
           .backgroundColor(Theme.card)
 
           Column() {
-            this.cellRow('藏品广场', '', [], Routes.PLAZA, '藏友晒单与号码')
-            Divider().color(Theme.lineSoft)
             this.cellRow('收藏备份', '', [], Routes.BACKUP, '导出 CSV / 导入恢复')
             Divider().color(Theme.lineSoft)
             this.cellRow('更多功能', '', [], Routes.MORE_TOOLS, '')

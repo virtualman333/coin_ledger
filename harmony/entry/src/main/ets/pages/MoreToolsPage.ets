@@ -41,7 +41,6 @@ export struct MoreToolsPage {
       new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '', $r('sys.symbol.list_bullet'))
     ];
     this.plaza = [
-      new ToolRow('藏品广场', '藏友晒单与号码', Routes.PLAZA, '', $r('sys.symbol.star')),
       new ToolRow('按系列浏览', '20 个系列分组', Routes.SERIES, '', $r('sys.symbol.square_grid_2x2'))
     ];
     this.aboutRows = [
