@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const feature = require('../../utils/feature');
+const tabbar = require('../../utils/tabbar');
 
 /** 收藏进度切成 20 段刻度：比一根细线更像「集章册」，也更看得清进度 */
 function buildSegs(pct) {
@@ -47,6 +48,7 @@ Page({
   },
 
   onShow() {
+    tabbar.syncSelected(this, 3);
     this.render();
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });

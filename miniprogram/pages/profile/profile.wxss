@@ -1,6 +1,4 @@
-@import "../../styles/ui.wxss";
-
-/* 个人资料：头像 + 三条只读信息，细线分隔 */
+/* 个人资料：行样式走全局 .cell，这里只留头像与输入框 */
 
 .page {
   padding-top: 12rpx;
@@ -34,9 +32,9 @@
   height: 160rpx;
   border-radius: 999rpx;
   background: #f6efe0;
-  color: #6b6559;
+  color: #8a6420;
   font-size: 56rpx;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 160rpx;
   text-align: center;
 }
@@ -47,21 +45,7 @@
   justify-content: center;
 }
 
-.field {
-  display: flex;
-  min-height: 108rpx;
-  align-items: center;
-  gap: 16rpx;
-  border-bottom: 1rpx solid #ece7dc;
-}
-
-.f-k {
-  width: 150rpx;
-  color: #2b2926;
-  font-size: 28rpx;
-  flex: 0 0 auto;
-}
-
+/* 行内输入：右侧对齐 */
 .f-v {
   flex: 1;
   min-width: 0;
@@ -80,7 +64,6 @@
 
 .link-row {
   margin-top: 18rpx;
-  border-bottom: none;
 }
 
 .save-btn {

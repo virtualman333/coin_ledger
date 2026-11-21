@@ -35,17 +35,17 @@
     </view>
 
     <view class="rows">
-      <view class="row" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
-        <text class="row-k">我的藏品</text>
+      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
+        <text class="cell-k">我的藏品</text>
         <view class="row-thumbs" wx:if="{{thumbs.length}}">
           <image wx:for="{{thumbs}}" wx:key="*this" class="rt-img" src="{{item}}" mode="aspectFill"></image>
         </view>
-        <text class="row-v">{{stats.kinds}} 个品种</text>
-        <text class="row-a">›</text>
+        <text class="cell-v">{{stats.kinds}} 个品种</text>
+        <text class="cell-a">›</text>
       </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
-        <text class="row-k">更多功能</text>
-        <text class="row-a">›</text>
+      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
+        <text class="cell-k">更多功能</text>
+        <text class="cell-a">›</text>
       </view>
     </view>
 
@@ -61,9 +61,9 @@
     </view>
 
     <view class="rows">
-      <view class="row" hover-class="row-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
-        <text class="row-k">更多功能</text>
-        <text class="row-a">›</text>
+      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goMoreTools" aria-role="button" aria-label="更多功能">
+        <text class="cell-k">更多功能</text>
+        <text class="cell-a">›</text>
       </view>
     </view>
   </block>

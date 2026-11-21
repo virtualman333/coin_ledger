@@ -101,11 +101,18 @@ test('账户与安全没丢：从个人资料页进', () => {
   assert.match(js, /\/pages\/account\/account/);
 });
 
-test('列表页走 baseline UI，主页面只允许既定暖色，都不用渐变', () => {
-  // mine 是唯一的主视觉页，自成一套；profile / more-tools 是列表页，复用 baseline
-  for (const slug of ['profile', 'more-tools']) {
+test('三页只依赖项目自身样式：全局 .cell + 既定色板', () => {
+  // 外部 skill 的样式已整体移除：不许有 styles/ui.wxss，也不许页面 @import 它
+  assert.ok(!fs.existsSync(path.join(MP, 'styles', 'ui.wxss')), 'styles/ui.wxss 应已删除');
+  for (const slug of ['mine', 'profile', 'more-tools']) {
     const wxss = read('pages/' + slug + '/' + slug + '.wxss');
-    assert.match(wxss, /@import "\.\.\/\.\.\/styles\/ui\.wxss"/, slug + ' 没引入 baseline UI');
+    assert.doesNotMatch(wxss, /@import/, slug + ' 不该再 @import 外部样式');
+    const wxml = read('pages/' + slug + '/' + slug + '.wxml');
+    assert.match(wxml, /class="cell"/, slug + ' 没用全局 .cell');
+  }
+  const appWxss = read('app.wxss');
+  for (const cls of ['.cell', '.cell-k', '.cell-v', '.cell-a']) {
+    assert.ok(appWxss.includes(cls + ' {'), 'app.wxss 缺 ' + cls);
   }
   const mine = read('pages/mine/mine.wxss');
   // 渐变只允许出现在主 CTA 按钮上（与全站 .btn-primary 保持一致），其余地方不许

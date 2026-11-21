@@ -3,6 +3,8 @@
 
 .page {
   padding-top: 4rpx;
+  /* 底部让位给悬浮 tabBar（108rpx）+ 安全区 */
+  padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 身份 ---------- */
@@ -210,42 +212,6 @@
   border-radius: 20rpx;
   background: #ffffff;
   box-shadow: 0 3rpx 16rpx rgba(74, 55, 20, 0.06);
-}
-
-.row {
-  display: flex;
-  min-height: 104rpx;
-  align-items: center;
-  gap: 14rpx;
-  border-bottom: 1rpx solid #f6f3ec;
-}
-
-.row:last-child {
-  border-bottom: none;
-}
-
-.row-hover {
-  background: #faf8f3;
-}
-
-.row-k {
-  flex: 1;
-  min-width: 0;
-  color: #2b2926;
-  font-size: 28rpx;
-}
-
-.row-v {
-  color: #6b6559;
-  font-size: 23rpx;
-  flex: 0 0 auto;
-}
-
-.row-a {
-  color: #8a8378;
-  font-size: 32rpx;
-  line-height: 1;
-  flex: 0 0 auto;
 }
 
 .row-thumbs {

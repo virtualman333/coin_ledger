@@ -1,6 +1,4 @@
-@import "../../styles/ui.wxss";
-
-/* 更多功能：纯列表，不写说明文字 */
+/* 更多功能：纯列表，行样式走全局 .cell */
 
 .page {
   padding-top: 4rpx;

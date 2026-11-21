@@ -160,3 +160,36 @@ button::after {
 .row-hover {
   background: #fbf8f1;
 }
+
+/* ---------- 通用列表行：我的 / 更多功能 / 个人资料共用 ---------- */
+.cell {
+  display: flex;
+  min-height: 104rpx;
+  align-items: center;
+  gap: 14rpx;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.cell:last-child {
+  border-bottom: none;
+}
+
+.cell-k {
+  flex: 1;
+  min-width: 0;
+  color: #2b2926;
+  font-size: 28rpx;
+}
+
+.cell-v {
+  color: #6b6559;
+  font-size: 23rpx;
+  flex: 0 0 auto;
+}
+
+.cell-a {
+  color: #8a8378;
+  font-size: 34rpx;
+  line-height: 1;
+  flex: 0 0 auto;
+}

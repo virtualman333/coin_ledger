@@ -1,34 +1,34 @@
 <view class="page">
   <text class="grp">工具</text>
-  <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="onBackup" aria-role="button" aria-label="收藏备份">
-    <text class="u-row-k">收藏备份</text>
-    <text class="u-row-a">›</text>
+  <view class="cell" hover-class="tap-hover" hover-stay-time="80" bindtap="onBackup" aria-role="button" aria-label="收藏备份">
+    <text class="cell-k">收藏备份</text>
+    <text class="cell-a">›</text>
   </view>
-  <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goCount" aria-role="button" aria-label="拍照数币">
-    <text class="u-row-k">拍照数币</text>
-    <text class="u-row-a">›</text>
+  <view class="cell" hover-class="tap-hover" hover-stay-time="80" bindtap="goCount" aria-role="button" aria-label="拍照数币">
+    <text class="cell-k">拍照数币</text>
+    <text class="cell-a">›</text>
   </view>
 
   <text class="grp">其他</text>
-  <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goMyFeedback" aria-role="button" aria-label="我的反馈">
-    <text class="u-row-k">我的反馈</text>
-    <text class="u-row-a">›</text>
+  <view class="cell" hover-class="tap-hover" hover-stay-time="80" bindtap="goMyFeedback" aria-role="button" aria-label="我的反馈">
+    <text class="cell-k">我的反馈</text>
+    <text class="cell-a">›</text>
   </view>
-  <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAbout" aria-role="button" aria-label="关于藏币录">
-    <text class="u-row-k">关于藏币录</text>
-    <text class="u-row-v">v{{appVersion}}</text>
-    <text class="u-row-a">›</text>
+  <view class="cell" hover-class="tap-hover" hover-stay-time="80" bindtap="goAbout" aria-role="button" aria-label="关于藏币录">
+    <text class="cell-k">关于藏币录</text>
+    <text class="cell-v">v{{appVersion}}</text>
+    <text class="cell-a">›</text>
   </view>
-  <view class="u-row" wx:if="{{plazaOn}}" hover-class="tap-hover" hover-stay-time="80" bindtap="goPlaza" aria-role="button" aria-label="藏品广场">
-    <text class="u-row-k">藏品广场</text>
-    <text class="u-row-a">›</text>
+  <view class="cell" wx:if="{{plazaOn}}" hover-class="tap-hover" hover-stay-time="80" bindtap="goPlaza" aria-role="button" aria-label="藏品广场">
+    <text class="cell-k">藏品广场</text>
+    <text class="cell-a">›</text>
   </view>
 
   <block wx:if="{{isAdmin}}">
     <text class="grp">管理</text>
-    <view class="u-row" hover-class="tap-hover" hover-stay-time="80" bindtap="goAdmin" aria-role="button" aria-label="管理端">
-      <text class="u-row-k">管理端</text>
-      <text class="u-row-a">›</text>
+    <view class="cell" hover-class="tap-hover" hover-stay-time="80" bindtap="goAdmin" aria-role="button" aria-label="管理端">
+      <text class="cell-k">管理端</text>
+      <text class="cell-a">›</text>
     </view>
   </block>
 </view>
