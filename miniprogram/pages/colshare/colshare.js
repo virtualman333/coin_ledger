@@ -1,6 +1,16 @@
 const api = require('../../utils/api');
 const share = require('../../utils/share');
 
+/** 金额：千分位 + 最多两位小数。不引 catalog，落地页是给外人看的，越轻越好 */
+function money(n) {
+  const v = Math.round((Number(n) || 0) * 100) / 100;
+  const neg = v < 0;
+  const p = Math.abs(v).toFixed(2).split('.');
+  const int = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const dec = String(p[1] || '').replace(/0+$/, '');
+  return (neg ? '-' : '') + int + (dec ? '.' + dec : '');
+}
+
 /** 分享出去的时间按手机本地时区显示 */
 function timeText(iso) {
   if (!iso) return '';
@@ -19,6 +29,9 @@ Page({
     loading: true,
     err: '',
     timeText: '',
+    faceText: '',
+    aiText: '',
+    listHidden: false,
   },
 
   onLoad(q) {
@@ -51,6 +64,9 @@ Page({
         kinds: Number(r.kinds) || items.length,
         total: Number(r.total) || 0,
         items,
+        faceText: Number(r.faceTotal) > 0 ? money(r.faceTotal) : '',
+        aiText: Number(r.aiTotal) > 0 ? money(r.aiTotal) : '',
+        listHidden: !!r.listHidden,
         timeText: timeText(r.createdAt),
         loading: false,
       });

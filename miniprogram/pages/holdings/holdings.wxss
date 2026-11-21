@@ -734,3 +734,102 @@
   height: 64rpx;
   margin: -32rpx 0 0 -32rpx;
 }
+
+/* ================= 分享内容选择 ================= */
+.sh-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(24, 20, 14, 0.45);
+}
+
+.sh-sheet {
+  width: 100%;
+  padding: 32rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  border-radius: 28rpx 28rpx 0 0;
+  background: #ffffff;
+}
+
+.sh-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.sh-title {
+  color: #2b2926;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.sh-x {
+  padding: 10rpx 14rpx;
+  color: #8a8378;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.sh-tip {
+  display: block;
+  margin-bottom: 20rpx;
+  color: #8a8378;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.sh-list {
+  margin-bottom: 24rpx;
+}
+
+.sh-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f6f3ec;
+}
+
+.sh-row:last-child {
+  border-bottom: none;
+}
+
+.sh-box {
+  display: flex;
+  width: 40rpx;
+  height: 40rpx;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #d9cfba;
+  border-radius: 10rpx;
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.sh-box.on {
+  border-color: #9a6b1f;
+  background: #9a6b1f;
+}
+
+.sh-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.sh-k {
+  color: #2b2926;
+  font-size: 27rpx;
+}
+
+.sh-d {
+  color: #8a8378;
+  font-size: 21rpx;
+}

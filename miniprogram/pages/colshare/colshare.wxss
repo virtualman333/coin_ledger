@@ -29,3 +29,36 @@
   margin:28rpx auto 0;min-height:88rpx;line-height:88rpx;width:60%;text-align:center;
   border-radius:16rpx;background:#9a6b1f;color:#fff;font-size:27rpx
 }
+
+/* 面值 / 推理价汇总：压在金色卡里，和卡片同色系 */
+.sum {
+  display: flex;
+  gap: 48rpx;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.28);
+}
+
+.sum-i {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.sum-k {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.4;
+}
+
+.sum-v {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  letter-spacing: 0.5rpx;
+}
+
+.sum-gold {
+  color: #ffffff;
+}

@@ -30,12 +30,16 @@ module.exports = async function colshareRoutes(app) {
   app.post('/api/colshare', { preHandler: app.requireLogin }, async function (request, reply) {
     const me = request.user;
     const body = await legacy.readBody(request.raw, 512 * 1024);
-    const items = colshare.sanitizeItems(body && body.items);
+    const options = colshare.normalizeOptions(body && body.options);
+    const items = colshare.sanitizeItems(body && body.items, options);
     if (!items.length) {
       return reply.code(400).send({ ok: false, error: '先添加藏品再分享' });
     }
     const code = newCode();
+    // 统计永远按完整清单算：即使用户选择不公开清单，头部「N 个品种 · X 枚」也该是对的
     const stats = colshare.statsOf(items);
+    // 不勾「品种清单」就只存汇总，别把明细留在库里
+    const storedItems = options.list ? items : [];
     const [users] = await app.db.query(
       'SELECT nickname, name FROM cl_users WHERE id = ? LIMIT 1', [me.id]);
     const u = users[0] || {};
@@ -43,7 +47,7 @@ module.exports = async function colshareRoutes(app) {
     await app.db.query(
       'INSERT INTO cl_colshare (code, uid, nickname, items, kinds, total, created_at) '
       + 'VALUES (?, ?, ?, ?, ?, ?, NOW(3))',
-      [code, String(me.id), nickname, JSON.stringify(items), stats.kinds, stats.total]);
+      [code, String(me.id), nickname, JSON.stringify(storedItems), stats.kinds, stats.total]);
     reply.send({ ok: true, code, kinds: stats.kinds, total: stats.total });
   });
 
@@ -56,13 +60,19 @@ module.exports = async function colshareRoutes(app) {
       [code]);
     const r = rows[0];
     if (!r) return reply.code(404).send({ ok: false, error: '分享不存在或已失效' });
+    const items = parseItems(r.items);
+    const stats = colshare.statsOf(items);
     reply.send({
       ok: true,
       code: r.code,
       owner: r.nickname || '藏友',
-      items: parseItems(r.items),
+      items: items,
       kinds: Number(r.kinds) || 0,
       total: Number(r.total) || 0,
+      // 有品种但没明细 = 分享者选择不公开清单
+      listHidden: (Number(r.kinds) || 0) > 0 && items.length === 0,
+      faceTotal: stats.faceTotal,
+      aiTotal: stats.aiTotal,
       createdAt: r.created_at ? new Date(r.created_at).toISOString() : '',
     });
   });

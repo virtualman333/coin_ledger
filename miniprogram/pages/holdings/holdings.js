@@ -29,6 +29,15 @@ Page({
     ],
     empty: true,
     shareCode: '',      // 收藏快照分享码（进页面时预生成）
+    shareOpen: false,   // 分享内容选择面板
+    shareBusy: false,   // 正在按选项生成快照
+    shareOpts: { list: true, qty: true, face: true, ai: true },
+    shareOptList: [
+      { key: 'list', name: '品种清单', desc: '具体有哪些币' },
+      { key: 'qty', name: '数量', desc: '每个品种几枚 / 几套' },
+      { key: 'face', name: '面值合计', desc: '按面额累加' },
+      { key: 'ai', name: '推理价合计', desc: '按目录推理价估算' }
+    ],
     selectMode: false,  // 多选分享模式：点卡片改为勾选
     selected: {},       // 持仓 id -> true
     selectedCount: 0,
@@ -59,11 +68,14 @@ Page({
     if (!store.isLogin()) return;
     const hs = store.getState().holdings || [];
     if (!hs.length) return;
-    const sig = hs.map((h) => [h.id, h.rolls, h.unit, h.category, h.name].join(':')).join('|');
+    // 选项也算签名的一部分：改了勾选就必须重新生成快照
+    const sig = hs.map((h) => [h.id, h.rolls, h.unit, h.category, h.name].join(':')).join('|')
+      + '|' + JSON.stringify(this.data.shareOpts);
     if (this.data.shareCode && sig === this._shareSig) return;
     if (this._shareBusy) return;
     this._shareSig = sig;
     this._shareBusy = true;
+    this.setData({ shareBusy: true });
 
     const items = hs.map((h) => {
       const c = cat.byName[h.name];
@@ -76,6 +88,9 @@ Page({
       } else if (c) {
         imgUrl = c.smallUrl || c.thumbUrl || c.imgUrl || '';
       }
+      // 面值按套计（一套面额 × 套数），推理价按件计；贵金属没有这套口径，都是 0
+      const faceOne = c ? (Number(c.setFaceBase || c.setFace) || 0) : 0;
+      const aiUnit = c ? (Number(cat.aiPriceOf(c)) || 0) : 0;
       return {
         name: h.name,
         year: c ? c.year : 0,
@@ -84,13 +99,16 @@ Page({
         qtyLabel: qty + ' ' + ((c && c.kind === 'note') ? '张' : '枚'),
         seriesName: (c && c.seriesName) || h.group || '',
         imgUrl,
+        face: Math.round(faceOne * rolls * 100) / 100,
+        ai: Math.round(aiUnit * qty * 100) / 100,
       };
     });
 
-    return api.post('/api/colshare', { items }).then((r) => {
+    return api.post('/api/colshare', { items, options: this.data.shareOpts }).then((r) => {
       this._shareBusy = false;
+      this.setData({ shareBusy: false });
       if (r && r.ok && r.code) this.setData({ shareCode: r.code });
-    }).catch(() => { this._shareBusy = false; });
+    }).catch(() => { this._shareBusy = false; this.setData({ shareBusy: false }); });
   },
 
   switchCat(e) {
@@ -101,6 +119,39 @@ Page({
     // 底部「已选 N 件」点分享会把当前分类外的也带出去
     this.setData({ holdCat: next, selectMode: false, selected: {}, selectedCount: 0 },
       () => this.render());
+  },
+
+  /* ---------------- 分享内容选择 ---------------- */
+
+  openShareSheet() {
+    if (!store.isLogin()) {
+      wx.showToast({ title: '登录后才能分享', icon: 'none' });
+      return;
+    }
+    if (!(store.state.holdings || []).length) {
+      wx.showToast({ title: '账本还是空的', icon: 'none' });
+      return;
+    }
+    this.setData({ shareOpen: true });
+    this.prepareShare();
+  },
+
+  closeShare() {
+    if (this.data.shareBusy) return;
+    this.setData({ shareOpen: false });
+  },
+
+  toggleShareOpt(e) {
+    const key = e.currentTarget.dataset.key;
+    if (!key) return;
+    const opts = Object.assign({}, this.data.shareOpts);
+    opts[key] = !opts[key];
+    // 四项全关就没东西可分享了，留最后一项不让关
+    if (!opts.list && !opts.qty && !opts.face && !opts.ai) {
+      wx.showToast({ title: '至少保留一项', icon: 'none' });
+      return;
+    }
+    this.setData({ shareOpts: opts }, () => this.prepareShare(true));
   },
 
   onPullDownRefresh() {

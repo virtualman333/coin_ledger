@@ -55,7 +55,7 @@
 
         <view class="tools-acts">
           <view class="tools-ghost" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</view>
-          <button class="tools-share" open-type="share" hover-class="tap-hover" wx:if="{{!selectMode}}">
+          <button class="tools-share" bindtap="openShareSheet" hover-class="tap-hover" wx:if="{{!selectMode}}">
             <text class="tools-share-ico">↗</text>
             <text>分享我的收藏</text>
           </button>
@@ -234,5 +234,37 @@
       <button class="act ghost" bindtap="sheetRemove">移出藏品</button>
       <button class="act primary" bindtap="saveSheet">保存</button>
     </view>
+  </view>
+</view>
+
+<!-- 分享内容选择：勾完再分享，落地页只出现勾中的信息 -->
+<view class="sh-mask" wx:if="{{shareOpen}}" bindtap="closeShare" catchtouchmove="noop">
+  <view class="sh-sheet" catchtap="noop">
+    <view class="sh-head">
+      <text class="sh-title">分享内容</text>
+      <text class="sh-x" hover-class="tap-hover" bindtap="closeShare">✕</text>
+    </view>
+    <text class="sh-tip">勾选要展示给对方的；成本等账本信息永远不会分享</text>
+
+    <view class="sh-list">
+      <view
+        class="sh-row"
+        wx:for="{{shareOptList}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        hover-class="tap-hover"
+        bindtap="toggleShareOpt"
+      >
+        <view class="sh-box {{shareOpts[item.key] ? 'on' : ''}}">{{shareOpts[item.key] ? '✓' : ''}}</view>
+        <view class="sh-txt">
+          <text class="sh-k">{{item.name}}</text>
+          <text class="sh-d">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <button class="btn-primary sh-go" open-type="share" disabled="{{shareBusy}}">
+      {{shareBusy ? '正在生成…' : '分享给朋友'}}
+    </button>
   </view>
 </view>
