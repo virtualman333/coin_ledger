@@ -586,6 +586,7 @@ export struct AdminPage {
         } else {
           Scroll() {
             Column({ space: 10 }) {
+              this.moduleGrid()
               this.tabs()
 
               if (this.tab === 'users') {
@@ -688,6 +689,65 @@ export struct AdminPage {
     }
     .width('100%')
     .height('100%')
+  }
+
+  /** 模块入口：补齐小程序管理后台里的系列/图片/贵金属/访问四个板块 */
+  @Builder
+  moduleGrid() {
+    Column({ space: 8 }) {
+      Text('管理模块')
+        .fontSize(13)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(Theme.text)
+        .width('100%')
+      Row({ space: 8 }) {
+        this.moduleCard('系列', '分组与删除', Routes.ADMIN_SERIES, $r('sys.symbol.doc_text'))
+        this.moduleCard('图片', '快速找缺图', Routes.ADMIN_IMAGES, $r('sys.symbol.camera'))
+      }
+      .width('100%')
+      Row({ space: 8 }) {
+        this.moduleCard('贵金属', '上下架管理', Routes.ADMIN_PM, $r('sys.symbol.star'))
+        this.moduleCard('访问统计', '总量与趋势', Routes.ADMIN_VISITORS, $r('sys.symbol.square_grid_2x2'))
+      }
+      .width('100%')
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  moduleCard(label: string, hint: string, route: string, symbol: Resource) {
+    Row({ space: 10 }) {
+      Stack({ alignContent: Alignment.Center }) {
+        SymbolGlyph(symbol)
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+          .fontColor([Theme.goldDeep])
+      }
+      .width(34)
+      .height(34)
+      .borderRadius(11)
+      .backgroundColor(Theme.goldBg)
+
+      Column({ space: 2 }) {
+        Text(label)
+          .fontSize(14)
+          .fontColor(Theme.textStrong)
+        Text(hint)
+          .fontSize(11)
+          .fontColor(Theme.faint)
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+    }
+    .layoutWeight(1)
+    .padding({ left: 10, right: 10, top: 10, bottom: 10 })
+    .borderRadius(Theme.radiusInner)
+    .backgroundColor(Theme.card)
+    .border({ width: 1, color: Theme.lineSoft })
+    .onClick((): void => {
+      Nav.push(this.stack, route, new RouteParam());
+    })
   }
 
   @Builder

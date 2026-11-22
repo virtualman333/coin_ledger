@@ -20,6 +20,10 @@ import { BackupPage } from './BackupPage';
 import { CountPage } from './CountPage';
 import { ProfilePage } from './ProfilePage';
 import { AdminPage } from './AdminPage';
+import { AdminSeriesPage } from './AdminSeriesPage';
+import { AdminImagesPage } from './AdminImagesPage';
+import { AdminPmPage } from './AdminPmPage';
+import { AdminVisitorsPage } from './AdminVisitorsPage';
 import { Privacy } from '../utils/privacy';
 import { Routes } from '../utils/router';
 import { Store } from '../utils/store';
@@ -205,6 +209,14 @@ struct Index {
         ProfilePage({ stack: this.stack })
       } else if (name === Routes.ADMIN) {
         AdminPage({ stack: this.stack })
+      } else if (name === Routes.ADMIN_SERIES) {
+        AdminSeriesPage({ stack: this.stack })
+      } else if (name === Routes.ADMIN_IMAGES) {
+        AdminImagesPage({ stack: this.stack })
+      } else if (name === Routes.ADMIN_PM) {
+        AdminPmPage({ stack: this.stack })
+      } else if (name === Routes.ADMIN_VISITORS) {
+        AdminVisitorsPage({ stack: this.stack })
       } else {
         Text('页面加载中')
           .fontSize(14)
