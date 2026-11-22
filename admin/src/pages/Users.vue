@@ -74,7 +74,16 @@
                   <b>{{ row.nickname || row.name }}</b>
                   <small class="u-acc">账号 {{ row.name }}</small>
                 </div>
-                <el-tag v-if="row.wx" size="small" effect="plain">微信</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="登录方式" width="200">
+            <template #default="{ row }">
+              <div class="u-login">
+                <el-tag v-if="row.hasPassword" size="small" effect="plain" type="info">密钥</el-tag>
+                <el-tag v-if="row.wx" size="small" effect="plain" type="success">微信小程序</el-tag>
+                <el-tag v-if="row.hw" size="small" effect="plain" type="danger">华为账号</el-tag>
+                <span v-if="!row.hasPassword && !row.wx && !row.hw" class="u-dash">—</span>
               </div>
             </template>
           </el-table-column>
@@ -146,7 +155,9 @@
                 {{ detail.role === 'admin' ? '超级管理员' : '普通用户' }}
               </el-tag>
               <el-tag :type="statusOf(detail).type" size="small">{{ statusOf(detail).text }}</el-tag>
-              <el-tag v-if="detail.wx" size="small" effect="plain">微信</el-tag>
+              <el-tag v-if="detail.hasPassword" size="small" effect="plain" type="info">密钥</el-tag>
+              <el-tag v-if="detail.wx" size="small" effect="plain" type="success">微信小程序</el-tag>
+              <el-tag v-if="detail.hw" size="small" effect="plain" type="danger">华为账号</el-tag>
               <el-tag v-if="detail.nameChanged" size="small" effect="plain" type="info">已改过名</el-tag>
             </div>
           </div>
@@ -158,10 +169,9 @@
           <el-descriptions-item label="用户名（昵称）">{{ detail.nickname || '—' }}</el-descriptions-item>
           <el-descriptions-item label="角色">{{ detail.role === 'admin' ? '超级管理员' : '普通用户' }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusOf(detail).text }}</el-descriptions-item>
-          <el-descriptions-item label="登录方式">
-            {{ (detail.hasPassword ? '账号密码' : '') + (detail.hasPassword && detail.wx ? ' + ' : '') + (detail.wx ? '微信' : '') || '—' }}
-          </el-descriptions-item>
+          <el-descriptions-item label="登录方式">{{ loginMethods(detail) }}</el-descriptions-item>
           <el-descriptions-item label="微信绑定">{{ detail.wx ? '已绑定' : '未绑定' }}</el-descriptions-item>
+          <el-descriptions-item label="华为绑定">{{ detail.hw ? '已绑定' : '未绑定' }}</el-descriptions-item>
           <el-descriptions-item label="改名">{{ detail.nameChanged ? '已用过（不可再改）' : '未用过' }}</el-descriptions-item>
           <el-descriptions-item label="注册时间">{{ fmt(detail.createdAt) }}</el-descriptions-item>
           <el-descriptions-item label="最近登录">{{ fmt(detail.lastLogin) }}</el-descriptions-item>
@@ -257,6 +267,15 @@ function fmt(v) {
 }
 function money(v) { return '¥' + (Number(v) || 0).toFixed(0); }
 function isMe(row) { return !!meId.value && row.id === meId.value; }
+/** 登录方式：密钥（账号密码）/ 微信小程序 / 华为账号 */
+function loginMethods(u) {
+  if (!u) return '—';
+  const out = [];
+  if (u.hasPassword) out.push('密钥');
+  if (u.wx) out.push('微信小程序');
+  if (u.hw) out.push('华为账号');
+  return out.length ? out.join(' · ') : '—';
+}
 function statusOf(u) {
   if (!u) return { text: '—', type: 'info' };
   if (u.disabled) return { text: '已禁用', type: 'danger' };
@@ -432,6 +451,8 @@ async function openDetail(row) {
 .u-detail-name { font-size: 16px; font-weight: 700; line-height: 1.3; }
 .u-detail-acc { margin-top: 2px; font-size: 12px; color: var(--cl-dim); }
 .u-detail-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.u-login { display: flex; gap: 4px; flex-wrap: wrap; }
+.u-dash { color: var(--el-text-color-placeholder); }
 .cl-up { color: var(--cl-success); }
 .cl-down { color: var(--cl-danger); }
 </style>

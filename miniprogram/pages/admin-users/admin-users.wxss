@@ -140,3 +140,14 @@
   background: #eaf4ea;
   color: #4a7a4a;
 }
+
+/* 登录方式：密钥（账号密码）/ 华为账号；微信见上 */
+.badge.pw {
+  background: #eef1f5;
+  color: #5b6a78;
+}
+
+.badge.hw {
+  background: #fbeeec;
+  color: #a3281c;
+}

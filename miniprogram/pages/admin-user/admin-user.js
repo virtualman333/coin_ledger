@@ -15,6 +15,8 @@ Page({
     isTest: false,
     disabled: false,
     wx: false,
+    hw: false,
+    hasPassword: false,
     nameChanged: false,
     loginText: '—',
     nameChangedText: '未改过名',
@@ -100,9 +102,11 @@ Page({
           : '';
         const createdText = dayText(user.createdAt);
         const lastLoginText = dayText(user.lastLogin);
-        const loginText = ((user.hasPassword ? '账号密码' : '')
-          + (user.hasPassword && user.wx ? ' + ' : '')
-          + (user.wx ? '微信' : '')) || '—';
+        const methods = [];
+        if (user.hasPassword) methods.push('密钥');
+        if (user.wx) methods.push('微信小程序');
+        if (user.hw) methods.push('华为账号');
+        const loginText = methods.length ? methods.join(' · ') : '—';
         this.setData({
           loading: false,
           user,
@@ -115,6 +119,8 @@ Page({
           isTest: !!user.isTest,
           disabled: !!user.disabled,
           wx: !!user.wx,
+          hw: !!user.hw,
+          hasPassword: !!user.hasPassword,
           nameChanged: !!user.nameChanged,
           loginText,
           nameChangedText: user.nameChanged ? '已用过改名机会' : '未改过名',

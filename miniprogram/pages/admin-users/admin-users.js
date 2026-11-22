@@ -66,6 +66,9 @@ Page({
           : '';
         const statusText = u.disabled ? '已禁用' : (u.isTest ? '测试账号' : '正常');
         return Object.assign({}, u, {
+          wx: !!u.wx,
+          hw: !!u.hw,
+          hasPassword: !!u.hasPassword,
           displayName: display,
           accountName: u.name || '',
           initial: String(display).slice(0, 1),

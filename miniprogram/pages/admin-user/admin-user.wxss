@@ -262,6 +262,17 @@
   color: #4a7a4a;
 }
 
+/* 登录方式：密钥（账号密码）/ 华为账号 */
+.ubadge.pw {
+  background: rgba(255, 255, 255, 0.9);
+  color: #5b6a78;
+}
+
+.ubadge.hw {
+  background: rgba(255, 255, 255, 0.9);
+  color: #a3281c;
+}
+
 /* 账号名：昵称和登录名可能完全不同，必须单独一行写清楚 */
 .uaccount {
   display: block;
