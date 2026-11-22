@@ -294,34 +294,6 @@ export interface PmItemRaw {
   thumbBack?: string;
 }
 
-/** 广场晒单 */
-export interface ShareTag {
-  name: string;
-}
-
-export interface ShareItem {
-  id: number | string;
-  uid?: string;
-  author: string;
-  avatar?: string;
-  holdingName: string;
-  serials: string[];
-  tags: Array<ShareTag | string>;
-  images: string[];
-  likes?: number;
-  liked?: boolean;
-  comments?: number;
-  createdAt: string;
-  caption?: string;
-  form?: string;
-}
-
-export interface SharesResponse {
-  ok: boolean;
-  items: ShareItem[];
-  total?: number;
-}
-
 /** 系列（贵金属发行项目） */
 export interface PmSeriesItem {
   code: string;

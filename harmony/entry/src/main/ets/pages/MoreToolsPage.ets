@@ -31,17 +31,17 @@ export struct MoreToolsPage {
   @State isAdmin: boolean = false;
   @State displayName: string = '';
   @State tools: ToolRow[] = [];
-  @State plaza: ToolRow[] = [];
+  @State browse: ToolRow[] = [];
   @State aboutRows: ToolRow[] = [];
 
   aboutToAppear(): void {
     this.tools = [
       new ToolRow('拍照数币', '一张照片数清多少枚', Routes.COUNT, '', $r('sys.symbol.camera')),
-      new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '', $r('sys.symbol.arrow_clockwise')),
-      new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '', $r('sys.symbol.doc_text')),
+      new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '', $r('sys.symbol.externaldrive')),
+      new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '', $r('sys.symbol.message')),
       new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '', $r('sys.symbol.list_bullet'))
     ];
-    this.plaza = [
+    this.browse = [
       new ToolRow('按系列浏览', '20 个系列分组', Routes.SERIES, '', $r('sys.symbol.square_grid_2x2'))
     ];
     this.aboutRows = [
@@ -143,13 +143,18 @@ export struct MoreToolsPage {
   @Builder
   row(item: ToolRow) {
     Row({ space: 12 }) {
-      SymbolGlyph(item.symbol)
-        .fontSize(18)
-        .fontColor([Theme.goldDeep])
-        .width(36)
-        .height(36)
-        .borderRadius(12)
-        .backgroundColor(Theme.goldBg)
+      // 符号字形自带基线偏移，直接给 SymbolGlyph 设宽高会视觉偏上偏左，
+      // 必须用 Stack 居中承载，底色块也画在 Stack 上
+      Stack({ alignContent: Alignment.Center }) {
+        SymbolGlyph(item.symbol)
+          .fontSize(20)
+          .fontWeight(FontWeight.Medium)
+          .fontColor([Theme.goldDeep])
+      }
+      .width(36)
+      .height(36)
+      .borderRadius(12)
+      .backgroundColor('#F8EEDB')
       Column({ space: 3 }) {
         Text(item.label)
           .fontSize(15)
@@ -240,7 +245,7 @@ export struct MoreToolsPage {
           .alignItems(VerticalAlign.Center)
 
           this.group(this.tools)
-          this.group(this.plaza)
+          this.group(this.browse)
           this.group(this.aboutRows)
 
           if (this.isAdmin) {

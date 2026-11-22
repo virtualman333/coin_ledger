@@ -8,7 +8,6 @@ export class Routes {
   static readonly HOLDINGS: string = 'holdings';
   static readonly SERIES: string = 'series';
   static readonly SERIES_DETAIL: string = 'seriesDetail';
-  static readonly PLAZA: string = 'plaza';
   static readonly COLSHARE: string = 'colshare';
   static readonly COUNT: string = 'count';
   static readonly BACKUP: string = 'backup';

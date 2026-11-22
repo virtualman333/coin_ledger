@@ -19,7 +19,6 @@ import { MyFeedbackPage } from './MyFeedbackPage';
 import { BackupPage } from './BackupPage';
 import { CountPage } from './CountPage';
 import { ProfilePage } from './ProfilePage';
-import { PlazaPage } from './PlazaPage';
 import { AdminPage } from './AdminPage';
 import { Privacy } from '../utils/privacy';
 import { Routes } from '../utils/router';
@@ -204,8 +203,6 @@ struct Index {
         CountPage({ stack: this.stack })
       } else if (name === Routes.PROFILE) {
         ProfilePage({ stack: this.stack })
-      } else if (name === Routes.PLAZA) {
-        PlazaPage({ stack: this.stack })
       } else if (name === Routes.ADMIN) {
         AdminPage({ stack: this.stack })
       } else {

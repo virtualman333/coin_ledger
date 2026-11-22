@@ -117,7 +117,7 @@ export struct MineView {
     this.dist = dist;
 
     const quick: QuickItem[] = [];
-    quick.push(this.quickItem('backup', '收藏备份', $r('sys.symbol.arrow_clockwise')));
+    quick.push(this.quickItem('backup', '收藏备份', $r('sys.symbol.externaldrive')));
     quick.push(this.quickItem('count', '拍照数币', $r('sys.symbol.camera')));
     quick.push(this.quickItem('feedback', '意见反馈', $r('sys.symbol.doc_text')));
     this.quick = quick;
@@ -182,9 +182,6 @@ export struct MineView {
     if (key === 'feedback') {
       Nav.push(this.stack, Routes.FEEDBACK, new RouteParam());
       return;
-    }
-    if (key === 'plaza') {
-      Nav.push(this.stack, Routes.PLAZA, new RouteParam());
     }
   }
 

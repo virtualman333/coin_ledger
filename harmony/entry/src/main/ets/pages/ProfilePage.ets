@@ -489,7 +489,7 @@ export struct ProfilePage {
             .border({ width: 1, color: Theme.glassBorder })
             .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
-            Text('昵称与头像会显示在广场晒单里；用户名只用于登录。')
+            Text('昵称与头像会显示在你的账号信息里；用户名只用于登录。')
               .fontSize(10)
               .fontColor(Theme.faint)
               .lineHeight(17)

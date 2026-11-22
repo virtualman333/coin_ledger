@@ -96,8 +96,9 @@ export struct DetailPage {
     if (coin.weight) facts.push(this.fact(coin.specFrom ? '重量*' : '重量', coin.weight));
     if (coin.caster) facts.push(this.factWide('铸造单位', coin.caster));
     if (coin.edge) facts.push(this.factWide('边齿', coin.edge));
-    facts.push(this.fact('系列', coin.seriesName));
-    facts.push(this.fact('类型', coin.kind === 'note' ? '纪念钞' : '纪念币'));
+    const kindText = coin.kind === 'note' ? '纪念钞' : '纪念币';
+    if (coin.seriesName && coin.seriesName !== kindText) facts.push(this.fact('系列', coin.seriesName));
+    facts.push(this.fact('类型', kindText));
     if (coin.setSizeCalc > 1) {
       facts.push(this.factWide('一套面值',
         money(coin.setFace) + ' 元 · ' + coin.setSizeCalc + (coin.kind === 'note' ? ' 张' : ' 枚')));
@@ -940,6 +941,17 @@ export struct DetailPage {
     .height('100%')
   }
 
+  /** 副标题：年份 · 系列 · 类型，系列与类型同名时去重（原来会出现「纪念钞 · 纪念钞」） */
+  private subtitleText(): string {
+    if (this.coin === null) return '';
+    const c = this.coin as Coin;
+    const kind = c.kind === 'note' ? '纪念钞' : '纪念币';
+    const parts: string[] = [c.year + ' 年'];
+    if (c.seriesName && c.seriesName !== kind) parts.push(c.seriesName);
+    parts.push(kind);
+    return parts.join(' · ');
+  }
+
   build() {
     Stack() {
       Column() {
@@ -962,8 +974,7 @@ export struct DetailPage {
                   .fontSize(18)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(Theme.text)
-                Text((this.coin as Coin).year + ' 年 · ' + (this.coin as Coin).seriesName
-                  + ' · ' + ((this.coin as Coin).kind === 'note' ? '纪念钞' : '纪念币'))
+                Text(this.subtitleText())
                   .fontSize(10)
                   .fontColor(Theme.muted)
               }
