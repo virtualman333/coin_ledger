@@ -12,6 +12,9 @@ class AdminUser {
   role: string = '';
   disabled: boolean = false;
   isTest: boolean = false;
+  hasPassword: boolean = false;
+  wx: boolean = false;
+  hw: boolean = false;
   createdAt: string = '';
   holdings: number = 0;
 }
@@ -120,6 +123,7 @@ export struct AdminPage {
   @State loading: boolean = false;
   @State err: string = '';
   @State isAdmin: boolean = false;
+  @State userFilter: string = 'all';
 
   @State editOpen: boolean = false;
   @State editNo: number = 0;
@@ -139,7 +143,12 @@ export struct AdminPage {
     this.loading = true;
     this.err = '';
     const q = this.keyword.trim();
-    Api.get<UsersResponse>('/api/admin/users?page=1&size=50' + (q !== '' ? '&q=' + encodeURIComponent(q) : ''))
+    let qs = 'page=1&size=50';
+    if (q !== '') qs += '&q=' + encodeURIComponent(q);
+    if (this.userFilter === 'admin') qs += '&role=admin';
+    else if (this.userFilter === 'disabled') qs += '&status=disabled';
+    else if (this.userFilter === 'test') qs += '&status=test';
+    Api.get<UsersResponse>('/api/admin/users?' + qs)
       .then((res: UsersResponse): void => {
         this.loading = false;
         if (!res || !res.ok) {
@@ -358,6 +367,38 @@ export struct AdminPage {
               .fontColor(Color.White)
               .padding({ left: 4, right: 4, top: 1, bottom: 1 })
               .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
+              .borderRadius(3)
+          }
+          if (u.isTest) {
+            Text('测试')
+              .fontSize(8)
+              .fontColor(Theme.muted)
+              .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+              .backgroundColor('#F1F1F3')
+              .borderRadius(3)
+          }
+          if (u.hasPassword) {
+            Text('密钥')
+              .fontSize(8)
+              .fontColor(Theme.muted)
+              .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+              .backgroundColor('#F1F1F3')
+              .borderRadius(3)
+          }
+          if (u.wx) {
+            Text('微信')
+              .fontSize(8)
+              .fontColor('#1A8F4C')
+              .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+              .backgroundColor('#EAF7EF')
+              .borderRadius(3)
+          }
+          if (u.hw) {
+            Text('华为')
+              .fontSize(8)
+              .fontColor('#C0392B')
+              .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+              .backgroundColor('#FDEDEB')
               .borderRadius(3)
           }
           if (u.disabled) {
@@ -599,6 +640,15 @@ export struct AdminPage {
                 .justifyContent(FlexAlign.Start)
                 .width('100%')
                 .padding(12)
+
+                Row({ space: 6 }) {
+                  this.filterChip('全部', 'all')
+                  this.filterChip('管理员', 'admin')
+                  this.filterChip('封禁', 'disabled')
+                  this.filterChip('测试号', 'test')
+                  Blank()
+                }
+                .width('100%')
                 .borderRadius(12)
                 .backgroundColor(Theme.card)
                 .border({ width: 1, color: Theme.glassBorder })
@@ -692,6 +742,22 @@ export struct AdminPage {
   }
 
   /** 模块入口：补齐小程序管理后台里的系列/图片/贵金属/访问四个板块 */
+  @Builder
+  filterChip(label: string, key: string) {
+    Text(label)
+      .fontSize(12)
+      .fontColor(this.userFilter === key ? Theme.goldDeep : Theme.muted)
+      .fontWeight(this.userFilter === key ? FontWeight.Medium : FontWeight.Normal)
+      .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+      .borderRadius(9)
+      .backgroundColor(this.userFilter === key ? Theme.goldBg : Theme.card)
+      .border({ width: 1, color: this.userFilter === key ? Theme.goldLine : Theme.lineSoft })
+      .onClick((): void => {
+        this.userFilter = key;
+        this.loadUsers();
+      })
+  }
+
   @Builder
   moduleGrid() {
     Column({ space: 8 }) {
