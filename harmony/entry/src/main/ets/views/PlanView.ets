@@ -415,6 +415,29 @@ export struct PlanView {
       .backgroundColor(cls === 'now' ? Theme.gold : (cls === 'up' ? Theme.goldBg : '#F1EEE6'))
   }
 
+  /**
+   * 把「2026/11/17 22:00 至 11/18 24:00」压成「11/17–11/18」。
+   * 年份在分组标题里已经有了，时刻对用户没用，一行才排得下。
+   */
+  private shortRange(raw: string): string {
+    if (raw.length === 0) return '';
+    // raw 形如「2026/11/17 22:00 至 11/18 24:00」，只留月/日，年份在分组标题里
+    const segs = raw.split('至');
+    const one = (t: string): string => {
+      const parts = t.trim().split('/');
+      if (parts.length >= 3) {
+        return parts[1] + '/' + parts[2].slice(0, 2);
+      }
+      if (parts.length === 2) {
+        return parts[0] + '/' + parts[1].slice(0, 2);
+      }
+      return t.trim();
+    };
+    const a = one(segs[0]);
+    const b = segs.length > 1 ? one(segs[1]) : '';
+    return b.length > 0 ? (a + '–' + b) : a;
+  }
+
   @Builder
   coinItem(row: PlanRow) {
     Row({ space: 10 }) {
@@ -454,11 +477,14 @@ export struct PlanView {
             .textOverflow({ overflow: TextOverflow.Ellipsis })
         }
         if (row.reserveText.length > 0 || row.exchangeText.length > 0) {
-          Text((row.reserveText.length > 0 ? row.reserveText + ' 预约' : '')
-            + (row.reserveText.length > 0 && row.exchangeText.length > 0 ? ' · ' : '')
-            + (row.exchangeText.length > 0 ? row.exchangeText + ' 兑换' : ''))
-            .fontSize(11)
-            .fontColor(Theme.faint)
+          Text((row.reserveText.length > 0 ? '预约 ' + this.shortRange(row.reserveText) : '')
+            + (row.reserveText.length > 0 && row.exchangeText.length > 0 ? '  ·  ' : '')
+            + (row.exchangeText.length > 0 ? '兑换 ' + this.shortRange(row.exchangeText) : ''))
+            .fontSize(12)
+            .fontColor(Theme.muted)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
         }
       }
       .layoutWeight(1)
@@ -670,12 +696,14 @@ export struct PlanView {
   tabButton(label: string, key: string) {
     Text(label)
       .fontSize(13)
-      .fontColor(this.tab === key ? Color.White : Theme.muted)
+      .fontColor(this.tab === key ? Theme.goldDeep : Theme.muted)
+      .fontWeight(this.tab === key ? FontWeight.Medium : FontWeight.Normal)
       .textAlign(TextAlign.Center)
       .layoutWeight(1)
       .height(38)
       .borderRadius(Theme.radiusS)
-      .backgroundColor(this.tab === key ? Theme.gold : Theme.card)
+      .backgroundColor(this.tab === key ? Theme.goldBg : Theme.card)
+      .border({ width: 1, color: this.tab === key ? Theme.goldLine : Color.Transparent })
       .onClick((): void => {
         this.tab = key;
       })
