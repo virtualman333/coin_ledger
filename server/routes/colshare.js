@@ -43,7 +43,7 @@ module.exports = async function colshareRoutes(app) {
     const [users] = await app.db.query(
       'SELECT nickname, name FROM cl_users WHERE id = ? LIMIT 1', [me.id]);
     const u = users[0] || {};
-    const nickname = String(u.nickname || u.name || '同好').slice(0, 64);
+    const nickname = String(u.nickname || u.name || '币友').slice(0, 64);
     await app.db.query(
       'INSERT INTO cl_colshare (code, uid, nickname, items, kinds, total, face_total, ai_total, created_at) '
       + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(3))',
@@ -66,7 +66,7 @@ module.exports = async function colshareRoutes(app) {
     reply.send({
       ok: true,
       code: r.code,
-      owner: r.nickname || '同好',
+      owner: r.nickname || '币友',
       items: items,
       kinds: Number(r.kinds) || 0,
       total: Number(r.total) || 0,

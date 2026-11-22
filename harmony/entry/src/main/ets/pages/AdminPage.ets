@@ -395,7 +395,7 @@ export struct AdminPage {
   feedbackRow(it: AdminFeedback) {
     Column({ space: 6 }) {
       Row() {
-        Text(it.userName.length > 0 ? it.userName : '同好')
+        Text(it.userName.length > 0 ? it.userName : '币友')
           .fontSize(11)
           .fontColor(Theme.goldDeep)
         if (it.coinName) {

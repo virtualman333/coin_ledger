@@ -142,7 +142,7 @@ test('授权地址：带齐 response_type / client_id / redirect_uri / scope / s
 
 /* ---------------- 账号口径 ---------------- */
 
-test('首次华为登录：自动建号、空账本、随机「同好」登录名', async () => {
+test('首次华为登录：自动建号、空账本、随机「币友」登录名', async () => {
   const doc = blankDoc([]);
   useDoc(doc);
   const r = await authService.huaweiUpsert({ openId: 'hw-open-1', unionId: 'hw-union-1', nickname: '阿华', avatar: 'https://a/b.png' });
@@ -153,7 +153,7 @@ test('首次华为登录：自动建号、空账本、随机「同好」登录�
   assert.equal(u.hwUnionid, 'hw-union-1');
   assert.equal(u.nickname, '阿华');
   assert.equal(u.hwAvatar, 'https://a/b.png');
-  assert.match(u.name, /^同好[0-9A-Z]{4}$/);
+  assert.match(u.name, /^币友[0-9A-Z]{4}$/);
   assert.deepEqual(doc.holdings[u.id], []);
   assert.equal(u.salt, '');
   assert.equal(u.hash, '');

@@ -263,7 +263,7 @@ SCREENS.mine = `
   <div class="page">
     <div class="profile">
       <div class="av">藏</div>
-      <div class="c"><div class="n">同好</div><div class="s">43 个品种 · 52 套</div></div>
+      <div class="c"><div class="n">币友</div><div class="s">43 个品种 · 52 套</div></div>
       <div class="edit">编辑</div>
     </div>
 

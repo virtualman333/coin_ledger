@@ -550,7 +550,7 @@ export struct AccountPage {
         this.statCell(String(this.holdingsCount), '在册收藏')
         this.statCell(String(this.totalCoins), '品种总数')
         this.statCell(String(this.seriesCount), '系列')
-        this.statCell(String(this.userCount), '同好')
+        this.statCell(String(this.userCount), '币友')
       }
       .width('100%')
       .padding({ top: 10, bottom: 10 })
