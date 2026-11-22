@@ -405,7 +405,9 @@ Page({
   },
 
   previewMarked() {
-    if (!this.data.marked) return;
-    wx.previewImage({ urls: [this.data.marked], current: this.data.marked });
+    // 标注图还没回来时点预览看原图，别让第一次点击像没反应
+    const src = this.data.marked || this.data.image;
+    if (!src) return;
+    wx.previewImage({ urls: [src], current: src });
   }
 });

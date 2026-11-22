@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "拍照数币",
+  "navigationBarBackgroundColor": "#f4f5f6",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f4f5f6",
   "usingComponents": {}
 }

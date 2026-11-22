@@ -5,19 +5,41 @@
     <text class="invite-d">平铺硬币拍一张，自动圈出每一枚并数清数量</text>
   </view>
 
-  <view class="intro">
-    <text class="intro-t">拍照数币</text>
-    <text class="intro-d">把硬币平铺在深色桌面上拍照，自动识别数量。类似火锅店数签子，方便清点。</text>
+  <view class="hero">
+    <text class="hero-t">一桌硬币，拍一张就数清</text>
+    <text class="hero-d">纯本地图像算法只数圆形亮斑的个数，不识别币种、不上传人脸；照片仅用于本次计数与标注图生成。</text>
+  </view>
+
+  <!-- 照片区：没选图时是大占位 + 硬币图标，选完直接显示（有标注图优先显示标注图） -->
+  <view class="shot">
+    <block wx:if="{{marked || image}}">
+      <image
+        class="shot-img"
+        src="{{marked || image}}"
+        mode="aspectFit"
+        bindtap="previewMarked"
+        show-menu-by-longpress
+      ></image>
+      <text class="shot-tag" wx:if="{{marked}}">已标注 · 点开看大图</text>
+      <view class="shot-busy" wx:if="{{busy}}"><text>识别中…</text></view>
+    </block>
+    <view class="shot-empty" wx:else bindtap="chooseImage">
+      <view class="coin">
+        <view class="coin-ring"></view>
+        <view class="coin-face"><view class="coin-hole"></view></view>
+      </view>
+      <text class="shot-hint">{{busy ? '正在识别…' : '点下面按钮选择一张硬币照片'}}</text>
+    </view>
   </view>
 
   <button class="btn-primary" bindtap="chooseImage" disabled="{{busy}}">
-    {{busy ? '识别中…' : (image ? '重新拍照' : '拍照 / 选择图片')}}
+    {{busy ? '识别中…' : (image ? '换一张照片' : '选择硬币照片')}}
   </button>
 
   <view class="err" wx:if="{{err}}">{{err}}<text class="retry" bindtap="retry"> 点此重试</text></view>
 
   <!-- 识别为 0 时也要能手动 +1 修正，否则结果区整块消失 -->
-  <view class="result" wx:if="{{count > 0 || edited || marked}}">
+  <view class="card result" wx:if="{{count > 0 || edited || marked}}">
     <view class="result-head">
       <text class="result-k">识别结果</text>
       <text class="result-note" wx:if="{{edited}}">已手动调整</text>
@@ -37,16 +59,21 @@
     </view>
   </view>
 
-  <view class="marked-box" wx:if="{{marked}}">
-    <text class="marked-h">识别标注图（点开看大图）</text>
-    <image class="marked-img" src="{{marked}}" mode="widthFix" bindtap="previewMarked"></image>
-  </view>
-
-  <view class="tips">
+  <!-- 拍摄建议：白卡 + 圆点条目，和上面的照片区同一套圆角语言 -->
+  <view class="card tips">
     <text class="tips-h">拍摄建议</text>
-    <text class="tips-i">· 币平铺不重叠，尽量在同一平面</text>
-    <text class="tips-i">· 深色桌面、光线均匀，避免反光</text>
-    <text class="tips-i">· 只数数量，不识别币种；结果可手动修正</text>
+    <view class="tip-i">
+      <text class="dot"></text>
+      <text class="tip-t">硬币平铺、互不重叠，浅色桌面对比更明显；</text>
+    </view>
+    <view class="tip-i">
+      <text class="dot"></text>
+      <text class="tip-t">光线均匀，避免强光反光与长阴影；</text>
+    </view>
+    <view class="tip-i">
+      <text class="dot"></text>
+      <text class="tip-t">一次不超过 200 枚，太多会粘连漏数。</text>
+    </view>
   </view>
 
   <!-- 海报画布：挪到屏幕外，只用于导出，不参与排版 -->
