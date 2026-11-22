@@ -762,7 +762,7 @@ export struct ListView {
               .width('100%')
               .height(3)
               .borderRadius(2)
-              .backgroundColor('#EFE8DA')
+              .backgroundColor('#EDEDEF')
             Row()
               .width(card.pct + '%')
               .height(3)
@@ -779,7 +779,7 @@ export struct ListView {
     .padding(14)
     .margin({ bottom: 10 })
     .borderRadius(Theme.radiusM)
-    .backgroundColor(Theme.glass)
+    .backgroundColor(Theme.card)
     .border({ width: 1, color: Theme.glassBorder })
     .shadow({ radius: 18, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
     .onClick((): void => {
@@ -1128,7 +1128,7 @@ export struct ListView {
             .width('100%')
             .padding({ left: 14, right: 14 })
             .borderRadius(Theme.radiusM)
-            .backgroundColor(Theme.glass)
+            .backgroundColor(Theme.card)
             .border({ width: 1, color: Theme.glassBorder })
             .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 

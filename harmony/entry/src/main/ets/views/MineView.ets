@@ -500,7 +500,7 @@ export struct MineView {
                 .layoutWeight(1)
                 .padding({ top: 12, bottom: 12 })
                 .borderRadius(Theme.radiusM)
-                .backgroundColor(Theme.glass)
+                .backgroundColor(Theme.card)
                 .border({ width: 1, color: Theme.glassBorder })
                 .onClick((): void => {
                   const p = new RouteParam();
@@ -521,7 +521,7 @@ export struct MineView {
           .width('100%')
           .margin({ top: 10 })
           .borderRadius(Theme.radiusM)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 20, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
 

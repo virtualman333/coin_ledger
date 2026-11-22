@@ -740,7 +740,7 @@ export struct PlanView {
                   .fontSize(11)
                   .fontColor(Theme.goldDeep)
                   .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-                  .backgroundColor('#FFFFFFCC')
+                  .backgroundColor('#FFFFFFF2')
                   .borderRadius(5)
                 Text(this.nextName)
                   .fontSize(14)
@@ -839,7 +839,7 @@ export struct PlanView {
                   .width('100%')
                   .padding({ left: 14, right: 14 })
                   .borderRadius(Theme.radiusM)
-                  .backgroundColor(Theme.glass)
+                  .backgroundColor(Theme.card)
                   .border({ width: 1, color: Theme.glassBorder })
                   .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }
@@ -896,7 +896,7 @@ export struct PlanView {
                   .width('100%')
                   .padding({ left: 14, right: 14 })
                   .borderRadius(Theme.radiusM)
-                  .backgroundColor(Theme.glass)
+                  .backgroundColor(Theme.card)
                   .border({ width: 1, color: Theme.glassBorder })
                   .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }

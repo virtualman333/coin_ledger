@@ -171,7 +171,7 @@ export struct SeriesPage {
               .width('100%')
               .height(3)
               .borderRadius(2)
-              .backgroundColor('#EFE8DA')
+              .backgroundColor('#EDEDEF')
             Row()
               .width(item.pct + '%')
               .height(3)
@@ -268,7 +268,7 @@ export struct SeriesPage {
           .width('100%')
           .padding(14)
           .borderRadius(14)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .onClick((): void => {

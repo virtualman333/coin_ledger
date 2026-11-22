@@ -112,7 +112,7 @@ export struct AboutPage {
           .width('100%')
           .padding({ top: 12, bottom: 12 })
           .borderRadius(14)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
@@ -138,7 +138,7 @@ export struct AboutPage {
           .width('100%')
           .padding({ left: 14, right: 14 })
           .borderRadius(14)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
@@ -164,7 +164,7 @@ export struct AboutPage {
           .width('100%')
           .padding(14)
           .borderRadius(14)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)

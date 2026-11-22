@@ -335,7 +335,7 @@ export struct PmDetailPage {
       .width('90%')
       .padding(18)
       .borderRadius(16)
-      .backgroundColor(Theme.glass)
+      .backgroundColor(Theme.card)
       .border({ width: 1, color: Theme.glassBorder })
       .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
@@ -408,7 +408,7 @@ export struct PmDetailPage {
                   .width('100%')
                   .padding(14)
                   .borderRadius(14)
-                  .backgroundColor(Theme.glass)
+                  .backgroundColor(Theme.card)
                   .border({ width: 1, color: Theme.glassBorder })
                   .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
@@ -461,7 +461,7 @@ export struct PmDetailPage {
                   .alignItems(HorizontalAlign.Start)
                   .padding(14)
                   .borderRadius(14)
-                  .backgroundColor(Theme.glass)
+                  .backgroundColor(Theme.card)
                   .border({ width: 1, color: Theme.glassBorder })
                   .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }

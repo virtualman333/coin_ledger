@@ -206,7 +206,7 @@ export struct CountPage {
           .width('100%')
           .padding(14)
           .borderRadius(12)
-          .backgroundColor(Theme.glass)
+          .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
