@@ -132,3 +132,32 @@ test('会话列表带 sessionsTotal，前端能判断是否被截断', () => {
   assert.equal(s.sessionsTotal, Object.keys(s.sessions.reduce((m, x) => { m[x.sid] = 1; return m; }, {})).length);
   assert.ok(s.sessionsTotal >= s.sessions.length);
 });
+
+test('按用户汇总：同一 uid 跨 IP 合成一行，未登录按 IP 分组', () => {
+  const rows = [
+    item(at(0, 9, 0), '1.1.1.1', 's1', 'home', 'web'),
+    Object.assign(item(at(0, 9, 30), '2.2.2.2', 's2', 'plan', 'mp'), { uid: 'u1', userName: 'alice' }),
+    Object.assign(item(at(0, 10, 0), '3.3.3.3', 's3', 'home', 'mp'), { uid: 'u1', userName: 'alice' }),
+    Object.assign(item(at(0, 11, 0), '2.2.2.2', 's4', 'holdings', 'mp'), { uid: 'u2', userName: 'bob' }),
+    item(at(0, 12, 0), '1.1.1.1', 's5', 'mine', 'web'),
+  ];
+  const s = visitors.stats(rows, { range: 'today' });
+  const users = s.userGroups;
+  const alice = users.find((g) => g.uid === 'u1');
+  assert.ok(alice, '缺少 u1 聚合行');
+  assert.equal(alice.pv, 2);
+  assert.equal(alice.ipCount, 2, '同一用户的两个 IP 应计入 ipCount');
+  assert.equal(alice.name, 'alice');
+  assert.equal(users.filter((g) => !g.uid && g.ip === '1.1.1.1').length, 1, '未登录应按 IP 合成一行');
+  assert.ok(users[0].pv >= users[users.length - 1].pv, '应按访问次数降序');
+});
+
+test('明细支持按 uid 查，不混入别人', () => {
+  const rows = [
+    Object.assign(item(at(0, 9, 0), '1.1.1.1', 's1', 'home', 'web'), { uid: 'u1' }),
+    Object.assign(item(at(0, 9, 30), '1.1.1.1', 's2', 'plan', 'web'), { uid: 'u2' }),
+  ];
+  const d = visitors.detail(rows, { uid: 'u1' });
+  assert.equal(d.total, 1);
+  assert.equal(d.rows[0].sid, 's1');
+});

@@ -177,7 +177,7 @@ function ipGroups(items) {
       map[ip] = {
         ip: x.ip || '—',
         pv: 0, sessions: {}, pages: {}, clients: {}, days: {},
-        first: x.at, last: x.at, name: '', nickName: '', ua: x.ua || '',
+        first: x.at, last: x.at, name: '', nickName: '', ua: x.ua || '', uid: '',
       };
     }
     const g = map[ip];
@@ -192,6 +192,7 @@ function ipGroups(items) {
     // 用户名用来认账号，昵称用来认人 —— 两个都留着，别互相覆盖
     if (!g.nickName && x.nickName) g.nickName = x.nickName;
     if (!g.ua && x.ua) g.ua = x.ua;
+    if (!g.uid && x.uid) g.uid = x.uid;
   });
   return Object.keys(map).map((k) => {
     const g = map[k];
@@ -205,6 +206,7 @@ function ipGroups(items) {
       days: Object.keys(g.days).length,
       first: g.first,
       last: g.last,
+      uid: g.uid || '',
       name: g.name,
       nickName: g.nickName || '',
       ua: g.ua,
@@ -212,11 +214,65 @@ function ipGroups(items) {
   }).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 60);
 }
 
-/** 某个 IP 或会话的完整访问明细（管理端弹窗用） */
+/**
+ * 按用户汇总：登录用户按 uid 聚合，未登录按 IP 归一组（昵称显示「未登录」）。
+ *
+ * 与 ipGroups 的区别：同一个人换了 IP 只算一行，同一 IP 下的多个账号也分开。
+ *
+ * @param {Array<object>} items 已按区间/来源筛过的埋点
+ * @returns {Array<object>} 按访问次数降序
+ */
+function userGroups(items) {
+  const map = {};
+  (items || []).forEach((x) => {
+    const key = x.uid ? ('u:' + x.uid) : ('a:' + (x.ip || x.sid));
+    if (!map[key]) {
+      map[key] = {
+        uid: x.uid || '', ip: x.ip || '', pv: 0,
+        sessions: {}, pages: {}, clients: {}, days: {}, ips: {},
+        first: x.at, last: x.at, name: '', nickName: '', ua: '',
+      };
+    }
+    const g = map[key];
+    g.pv += 1;
+    g.sessions[x.sid] = 1;
+    g.pages[x.tab] = 1;
+    g.clients[x.client || 'web'] = 1;
+    g.days[dayKey(x.at)] = 1;
+    if (x.ip) g.ips[x.ip] = 1;
+    if (Date.parse(x.at) < Date.parse(g.first)) g.first = x.at;
+    if (Date.parse(x.at) > Date.parse(g.last)) g.last = x.at;
+    if (!g.name && x.userName) g.name = x.userName;
+    if (!g.nickName && x.nickName) g.nickName = x.nickName;
+    if (!g.ua && x.ua) g.ua = x.ua;
+  });
+  return Object.keys(map).map((k) => {
+    const g = map[k];
+    return {
+      uid: g.uid,
+      ip: g.ip,
+      pv: g.pv,
+      sessionCount: Object.keys(g.sessions).length,
+      pageCount: Object.keys(g.pages).length,
+      pages: Object.keys(g.pages),
+      clients: Object.keys(g.clients),
+      days: Object.keys(g.days).length,
+      ipCount: Object.keys(g.ips).length,
+      first: g.first,
+      last: g.last,
+      name: g.name,
+      nickName: g.nickName || '',
+      ua: g.ua,
+    };
+  }).sort((a, b) => b.pv - a.pv || String(b.last).localeCompare(String(a.last))).slice(0, 200);
+}
+
+/** 某个 IP / 会话 / 用户的完整访问明细（管理端弹窗用） */
 function detail(items, query) {
   const q = query || {};
   const rows = items.filter((x) => {
     if (q.sid) return x.sid === q.sid;
+    if (q.uid) return x.uid === q.uid;
     if (q.ip) return (x.ip || ('sid:' + x.sid)) === q.ip;
     return false;
   });
@@ -341,7 +397,8 @@ function stats(items, options) {
       : 0,
     retention: pageRetention(scoped),
     ipGroups: ipGroups(rows),
+    userGroups: userGroups(rows),
   };
 }
 
-module.exports = { load, add, recentlySeen, stats, pageRetention, ipGroups, detail, dayKey, resolveRange, filterByRange };
+module.exports = { load, add, recentlySeen, stats, pageRetention, ipGroups, userGroups, detail, dayKey, resolveRange, filterByRange };

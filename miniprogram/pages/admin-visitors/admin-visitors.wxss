@@ -40,3 +40,38 @@
 }
 .vdd-sum-i b { color: #8a6420; font-size: 25rpx; }
 .vdd-sum-ip { margin-left: auto; color: #8a8378; font-family: monospace; }
+
+/* 访客头像：有图显示图，没有就用首字圆形占位，和后台其它列表一致 */
+.vr-ava {
+  width: 64rpx;
+  height: 64rpx;
+  flex: 0 0 auto;
+  margin-right: 16rpx;
+  border-radius: 50%;
+  background: #f2efe7;
+}
+.vr-ava-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b6559;
+  font-size: 26rpx;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+/* 行尾箭头：明确「整行可点，进去看明细」 */
+.vr-go {
+  flex: 0 0 auto;
+  margin-left: 10rpx;
+  color: #bdb7ab;
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.vdd-empty {
+  padding: 44rpx 0;
+  text-align: center;
+  color: #8a8378;
+  font-size: 22rpx;
+}

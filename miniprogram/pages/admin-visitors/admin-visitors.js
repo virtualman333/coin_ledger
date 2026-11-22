@@ -56,6 +56,22 @@ const TAB_NAMES = {
 
 const RANGE_LABELS = { today: '今日', week: '近 7 天', month: '近 30 天', all: '全部' };
 
+/** 头像可能是站内相对路径（/avatar/x.jpg），小程序要拼接口域名 */
+function avatarUrl(p) {
+  const s = String(p || '');
+  if (!s) return '';
+  return s.indexOf('http') === 0 ? s : api.BASE + s;
+}
+
+/** 来源标签：同一行可能既有网页又有小程序 */
+function srcOf(clients) {
+  const c = Array.isArray(clients) ? clients : [];
+  const hasMp = c.indexOf('mp') >= 0;
+  const hasWeb = c.indexOf('web') >= 0;
+  if (hasMp && hasWeb) return { text: '混合', cls: 'mix' };
+  return hasMp ? { text: '小程序', cls: 'mp' } : { text: '网页', cls: 'web' };
+}
+
 function tabName(k) {
   if (!k) return '—';
   return TAB_NAMES[k] || k;
@@ -99,6 +115,7 @@ Page({
     vsView: 'ip',
     vsViews: [
       { v: 'ip', t: '按 IP' },
+      { v: 'user', t: '按用户' },
       { v: 'sid', t: '按会话' },
     ],
     visitors: null,
@@ -208,9 +225,33 @@ Page({
           kind: 'ip',
           main: who,
           acc: (x.nickName && x.name && x.name !== x.nickName) ? x.name : '',
+          avatar: avatarUrl(x.avatar),
+          initial: String(who).slice(0, 1),
           src: mixed ? '混合' : (hasMp ? '小程序' : '网页'),
           srcCls: mixed ? 'mix' : (hasMp ? 'mp' : 'web'),
           device: deviceOf(x.ua, hasMp && !hasWeb ? 'mp' : 'web'),
+          meta: (x.pv || 0) + ' 次 · ' + (x.sessionCount || 0) + ' 会话 · '
+            + (x.pageCount || 0) + ' 页 · ' + (x.days || 0) + ' 天',
+          sub: fmtTime(x.last),
+          ip: x.ip || '—',
+        };
+      });
+    }
+    if (this.data.vsView === 'user') {
+      return (res.userGroups || []).map((x) => {
+        const src = srcOf(x.clients);
+        const who = x.nickName || x.name || (x.uid ? '用户 ' + String(x.uid).toUpperCase() : '未登录访客');
+        return {
+          key: x.uid || x.ip,
+          kind: x.uid ? 'uid' : 'ip',
+          main: who,
+          acc: (x.nickName && x.name && x.name !== x.nickName) ? x.name : '',
+          avatar: avatarUrl(x.avatar),
+          initial: String(who).slice(0, 1),
+          src: src.text,
+          srcCls: src.cls,
+          // 用户视图没有 UA 可信（可能多设备），换成「几个 IP」这个更有用的信息
+          device: (x.ipCount || 0) > 1 ? x.ipCount + ' 个 IP' : '',
           meta: (x.pv || 0) + ' 次 · ' + (x.sessionCount || 0) + ' 会话 · '
             + (x.pageCount || 0) + ' 页 · ' + (x.days || 0) + ' 天',
           sub: fmtTime(x.last),
@@ -226,6 +267,8 @@ Page({
         kind: 'sid',
         main: x.nickName || x.name || '未登录',
         acc: (x.nickName && x.name && x.name !== x.nickName) ? x.name : '',
+        avatar: avatarUrl(x.avatar),
+        initial: String(x.nickName || x.name || '未').slice(0, 1),
         src: isMp ? '小程序' : '网页',
         srcCls: isMp ? 'mp' : 'web',
         device: deviceOf(x.ua, x.client),
@@ -282,8 +325,8 @@ Page({
     const kind = e.currentTarget.dataset.kind;
     const key = e.currentTarget.dataset.key;
     const who = e.currentTarget.dataset.who;
-    const q = (kind === 'ip' ? 'ip=' + encodeURIComponent(key) : 'sid=' + encodeURIComponent(key))
-      + '&range=' + this.data.vsRange;
+    const field = kind === 'ip' ? 'ip' : (kind === 'uid' ? 'uid' : 'sid');
+    const q = field + '=' + encodeURIComponent(key) + '&range=' + this.data.vsRange;
     this.setData({ vsDetailLoading: true });
     api.get('/api/admin/visitors/detail?' + q).then((res) => {
       const rows = res.rows || [];
@@ -296,7 +339,8 @@ Page({
       this.setData({
         vsDetailLoading: false,
         vsDetail: {
-          title: kind === 'ip' ? key : (who || '会话') + ' · ' + String(key || '').slice(0, 6),
+          title: kind === 'ip' ? key
+            : (kind === 'uid' ? (who || '用户') : (who || '会话') + ' · ' + String(key || '').slice(0, 6)),
           total: res.total || rows.length,
           sessions: Object.keys(sidSet).length,
           pages: Object.keys(tabSet).length,

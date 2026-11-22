@@ -56,6 +56,8 @@
           bindtap="openVsDetail"
           hover-class="tap-hover"
         >
+          <image class="vr-ava" wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="vr-ava vr-ava-ph" wx:else>{{item.initial}}</view>
           <view class="vr-main">
             <view class="vr-title">
               <text>{{item.main}}</text>
@@ -69,6 +71,7 @@
             <text class="vr-time">{{item.sub}}</text>
             <text class="vr-ip">{{item.ip}}</text>
           </view>
+          <text class="vr-go">›</text>
         </view>
       </view>
       <view class="vs-more" wx:if="{{vsHasMore}}" bindtap="loadMore" hover-class="tap-hover">
@@ -95,6 +98,7 @@
         <text class="vdd-sum-ip" wx:if="{{vsDetail.ip}}">{{vsDetail.ip}}</text>
       </view>
       <scroll-view scroll-y class="vdd-list">
+        <view class="vdd-empty" wx:if="{{!vsDetail.rows.length}}">这条记录在当前区间没有明细</view>
         <view class="vdd-row" wx:for="{{vsDetail.rows}}" wx:key="index">
           <text class="vdd-time">{{item.at}}</text>
           <text class="vdd-tab">{{item.tab}}</text>

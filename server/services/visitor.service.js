@@ -78,7 +78,32 @@ function adminStats(query) {
   const client = CLIENTS.indexOf(String(query.client || '')) >= 0 ? String(query.client) : 'all';
   const range = RANGES.indexOf(String(query.range || '')) >= 0 ? String(query.range) : 'all';
   const items = visitors.load().items;
-  return Object.assign({ ok: true }, visitors.stats(items, { client, range }));
+  const res = visitors.stats(items, { client, range });
+  // 埋点只记 uid / 用户名，头像与昵称要回用户表补：列表、IP 聚合、用户聚合三处都要
+  attachProfile(store.load().users, res.sessions, res.ipGroups, res.userGroups);
+  return Object.assign({ ok: true }, res);
+}
+
+/**
+ * 用用户表补齐头像与昵称。
+ *
+ * 站内头像存的是文件名，拼 /avatar/ 前缀；没传过站内头像的用华为外链兜底。
+ *
+ * @param {Array<object>} users 用户表
+ * @param {...Array<object>} lists 需要补字段的聚合数组
+ * @returns {void}
+ */
+function attachProfile(users, ...lists) {
+  const byId = {};
+  (users || []).forEach((u) => { byId[u.id] = u; });
+  lists.forEach((list) => (list || []).forEach((g) => {
+    if (!g || !g.uid) return;
+    const u = byId[g.uid];
+    if (!u) return;
+    if (!g.avatar) g.avatar = u.avatar ? '/avatar/' + u.avatar : (u.hwAvatar || '');
+    if (!g.nickName) g.nickName = u.nickname || '';
+    if (!g.name) g.name = u.name || '';
+  }));
 }
 
 /**
@@ -94,11 +119,12 @@ function adminDetail(query) {
   const d = store.load();
   const ip = String(query.ip || '').slice(0, 80);
   const sid = String(query.sid || '').slice(0, 40);
+  const uid = String(query.uid || '').slice(0, 16);
   const range = RANGES.indexOf(String(query.range || '')) >= 0 ? String(query.range) : 'all';
-  if (!ip && !sid) throw badRequest('缺少 ip 或 sid');
+  if (!ip && !sid && !uid) throw badRequest('缺少 ip / sid / uid');
 
   const scoped = visitors.filterByRange(visitors.load().items, range);
-  const detail = visitors.detail(scoped, { ip, sid });
+  const detail = visitors.detail(scoped, { ip, sid, uid });
 
   const byId = {};
   (d.users || []).forEach((u) => { byId[u.id] = u; });
