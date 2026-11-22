@@ -4528,6 +4528,7 @@ function doLogin(ev){
   msg.textContent = '';
   api('/api/auth/login', { method: 'POST', body: JSON.stringify({ name: name, password: pwd }) })
     .then(function(){ document.getElementById('loginPwd').value = ''; return afterAuth('登录成功'); })
+    .then(function(){ showHuaweiBindSuggest(); })
     .catch(function(e){ msg.textContent = e.message; })
     .then(function(){ btn.disabled = false; });
 }
@@ -4582,6 +4583,52 @@ function doLogout(){
 /* =========================================================
    14. 账户面板 / 用户管理
    ========================================================= */
+
+/**
+ * 账号密码登录成功后推荐绑定华为账号。
+ * 绑定后下次在登录页直接点「华为账号快速登录」即可，不用再记密码，网页与鸿蒙端通用。
+ * 本次会话点过「以后再说」就不再打扰；关掉页面再登录仍会提醒一次。
+ */
+function showHuaweiBindSuggest(){
+  if (!isLoggedIn()) return;
+  if (APP.user && APP.user.hw) return;          // 已绑定，没什么可推荐
+  try { if (sessionStorage.getItem('cl_hw_suggest_off') === '1') return; } catch (e) { /* 隐私模式忽略 */ }
+
+  function render(){
+    var old = document.getElementById('hwSuggestMask');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var mask = document.createElement('div');
+    mask.id = 'hwSuggestMask';
+    mask.className = 'au-mask';
+    mask.innerHTML =
+      '<div class="au-sheet" role="dialog" aria-modal="true" aria-label="推荐绑定华为账号">' +
+        '<b>绑定华为账号，下次一点就进</b>' +
+        '<p>你的账本现在用用户名密码登录。绑定华为账号后，下次在登录页直接点「华为账号快速登录」就行，不用再记密码；网页和鸿蒙端通用，藏品完全不变。</p>' +
+        '<button type="button" data-hw-suggest="bind">去绑定华为账号</button>' +
+        '<button type="button" class="au-x" data-hw-suggest="later">以后再说</button>' +
+      '</div>';
+    document.body.appendChild(mask);
+    mask.onclick = function(e){
+      var b = e.target.closest('[data-hw-suggest]');
+      if (!b) return;
+      var act = b.getAttribute('data-hw-suggest');
+      if (mask.parentNode) mask.parentNode.removeChild(mask);
+      if (act === 'bind') {
+        location.href = '/api/auth/huawei/start?mode=bind';
+        return;
+      }
+      try { sessionStorage.setItem('cl_hw_suggest_off', '1'); } catch (e2) { /* 隐私模式忽略 */ }
+    };
+  }
+
+  if (HW_ENABLED) { render(); return; }
+  // 页面刚加载就登录时 status 可能还没回来，这里补探一次，别把推荐吞掉
+  api('/api/auth/huawei/status').then(function(r){
+    if (!r || !r.enabled) return;
+    HW_ENABLED = true;
+    render();
+  }).catch(function(){});
+}
 
 /** 登录方式一览：密码 / 微信 / 华为账号，用来在资料卡说明这号怎么进的 */
 function loginWays(u){

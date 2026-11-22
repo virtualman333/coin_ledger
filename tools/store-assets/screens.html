@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>藏币录 · 素材渲染</title>
+<link rel="stylesheet" href="app-screens.css">
+<style>html,body{margin:0;background:#EFEFF1}#stage{width:540px;height:960px;overflow:hidden}</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="app-screens.js"></script>
+<script>
+  var key = new URLSearchParams(location.search).get('s') || 'home';
+  document.getElementById('stage').innerHTML = window.SCREENS[key] || window.SCREENS.home;
+  // 图片加载完再截图（shoot.js 也会等 document.fonts.ready）
+  window.__ready = Promise.all(Array.prototype.map.call(document.images, function (im) {
+    return im.complete ? 1 : new Promise(function (res) { im.onload = im.onerror = res; });
+  })).then(function () { return document.fonts ? document.fonts.ready : 1; });
+</script>
+</body>
+</html>
