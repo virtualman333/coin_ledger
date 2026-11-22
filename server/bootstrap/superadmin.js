@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const store = require('../store');
 const auth = require('../auth');
 const catalogState = require('../state/catalog');
+const { groupLabel } = require('../core/labels');
 
 const SUPERADMIN_NAME = process.env.SUPERADMIN_NAME || 'virtualman';
 
@@ -43,7 +44,7 @@ function defaultHoldings() {
     rolls: x.rolls,
     cost: x.cost,
     market: x.market,
-    group: x.group || '独立藏品',
+    group: groupLabel(x.group),
     sep: !!x.sep
   }));
 }
@@ -78,7 +79,7 @@ async function ensureSuperadmin() {
       }
       return u;
     });
-    console.log(`[boot] 已创建超级管理员「${SUPERADMIN_NAME}」并接管初始藏品`);
+    console.log(`[boot] 已创建超级管理员「${SUPERADMIN_NAME}」并接管初始收藏`);
     return;
   }
 
@@ -87,7 +88,7 @@ async function ensureSuperadmin() {
       draft.holdings[admin.id] = draft.holdings._legacy;
       delete draft.holdings._legacy;
     });
-    console.log(`[boot] 已把旧版单用户藏品认领给「${SUPERADMIN_NAME}」`);
+    console.log(`[boot] 已把旧版单用户收藏认领给「${SUPERADMIN_NAME}」`);
   }
 }
 

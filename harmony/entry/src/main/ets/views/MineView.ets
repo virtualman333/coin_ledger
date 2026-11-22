@@ -597,8 +597,7 @@ export struct MineView {
           .backgroundColor(Theme.card)
           .border({ width: 1, color: Theme.lineSoft })
 
-          // 未登录也给工具入口：数币与反馈本来就不需要账号
-          this.quickRow()
+          // 工具卡里的备份与反馈都需登录，未登录不展示（拍照数币可从「更多功能」进入）
 
           Column()
             .height(88)

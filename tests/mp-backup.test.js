@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 收藏备份（导出 / 导入）与小程序的广场开关。
+ * 收藏备份（导出 / 导入）。
  *
  * 导出格式两端共用，任何一端改字段都要能对上；导入必须挡住脏数据，
  * 且「合并」不能覆盖用户已有的数量与成本。
@@ -224,36 +224,24 @@ test('未登录时导入被拒（账本只属于登录用户）', async () => {
   assert.equal(store.state.holdings.length, 0);
 });
 
-/* ---------------- 广场开关 ---------------- */
+/* ---------------- 广场已整块下线（2026-11-22） ---------------- */
 
-test('广场开关默认关闭，且只在一处定义', () => {
-  const f = readMp('utils/feature.js');
-  assert.match(f, /plaza:\s*false/, '广场入口应处于关闭状态');
+test('广场下线：小程序不再有页面、入口与接口调用', () => {
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'miniprogram', 'pages', 'plaza')), false, 'plaza 页面应已删除');
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'miniprogram', 'utils', 'feature.js')), false, 'feature 开关应已删除');
+  const appJson = readMp('app.json');
+  assert.doesNotMatch(appJson, /pages\/plaza/, 'app.json 不该再注册广场页');
+  for (const f of ['pages/holdings/holdings.js', 'pages/holdings/holdings.wxml', 'views/home/home.logic.js',
+    'views/home/home.wxml', 'views/mine/mine.logic.js', 'pages/more-tools/more-tools.wxml', 'utils/share.js']) {
+    assert.doesNotMatch(readMp(f), /plaza|广场|api\/shares/, f + ' 仍残留广场入口');
+  }
 });
 
-test('小程序的广场入口都受开关控制', () => {
-  // 广场入口从「我的」收进了「更多功能」页
-  assert.match(readMp('pages/more-tools/more-tools.wxml'), /wx:if="\{\{plazaOn\}\}"[\s\S]{0,120}goPlaza/,
-    '「更多功能」里的广场入口没有开关');
-  assert.doesNotMatch(readMp('views/mine/mine.wxml'), /goPlaza/, '「我的」不该再直接挂广场入口');
-  assert.match(readMp('views/home/home.wxml'), /plazaOn && feed\.length/, '首页晒单板块没有开关');
-  const holdings = readMp('pages/holdings/holdings.wxml');
-  assert.match(holdings, /wx:if="\{\{plazaOn\}\}"[^>]*shareToPlaza/, '弹层里的「分享广场」没有开关');
-  assert.match(holdings, /wx:if="\{\{plazaOn\}\}"[^>]*toggleSelectMode/, '「多选分享」没有开关');
-});
-
-test('小程序首页关闭广场后不再请求广场数据', () => {
-  const s = readMp('views/home/home.logic.js');
-  assert.match(s, /if \(!feature\.plaza\)[\s\S]{0,80}feed: \[\]/, '关掉入口后还在拉 /api/shares');
-});
-
-test('网站端：广场 tab 隐藏且旧链接回落首页', () => {
+test('广场下线：网站不再有广场 tab 与逻辑', () => {
   const js = readWeb('app.js');
-  assert.match(js, /var PLAZA_ON = false/, '开关应为关闭');
-  assert.match(js, /name === 'plaza' && !PLAZA_ON\) name = 'home'/, '缺少 goTab 回落');
-  assert.match(js, /querySelector\('\[data-tab="plaza"\]'\)[\s\S]{0,40}hidden = true/, '顶部 tab 没有被隐藏');
-  const css = readWeb('app.css');
-  assert.match(css, /\.tab\[hidden\]\{display:none\}/, 'hidden 需要样式兜底');
+  assert.doesNotMatch(js, /loadPlaza|PLAZA_ON|data-tab="plaza"/, '网站广场逻辑应已删除');
+  const html = readWeb('index.html');
+  assert.doesNotMatch(html, /pane-plaza|data-tab="plaza"/, '网站不该再有广场 tab');
 });
 
 test('网站端也提供同一份 CSV 格式的导入导出', () => {

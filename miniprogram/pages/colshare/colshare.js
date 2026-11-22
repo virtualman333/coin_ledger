@@ -46,7 +46,7 @@ Page({
         this.setData({ loading: false, err: (r && r.error) || '分享不存在或已失效' });
         return;
       }
-      const owner = r.owner || '藏友';
+      const owner = r.owner || '同好';
       const items = (Array.isArray(r.items) ? r.items : []).map((it) => ({
         name: it.name || '',
         nameInitial: String(it.name || '藏').charAt(0),  // WXML 不支持 (expr)[0]，预算好
@@ -90,7 +90,7 @@ Page({
   onShareAppMessage() {
     const d = this.data;
     return {
-      title: (d.owner || '藏友') + '的收藏 · ' + d.kinds + ' 个品种（藏币录）',
+      title: (d.owner || '同好') + '的收藏 · ' + d.kinds + ' 个品种（藏币录）',
       path: '/pages/colshare/colshare?code=' + encodeURIComponent(d.code),
       imageUrl: share.COVER,
     };
@@ -99,7 +99,7 @@ Page({
   onShareTimeline() {
     const d = this.data;
     return {
-      title: (d.owner || '藏友') + '的收藏 · ' + d.kinds + ' 个品种（藏币录）',
+      title: (d.owner || '同好') + '的收藏 · ' + d.kinds + ' 个品种（藏币录）',
       query: 'code=' + encodeURIComponent(d.code),
       imageUrl: share.COVER,
     };

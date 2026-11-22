@@ -31,7 +31,7 @@ Page({
     if (!state.isAdmin) {
       wx.showModal({
         title: '没有权限',
-        content: '只有管理员能查看用户的藏品。',
+        content: '只有管理员能查看用户的收藏。',
         showCancel: false,
         success: () => wx.navigateBack(),
       });

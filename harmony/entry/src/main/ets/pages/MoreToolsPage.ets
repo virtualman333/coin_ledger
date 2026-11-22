@@ -35,12 +35,6 @@ export struct MoreToolsPage {
   @State aboutRows: ToolRow[] = [];
 
   aboutToAppear(): void {
-    this.tools = [
-      new ToolRow('拍照数币', '一张照片数清多少枚', Routes.COUNT, '', $r('sys.symbol.camera')),
-      new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '', $r('sys.symbol.externaldrive')),
-      new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '', $r('sys.symbol.message')),
-      new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '', $r('sys.symbol.list_bullet'))
-    ];
     this.browse = [
       new ToolRow('按系列浏览', '20 个系列分组', Routes.SERIES, '', $r('sys.symbol.square_grid_2x2'))
     ];
@@ -60,6 +54,17 @@ export struct MoreToolsPage {
     this.loggedIn = s.user !== null;
     this.isAdmin = s.isAdmin;
     this.displayName = s.user !== null ? (s.user.nickname || s.user.name) : '';
+
+    // 备份、提交反馈、我的反馈都走需登录的接口，未登录不展示，避免点进去才发现用不了
+    const tools: ToolRow[] = [
+      new ToolRow('拍照数币', '一张照片数清多少枚', Routes.COUNT, '', $r('sys.symbol.camera'))
+    ];
+    if (this.loggedIn) {
+      tools.push(new ToolRow('收藏备份', '导出 CSV / 导入恢复', Routes.BACKUP, '', $r('sys.symbol.externaldrive')));
+      tools.push(new ToolRow('意见反馈', '数据纠错与功能建议', Routes.FEEDBACK, '', $r('sys.symbol.message')));
+      tools.push(new ToolRow('我的反馈', '查看处理进度', Routes.MY_FEEDBACK, '', $r('sys.symbol.list_bullet')));
+    }
+    this.tools = tools;
   }
 
   private go(route: string): void {

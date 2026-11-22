@@ -31,11 +31,6 @@ const PAGES = {
     path: '/pages/series/series',
     query: '',
   },
-  plaza: {
-    title: '藏币录 · 藏友晒单广场，看看大家的靓号藏品',
-    path: '/pages/plaza/plaza',
-    query: '',
-  },
 };
 
 /** 转发给朋友 */

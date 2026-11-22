@@ -82,10 +82,10 @@ function code2Session(code) {
  */
 function wxName(doc) {
   for (let i = 0; i < 50; i += 1) {
-    const name = '藏友' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const name = '同好' + Math.random().toString(36).slice(2, 6).toUpperCase();
     if (!auth.findByName(doc, name)) return name;
   }
-  return '藏友' + Date.now().toString(36).slice(-4).toUpperCase();
+  return '同好' + Date.now().toString(36).slice(-4).toUpperCase();
 }
 
 /**
@@ -307,7 +307,7 @@ async function huaweiUpsert(profile) {
     const created = await store.commit((draft) => {
       const u = {
         id: auth.nextID(draft),
-        name: wxName(draft),          // 与微信同款「藏友XXXX」，不让渠道一眼可辨
+        name: wxName(draft),          // 与微信同款「同好XXXX」，不让渠道一眼可辨
         role: 'user',
         salt: '',
         hash: '',
@@ -428,7 +428,7 @@ async function huaweiBind(uid, body) {
   return { ok: true, user: auth.publicUser(fresh) };
 }
 
-/** 解绑华为账号：只清华为字段，密码/微信/藏品都不动 */
+/** 解绑华为账号：只清华为字段，密码/微信/收藏都不动 */
 async function huaweiUnbind(uid) {
   await store.commit((draft) => {
     const t = auth.findByID(draft, uid);

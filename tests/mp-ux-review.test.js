@@ -159,8 +159,6 @@ test('分享落地页与失败态都有明确的出路（重试 / 回首页）',
   assert.match(list, /bindtap="retryPmFull"/);
   const myfb = read('miniprogram/pages/myfeedback/myfeedback.wxml');
   assert.match(myfb, /wx:if="\{\{err\}\}"/);
-  const plaza = read('miniprogram/pages/plaza/plaza.wxml');
-  assert.match(plaza, /bindtap="retry"/);
 });
 
 test('隐私授权：count 与 holdings 的 chooseMedia 前置 privacy.ensure()', () => {
@@ -175,13 +173,4 @@ test('系列详情：缺 code 时早退，不把全站品种编造成一个系�
   const js = read('miniprogram/pages/series-detail/series-detail.js');
   assert.match(js, /if \(!code\)/);
   assert.match(js, /缺少系列参数/);
-});
-
-test('广场：关注状态回显 + 登录引导 + 评论防重', () => {
-  const wxml = read('miniprogram/pages/plaza/plaza.wxml');
-  assert.match(wxml, /item\.following \? '已关注'/);
-  const js = read('miniprogram/pages/plaza/plaza.js');
-  assert.match(js, /goLogin\(\)/);
-  assert.match(js, /_sending\[id\]/);
-  assert.match(js, /startOffset === 0/);   // 竞态：捕获起始 offset
 });

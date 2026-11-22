@@ -59,7 +59,7 @@ Page({
     if (!res) return [];
     const name = (k) => ({
       home: '首页', all: '全套清单', plan: '发行计划', series: '系列',
-      holdings: '我的藏品', mine: '我的', detail: '品种详情', account: '账户',
+      holdings: '我的收藏', mine: '我的', detail: '品种详情', account: '账户',
       about: '关于', more: '更多', feedback: '反馈', privacy: '隐私',
     }[k] || k);
     const time = (s) => String(s || '').slice(0, 16).replace('T', ' ');
@@ -118,7 +118,7 @@ Page({
     api.get('/api/admin/visitors/detail?' + q).then((res) => {
       const name = (k) => ({
         home: '首页', all: '全套清单', plan: '发行计划', series: '系列',
-        holdings: '我的藏品', mine: '我的', detail: '品种详情', account: '账户',
+        holdings: '我的收藏', mine: '我的', detail: '品种详情', account: '账户',
       }[k] || k);
       this.setData({
         vsDetail: {

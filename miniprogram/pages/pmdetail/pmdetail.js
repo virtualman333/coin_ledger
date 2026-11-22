@@ -12,7 +12,7 @@ Page({
   onLoad(q) {
     const code = String((q && q.code) || '').toUpperCase();
     this.setData({ code, owned: this.isOwned(code) });
-    if (!code) { this.setData({ loading: false, err: '缺少藏品编号', retryable: false }); return; }
+    if (!code) { this.setData({ loading: false, err: '缺少编号', retryable: false }); return; }
     this.load();
   },
 
@@ -96,7 +96,7 @@ Page({
     });
   },
 
-  /** 从「我的藏品」移出后再返回本页，按钮状态要跟着更新 */
+  /** 从「我的收藏」移出后再返回本页，按钮状态要跟着更新 */
   onShow() {
     if (this.data.code) this.setData({ owned: this.isOwned(this.data.code) });
   },
@@ -125,8 +125,8 @@ Page({
     if (!it || !this.data.owned || this.data.busy) return;
     const code = this.data.code || it.code;
     wx.showModal({
-      title: '移出藏品',
-      content: '把「' + (it.name || code) + '」从我的藏品里移出？',
+      title: '移出收藏',
+      content: '把「' + (it.name || code) + '」从我的收藏里移出？',
       confirmText: '移出',
       confirmColor: '#c0392b',
       success: (res) => {
@@ -156,7 +156,7 @@ Page({
     // 与普通币详情页 detail.js 的 addCoin 保持同一登录引导口径
     if (!store.isLogin()) {
       wx.showModal({
-        title: '还没登录', content: '登录后才能把藏品记进自己的账本',
+        title: '还没登录', content: '登录后才能把收藏记进自己的账本',
         confirmText: '去登录',
         success: (r) => { if (r.confirm) wx.navigateTo({ url: '/pages/account/account' }); },
       });
@@ -171,7 +171,7 @@ Page({
     task.then(() => store.refresh({ force: true })).then(() => {
       wx.hideLoading();
       this.setData({ owned: this.isOwned(it.code), busy: false });
-      wx.showToast({ title: '已加入藏品', icon: 'success' });
+      wx.showToast({ title: '已加入收藏', icon: 'success' });
     }).catch((e) => {
       wx.hideLoading(); this.setData({ busy: false });
       wx.showToast({ title: (e && e.message) || '保存失败', icon: 'none' });

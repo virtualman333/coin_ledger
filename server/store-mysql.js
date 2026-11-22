@@ -15,6 +15,7 @@
  * 每次落库都在一个事务里，失败整体回滚，内存镜像不会被污染。
  */
 const mysql = require('mysql2/promise');
+const { groupLabel } = require('./core/labels');
 
 let pool = null;
 
@@ -74,7 +75,7 @@ const DDL = [
      rolls INT NOT NULL DEFAULT 0,
      cost DECIMAL(12,2) NOT NULL DEFAULT 0,
      market DECIMAL(12,2) NOT NULL DEFAULT 0,
-     grp VARCHAR(32) NOT NULL DEFAULT '独立藏品',
+     grp VARCHAR(32) NOT NULL DEFAULT '单品收藏',
      sep TINYINT(1) NOT NULL DEFAULT 0,
      PRIMARY KEY (uid, ord),
      KEY idx_name (name),
@@ -92,39 +93,7 @@ const DDL = [
      day CHAR(10) NOT NULL,
      hits INT NOT NULL DEFAULT 0,
      PRIMARY KEY (day)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按天匿名访问计数'`,
-
-  `CREATE TABLE IF NOT EXISTS cl_share (
-     id VARCHAR(24) NOT NULL,
-     uid VARCHAR(16) NOT NULL,
-     holding_name VARCHAR(64) NOT NULL COMMENT '关联藏品品种名',
-     serials TEXT NULL COMMENT '分享的号码 JSON 数组',
-     images TEXT NULL COMMENT '图片路径 JSON 数组',
-     form VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'single|set',
-     caption VARCHAR(280) NOT NULL DEFAULT '' COMMENT '分享文案',
-     tags TEXT NULL COMMENT '号码花样标签 JSON 数组',
-     likes INT NOT NULL DEFAULT 0,
-     comments INT NOT NULL DEFAULT 0,
-     created_at DATETIME(3) NOT NULL,
-     PRIMARY KEY (id), KEY idx_share_time (created_at), KEY idx_share_uid (uid)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-分享帖子'`,
-
-  `CREATE TABLE IF NOT EXISTS cl_share_like (
-     share_id VARCHAR(24) NOT NULL, uid VARCHAR(16) NOT NULL, created_at DATETIME(3) NOT NULL,
-     PRIMARY KEY (share_id, uid), KEY idx_like_uid (uid)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-点赞'`,
-
-  `CREATE TABLE IF NOT EXISTS cl_share_comment (
-     id VARCHAR(24) NOT NULL, share_id VARCHAR(24) NOT NULL, uid VARCHAR(16) NOT NULL,
-     text VARCHAR(280) NOT NULL, created_at DATETIME(3) NOT NULL,
-     PRIMARY KEY (id), KEY idx_comment_share (share_id, created_at)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-评论'`,
-
-  `CREATE TABLE IF NOT EXISTS cl_follow (
-     uid VARCHAR(16) NOT NULL COMMENT '关注者', target_uid VARCHAR(16) NOT NULL COMMENT '被关注者',
-     created_at DATETIME(3) NOT NULL,
-     PRIMARY KEY (uid, target_uid), KEY idx_follow_target (target_uid)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-关注'`
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按天匿名访问计数'`
 ];
 
 function nowISO() { return new Date().toISOString(); }
@@ -175,7 +144,7 @@ async function ensureSchema() {
   // 收藏分享快照的汇总：不公开清单时 items 是空的，面值/推理价只能靠这两列带出去
   await ensureColumn('cl_colshare', 'face_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
   await ensureColumn('cl_colshare', 'ai_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
-  // 藏品增强（migration 008）：号码 / 形态 / 图片，缺省不影响既有藏品
+  // 收藏增强（migration 008）：号码 / 形态 / 图片，缺省不影响既有收藏
   await ensureColumn('cl_holdings', 'serials', 'TEXT NULL');
   await ensureColumn('cl_holdings', 'form', "VARCHAR(8) NOT NULL DEFAULT ''");
   await ensureColumn('cl_holdings', 'images', 'TEXT NULL');
@@ -230,13 +199,13 @@ async function loadDoc() {
       rolls: Number(r.rolls) || 0,
       cost: Number(r.cost) || 0,
       market: Number(r.market) || 0,
-      group: r.grp || '独立藏品',
+      group: groupLabel(r.grp),
       sep: !!r.sep,
       category: r.category || 'coin',
       // 贵金属/按单枚记的展示元数据（migration 007）；老行是空串，等价于没有
       thumb: r.thumb || '',
       unit: r.unit || '',
-      // 藏品增强（migration 008）：号码 / 形态 / 图片
+      // 收藏增强（migration 008）：号码 / 形态 / 图片
       serials: parseArr(r.serials),
       form: r.form === 'single' || r.form === 'set' ? r.form : '',
       images: parseArr(r.images)
@@ -347,11 +316,11 @@ async function syncHoldings(conn, doc) {
       uid, i, String(h.id || 'h' + (i + 1)), String(h.name),
       Math.round(Number(h.rolls) || 0),
       Number(h.cost) || 0, Number(h.market) || 0,
-      String(h.group || '独立藏品').slice(0, 32), h.sep ? 1 : 0,
+      groupLabel(h.group).slice(0, 32), h.sep ? 1 : 0,
       ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin',
       String(h.thumb || '').slice(0, 512),
       String(h.unit || '').slice(0, 8),
-      // 藏品增强（migration 008）
+      // 收藏增强（migration 008）
       JSON.stringify(Array.isArray(h.serials) ? h.serials.slice(0, 200) : []),
       h.form === 'single' || h.form === 'set' ? h.form : '',
       JSON.stringify(Array.isArray(h.images) ? h.images.slice(0, 3) : [])

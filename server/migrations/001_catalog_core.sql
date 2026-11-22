@@ -1,5 +1,5 @@
 -- =====================================================================
--- 001 · 目录核心表（品种主表 / 描述 / 新账号初始藏品模板）
+-- 001 · 目录核心表（品种主表 / 描述 / 新账号初始收藏模板）
 --
 -- 约定（见 arch-db-refactor.md 3.1 与 10）：
 --   · 表名 cl_ 前缀；列 snake_case；对外 JSON 一律 camelCase（SQL 里 AS 转换）
@@ -106,14 +106,14 @@ CREATE TABLE IF NOT EXISTS cl_coin_descriptions (
 
 -- @@
 
--- 新账号的初始藏品模板（coins.json 的 defaults，12 条；/api/bootstrap 必须原样下发）
+-- 新账号的初始收藏模板（coins.json 的 defaults，12 条；/api/bootstrap 必须原样下发）
 CREATE TABLE IF NOT EXISTS cl_default_holdings (
   ord    SMALLINT UNSIGNED NOT NULL,
   name   VARCHAR(64)       NOT NULL,
   rolls  INT               NOT NULL DEFAULT 0,
   cost   DECIMAL(12,2)     NOT NULL DEFAULT 0,
   market DECIMAL(12,2)     NOT NULL DEFAULT 0,
-  grp    VARCHAR(32)       NOT NULL DEFAULT '独立藏品',
+  grp    VARCHAR(32)       NOT NULL DEFAULT '单品收藏',
   sep    TINYINT(1)        NOT NULL DEFAULT 0,
   PRIMARY KEY (ord)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='新用户初始藏品模板';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='新用户初始收藏模板';

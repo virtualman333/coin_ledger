@@ -20,7 +20,6 @@ const CONTENT_PAGES = [
   'pmdetail/pmdetail',
   'plan/plan',
   'series/series',
-  'plaza/plaza',
   'list/list',
 ];
 
@@ -84,14 +83,13 @@ test('贵金属分享无数据时回落到首页，不抛错', () => {
 test('公开页分享配置指向对应落地页', () => {
   assert.equal(share.appMessage('series').path, '/pages/series/series');
   assert.equal(share.timeline('series').query, '');
-  assert.equal(share.appMessage('plaza').path, '/pages/plaza/plaza');
   assert.equal(share.appMessage('plan').path, '/pages/plan/plan');
   assert.equal(share.timeline('plan').query, '');
   assert.equal(share.appMessage('__unknown__').path, '/pages/index/index');
 });
 
-test('series / plaza / plan 复用统一分享配置', () => {
-  for (const rel of ['series/series', 'plaza/plaza', 'plan/plan']) {
+test('series / plan 复用统一分享配置', () => {
+  for (const rel of ['series/series', 'plan/plan']) {
     const key = rel.split('/')[0];
     const s = fs.readFileSync(pageFile(rel), 'utf8');
     assert.ok(s.includes("require('../../utils/share')"), rel + ' 未引入 share');

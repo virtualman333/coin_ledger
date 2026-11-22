@@ -1,6 +1,5 @@
 const cat = require('../../utils/catalog');
 const api = require('../../utils/api');
-const feature = require('../../utils/feature');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const privacy = require('../../utils/privacy');
@@ -38,9 +37,6 @@ Page({
       { key: 'face', name: '面值合计', desc: '按面额累加' },
       { key: 'ai', name: '推理价合计', desc: '按目录推理价估算' }
     ],
-    selectMode: false,  // 多选分享模式：点卡片改为勾选
-    selected: {},       // 持仓 id -> true
-    selectedCount: 0,
   },
 
   onLoad(q) {
@@ -120,10 +116,7 @@ Page({
     // 别用 cat 命名：文件顶部的 cat 是 catalog 模块
     const next = e.currentTarget.dataset.cat;
     if (next === this.data.holdCat) return;
-    // 切分类时退出多选：否则 selected 里留着看不见的藏品，
-    // 底部「已选 N 件」点分享会把当前分类外的也带出去
-    this.setData({ holdCat: next, selectMode: false, selected: {}, selectedCount: 0 },
-      () => this.render());
+    this.setData({ holdCat: next }, () => this.render());
   },
 
   /* ---------------- 分享内容选择 ---------------- */
@@ -183,7 +176,7 @@ Page({
       const coin = cat.byName[h.name];
       // 分组跟「系列」走（系列主数据里的名字），而不是品种上的历史 group 字段
       const seriesCode = (coin && coin.series) || '';
-      const rawGroup = (coin && coin.seriesName) || h.group || '独立藏品';
+      const rawGroup = (coin && coin.seriesName) || h.group || '单品收藏';
       // 老数据 group 存的是「贵金属」，展示统一成全称
       const groupName = rawGroup === '贵金属' ? '贵金属纪念币' : rawGroup;
       if (!map[groupName]) {
@@ -221,7 +214,7 @@ Page({
         unitCostText: cat.money(Math.round((Number(h.cost) || 0) / (rolls || 1))),
         unitWord: isPiece ? (coin && coin.kind === 'note' ? '张' : '枚') : '套',
         aiText: aiTotal ? cat.money(aiTotal) : '',
-        // 藏品增强字段
+        // 收藏增强字段
         isNote: !!(coin && coin.kind === 'note') || h.category === 'note',
         setSize: size,               // 一套几件，面板里切形态时按它换算
         serials: Array.isArray(h.serials) ? h.serials : [],
@@ -256,8 +249,8 @@ Page({
       g.pct = g.total ? Math.min(100, Math.round((g.own / g.total) * 100)) : 0;
       g.progLabel = g.own + ' / ' + g.total;
     });
-    const solo = groups.filter((g) => g.name === '独立藏品');
-    const rest = groups.filter((g) => g.name !== '独立藏品');
+    const solo = groups.filter((g) => g.name === '单品收藏');
+    const rest = groups.filter((g) => g.name !== '单品收藏');
     // 推理价合计（全账本口径，和分组金额一致）
     const aiAllSum = allH.reduce((sum, h) => {
       const c = cat.byName[h.name];
@@ -292,15 +285,14 @@ Page({
       },
       groups: rest.concat(solo),
       empty: state.holdings.length === 0,
-      // 有藏品但当前分类下一条都没有：以前会渲染成「0 个分组」+ 一片空白，像页面坏了
+      // 有收藏但当前分类下一条都没有：以前会渲染成「0 个分组」+ 一片空白，像页面坏了
       catEmpty: state.holdings.length > 0 && hs.length === 0,
       syncTip: state.synced ? '' : (state.error || ''),
     });
   },
 
-  /** 点卡片右侧「⋯」→ 底部编辑面板（多选模式下点卡片是勾选，不进这里） */
+  /** 点卡片右侧「⋯」→ 底部编辑面板 */
   openSheet(e) {
-    if (this.data.selectMode) { this.toggleSelect(e); return; }
     const ds = e.currentTarget.dataset;
     const gi = Number(ds.g);
     const ii = Number(ds.i);
@@ -323,7 +315,7 @@ Page({
         aiText: item.aiText,
         costText: item.costText,
         unitCost: String(Math.round((Number(item.unitCostText.replace(/,/g, '')) || 0))),
-        // 藏品增强：号码 / 形态 / 图片
+        // 收藏增强：号码 / 形态 / 图片
         isNote: !!(item.isNote),
         setSize: Number(item.setSize) || 1,
         costLabel: item.unitWord === '套' ? '每套成本' : '单个成本',
@@ -430,7 +422,7 @@ Page({
               store.uploadImage('data:image/jpeg;base64,' + fr.data).then((r) => {
                 wx.hideLoading();
                 if (!r || !r.ok) throw new Error((r && r.error) || '上传失败');
-                // 上传期间用户可能关掉面板或换了另一枚藏品，此时不能把图塞进错的面板
+                // 上传期间用户可能关掉面板或换了另一枚收藏，此时不能把图塞进错的面板
                 const cur = this.data.sheet;
                 if (!cur || cur.id !== sheetId) return;
                 const images = (cur.images || []).concat([r.path]);
@@ -449,81 +441,6 @@ Page({
     const images = (this.data.sheet.images || []).slice();
     images.splice(idx, 1);
     this.setData({ 'sheet.images': images });
-  },
-
-  shareToPlaza() {
-    const sheet = this.data.sheet;
-    if (!sheet) return;
-    const serials = (sheet.serialsText || '').split(/[\n,，\s]+/).filter(Boolean).slice(0, 200);
-    wx.showModal({
-      title: '分享到藏品广场',
-      content: '把「' + sheet.name + '」' + (serials.length ? '（' + serials.length + ' 个号码）' : '') + ' 分享到广场？',
-      success: (res) => {
-        if (!res.confirm) return;
-        api.post('/api/shares', {
-          holdingName: sheet.name, serials, images: sheet.images || [], form: sheet.form || '', caption: '',
-        }).then((r) => {
-          if (!r || !r.ok) throw new Error((r && r.error) || '分享失败');
-          wx.showToast({ title: '已分享', icon: 'success' });
-        }).catch((err) => wx.showToast({ title: err.message || '分享失败', icon: 'none' }));
-      },
-    });
-  },
-
-  /* ---------------- 多选分享（长按进入，勾选后一次分享多件） ---------------- */
-  toggleSelectMode() {
-    if (!store.isLogin()) { wx.showToast({ title: '请先登录', icon: 'none' }); return; }
-    if (this.data.selectMode) { this.exitSelectMode(); return; }
-    this.setData({ selectMode: true, selected: {}, selectedCount: 0, sheet: null });
-  },
-
-  exitSelectMode() {
-    this.setData({ selectMode: false, selected: {}, selectedCount: 0 });
-  },
-
-  /** 多选模式下点卡片 = 勾选；普通模式仍进详情（见 goDetail / openSheet 分流） */
-  toggleSelect(e) {
-    const id = String((e.currentTarget.dataset && e.currentTarget.dataset.hold) || '');
-    if (!id) return;
-    const selected = Object.assign({}, this.data.selected);
-    if (selected[id]) delete selected[id]; else selected[id] = true;
-    this.setData({ selected, selectedCount: Object.keys(selected).length });
-  },
-
-  selectAll() {
-    const all = {};
-    (this.data.groups || []).forEach((g) => (g.items || []).forEach((it) => { all[it.id] = true; }));
-    this.setData({ selected: all, selectedCount: Object.keys(all).length });
-  },
-
-  /** 把选中的持仓映射为批量分享 items（与单件口径一致：名称+号码+图片+形态） */
-  batchShareToPlaza() {
-    const ids = Object.keys(this.data.selected || {});
-    if (!ids.length) { wx.showToast({ title: '请先勾选藏品', icon: 'none' }); return; }
-    const hs = store.getState().holdings || [];
-    const items = hs.filter((h) => ids.indexOf(String(h.id)) >= 0).map((h) => ({
-      holdingName: h.name,
-      serials: Array.isArray(h.serials) ? h.serials.slice(0, 200) : [],
-      images: Array.isArray(h.images) ? h.images.slice(0, 3) : [],
-      form: h.form || '',
-      caption: '',
-    })).filter((it) => !!it.holdingName);
-    if (!items.length) { wx.showToast({ title: '选中的藏品已不存在', icon: 'none' }); return; }
-    if (items.length > 20) { wx.showToast({ title: '一次最多分享 20 件', icon: 'none' }); return; }
-    wx.showModal({
-      title: '分享到藏品广场',
-      content: '把选中的 ' + items.length + ' 件藏品分享到广场？每件会成为一张卡片。',
-      success: (res) => {
-        if (!res.confirm) return;
-        wx.showLoading({ title: '分享中', mask: true });
-        api.post('/api/shares/batch', { items }).then((r) => {
-          wx.hideLoading();
-          if (!r || !r.ok) throw new Error((r && r.error) || '分享失败');
-          this.exitSelectMode();
-          wx.showToast({ title: '已分享 ' + (r.count || items.length) + ' 件', icon: 'success' });
-        }).catch((err) => { wx.hideLoading(); wx.showToast({ title: err.message || '分享失败', icon: 'none' }); });
-      },
-    });
   },
 
   noop() {},
@@ -638,8 +555,8 @@ Page({
     const sheet = this.data.sheet;
     if (!sheet) return;
     wx.showModal({
-      title: '移出藏品',
-      content: '把「' + sheet.name + '」从我的藏品里移出？',
+      title: '移出收藏',
+      content: '把「' + sheet.name + '」从我的收藏里移出？',
       confirmText: '移出',
       confirmColor: '#c0392b',
       success: (res) => {
@@ -668,8 +585,6 @@ Page({
   },
 
   goDetail(e) {
-    // 多选模式：点卡片 = 勾选，不跳详情
-    if (this.data.selectMode) { this.toggleSelect(e); return; }
     const ds = e.currentTarget.dataset;
     if (ds.ispm === '1' || ds.ispm === true) {
       if (ds.pmcode) wx.navigateTo({ url: '/pages/pmdetail/pmdetail?code=' + encodeURIComponent(ds.pmcode) });
@@ -726,7 +641,7 @@ Page({
     const d = this.data;
     if (!d.shareCode) return share.appMessage('mine');
     return {
-      title: '我的藏品 · ' + d.summary.kinds + ' 个品种，来看看都有哪些（藏币录）',
+      title: '我的收藏 · ' + d.summary.kinds + ' 个品种，来看看都有哪些（藏币录）',
       path: '/pages/colshare/colshare?code=' + encodeURIComponent(d.shareCode),
       imageUrl: share.COVER,
     };
@@ -736,7 +651,7 @@ Page({
     const d = this.data;
     if (!d.shareCode) return share.timeline('mine');
     return {
-      title: '我的藏品 · ' + d.summary.kinds + ' 个品种（藏币录）',
+      title: '我的收藏 · ' + d.summary.kinds + ' 个品种（藏币录）',
       query: 'code=' + encodeURIComponent(d.shareCode),
       imageUrl: share.COVER,
     };

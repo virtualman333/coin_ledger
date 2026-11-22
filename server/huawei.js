@@ -265,7 +265,7 @@ async function getUserInfo(accessToken) {
 
   let nickname = String(j.displayName || '').trim();
   const anonymous = Number(j.displayNameFlag) === 1 || /\*{2,}/.test(nickname);
-  if (anonymous) nickname = '';   // 匿名化手机号不做昵称，交给建号逻辑生成「藏友XXXX」
+  if (anonymous) nickname = '';   // 匿名化手机号不做昵称，交给建号逻辑生成「同好XXXX」
 
   let avatar = String(j.headPictureURL || '').trim();
   if (!/^https:\/\//i.test(avatar)) avatar = '';

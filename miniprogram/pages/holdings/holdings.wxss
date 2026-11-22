@@ -98,7 +98,7 @@
   font-weight: 600;
 }
 
-/* 当前分类下没有藏品（但账本里别处有） */
+/* 当前分类下没有收藏（但账本里别处有） */
 .cat-empty {
   margin-top: 8rpx;
   padding: 64rpx 40rpx;
@@ -172,30 +172,6 @@
   transform: rotate(180deg);
 }
 
-.tools-text {
-  flex: 1;
-  min-width: 0;
-  color: #6b6559;
-  font-size: 21rpx;
-}
-
-.tools-acts {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-/* 次要动作：白底细边胶囊 */
-.tools-ghost {
-  padding: 14rpx 24rpx;
-  border: 1rpx solid #e6e0d4;
-  border-radius: 999rpx;
-  background: #ffffff;
-  color: #6b6559;
-  font-size: 22rpx;
-  line-height: 1;
-}
-
 /* 主操作：淡金胶囊，和全站卡片同一套语言 */
 .tools-share {
   display: flex;
@@ -217,32 +193,6 @@
   font-size: 22rpx;
   line-height: 1;
 }
-
-/* ================= 多选分享 ================= */
-.hcard.picked { outline: 3rpx solid #9a6b1f; outline-offset: -3rpx; background: #fdf8ec; }
-.pick-mark {
-  position: absolute; z-index: 6; top: 14rpx; right: 14rpx;
-  width: 40rpx; height: 40rpx; line-height: 36rpx; text-align: center;
-  border-radius: 50%; border: 2rpx solid #c9bca2; background: #fff;
-  color: #fff; font-size: 26rpx; font-weight: 700;
-}
-.hcard.picked .pick-mark { background: #9a6b1f; border-color: #9a6b1f; }
-.pick-bar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-  display: flex; align-items: center; gap: 20rpx;
-  padding: 20rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-  background: #fff; border-top: 1rpx solid #e8e2d5;
-  box-shadow: 0 -6rpx 24rpx rgba(60,44,20,.08);
-}
-.pick-all { color: #9a6b1f; font-size: 26rpx; }
-.pick-count { color: #6a6252; font-size: 25rpx; margin-left: auto; }
-.pick-go {
-  padding: 14rpx 34rpx; border-radius: 999rpx;
-  background: #9a6b1f; color: #fff; font-size: 26rpx; font-weight: 600;
-}
-.pick-go.off { background: #c9bca2; color: #4a4438; }
-/* 批量栏是 position:fixed，不占文档流；不留占位会盖住最后一张卡片（约 59rpx） */
-.pick-spacer { height: calc(120rpx + env(safe-area-inset-bottom)); }
 
 /* ================= 分组 ================= */
 .ghead {
@@ -304,7 +254,7 @@
   background: linear-gradient(90deg, #b98f43, #d9b364);
 }
 
-/* ================= 藏品卡片 ================= */
+/* ================= 收藏卡片 ================= */
 /* 交互：点卡片看资料，点右侧「⋯」改账。不再有左滑和长按——
    账本页的高频动作是改数量/成本，藏在手势里既不可发现，
    横向滑动又会和页面上下滚动抢手势（实测误触率高）。 */
@@ -638,12 +588,12 @@
 }
 
 /* 卡片里「成本 · 推理价」合并成一行：原来推理价单独占一行，
-   把卡片撑到 4 行高，同屏能看到的藏品少了一半 */
+   把卡片撑到 4 行高，同屏能看到的收藏少了一半 */
 .hc-sep {
   color: #8a8378;
 }
 
-/* 藏品品类筛选 */
+/* 收藏品类筛选 */
 .hold-cats{display:flex;gap:12rpx;padding:16rpx 0 20rpx}
 .hc{
   position:relative;
@@ -652,7 +602,7 @@
 }
 .hc.on{background:#fbf1d8;border-color:#d9bd82;color:#9a6b1f;font-weight:600}
 
-/* 藏品增强：号码 / 花样 / 形态 / 图片（统一浅色主题，勿用深色 CSS 变量） */
+/* 收藏增强：号码 / 花样 / 形态 / 图片（统一浅色主题，勿用深色 CSS 变量） */
 .ex-row{align-items:flex-start;padding-top:20rpx}
 .sr-textarea{
   flex:1;min-height:56rpx;line-height:1.5;font-size:26rpx;

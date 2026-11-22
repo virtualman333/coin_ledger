@@ -207,7 +207,7 @@ SCREENS.detail = `
     <div class="f"><span class="k">铸造单位</span><span class="v">沈阳造币有限公司</span></div>
   </div>
 
-  <div class="dcta"><div class="btn">加入我的藏品</div></div>
+  <div class="dcta"><div class="btn">加入我的收藏</div></div>
   ${TAB(2)}
 </div>`;
 
@@ -263,7 +263,7 @@ SCREENS.mine = `
   <div class="page">
     <div class="profile">
       <div class="av">藏</div>
-      <div class="c"><div class="n">藏友</div><div class="s">43 个品种 · 52 套</div></div>
+      <div class="c"><div class="n">同好</div><div class="s">43 个品种 · 52 套</div></div>
       <div class="edit">编辑</div>
     </div>
 
@@ -283,7 +283,7 @@ SCREENS.mine = `
     </div>
 
     <div class="cellcard">
-      <div class="cell"><span class="t">我的藏品</span><span class="s">43 个品种</span><span class="g">›</span></div>
+      <div class="cell"><span class="t">我的收藏</span><span class="s">43 个品种</span><span class="g">›</span></div>
       <div class="cell"><span class="t">更多功能</span><span class="s">备份 · 关于 · 条款</span><span class="g">›</span></div>
     </div>
 

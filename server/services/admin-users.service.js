@@ -187,7 +187,7 @@ async function remove(me, id, ip) {
     draft.users = draft.users.filter((u) => u.id !== target.id);
     delete draft.holdings[target.id];
   });
-  audit.log(me.name, 'user.delete', target.name, '账号及藏品已删除', ip);
+  audit.log(me.name, 'user.delete', target.name, '账号及收藏已删除', ip);
   return { ok: true };
 }
 

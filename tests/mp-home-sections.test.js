@@ -1,9 +1,10 @@
 'use strict';
 /**
- * 回归测试：小程序首页内容板块（今日金银价 + 藏友晒单）。
+ * 回归测试：小程序首页内容板块（今日金银价）。
  * - 行情字段格式化、时间本地化、失败整块隐藏
- * - 广场晒单取前 3 条、图片 URL 归一化、时间文案
- * - 两个板块的跳转入口
+ * - 行情卡跳转贵金属目录
+ *
+ * 首页的「同好晒单」随收藏广场一并下线（2026-11-22）。
  * 运行：npm test
  */
 const test = require('node:test');
@@ -44,8 +45,7 @@ function setupWx() {
 
 let mockGet = () => Promise.resolve({});
 
-function loadHomePage(opts) {
-  const plaza = !(opts && opts.plaza === false);
+function loadHomePage() {
   install('utils/catalog.js', {
     total: 137, descCount: 1, seriesList: [], coins: [],
     money: (n) => String(n), signed: (n) => String(n),
@@ -58,7 +58,6 @@ function loadHomePage(opts) {
     refresh: () => Promise.resolve(),
   });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}) });
-  install('utils/feature.js', { plaza: plaza });
   install('utils/api.js', {
     BASE: 'https://example.test',
     get: (p) => mockGet(p),
@@ -117,48 +116,7 @@ test('行情板块：接口失败整块隐藏', async () => {
   assert.equal(p.data.metal, null);
 });
 
-test('晒单板块：广场关闭时连接口都不请求', async () => {
-  setupWx();
-  let called = 0;
-  mockGet = () => { called += 1; return Promise.resolve({ ok: true, items: [] }); };
-  const p = loadHomePage({ plaza: false });
-  await p.loadFeed();
-  assert.equal(called, 0, '广场下线后不该再拉 /api/shares');
-  assert.deepEqual(p.data.feed, []);
-});
-
-test('晒单板块：取前 3 条并归一化图片/时间', async () => {
-  setupWx();
-  mockGet = () => Promise.resolve({
-    ok: true,
-    items: [
-      { id: 'a', author: '藏友甲', holdingName: '纪念钞', serials: ['AB123'], tags: [{ name: '豹子号' }], images: ['/collection/a.jpg'], createdAt: new Date().toISOString() },
-      { id: 'b', author: '藏友乙', holdingName: '生肖币', serials: [], tags: [], images: [], createdAt: new Date().toISOString() },
-      { id: 'c', holdingName: '第三', serials: [], tags: [], images: [], createdAt: '' },
-      { id: 'd', holdingName: '第四', serials: [], tags: [], images: [], createdAt: '' },
-    ],
-  });
-  const p = loadHomePage();
-  await p.loadFeed();
-  assert.equal(p.data.feed.length, 3);
-  assert.equal(p.data.feed[0].pic, 'https://example.test/collection/a.jpg');
-  assert.equal(p.data.feed[0].tag, '豹子号');
-  assert.equal(p.data.feed[0].serialText, 'AB123');
-  assert.equal(p.data.feed[0].timeText, '刚刚');
-  assert.equal(p.data.feed[1].pic, '');
-  assert.equal(p.data.feed[2].author, '藏友');
-});
-
-test('晒单板块：接口失败整块隐藏', async () => {
-  setupWx();
-  mockGet = () => Promise.reject(new Error('offline'));
-  const p = loadHomePage();
-  p.data.feed = [{ id: 'x' }];
-  await p.loadFeed();
-  assert.deepEqual(p.data.feed, []);
-});
-
-test('行情卡跳转贵金属目录，晒单跳转广场', () => {
+test('行情卡跳转贵金属目录', () => {
   setupWx();
   const p = loadHomePage();
   const tabEvents = [];
@@ -169,8 +127,6 @@ test('行情卡跳转贵金属目录，晒单跳转广场', () => {
   };
   global.wx.navigateTo = (o) => navUrls.push(o.url);
   p.goMetal();
-  p.goPlaza();
   assert.equal(tabEvents[0], 2, '贵金属目录应该切到「全套清单」tab');
   assert.deepEqual(mem['cl_pending_series'], { code: '', category: 'pm' });
-  assert.equal(navUrls[0], '/pages/plaza/plaza');
 });

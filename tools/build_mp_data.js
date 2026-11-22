@@ -2,7 +2,7 @@
 /**
  * 把网站的品种目录打包成小程序内置数据模块。
  * 品种目录是静态参考数据（不随用户变化），内置进包体可以离线秒开、不耗流量；
- * 账号 / 藏品 / 行情走服务器数据库（/api/state、/api/holdings）。
+ * 账号 / 收藏 / 行情走服务器数据库（/api/state、/api/holdings）。
  *
  *   node tools/build_mp_data.js
  */

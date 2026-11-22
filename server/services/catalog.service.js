@@ -17,6 +17,7 @@
  * 「深比较」判定零漂移，另外提供 `--strict-key-order` 只做提示、不判失败。
  */
 const common = require('../schemas/common');
+const { groupLabel } = require('../core/labels');
 const source = require('../repositories/json-source');  // 只读配置：发行计划/品类注册表走同一缓存层
 
 /* 排序口径从 common 再导出，保持「catalog.service 是唯一入口」的可读性 */
@@ -539,7 +540,7 @@ class CatalogService {
           rolls: Number(d.rolls || 0),
           cost: Number(d.cost || 0),
           market: Number(d.market || 0),
-          group: d.grp || '独立藏品'
+          group: groupLabel(d.grp)
         };
         // 存量 12 条里只有 1 条带 sep；「有才输出」才能逐字还原
         if (d.sep) item.sep = true;

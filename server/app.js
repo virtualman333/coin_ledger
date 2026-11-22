@@ -15,7 +15,7 @@
  *
  *   路由
  *     routes/index.js 按域注册（auth / account / feedback / visitors / reminders /
- *     catalog / plaza / admin/* / honeypot），最后 fallback 兜底。
+ *     catalog / holdings-extra / admin/* / honeypot），最后 fallback 兜底。
  *
  * bodyLimit 说明：Fastify 实例级给 8MB（够 /api/feedback 的 8MB 图片），
  * 但因为 body 插件把原始流原样交回、Fastify 并不解析，真正的限制是各路由

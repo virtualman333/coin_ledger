@@ -74,7 +74,7 @@ test('小程序：已收藏时 toggleFav 走移出，二次确认后 owned 变 f
   p.data.owned = true;
   p.toggleFav();
   assert.equal(modals.length, 1, '移出前必须二次确认');
-  assert.match(modals[0].title, /移出藏品/);
+  assert.match(modals[0].title, /移出收藏/);
   await new Promise((r) => setTimeout(r, 20));
   assert.equal(p.data.owned, false, '移出后按钮应回到可加入状态');
   assert.equal(p.data.busy, false);
@@ -120,7 +120,7 @@ test('Web：独立页按钮已收藏时不 disabled，且 togglePmFav 能移出�
   assert.match(t, /coll\.splice/);
   assert.match(t, /saveState\(\)/);
   assert.match(t, /window\.confirm/);
-  assert.match(t, /btn\.textContent = '＋ 加入我的藏品'/);
+  assert.match(t, /btn\.textContent = '＋ 加入我的收藏'/);
   assert.ok(!/reRenderAll\(\)/.test(t), '独立页不该全量重建清单');
 });
 
@@ -154,11 +154,11 @@ test('Web：真实执行 togglePmFav —— 移出后 coll 减少、按钮回到
   vm.createContext(ctx);
   vm.runInContext(snippet, ctx);
 
-  const btn = { className: 'btn ghost pm-fav-owned', textContent: '✓ 已在藏品 · 点此取消' };
+  const btn = { className: 'btn ghost pm-fav-owned', textContent: '✓ 已在收藏 · 点此取消' };
   assert.equal(ctx.pmIsOwned('G19790101'), true);
   ctx.togglePmFav('G19790101', { code: 'G19790101', name: '建国30周年金币', thumb: '' }, btn);
-  assert.equal(ctx.pmIsOwned('G19790101'), false, '藏品应从 coll 移出');
-  assert.equal(btn.textContent, '＋ 加入我的藏品', '按钮应回到可加入态');
+  assert.equal(ctx.pmIsOwned('G19790101'), false, '收藏应从 coll 移出');
+  assert.equal(btn.textContent, '＋ 加入我的收藏', '按钮应回到可加入态');
   assert.equal(btn.className, 'btn primary');
 
   // 再点一次可重新加入（light 模式不重建清单）

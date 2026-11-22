@@ -1,7 +1,7 @@
 'use strict';
 /**
  * 小程序数据层冒烟测试：用真实的 utils/api.js + utils/store.js，
- * 把 wx.* 换成 Node 实现，跑一遍注册 → 藏品增删改 → 清理。
+ * 把 wx.* 换成 Node 实现，跑一遍注册 → 收藏增删改 → 清理。
  *
  *   node tools/mp_smoke.js
  */
@@ -89,7 +89,7 @@ const TEMP_PW = 'Smoke2026pw';
   ok(s0.holdings.length === 0, '匿名不返回持仓');
   let needLogin = false;
   try { store.addCoin(cat.byId[1]); } catch (e) { needLogin = !!e.needLogin; }
-  ok(needLogin, '未登录时加入藏品被拦住');
+  ok(needLogin, '未登录时加入收藏被拦住');
 
   console.log('\n[3] 注册 + Bearer 令牌');
   const reg = await api.post('/api/auth/register', { name: TEMP_USER, password: TEMP_PW });
@@ -99,7 +99,7 @@ const TEMP_PW = 'Smoke2026pw';
   const me = await api.get('/api/auth/me');
   ok(me.user && me.user.name === TEMP_USER, 'Bearer 令牌能识别身份：' + (me.user && me.user.name));
 
-  console.log('\n[4] 藏品增删改（走服务器数据库）');
+  console.log('\n[4] 收藏增删改（走服务器数据库）');
   store.hydrate();
   await store.refresh();
   const coin = cat.byId[1];

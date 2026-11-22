@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 回归测试：我的藏品 → 只读分享快照
+ * 回归测试：我的收藏 → 只读分享快照
  * - 后端脱敏白名单：成本 / 市值 / 盈亏 / 号码绝不落库
  * - 接口与迁移已注册
  * - 小程序：预生成分享码、转发/朋友圈带 code、朋友圈访客跳转
@@ -95,7 +95,7 @@ test('后端路由、迁移与注册齐全', () => {
   assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS cl_colshare'));
 });
 
-/* ---------------- 小程序：我的藏品 ---------------- */
+/* ---------------- 小程序：我的收藏 ---------------- */
 
 function loadHoldings(holdingsData, loggedIn, state) {
   let captured = null;
@@ -158,7 +158,7 @@ test('预生成快照码，转发与朋友圈都带 code', async () => {
 
   const msg = p.onShareAppMessage();
   assert.equal(msg.path, '/pages/colshare/colshare?code=CODE123');
-  assert.ok(msg.title.includes('我的藏品'));
+  assert.ok(msg.title.includes('我的收藏'));
   const tl = p.onShareTimeline();
   assert.equal(tl.query, 'code=CODE123');
 });
@@ -179,7 +179,7 @@ test('朋友圈打开 holdings?code 时跳到快照页并编码 code', () => {
   assert.equal(state.redirected, '/pages/colshare/colshare?code=' + encodeURIComponent('ab/cd'));
 });
 
-test('我的藏品页有显式分享按钮，快照页已注册', () => {
+test('我的收藏页有显式分享按钮，快照页已注册', () => {
   const wxml = read('miniprogram/pages/holdings/holdings.wxml');
   assert.match(wxml, /分享我的收藏/);
   assert.match(wxml, /open-type="share"/);

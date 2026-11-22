@@ -158,7 +158,7 @@ Page({
     if (!store.isLogin()) {
       wx.showModal({
         title: '还没登录',
-        content: '登录后藏品会存到你的账号里，和网页版同步。',
+        content: '登录后收藏会存到你的账号里，和网页版同步。',
         confirmText: '去登录',
         success: (res) => {
           if (res.confirm) wx.navigateTo({ url: '/pages/account/account' });
@@ -213,7 +213,7 @@ Page({
       wx.hideLoading();
       this.setData({ busy: false });
       this.render();
-      wx.showToast({ title: '已加入我的藏品', icon: 'success' });
+      wx.showToast({ title: '已加入我的收藏', icon: 'success' });
     }).catch((err) => {
       wx.hideLoading();
       this.setData({ busy: false });
@@ -226,8 +226,8 @@ Page({
     const holding = this.data.holding;
     if (!holding) return;
     wx.showModal({
-      title: '移出藏品',
-      content: '把「' + holding.name + '」从我的藏品里移出？',
+      title: '移出收藏',
+      content: '把「' + holding.name + '」从我的收藏里移出？',
       confirmText: '移出',
       confirmColor: '#c0392b',
       success: (res) => {

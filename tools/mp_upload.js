@@ -36,7 +36,7 @@ if (!version) {
   const VER_FILE = path.join(__dirname, '_data', 'mp-version.txt');
   try { version = fs.readFileSync(VER_FILE, 'utf8').trim(); } catch (e) { version = '1.2.0'; }
 }
-const desc = arg('-d', `加入藏品支持指定数量（WEB 与小程序同步）`);
+const desc = arg('-d', `加入收藏支持指定数量（WEB 与小程序同步）`);
 const robot = Number(arg('--robot', '1'));
 
 const keyPath = path.join(ROOT, '.secrets', `private.${APPID}.key`);

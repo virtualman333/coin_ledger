@@ -188,7 +188,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   list.applySeries('');
   list.clearSearch();
   list.toggleOwn();
-  ok(list.data.rows.length === 0 && list.data.count === 0, '「只看已收」在无藏品时筛出 0 条');
+  ok(list.data.rows.length === 0 && list.data.count === 0, '「只看已收」在无收藏时筛出 0 条');
   list.toggleOwn();
   ok(list.data.rows.length === cat.total, '关掉筛选回到全部');
 
@@ -220,7 +220,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   detail.addCoin();
   ok(modals.length === beforeModal + 1, '未登录点加入会提示登录');
 
-  console.log('\n[4] 我的页与藏品列表（未登录）');
+  console.log('\n[4] 我的页与收藏列表（未登录）');
   const mine = loadPage('pages/mine/mine');
   mine.onShow();
   await sleep(1200);
@@ -238,7 +238,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(acc.data.loggedIn === false, '账户页未登录');
   ok(acc.data.totalCoins === cat.total, '展示全站品种数');
 
-  console.log('\n[6] 登录 → 我的藏品有数据 → 详情页加藏品');
+  console.log('\n[6] 登录 → 我的收藏有数据 → 详情页加收藏');
   const reg = await api.post('/api/auth/register', {
     name: 'mprender' + Date.now().toString(36).slice(-5),
     password: 'Render2026pw',
@@ -252,7 +252,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(detail2.data.loggedIn === true, '登录态已生效');
   detail2.addCoin();
   await sleep(1800);
-  ok(toasts.indexOf('已加入我的藏品') >= 0, '加入成功提示：' + toasts.join(' / '));
+  ok(toasts.indexOf('已加入我的收藏') >= 0, '加入成功提示：' + toasts.join(' / '));
   ok(detail2.data.owned === true, '按钮切换为「移出」');
 
   const mine2 = loadPage('pages/mine/mine');
@@ -260,19 +260,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(1500);
   ok(mine2.data.loggedIn === true, '我的页已登录');
   ok(mine2.data.stats.kinds === 1 && mine2.data.stats.costText !== '0', '我的页统计：' + mine2.data.stats.costText + ' / ' + mine2.data.stats.marketText);
-  ok(typeof mine2.goHoldings === 'function', '我的页有「我的藏品」二级页入口');
+  ok(typeof mine2.goHoldings === 'function', '我的页有「我的收藏」二级页入口');
 
   const hold = loadPage('pages/holdings/holdings');
   hold.onShow();
   await sleep(1200);
-  ok(hold.data.empty === false, '藏品列表非空');
+  ok(hold.data.empty === false, '收藏列表非空');
   const firstGroup = hold.data.groups[0];
   ok(firstGroup && firstGroup.items.length === 1, '分组渲染：' + (firstGroup || {}).name + ' / ' + ((firstGroup || {}).items || []).length + ' 条');
   ok(hold.data.groups[0].items[0].qtyLabel && /枚|张/.test(hold.data.groups[0].items[0].qtyLabel),
     '持仓行显示件数：' + hold.data.groups[0].items[0].qtyLabel + ' · 面值 ' + hold.data.groups[0].items[0].faceText);
   ok(hold.data.groups[0].progLabel && hold.data.groups[0].pct >= 0,
     '分组进度：' + hold.data.groups[0].name + ' ' + hold.data.groups[0].progLabel);
-  // 分组名必须跟系列主数据一致，不能退化成笼统的「独立藏品」
+  // 分组名必须跟系列主数据一致，不能退化成笼统的「单品收藏」
   const coinOfGroup = cat.byName[hold.data.groups[0].items[0].name];
   ok(firstGroup.name === coinOfGroup.seriesName,
     '分组名对齐系列：' + firstGroup.name + ' = ' + coinOfGroup.seriesName);
@@ -288,7 +288,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   acc2.onShow();
   await sleep(1200);
   ok(acc2.data.loggedIn === true && acc2.data.user.name === reg.user.name, '账户页显示已登录用户');
-  ok(acc2.data.holdingsCount === 1, '账户页藏品数 1');
+  ok(acc2.data.holdingsCount === 1, '账户页收藏数 1');
   ok(acc2.data.avatarText.length === 1, '头像只取首字：' + acc2.data.avatarText);
 
   console.log('\n[6.2] 搜索框不自动聚焦');
@@ -347,10 +347,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const upItem = planPage.data.years.reduce((a, y) => a.concat((y.items || []).filter((i) => i.isUp)), [])[0];
   ok(!!upItem && !!upItem.key, '待发行条目带 key（订阅要用）：' + (upItem ? upItem.key : '无'));
 
-  console.log('\n[6.79] 我的藏品卡片与长按编辑');
+  console.log('\n[6.79] 我的收藏卡片与长按编辑');
   const holdPg = loadPage('pages/holdings/holdings');
   ok(typeof holdPg.openSheet === 'function' && typeof holdPg.saveSheet === 'function',
-    '藏品卡长按进操作面板（数量/成本/移出）');
+    '收藏卡长按进操作面板（数量/成本/移出）');
   ok(typeof holdPg.closeSheet === 'function' && holdPg.data.sheet === null,
     '面板默认关闭');
 
@@ -396,7 +396,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(!!aboutPage.data.version, '关于页显示版本：v' + aboutPage.data.version);
   ok(aboutPage.data.totalCoins > 100, '关于页显示收录数量：' + aboutPage.data.totalCoins);
 
-  console.log('\n[6.85] 我的藏品折叠');
+  console.log('\n[6.85] 我的收藏折叠');
   const mineFold = loadPage('pages/holdings/holdings');
   mineFold.onShow();
   if (mineFold.data.groups.length) {
@@ -412,7 +412,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     ok(Array.isArray(saved) && saved.length === mineFold.data.groups.length, '折叠状态写入本地：' + saved.length + ' 个分组');
     mineFold.toggleAll();
   } else {
-    ok(false, '我的藏品没有分组，无法验证折叠');
+    ok(false, '我的收藏没有分组，无法验证折叠');
   }
 
   console.log('\n[6.9] 多图');
@@ -430,7 +430,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   ok(cat.coins.every((c) => c.imgs.every((g) => g.url.indexOf('https://') === 0 && g.url.indexOf('/img/') > 0)), '图片地址都是绝对 URL');
 
-  console.log('[6.95] 加入藏品时指定数量');
+  console.log('[6.95] 加入收藏时指定数量');
   await sleep(1500);   // 等上一段的 changeRolls 写完，避免两个 persist 竞态
   const qtyCoin = cat.coins.filter((c) => c.id !== 2)[0];
   await store.addCoin(qtyCoin, 'set', 3);

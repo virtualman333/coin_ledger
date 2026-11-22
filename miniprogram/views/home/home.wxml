@@ -44,7 +44,7 @@
   </view>
 
   <view class="ledger guest" wx:else>
-    <text class="guest-title">登录后开始记你的藏品</text>
+    <text class="guest-title">登录后开始记你的收藏</text>
     <text class="guest-sub">与网页版同一账号</text>
     <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
   </view>
@@ -97,29 +97,6 @@
       <view class="metal-foot">
         <text class="metal-time">{{metal.stale ? '延时行情 · ' : ''}}{{metal.timeText}}</text>
         <text class="metal-tip">仅材料价值，随行情浮动</text>
-      </view>
-    </view>
-  </block>
-
-  <!-- 藏友晒单（广场最新，失败自动隐藏） -->
-  <block wx:if="{{plazaOn && feed.length}}">
-    <view class="sec">
-      <text class="sec-title">藏友晒单</text>
-      <text class="sec-more" hover-class="tap-hover" bindtap="goPlaza">去广场 ›</text>
-    </view>
-    <view class="feed-list">
-      <view class="feed-card" wx:for="{{feed}}" wx:key="id" hover-class="tap-hover" bindtap="goPlaza">
-        <image class="feed-pic" wx:if="{{item.pic}}" src="{{item.pic}}" mode="aspectFill" lazy-load></image>
-        <view class="feed-ph" wx:else><text>藏</text></view>
-        <view class="feed-body">
-          <view class="feed-title">
-            <text class="feed-name">{{item.holdingName}}</text>
-            <text class="feed-tag" wx:if="{{item.tag}}">{{item.tag}}</text>
-          </view>
-          <text class="feed-serial" wx:if="{{item.serialText}}">号码 {{item.serialText}}</text>
-          <text class="feed-meta">{{item.author}} · {{item.timeText}}</text>
-        </view>
-        <text class="feed-arrow">›</text>
       </view>
     </view>
   </block>

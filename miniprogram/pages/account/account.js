@@ -366,7 +366,7 @@ Page({
     });
   },
 
-  /** 登录成功后回到上一页；没有上一页就回我的藏品 */
+  /** 登录成功后回到上一页；没有上一页就回我的收藏 */
   leave() {
     const pages = getCurrentPages();
     if (pages.length > 1) {
@@ -379,7 +379,7 @@ Page({
   logout() {
     wx.showModal({
       title: '退出登录',
-      content: '退出后需要重新登录才能查看藏品。',
+      content: '退出后需要重新登录才能查看收藏。',
       confirmText: '退出',
       success: (res) => {
         if (!res.confirm) return;

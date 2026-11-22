@@ -26,7 +26,7 @@ function normalizeOptions(raw) {
   return out;
 }
 
-/** 单个藏品的公开字段 */
+/** 单个收藏的公开字段 */
 function sanitizeItem(raw, opts) {
   if (!raw || typeof raw !== 'object') return null;
   const name = cleanText(raw.name, 64);

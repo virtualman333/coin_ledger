@@ -1,8 +1,8 @@
 'use strict';
 /**
- * 我的藏品：只读分享快照（Web 与小程序共用）。
+ * 我的收藏：只读分享快照（Web 与小程序共用）。
  *
- *   POST /api/colshare          登录，把当前藏品脱敏成快照，返回分享码
+ *   POST /api/colshare          登录，把当前收藏脱敏成快照，返回分享码
  *   GET  /api/colshare/:code    公开，读取快照（转发 / 朋友圈落地）
  *
  * 快照独立于 store 的整份文档模型，直接走 app.db（cl_colshare，migration 009）。
@@ -33,7 +33,7 @@ module.exports = async function colshareRoutes(app) {
     const options = colshare.normalizeOptions(body && body.options);
     const items = colshare.sanitizeItems(body && body.items, options);
     if (!items.length) {
-      return reply.code(400).send({ ok: false, error: '先添加藏品再分享' });
+      return reply.code(400).send({ ok: false, error: '先添加收藏再分享' });
     }
     const code = newCode();
     // 统计永远按完整清单算：即使用户选择不公开清单，头部「N 个品种 · X 枚」也该是对的
@@ -43,7 +43,7 @@ module.exports = async function colshareRoutes(app) {
     const [users] = await app.db.query(
       'SELECT nickname, name FROM cl_users WHERE id = ? LIMIT 1', [me.id]);
     const u = users[0] || {};
-    const nickname = String(u.nickname || u.name || '藏友').slice(0, 64);
+    const nickname = String(u.nickname || u.name || '同好').slice(0, 64);
     await app.db.query(
       'INSERT INTO cl_colshare (code, uid, nickname, items, kinds, total, face_total, ai_total, created_at) '
       + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(3))',
@@ -66,7 +66,7 @@ module.exports = async function colshareRoutes(app) {
     reply.send({
       ok: true,
       code: r.code,
-      owner: r.nickname || '藏友',
+      owner: r.nickname || '同好',
       items: items,
       kinds: Number(r.kinds) || 0,
       total: Number(r.total) || 0,

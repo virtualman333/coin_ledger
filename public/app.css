@@ -154,7 +154,7 @@ h2{
 .btn.ghost{color:var(--muted);border-color:var(--line2);background:transparent}
 .btn.ghost:hover{color:var(--text);border-color:var(--line2)}
 
-/* ---------- 藏品分组 ---------- */
+/* ---------- 收藏分组 ---------- */
 .group{margin-bottom:26px}
 .group-head{
   display:flex;align-items:center;gap:10px;margin-bottom:12px;
@@ -916,7 +916,7 @@ html[data-theme="light"] .btn.primary:hover{
 }
 
 /* =========================================================
-   清单页：我的藏品合计
+   清单页：我的收藏合计
    ========================================================= */
 .liststats{
   display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -1212,7 +1212,7 @@ html[data-theme="light"] .oc-ok{color:#1a7a52}
   .coin-price.single-price{grid-template-columns:1fr}
 }
 
-/* 藏品卡名称可点 */
+/* 收藏卡名称可点 */
 .hcard .name[data-coin]{cursor:pointer;transition:color .15s}
 .hcard .name[data-coin]:hover{color:var(--gold);text-decoration:underline;text-underline-offset:3px}
 
@@ -1718,7 +1718,7 @@ tr.dirty .arow{border-color:var(--gold);color:var(--gold);background:var(--gold-
   .hh-cta .btn{flex:1 1 0;min-width:0;min-height:44px;justify-content:center;padding:0 12px}
   .home-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 6px}
 
-  /* ---------- 7. 我的藏品：分组标题不再跟汇总抢一行 ---------- */
+  /* ---------- 7. 我的收藏：分组标题不再跟汇总抢一行 ---------- */
   .group-head{flex-wrap:wrap;row-gap:3px;font-size:12px;margin-bottom:10px}
   .group-head .tot{flex:1 1 100%;margin-left:0;font-size:11.5px}
   .grid{grid-template-columns:1fr;gap:11px}
@@ -1901,7 +1901,7 @@ tr.dirty .arow{border-color:var(--gold);color:var(--gold);background:var(--gold-
   min-height:0;max-height:none;width:100%;height:auto
 }
 
-/* ---------- 管理端：用户藏品行内展开 ---------- */
+/* ---------- 管理端：用户收藏行内展开 ---------- */
 .uacts{white-space:nowrap}
 .uacts .btn+.btn{margin-left:6px}
 .uh-row>td{padding:0!important;background:var(--panel)}
@@ -2077,7 +2077,7 @@ tr.dirty .arow{border-color:var(--gold);color:var(--gold);background:var(--gold-
   .plan-sub{gap:6px}
 }
 
-/* 手机上导航加到 7 项会挤成一团，甚至让人滑不到「我的藏品」。
+/* 手机上导航加到 7 项会挤成一团，甚至让人滑不到「我的收藏」。
    概览页的信息在首页统计条和清单里都有，小屏先收起来（桌面仍可见）。 */
 @media (max-width:640px){
   /* 手机导航：概览让位（未登录本来也隐藏，登录后它的信息在首页统计条里已有），
@@ -2294,7 +2294,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   width:1px;height:11px;margin-top:-5.5px;background:var(--line2);
 }
 
-/* 我的藏品：缩略图（原来这里是金色圆球） */
+/* 我的收藏：缩略图（原来这里是金色圆球） */
 .hthumb{
   width:46px;height:46px;border-radius:10px;flex:0 0 auto;
   object-fit:cover;object-position:center;background:var(--input-bg);
@@ -2345,7 +2345,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   color:var(--dim);font-size:11px;font-weight:400;line-height:1.4;
 }
 
-/* 藏品卡片：AI 推理价 */
+/* 收藏卡片：AI 推理价 */
 .ai-line{
   display:flex;align-items:center;gap:6px;margin-top:7px;
   font-size:11.5px;color:var(--dim);
@@ -2433,7 +2433,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 .sm-static a{color:var(--muted);text-decoration:none}
 .sm-static a:hover{color:var(--gold)}
 
-/* 加入藏品：按套 / 按单枚 选择 */
+/* 加入收藏：按套 / 按单枚 选择 */
 .au-mask{
   position:fixed;inset:0;z-index:220;display:flex;align-items:center;justify-content:center;
   padding:20px;background:rgba(12,10,8,.5);backdrop-filter:blur(3px);
@@ -2454,7 +2454,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 .au-sheet button i{float:right;color:var(--dim);font-size:11px;font-style:normal;font-weight:400}
 .au-sheet .au-x{text-align:center;border:none;background:transparent;color:var(--dim);font-size:12px}
 
-/* 加入藏品：数量输入 */
+/* 加入收藏：数量输入 */
 .au-qty{
   display:flex;align-items:center;gap:8px;margin:0 0 8px;
   padding:8px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--input-bg);
@@ -2780,7 +2780,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   .hh-dot::after{content:"";position:absolute;inset:-9px}
 }
 
-/* 藏品页品类筛选 */
+/* 收藏页品类筛选 */
 .hold-cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .hold-cats button{
   appearance:none;border:1px solid var(--line2);background:var(--panel);
@@ -2794,7 +2794,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
 .pm-detail-actions .btn{min-width:160px}
 
 /* =========================================================
-   藏品增强（号码 / 花样 / 形态 / 图片）+ 藏品广场
+   收藏增强（号码 / 花样 / 形态 / 图片）
    ========================================================= */
 .hx{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line2);display:grid;gap:8px}
 .hx-row{display:flex;align-items:flex-start;gap:8px;font-size:11.5px}
@@ -2834,64 +2834,7 @@ html[data-theme="light"] .badge.test{background:rgba(31,140,96,.12);color:#1f8c6
   border:1px dashed var(--line);border-radius:8px;color:var(--dim);cursor:pointer;font-size:20px
 }
 .hx-add:hover{color:var(--gold);border-color:var(--gold)}
-.hx-share{
-  justify-self:start;padding:5px 12px;border-radius:8px;border:1px solid var(--gold);
-  background:var(--gold-soft);color:var(--gold);font-size:11.5px;cursor:pointer
-}
-
-/* 广场 */
-.plaza-tabs{display:flex;gap:8px;margin:6px 0 16px}
-.plaza-tabs button{
-  padding:5px 14px;border-radius:999px;border:1px solid var(--line2);
-  background:var(--surf-2);color:var(--muted);font-size:12px;cursor:pointer
-}
-.plaza-tabs button.on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
-.plaza-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.pz-card{
-  border:1px solid var(--line2);border-radius:14px;background:var(--panel);
-  padding:14px;display:flex;flex-direction:column;gap:10px
-}
-.pz-empty{grid-column:1/-1;padding:50px 20px;text-align:center;color:var(--dim)}
-.pz-head{display:flex;align-items:center;gap:8px}
-.pz-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover}
-.pz-avatar.ph{
-  display:flex;align-items:center;justify-content:center;background:var(--gold-soft);
-  color:var(--gold);font-size:13px
-}
-.pz-author{font-size:12.5px;font-weight:500;color:var(--text)}
-.pz-time{font-size:11px;color:var(--dim);margin-left:auto}
-.pz-pics{display:flex;gap:6px;overflow-x:auto}
-.pz-pics img{width:96px;height:96px;flex:0 0 96px;object-fit:cover;border-radius:10px;border:1px solid var(--line2)}
-.pz-title{font-size:13.5px;font-weight:500;color:var(--text)}
-.pz-form{font-size:10px;color:var(--dim);border:1px solid var(--line2);border-radius:4px;padding:1px 5px}
-.pz-serials{font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);margin-top:3px;word-break:break-all}
-.pz-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.pz-tag{padding:2px 7px;border-radius:999px;font-size:10.5px;background:var(--surf-3);border:1px solid var(--line2);color:var(--muted)}
-.pz-tag.rar2{color:var(--gold);border-color:rgba(232,200,119,.35)}
-.pz-tag.rar3{color:#6aa9ff;border-color:rgba(106,169,255,.35)}
-.pz-tag.rar4{color:#c792ff;border-color:rgba(199,146,255,.4)}
-.pz-tag.rar5{color:#ff7b9c;border-color:rgba(255,123,156,.45)}
-.pz-caption{font-size:12px;line-height:1.6;color:var(--muted);margin-top:6px}
-.pz-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px;border-top:1px solid var(--line2)}
-.pz-actions button{
-  padding:4px 10px;border-radius:8px;border:1px solid var(--line2);
-  background:var(--surf-2);color:var(--muted);font-size:11.5px;cursor:pointer
-}
-.pz-actions .pz-like.on{color:#ff7b9c;border-color:rgba(255,123,156,.45)}
-.pz-actions .pz-follow.on{color:var(--gold);border-color:var(--gold)}
-.pz-actions .pz-del{margin-left:auto}
-.pz-comments{border-top:1px dashed var(--line2);padding-top:8px;display:grid;gap:6px}
-.pz-cmt{font-size:12px;line-height:1.5;color:var(--muted)}
-.pz-cmt b{color:var(--text);font-weight:500}
-.pz-cmt-form{display:flex;gap:6px;margin-top:4px}
-.pz-cmt-form input{
-  flex:1;min-width:0;padding:5px 9px;border-radius:8px;border:1px solid var(--line2);
-  background:var(--surf-2);color:var(--text);font-size:12px
-}
-.pz-cmt-form button{padding:5px 12px;border-radius:8px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--gold);font-size:12px;cursor:pointer}
-.pz-more{grid-column:1/-1;padding:10px;border-radius:10px;border:1px solid var(--line2);background:var(--surf-2);color:var(--muted);cursor:pointer}
-
-/* 分享弹窗 */
+/* 通用弹窗（推理价说明等仍在用） */
 .pz-modal-mask{
   position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;
   display:flex;align-items:center;justify-content:center;padding:20px
@@ -2912,56 +2855,6 @@ html[data-theme="light"] .pz-modal-mask{background:rgba(0,0,0,.35)}
 .pz-modal textarea{resize:vertical}
 .pz-preview{padding:8px 0;min-height:24px}
 .pz-modal-f{display:flex;justify-content:flex-end;gap:8px}
-
-/* ===== 藏品卡片化（藏品为主角，分享者弱化到一行） ===== */
-.pz-card{padding:0;gap:0;overflow:hidden}
-.pz-cover{
-  position:relative;width:100%;height:210px;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(160deg,var(--gold-soft),var(--surf-3));overflow:hidden
-}
-.pz-cover.ph{background:linear-gradient(160deg,var(--surf-3),var(--line2))}
-.pz-cover>img{width:100%;height:100%;object-fit:contain}
-.pz-cover-ph-name{font-size:20px;font-weight:600;color:var(--gold);letter-spacing:1px;text-align:center;padding:0 24px}
-.pz-cover-more{
-  position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;
-  font-size:11px;padding:3px 9px;border-radius:999px
-}
-.pz-cover .pz-form{position:absolute;top:8px;left:8px;background:var(--card);color:var(--gold);border-color:transparent}
-.pz-body{padding:14px 14px 4px}
-.pz-body .pz-title{font-size:15px;font-weight:600}
-.pz-author-line{display:flex;align-items:center;gap:7px;padding:8px 14px 0}
-.pz-author-line .pz-avatar{width:24px;height:24px}
-.pz-author-line .pz-author{font-size:11.5px;color:var(--muted);font-weight:400}
-.pz-actions{padding:10px 14px}
-.pz-comments{margin:0 14px 14px}
-.pz-cmt{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
-.pz-cmt-del{margin-left:auto;background:none;border:none;color:#d0594a;font-size:11px;cursor:pointer;padding:0}
-
-/* 多选分享弹窗 */
-.pz-modal-multi{width:min(520px,100%)}
-.pz-pick-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.pz-pick-all{padding:4px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--surf-2);color:var(--gold);font-size:12px;cursor:pointer}
-.pz-pick-count{font-size:12px;color:var(--muted)}
-.pz-pick-list{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;
-  max-height:46vh;overflow:auto;margin-bottom:14px
-}
-.pz-pick{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:8px;border:1px solid var(--line2);border-radius:10px;background:var(--surf-2);
-  cursor:pointer;margin-bottom:0!important
-}
-.pz-pick:has(.pz-pick-cb:checked){border-color:var(--gold);background:var(--gold-soft)}
-.pz-pick-cb{accent-color:var(--gold);flex:0 0 auto}
-.pz-pick img{width:30px;height:30px;object-fit:cover;border-radius:6px}
-.pz-pick-name{font-size:12px;color:var(--text);font-weight:500}
-.pz-pick-note{font-size:10.5px;color:var(--dim);width:100%;padding-left:26px}
-
-@media (max-width:640px){
-  .plaza-grid{grid-template-columns:1fr}
-  .pz-cover{height:180px}
-  .pz-pick-list{grid-template-columns:1fr}
-}
 
 /* ============ 贵金属单枚独立页 /pm/<code> ============ */
 .pm-crumb{font-size:12px;color:var(--dim);margin-left:auto}

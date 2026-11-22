@@ -30,7 +30,7 @@
     </view>
 
     <view class="hero hero-empty" wx:else>
-      <text class="he-t">还没有藏品</text>
+      <text class="he-t">还没有收藏</text>
       <view class="he-btn" hover-class="tap-hover" bindtap="goList">去挑第一枚</view>
     </view>
 
@@ -53,8 +53,8 @@
     </view>
 
     <view class="rows">
-      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的藏品">
-        <text class="cell-k">我的藏品</text>
+      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的收藏">
+        <text class="cell-k">我的收藏</text>
         <view class="row-thumbs" wx:if="{{thumbs.length}}">
           <image wx:for="{{thumbs}}" wx:key="*this" class="rt-img" src="{{item}}" mode="aspectFill"></image>
         </view>
@@ -116,7 +116,7 @@
   <block wx:else>
     <view class="hero hero-empty guest">
       <text class="he-t">登录后才有账本</text>
-      <text class="he-s">藏品存在云端，换设备也能接着记</text>
+      <text class="he-s">收藏存在云端，换设备也能接着记</text>
       <button class="he-primary" bindtap="goAccount">登录 / 注册</button>
     </view>
 

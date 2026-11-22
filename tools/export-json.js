@@ -89,7 +89,7 @@ async function buildDocs(ds, baseDir) {
         rolls: Number(d.rolls || 0),
         cost: Number(d.cost || 0),
         market: Number(d.market || 0),
-        group: d.grp || '独立藏品'
+        group: d.grp || '单品收藏'
       };
       if (d.sep) item.sep = true;
       return item;

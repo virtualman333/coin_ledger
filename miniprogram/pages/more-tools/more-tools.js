@@ -1,6 +1,5 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
-const feature = require('../../utils/feature');
 
 /** 版本号来自 app.globalData；测试环境没有 getApp 时退回空串 */
 function appVersion() {
@@ -16,7 +15,6 @@ Page({
   data: {
     isAdmin: false,
     loggedIn: false,
-    plazaOn: feature.plaza,
     appVersion: '',
   },
 
@@ -33,7 +31,7 @@ Page({
   onLogout() {
     wx.showModal({
       title: '退出登录',
-      content: '退出后需要重新登录才能查看藏品。',
+      content: '退出后需要重新登录才能查看收藏。',
       confirmText: '退出',
       success: (res) => {
         if (!res.confirm) return;
@@ -63,10 +61,6 @@ Page({
 
   goAdmin() {
     wx.navigateTo({ url: '/pages/admin/admin' });
-  },
-
-  goPlaza() {
-    wx.navigateTo({ url: '/pages/plaza/plaza' });
   },
 
   /* ---------------- 收藏备份：在独立页面里做，那里有完整说明 ---------------- */

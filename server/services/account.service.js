@@ -12,6 +12,7 @@ const auth = require('../auth');
 const catalogState = require('../state/catalog');
 const superadmin = require('../bootstrap/superadmin');
 const { badRequest } = require('../core/http');
+const { groupLabel } = require('../core/labels');
 
 const MAX_HOLDINGS = 300;
 
@@ -79,14 +80,14 @@ function normalizeHoldings(input) {
       rolls: Math.round(rolls),
       cost: Math.round(cost * 100) / 100,
       market: Math.round(market * 100) / 100,
-      group: String(h.group || '独立藏品').slice(0, 24),
+      group: groupLabel(h.group).slice(0, 24),
       sep: !!h.sep,
       category: ['coin','note','pm'].indexOf(h.category) >= 0 ? h.category : 'coin',
       // 贵金属缩略图与「按单枚记」口径（migration 007）。
       // thumb 允许相对路径或 http(s) URL，限制长度即可；unit 白名单 piece，其余按套处理。
       thumb: String(h.thumb || '').slice(0, 512),
       unit: h.unit === 'piece' ? 'piece' : '',
-      // 藏品增强（migration 008）：号码数组 / 整套单个 / 图片数组
+      // 收藏增强（migration 008）：号码数组 / 整套单个 / 图片数组
       serials: normSerials(h.serials),
       form: h.form === 'single' || h.form === 'set' ? h.form : '',
       images: normImages(h.images)

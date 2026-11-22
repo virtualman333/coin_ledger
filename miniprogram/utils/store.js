@@ -1,5 +1,5 @@
 /**
- * 应用状态：账号 / 藏品 / 行情。
+ * 应用状态：账号 / 收藏 / 行情。
  * 权威数据在服务器（与网站共用一套库），本机只做一份缓存用于秒开。
  */
 const api = require('./api');
@@ -60,9 +60,9 @@ let refreshSeq = 0;   // 每次 refresh 递增；只有最新一次允许写 sta
 
 /** 从服务器拉一次全量状态。
  *  并发调用共用同一个请求；写操作之后要用 refresh({force:true})，
- *  否则可能拿到「写入之前就已发出」的那次响应，导致刚加的藏品不出现。
+ *  否则可能拿到「写入之前就已发出」的那次响应，导致刚加的收藏不出现。
  *  注意：force 会发新请求，但旧请求并不会被取消，所以必须用序号把旧响应作废，
- *  否则旧响应晚到仍会覆盖 state 与缓存（这正是以前「刚加的藏品消失」的根因）。 */
+ *  否则旧响应晚到仍会覆盖 state 与缓存（这正是以前「刚加的收藏消失」的根因）。 */
 function refresh(opts) {
   const force = !!(opts && opts.force);
   if (inflight && !force) return inflight;
@@ -163,7 +163,7 @@ function stats() {
 
 function requireLogin() {
   if (!state.user) {
-    const err = new Error('登录后才能记录藏品');
+    const err = new Error('登录后才能记录收藏');
     err.needLogin = true;
     throw err;
   }
@@ -480,13 +480,13 @@ function persist() {
     cost: cat.round2(h.cost),
     market: cat.round2(h.market),
     group: h.group,
-    // 这三个字段必须一起回传，否则贵金属藏品服务端刷新后会退化成普通币：
-    // category 决定「我的藏品-贵金属」页签与 isOwned 去重，thumb 是缩略图，
+    // 这三个字段必须一起回传，否则贵金属收藏服务端刷新后会退化成普通币：
+    // category 决定「我的收藏-贵金属」页签与 isOwned 去重，thumb 是缩略图，
     // unit='piece' 决定按单枚而非按套记。服务端 migration 007 已存这三列。
     category: h.category,
     thumb: h.thumb,
     unit: h.unit,
-    // 藏品增强（migration 008）：号码 / 整套单个 / 图片，必须一起回传否则保存后丢失
+    // 收藏增强（migration 008）：号码 / 整套单个 / 图片，必须一起回传否则保存后丢失
     serials: Array.isArray(h.serials) ? h.serials : [],
     form: h.form === 'single' || h.form === 'set' ? h.form : '',
     images: Array.isArray(h.images) ? h.images : [],
@@ -518,16 +518,16 @@ function newId() {
   return 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
 }
 
-/** 加入我的藏品（1 套） */
+/** 加入我的收藏（1 套） */
 /**
- * 加入藏品。
+ * 加入收藏。
  * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
  * 单枚的成本与市价按「一套 ÷ 件数」折算，账本里仍然是纯数量。
  */
 function addCoin(coin, unit, qty) {
   requireLogin();
   if (findHolding(coin.name)) {
-    const err = new Error('这一枚已经在你的藏品里了');
+    const err = new Error('这一枚已经在你的收藏里了');
     err.duplicate = true;
     throw err;
   }
@@ -554,7 +554,7 @@ function addCoin(coin, unit, qty) {
 function addPm(item) {
   requireLogin();
   const hit = state.holdings.filter((h) => h.category === 'pm' && h.id === item.code)[0];
-  if (hit) { const err = new Error('这枚已经在你的藏品里了'); err.duplicate = true; throw err; }
+  if (hit) { const err = new Error('这枚已经在你的收藏里了'); err.duplicate = true; throw err; }
   // 面值优先取入参 item.face（贵金属详情接口提供），再退回目录同名品种；没有则维持 0
   const coin = cat.byName[item.name];
   const face = Number(item && item.face) || (coin ? Number(coin.face) || 0 : 0);
@@ -638,7 +638,7 @@ function setUnitForm(id, unit, rolls, totalCost) {
   return persist();
 }
 
-/** 局部更新藏品的可选字段（号码/形态/图片），白名单收敛后落库 */
+/** 局部更新收藏的可选字段（号码/形态/图片），白名单收敛后落库 */
 function patchHolding(id, patch) {
   requireLogin();
   const target = state.holdings.filter((h) => h.id === id)[0];
@@ -652,7 +652,7 @@ function patchHolding(id, patch) {
   return persist();
 }
 
-/** 上传藏品图片（base64），返回 /collection/xxx 路径 */
+/** 上传收藏图片（base64），返回 /collection/xxx 路径 */
 function uploadImage(dataUrl) {
   requireLogin();
   return api.post('/api/holding/image', { image: dataUrl });

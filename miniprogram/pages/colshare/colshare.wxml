@@ -32,7 +32,7 @@
         <view class="thumb-ph" wx:else>{{item.nameInitial || '藏'}}</view>
         <view class="info">
           <view class="name">{{item.name}}</view>
-          <view class="meta">{{item.year ? item.year + ' 年 · ' : ''}}{{item.seriesName || '独立藏品'}}</view>
+          <view class="meta">{{item.year ? item.year + ' 年 · ' : ''}}{{item.seriesName || '单品收藏'}}</view>
           <view class="tags" wx:if="{{item.tagText}}">{{item.tagText}}</view>
         </view>
         <view class="qty">{{item.qtyLabel}}</view>

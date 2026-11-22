@@ -74,7 +74,7 @@ Page({
           roleText: u.role === 'admin' ? '管理员' : '普通用户',
           createdText: dayText(u.createdAt),
           lastLoginText: dayText(u.lastLogin),
-          metaText: (Number(u.holdings) || 0) + ' 条藏品 · 注册 ' + dayText(u.createdAt)
+          metaText: (Number(u.holdings) || 0) + ' 条收藏 · 注册 ' + dayText(u.createdAt)
             + (u.lastLogin ? ' · 最近登录 ' + dayText(u.lastLogin) : ''),
         });
       });
@@ -117,7 +117,7 @@ Page({
     const u = this.data.users.filter((x) => x.id === id)[0];
     if (!u) return;
 
-    const items = ['查看藏品（' + u.holdings + ' 条）'];
+    const items = ['查看收藏（' + u.holdings + ' 条）'];
     const actions = [() => this.viewHoldings(u)];
     if (u.role !== 'admin') {
       items.push(u.isTest ? '取消测试标记' : '标记为测试账号');
@@ -169,7 +169,7 @@ Page({
     }
     wx.showModal({
       title: '删除账号',
-      content: '确定删除「' + u.name + '」？该账号的 ' + u.holdings + ' 条藏品会一起删除，无法恢复。',
+      content: '确定删除「' + u.name + '」？该账号的 ' + u.holdings + ' 条收藏会一起删除，无法恢复。',
       confirmText: '删除',
       confirmColor: '#c0392b',
       success: (r) => {

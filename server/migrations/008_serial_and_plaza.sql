@@ -1,5 +1,5 @@
--- 藏品增强 + 藏品广场（2026-11-20）
--- 1) cl_holdings 增加号码/形态/图片三列（可选，缺省空，不影响既有藏品）
+-- 收藏增强 + 收藏广场（2026-11-20）
+-- 1) cl_holdings 增加号码/形态/图片三列（可选，缺省空，不影响既有收藏）
 --    serials  JSON 数组字符串：["J12345678","J12345679"]，最多 200 张
 --    form     single | set —— 单个 / 整套（沿用账本口径，与 unit 的 piece 计价口径正交）
 --    images   JSON 数组字符串：["/collection/xxx.jpg"]，最多 3 张
@@ -34,7 +34,7 @@ PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 CREATE TABLE IF NOT EXISTS cl_share (
   id VARCHAR(24) NOT NULL,
   uid VARCHAR(16) NOT NULL,
-  holding_name VARCHAR(64) NOT NULL COMMENT '关联藏品品种名',
+  holding_name VARCHAR(64) NOT NULL COMMENT '关联品种名',
   serials TEXT NULL COMMENT '分享的号码 JSON 数组',
   images TEXT NULL COMMENT '图片路径 JSON 数组',
   form VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'single|set',
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS cl_share (
   PRIMARY KEY (id),
   KEY idx_share_time (created_at),
   KEY idx_share_uid (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-分享帖子';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏广场-分享帖子';
 
 -- ---- 点赞 ----
 CREATE TABLE IF NOT EXISTS cl_share_like (
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS cl_share_like (
   created_at DATETIME(3) NOT NULL,
   PRIMARY KEY (share_id, uid),
   KEY idx_like_uid (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-点赞';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏广场-点赞';
 
 -- ---- 评论 ----
 CREATE TABLE IF NOT EXISTS cl_share_comment (
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS cl_share_comment (
   created_at DATETIME(3) NOT NULL,
   PRIMARY KEY (id),
   KEY idx_comment_share (share_id, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-评论';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏广场-评论';
 
 -- ---- 关注 ----
 CREATE TABLE IF NOT EXISTS cl_follow (
@@ -75,4 +75,4 @@ CREATE TABLE IF NOT EXISTS cl_follow (
   created_at DATETIME(3) NOT NULL,
   PRIMARY KEY (uid, target_uid),
   KEY idx_follow_target (target_uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品广场-关注';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏广场-关注';

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 新账号初始藏品模板仓储（MySQL 实现）。
+ * 新账号初始收藏模板仓储（MySQL 实现）。
  *
  * coins.json 的 defaults（12 条）在 /api/bootstrap 里原样下发，
  * 也在 POST /api/holdings/reset 时变成新账本的初始 12 条。
@@ -10,6 +10,7 @@
  * 否则 defaults 数组会多出 11 个 `"sep": false`，与基线 diff 就出来了。
  */
 const COLUMNS = 'ord AS ord, name AS name, rolls AS rolls, cost AS cost, market AS market, grp AS grp, sep AS sep';
+const { groupLabel } = require('../core/labels');
 
 function create(pool) {
   if (!pool) throw new Error('default-holdings.repo(mysql) 需要连接池');
@@ -41,7 +42,7 @@ function create(pool) {
            market = VALUES(market), grp = VALUES(grp), sep = VALUES(sep)`,
         [Number(row.ord), String(row.name), Math.round(Number(row.rolls) || 0),
           Number(row.cost) || 0, Number(row.market) || 0,
-          String(row.grp || '独立藏品'), row.sep ? 1 : 0]
+          groupLabel(row.grp), row.sep ? 1 : 0]
       );
     }
   };

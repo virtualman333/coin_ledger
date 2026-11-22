@@ -135,7 +135,7 @@ test('成本默认按面值 × 数量初始化，且不覆盖已保存的成本'
     // 已有用户成本不被重复加入/新增操作覆盖
     const saved = { id: 'h9', name: '已保存', rolls: 1, cost: 777, market: 0, category: 'pm' };
     store.state.holdings = [saved];
-    assert.throws(() => store.addPm({ code: 'h9', name: '已保存', face: 100 }), /已经在你的藏品里/);
+    assert.throws(() => store.addPm({ code: 'h9', name: '已保存', face: 100 }), /已经在你的收藏里/);
     assert.equal(store.state.holdings[0].cost, 777);
   } finally {
     api.put = origPut;

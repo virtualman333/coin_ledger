@@ -8,7 +8,7 @@
     <view class="hero" wx:if="{{!empty}}">
       <view class="hero-top">
         <view class="hero-left">
-          <text class="hero-k">{{summary.kinds ? '推理价合计' : '贵金属藏品'}}</text>
+          <text class="hero-k">{{summary.kinds ? '推理价合计' : '贵金属收藏'}}</text>
           <view class="hero-val">
             <text class="hv-cur" wx:if="{{summary.kinds}}">¥</text>
             <text class="hv-num">{{summary.kinds ? stats.aiText : summary.pmRolls}}</text>
@@ -34,28 +34,26 @@
     </view>
 
     <view class="empty-card" wx:if="{{empty}}">
-      <text class="empty-title">还没有藏品</text>
-      <view class="empty-btn" hover-class="tap-hover" bindtap="goList">去挑藏品</view>
+      <text class="empty-title">还没有收藏</text>
+      <view class="empty-btn" hover-class="tap-hover" bindtap="goList">去挑品种</view>
     </view>
 
     <block wx:if="{{!empty}}">
       <view class="cat-empty" wx:if="{{catEmpty}}">
-        <text class="cat-empty-t">这个分类下还没有藏品</text>
+        <text class="cat-empty-t">这个分类下还没有收藏</text>
       </view>
 
       <block wx:if="{{!catEmpty}}">
       <!-- 工具条：左边是列表折叠（轻量），右边是分享动作（胶囊按钮）。
            以前三个都是同色纯文字，看不出主次，也看不出哪个是动作哪个是开关 -->
       <view class="tools">
-        <view class="tools-btn" hover-class="tap-hover" wx:if="{{!selectMode}}" bindtap="toggleAll">
+        <view class="tools-btn" hover-class="tap-hover" bindtap="toggleAll">
           <text>{{allOpen ? '收起分组' : '展开全部'}}</text>
           <text class="tools-arrow {{allOpen ? 'up' : ''}}">▾</text>
         </view>
-        <text class="tools-text" wx:if="{{selectMode}}">点选要分享的藏品（最多 20 件）</text>
 
         <view class="tools-acts">
-          <view class="tools-ghost" hover-class="tap-hover" wx:if="{{plazaOn}}" bindtap="toggleSelectMode">{{selectMode ? '取消多选' : '多选分享'}}</view>
-          <button class="tools-share" bindtap="openShareSheet" hover-class="tap-hover" wx:if="{{!selectMode}}">
+          <button class="tools-share" bindtap="openShareSheet" hover-class="tap-hover">
             <text class="tools-share-ico">↗</text>
             <text>分享我的收藏</text>
           </button>
@@ -80,7 +78,7 @@
           <view class="gbar" wx:if="{{!group.isPm}}"><view class="gbar-fill" style="width:{{group.pct}}%;min-width:{{group.pct > 0 ? 8 : 0}}rpx"></view></view>
 
           <view
-            class="hcard {{selectMode && selected[item.id] ? 'picked' : ''}}"
+            class="hcard"
             wx:for="{{group.items}}"
             wx:key="id"
             wx:for-index="ii"
@@ -89,7 +87,6 @@
             bindtap="goDetail"
             hover-class="tap-hover"
           >
-            <view class="pick-mark" wx:if="{{selectMode}}">{{selected[item.id] ? '✓' : ''}}</view>
             <view class="hc-fig">
               <image
                 wx:if="{{!item.imgFail}}"
@@ -117,7 +114,6 @@
                  隐藏手势在账本页里既不可发现，又容易和上下滚动抢手势 -->
             <view
               class="hc-more"
-              wx:if="{{!selectMode}}"
               data-g="{{gi}}"
               data-i="{{ii}}"
               catchtap="openSheet"
@@ -130,24 +126,16 @@
         </view>
       </block>
 
-      <view class="foot-hint" wx:if="{{!selectMode}}">点每张卡右侧的 ⋯ 可以改数量、改成本，或移出账本</view>
+      <view class="foot-hint">点每张卡右侧的 ⋯ 可以改数量、改成本，或移出账本</view>
       </block>
     </block>
-
-    <!-- 多选分享底部操作栏 -->
-    <view class="pick-bar" wx:if="{{plazaOn && selectMode && !empty}}">
-      <text class="pick-all" hover-class="tap-hover" bindtap="selectAll">全选</text>
-      <text class="pick-count">已选 {{selectedCount}} 件</text>
-      <view class="pick-go {{selectedCount ? '' : 'off'}}" hover-class="tap-hover" bindtap="batchShareToPlaza">分享到广场</view>
-    </view>
-    <view class="pick-spacer" wx:if="{{plazaOn && selectMode && !empty}}"></view>
 
     <view class="foot-note" wx:if="{{syncTip}}">{{syncTip}}</view>
   </block>
 
   <view class="guest-card" wx:else>
     <text class="guest-title">登录后才有账本</text>
-    <text class="guest-sub">登录后你的藏品会存在云端，换设备也能接着记</text>
+    <text class="guest-sub">登录后你的收藏会存在云端，换设备也能接着记</text>
     <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
   </view>
 </view>
@@ -193,7 +181,7 @@
         </view>
       </view>
 
-      <!-- 藏品增强：纪念钞号码 + 花样 -->
+      <!-- 收藏增强：纪念钞号码 + 花样 -->
       <view class="sheet-row ex-row" wx:if="{{sheet.isNote}}">
         <text class="sr-k">号码</text>
         <textarea class="sr-textarea" value="{{sheet.serialsText}}" bindinput="onSheetSerials" placeholder="输入冠字号码，多个换行" placeholder-class="ph" auto-height maxlength="-1"></textarea>
@@ -230,8 +218,7 @@
     </scroll-view>
 
     <view class="sheet-acts">
-      <button class="act ghost" wx:if="{{plazaOn}}" bindtap="shareToPlaza">分享广场</button>
-      <button class="act ghost" bindtap="sheetRemove">移出藏品</button>
+      <button class="act ghost" bindtap="sheetRemove">移出收藏</button>
       <button class="act primary" bindtap="saveSheet">保存</button>
     </view>
   </view>

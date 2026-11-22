@@ -13,9 +13,9 @@
 <link rel="canonical" href="https://coin.virtualman.top/">
 <meta name="theme-color" content="#0a0c10" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f4ed" media="(prefers-color-scheme: light)">
-<link rel="icon" type="image/svg+xml" href="/logo-square.svg?v=3.0.91">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3.0.91">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.0.91">
+<link rel="icon" type="image/svg+xml" href="/logo-square.svg?v=3.0.92">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3.0.92">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.0.92">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="藏币录">
@@ -44,7 +44,7 @@
   "inLanguage": "zh-CN"
 }
 </script>
-<link rel="stylesheet" href="/app.css?v=3.0.91">
+<link rel="stylesheet" href="/app.css?v=3.0.92">
 <script>
 /* 在首帧前定好主题，避免深色闪一下再变白 */
 (function(){
@@ -69,7 +69,7 @@
   <div class="boot-inner">
     <img src="logo.svg" alt="" width="44" height="44">
     <span class="boot-title">藏币录</span>
-    <span class="boot-sub" id="bootSub">正在载入藏品档案…</span>
+    <span class="boot-sub" id="bootSub">正在载入收藏档案…</span>
     <span class="boot-bar"><i></i></span>
   </div>
 </div>
@@ -118,8 +118,7 @@
       <button class="tab" data-tab="plan" data-short="计划" role="tab" aria-selected="false" aria-controls="pane-plan">发行计划</button>
       <button class="tab" data-tab="all" data-short="清单" role="tab" aria-selected="false" aria-controls="pane-all">全套清单</button>
       <button class="tab" data-tab="series" data-short="系列" role="tab" aria-selected="false" aria-controls="pane-series">全部系列</button>
-      <button class="tab" data-tab="holdings" data-short="藏品" role="tab" aria-selected="false" aria-controls="pane-holdings">我的藏品</button>
-      <button class="tab" data-tab="plaza" data-short="广场" role="tab" aria-selected="false" aria-controls="pane-plaza">藏品广场</button>
+      <button class="tab" data-tab="holdings" data-short="收藏" role="tab" aria-selected="false" aria-controls="pane-holdings">我的收藏</button>
     </div>
   </div>
 </nav>
@@ -205,7 +204,7 @@
           <div class="f-ico">账</div>
           <h4>记我的账本</h4>
           <p>按卷/张记录数量、成本与市价，自动算浮动盈亏。数据存在你的账号里，换设备登录也在。</p>
-          <span class="f-go">我的藏品 →</span>
+          <span class="f-go">我的收藏 →</span>
         </button>
       </div>
     </div>
@@ -233,11 +232,11 @@
 
   <!-- ============ 概览 ============ -->
 
-  <!-- ============ 我的藏品 ============ -->
+  <!-- ============ 我的收藏 ============ -->
   <section class="pane" role="tabpanel" id="pane-holdings">
     <div class="anon-gate">
       <div class="gate-ico">藏</div>
-      <h3>这里是你自己的藏品账本</h3>
+      <h3>这里是你自己的收藏账本</h3>
       <p>按卷记录每个品种的数量、成本与市价，改动自动保存到服务器，换设备登录也能接着记。</p>
       <div class="gate-actions">
         <button class="btn primary" data-goto="account">登录 / 注册</button>
@@ -269,7 +268,7 @@
       </div>
 
       <div class="note-line">
-        <span class="pill">独立藏品</span>
+        <span class="pill">单品收藏</span>
         <span id="cashNote">—</span>
       </div>
 
@@ -282,7 +281,7 @@
       <div class="series-summary" id="setsBox"></div>
     
       <div class="sec-head">
-        <h2>我的藏品</h2>
+        <h2>我的收藏</h2>
         <span class="muted">按账本记 · 整卷 20 枚、独立钞按张 · 数字可直接修改</span>
         <span class="spacer"></span>
         <button class="btn ghost xs" type="button" id="backupBtn">导入 / 导出</button>
@@ -302,22 +301,6 @@
       <div class="cost-grid" id="costBox"></div>
       <div class="concl" id="conclBox"></div>
     </div>
-  </section>
-
-  <!-- ============ 藏品广场 ============ -->
-  <section class="pane" role="tabpanel" id="pane-plaza">
-    <div class="sec-head">
-      <h2>藏品广场</h2>
-      <span class="muted">晒出你的靓号藏品，和藏友交流</span>
-      <span class="spacer"></span>
-      <button class="btn primary" id="plazaNew">分享我的藏品</button>
-    </div>
-    <div class="plaza-tabs" id="plazaTabs">
-      <button data-sort="new" class="on">最新</button>
-      <button data-sort="hot">最热</button>
-      <button data-follow="1">我关注的</button>
-    </div>
-    <div class="plaza-grid" id="plazaBox"><div class="muted" style="padding:30px">正在加载广场…</div></div>
   </section>
 
   <!-- ============ 收齐成本 ============ -->
@@ -483,7 +466,7 @@
                  data-form-type="other" data-lpignore="true" data-1p-ignore data-bwignore>
           <div class="authmsg" id="regMsg"></div>
           <button class="btn primary block" type="submit" id="regBtn">注册并登录</button>
-          <p class="authnote">注册后你的账本从空白开始，可以随时在「我的藏品」里记录。</p>
+          <p class="authnote">注册后你的账本从空白开始，可以随时在「我的收藏」里记录。</p>
         </form>
 
         <!-- 华为账号快速登录：只在服务端配好 Client ID / Secret 后显示（见 initHuaweiLogin） -->
@@ -553,8 +536,8 @@
      真人从搜索结果点进来会被误封。诱饵改放在 robots.txt 的 Disallow 里。 -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/serial.js?v=3.0.91"></script>
-<script src="/app.js?v=3.0.91"></script>
+<script src="/serial.js?v=3.0.92"></script>
+<script src="/app.js?v=3.0.92"></script>
   <button type="button" class="to-top" id="toTop" aria-label="回到顶部" tabindex="-1">↑</button>
 
 <!-- 小程序引导：桌面端悬浮，点开看码 -->
@@ -563,7 +546,7 @@
     <button class="mp-close" type="button" id="mpClose" aria-label="关闭">✕</button>
     <img class="mp-qr" src="img/miniprogram-qr.png" alt="藏币录微信小程序码" width="164" height="164">
     <div class="mp-title">微信扫一扫</div>
-    <div class="mp-sub">小程序里记藏品，手机随手看</div>
+    <div class="mp-sub">小程序里记收藏，手机随手看</div>
   </div>
   <button class="mp-btn" type="button" id="mpBtn" aria-expanded="true" aria-controls="mpPanel">
     <img src="logo.svg" alt="" width="22" height="22">

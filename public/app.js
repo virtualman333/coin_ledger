@@ -11,7 +11,7 @@ var PM_FULL = {           // 贵金属全量库（金币云集 2823 条，分页
   facets: null                                     // 年份/面额/材质去重取值，首屏一并取回
 };
 var VIEW_CATEGORY = 'coin'; // /all 分段：默认普通纪念币，贵金属首屏 0 条
-var DEFAULTS = [];        // 服务端初始藏品种子
+var DEFAULTS = [];        // 服务端初始收藏种子
 var SERIES = {};          // 系列代码 -> 中文名
 var SET_META = {};        // 套系定义：setId -> {name,total,unit,members}
 var IMG_SET = {};         // 有图的品种编号（由 /api/bootstrap 下发）
@@ -24,7 +24,7 @@ var PLAN_TAB = 'coin';       // 发行计划当前 tab：coin | pm
 var CATEGORIES = { categories: [] };  // 顶层品类注册表（统一 API 下发）
 var PM_SERIES = [];                   // 贵金属独立系列（= 发行项目，与普通币系列隔离）
 var DESC = {};            // 官方介绍：编号 -> {title,url,text,date}
-var GROUP_ORDER = ['国家公园系列','世界文化和自然遗产','赛事与贺岁','独立藏品'];
+var GROUP_ORDER = ['国家公园系列','世界文化和自然遗产','赛事与贺岁','单品收藏'];
 var STORE_KEY = 'coin-ledger-v3';
 var coll = [];            // 当前登录用户的持仓
 
@@ -231,7 +231,7 @@ function unitPrice(d){
  *  用户口径：「一套」= 一次预约能约到的最大数量，所以 limit 放在最前面。
  */
 /**
- * 藏品卡片里的 推理价：单枚理论价 × 这件持仓的件数。
+ * 收藏卡片里的 推理价：单枚理论价 × 这件持仓的件数。
  * 件数口径跟随持仓单位（按套记就乘每套件数，按枚记本身就是件数）。
  */
 function aiLine(d, c){
@@ -351,7 +351,7 @@ function galleryOf(d){
 }
 
 /** 账本口径：一条持仓记录里的「1 份」是几件。
- *  - 整卷纪念币 / 套系藏品：1 份 = setSizeOf(d) 件（通常 20 枚，冬奥对钞 2 张）
+ *  - 整卷纪念币 / 套系收藏：1 份 = setSizeOf(d) 件（通常 20 枚，冬奥对钞 2 张）
  *  - 独立发行的纪念钞（set=single，无套系声明）：账本按「张」记，1 份 = 1 张
  *    这类钞在清单里仍按 20 张一套展示，但账本不能跟着乘 20，
  *    否则「20 张 × 20 元」会被算成 8000 元（多乘一次 20）。
@@ -594,7 +594,7 @@ function renderKPI(){
   var r = calc(), m = r.main, s = r.sep, pm = r.pm || { kinds: 0, rolls: 0, cost: 0 };
 
   document.getElementById('kFace').textContent = money(m.face);
-  document.getElementById('kFaceNote').textContent = m.rolls + ' 份藏品 · 其中纪念币 ' + m.coins + ' 枚'
+  document.getElementById('kFaceNote').textContent = m.rolls + ' 份收藏 · 其中纪念币 ' + m.coins + ' 枚'
     + (pm.kinds
         ? ' · 另含 ' + pm.kinds + ' 种贵金属 ' + pm.rolls + ' 枚，成本 ' + money(pm.cost) + '（不计入估值与盈亏）'
         : '');
@@ -614,14 +614,14 @@ function renderKPI(){
     var sepItem = sepItems[0];
     // 只有一项时用它的真实量词（张/卷），多项混在一起才退回中性「份」
     var sepUnit = sepItems.length === 1 ? holdingUnitName(findDB(sepItem.name)) : '份';
-    cNote.textContent = (sepItem ? sepItem.name : '独立藏品') + ' · ' + s.rolls + ' ' + sepUnit +
+    cNote.textContent = (sepItem ? sepItem.name : '单品收藏') + ' · ' + s.rolls + ' ' + sepUnit +
       ' · 面值 ' + money(s.face) + ' · 推理价 ' + money(s.market) +
       '，未计入上方 ' + m.rolls + ' 份合计';
   }
 }
 
 /* =========================================================
-   7. 渲染：藏品卡片
+   7. 渲染：收藏卡片
    ========================================================= */
 var HOLD_CAT = 'all';
 function setHoldCat(cat){
@@ -633,7 +633,7 @@ function setHoldCat(cat){
   renderHoldings();
 }
 
-/** 藏品增强区：纪念钞号码+花样、整套/单个标记、自有图片、分享到广场 */
+/** 收藏增强区：纪念钞号码+花样、整套/单个标记、自有图片 */
 function luckyTagsHtml(serials){
   if (!window.SerialAnalyze || !serials || !serials.length) return '';
   var tagMap = {};
@@ -655,7 +655,7 @@ function holdingExtraHtml(c, d){
   var form = c.form === 'set' || c.form === 'single' ? c.form : '';
   var html = '<div class="hx">';
 
-  // 号码：纪念钞主打，其它藏品也可录（贵金属按编号意义不大，隐藏号码输入）
+  // 号码：纪念钞主打，其它收藏也可录（贵金属按编号意义不大，隐藏号码输入）
   if (isNote) {
     html += '<div class="hx-row hx-serial">' +
       '<span class="hx-label">号码</span>' +
@@ -676,7 +676,7 @@ function holdingExtraHtml(c, d){
   // 自有图片（最多 3 张）
   html += '<div class="hx-row hx-imgs"><span class="hx-label">图片</span><div class="hx-thumbs" data-imgs="' + esc(c.name) + '">';
   images.slice(0, 3).forEach(function(p, i){
-    html += '<span class="hx-thumb"><img src="' + esc(p) + '" alt="我的藏品图" loading="lazy">' +
+    html += '<span class="hx-thumb"><img src="' + esc(p) + '" alt="我的收藏图" loading="lazy">' +
       '<b data-ex-act="img-del" data-name="' + esc(c.name) + '" data-idx="' + i + '" title="删除">×</b></span>';
   });
   if (images.length < 3) {
@@ -685,8 +685,6 @@ function holdingExtraHtml(c, d){
   }
   html += '</div></div>';
 
-  // 分享到广场
-  html += '<button type="button" class="hx-share" data-ex-act="share" data-name="' + esc(c.name) + '">分享到藏品广场 →</button>';
   html += '</div>';
   return html;
 }
@@ -704,7 +702,7 @@ function renderHoldings(){
     return true;
   });
 
-  // 分组顺序：按各组藏品数量降序，独立藏品垫底
+  // 分组顺序：按各组收藏数量降序，单品收藏垫底
   var counts = {}, firstSeen = {};
   visible.forEach(function(c, idx){
     var d = findDB(c.name);
@@ -713,8 +711,8 @@ function renderHoldings(){
     if (firstSeen[g] === undefined) firstSeen[g] = idx;
   });
   var groups = Object.keys(counts).sort(function(a, b){
-    var sa = a === '独立藏品' ? 1 : 0, sb = b === '独立藏品' ? 1 : 0;
-    if (sa !== sb) return sa - sb;                 // 独立藏品最后
+    var sa = a === '单品收藏' ? 1 : 0, sb = b === '单品收藏' ? 1 : 0;
+    if (sa !== sb) return sa - sb;                 // 单品收藏最后
     if (counts[b] !== counts[a]) return counts[b] - counts[a];
     return firstSeen[a] - firstSeen[b];
   });
@@ -753,7 +751,7 @@ function renderHoldings(){
     items.forEach(function(c){
       var d = findDB(c.name);
       // isPiece 必须先算出来：原来它在下面才 var 声明，提升后这里恒为 undefined，
-      // 按枚记的藏品被当成按份记 —— 面值和「共 N 枚」一起被放大 size 倍。
+      // 按枚记的收藏被当成按份记 —— 面值和「共 N 枚」一起被放大 size 倍。
       var isPiece = c.unit === 'piece';
       var unitSize = holdingUnitSize(d);
       var qtyNum = (Number(c.rolls) || 0) * (isPiece ? 1 : unitSize);
@@ -812,7 +810,7 @@ function renderHoldings(){
 }
 
 /** 空账本 = 新用户注册后的第一屏。
- *  原来这里只有一行「还没有藏品，去下面的清单里勾选吧」，可这一页下面
+ *  原来这里只有一行「还没有收藏，去下面的清单里勾选吧」，可这一页下面
  *  没有任何清单（滚下去直接是数据说明和页脚），照做的用户只会走到死路。
  *  现在给出真正可点的下一步：单价最低的 4 枚一点即入，或者去完整清单。 */
 function emptyLedgerHtml(){
@@ -834,7 +832,7 @@ function emptyLedgerHtml(){
         'width="120" height="120" decoding="async">' +
       '<span class="lt-name">' + esc(d.name) + '</span>' +
       '<span class="lt-meta">' + d.year + ' 年 · 面额 ' + d.face + ' 元 · 推理价 ' + money(aiPrice(d)) + '</span>' +
-      '<span style="font-size:11px;font-weight:600;color:var(--gold)">＋ 加入我的藏品</span>' +
+      '<span style="font-size:11px;font-weight:600;color:var(--gold)">＋ 加入我的收藏</span>' +
     '</button>';
   }).join('');
   return '<div style="padding:34px 18px 6px;text-align:center">' +
@@ -866,12 +864,12 @@ function ownedIn(pred){
   });
   return n;
 }
-/** 藏品分组：有归属套系的用套系名，独立发行的归「独立藏品」 */
+/** 收藏分组：有归属套系的用套系名，独立发行的归「单品收藏」 */
 function groupOf(coin){
-  if (!coin) return '独立藏品';
+  if (!coin) return '单品收藏';
   var meta = SET_META[coin.set];
   if (coin.set && coin.set !== 'single' && meta && meta.name) return meta.name;
-  return '独立藏品';
+  return '单品收藏';
 }
 
 /** 按数据顺序重建分组顺序，保证列表里系列前后稳定 */
@@ -881,9 +879,9 @@ function rebuildGroupOrder(){
     var g = groupOf(d);
     if (order.indexOf(g) < 0) order.push(g);
   });
-  if (order.indexOf('独立藏品') >= 0) {
-    order.splice(order.indexOf('独立藏品'), 1);
-    order.push('独立藏品');          // 独立藏品永远放最后
+  if (order.indexOf('单品收藏') >= 0) {
+    order.splice(order.indexOf('单品收藏'), 1);
+    order.push('单品收藏');          // 单品收藏永远放最后
   }
   GROUP_ORDER = order;
 }
@@ -1074,7 +1072,7 @@ function renderSeries(){
       (anon ? ''
         : (x.ownCount
           ? '<div class="sc-own">已藏 ' + x.ownCount + ' 项 · 推理价 <b>' + money(x.ownMarket) + '</b></div>'
-          : '<div class="sc-own dim">还没有这个系列的藏品</div>')) +
+          : '<div class="sc-own dim">还没有这个系列的收藏</div>')) +
       (miss ? '<div class="sc-miss">' + miss + '</div>' : '') +
     '</button>';
   }
@@ -1379,7 +1377,7 @@ function renderHome(){
   var note = document.getElementById('homeNote');
   if (join && note) {
     if (isLoggedIn()) {
-      join.textContent = '回到我的藏品';
+      join.textContent = '回到我的收藏';
       join.setAttribute('data-goto', 'holdings');
       note.innerHTML = '你已收藏 <b>' + owned + '</b> / ' + DB.length + ' 个品种' +
         (owned ? '，继续加油' : '，去清单里挑第一枚吧');
@@ -1530,11 +1528,11 @@ function renderCoin(i){
           '<div><i>浮动</i><b class="' + (pnl >= 0 ? 'up' : 'down') + '">' +
             (pnl >= 0 ? '+' : '−') + money(Math.abs(pnl)) + '</b></div>' +
         '</div>' +
-        '<button class="btn ghost xs" data-goto="holdings">去「我的藏品」修改</button>' +
+        '<button class="btn ghost xs" data-goto="holdings">去「我的收藏」修改</button>' +
       '</div>';
   } else if (isLoggedIn()) {
-    ownHtml = '<div class="own-card oc-empty"><span>还没有加入我的藏品</span>' +
-      '<button class="btn primary xs" id="coinAdd">＋ 加入我的藏品</button></div>';
+    ownHtml = '<div class="own-card oc-empty"><span>还没有加入我的收藏</span>' +
+      '<button class="btn primary xs" id="coinAdd">＋ 加入我的收藏</button></div>';
   } else {
     ownHtml = '<div class="own-card oc-empty"><span>登录后可记录你的持仓</span>' +
       '<button class="btn xs" data-goto="account">登录 / 注册</button></div>';
@@ -1979,7 +1977,7 @@ function initAdvFilters(){
 }
 
 /* =========================================================
-   T04：目录分段 + 贵金属（只读参考数据，不进藏品/成本口径）
+   T04：目录分段 + 贵金属（只读参考数据，不进收藏/成本口径）
    ========================================================= */
 /** 当前分段看到的品种：coin=普通纪念币、note=纪念钞、pm=贵金属 */
 function activeCatalog(){
@@ -2152,18 +2150,18 @@ function renderPmFull(){
       var hit = PM_FULL.items.filter(function(x){ return x.code === code; })[0];
       var it = hit || { code: code, name: code, thumb: '' };
       if (pmIsOwned(code)) {
-        if (!window.confirm('把「' + (it.name || code) + '」从我的藏品里移出？')) return;
+        if (!window.confirm('把「' + (it.name || code) + '」从我的收藏里移出？')) return;
         for (var k = 0; k < coll.length; k++) {
           if (coll[k].category === 'pm' && coll[k].id === code) { coll.splice(k, 1); break; }
         }
         reRenderAll();
         a.className = 'pm-add'; a.textContent = '＋ 收藏';
-        toast('已移出藏品');
+        toast('已移出收藏');
       } else {
-        if (!isLoggedIn()) { toast('请先登录再加入藏品'); return; }
+        if (!isLoggedIn()) { toast('请先登录再加入收藏'); return; }
         if (addPmHolding(it.code, it.name, it.thumb)) {
           a.className = 'pm-add is-owned'; a.textContent = '✓ 已收藏 · 取消';
-          toast('已加入藏品');
+          toast('已加入收藏');
         }
       }
       return;
@@ -2263,7 +2261,7 @@ function renderPmDetail(code){
         + '<div class="pm-sib" id="pmSib"></div>'
         + '<div class="pm-detail-actions">'
         + '<button type="button" class="btn ' + (isOwned ? 'ghost pm-fav-owned' : 'primary') + '" data-pmfav="' + esc(code) + '">'
-        + (isOwned ? '✓ 已在藏品 · 点此取消' : '＋ 加入我的藏品') + '</button>'
+        + (isOwned ? '✓ 已在收藏 · 点此取消' : '＋ 加入我的收藏') + '</button>'
         + '<button type="button" class="btn ghost" data-pmcopy="' + SITE + pathOf('pm', code) + '">复制本页链接</button>'
         + '</div>'
         + '<p class="cd-empty">贵金属纪念币无稳定二级市场报价，全站不出市场估值；上方克重价只是材料价值。</p>'
@@ -2287,7 +2285,7 @@ function renderPmDetailError(code, msg){
   bindPmPageActions(box, code, { name: code, thumb: '' });
 }
 
-/** 当前贵金属是否已在我的藏品（与 addPmHolding 的判定同口径） */
+/** 当前贵金属是否已在我的收藏（与 addPmHolding 的判定同口径） */
 function pmIsOwned(code){
   return coll.some(function(c){ return c.category === 'pm' && c.id === code; });
 }
@@ -2296,7 +2294,7 @@ function pmIsOwned(code){
 function togglePmFav(code, it, btn){
   var owned = pmIsOwned(code);
   if (owned) {
-    if (!window.confirm('把「' + (it.name || code) + '」从我的藏品里移出？')) return;
+    if (!window.confirm('把「' + (it.name || code) + '」从我的收藏里移出？')) return;
     for (var i = 0; i < coll.length; i++) {
       if (coll[i].category === 'pm' && coll[i].id === code) { coll.splice(i, 1); break; }
     }
@@ -2305,19 +2303,19 @@ function togglePmFav(code, it, btn){
     saveState();
     renderKPI();
     btn.className = 'btn primary';
-    btn.textContent = '＋ 加入我的藏品';
-    toast('已移出藏品');
+    btn.textContent = '＋ 加入我的收藏';
+    toast('已移出收藏');
     return;
   }
-  if (!isLoggedIn()) { toast('请先登录再加入藏品'); return; }
+  if (!isLoggedIn()) { toast('请先登录再加入收藏'); return; }
   if (addPmHolding(code, it.name, it.thumb, { light: true })) {
     btn.className = 'btn ghost pm-fav-owned';
-    btn.textContent = '✓ 已在藏品 · 点此取消';
-    toast('已加入藏品');
+    btn.textContent = '✓ 已在收藏 · 点此取消';
+    toast('已加入收藏');
   }
 }
 
-/** 独立页内的图片放大 / 加入或取消藏品 / 重试 / 复制链接 */
+/** 独立页内的图片放大 / 加入或取消收藏 / 重试 / 复制链接 */
 function bindPmPageActions(box, code, it){
   box.onclick = function(e){
     var big = e.target.closest('[data-pmimg]');
@@ -2443,7 +2441,7 @@ function ensureCategoryTabs(){
   };
 }
 
-/** 贵金属详情页：只有公告事实 + 规格表，绝不渲染价格/藏品/成本 */
+/** 贵金属详情页：只有公告事实 + 规格表，绝不渲染价格/收藏/成本 */
 function renderPmCoin(d, i){
   var box = document.getElementById('coinBox'); if (!box) return;
   var no = d.no;
@@ -2628,18 +2626,18 @@ function renderTable(){
   hideTip();
 }
 
-/* 清单页顶部的「我的藏品」合计：总面值 / 推理价 / 浮动 */
+/* 清单页顶部的「我的收藏」合计：总面值 / 推理价 / 浮动 */
 function renderListStats(rows){
   var box = document.getElementById('listStats');
   if (!box) return;
 
   if (!isLoggedIn()) {
-    box.innerHTML = '<span class="ls-empty">登录后可在这里看到你藏品的总面值与推理价</span>';
+    box.innerHTML = '<span class="ls-empty">登录后可在这里看到你收藏的总面值与推理价</span>';
     return;
   }
 
   var r = calc();
-  var face = r.main.face + r.sep.face;         // 含独立藏品（纪念钞）
+  var face = r.main.face + r.sep.face;         // 含单品收藏（纪念钞）
   var market = r.main.market + r.sep.market;
   var cost = r.main.cost + r.sep.cost;
   var pnl = market - cost;
@@ -2651,8 +2649,8 @@ function renderListStats(rows){
 
   box.innerHTML =
     '<div class="ls-main">' +
-      '<span class="ls-tag">我的藏品</span>' +
-      '<span class="ls-sub">' + (r.main.rolls + r.sep.rolls) + ' 项 · 含独立藏品</span>' +
+      '<span class="ls-tag">我的收藏</span>' +
+      '<span class="ls-sub">' + (r.main.rolls + r.sep.rolls) + ' 项 · 含单品收藏</span>' +
     '</div>' +
     '<div class="ls-cells">' +
       '<div class="ls-cell"><i>总面值</i><b>' + money(face) + '</b></div>' +
@@ -3104,7 +3102,7 @@ function openBackupModal(){
       '<div class="bk-sec">' +
         '<b class="bk-t">导出</b>' +
         '<p class="bk-p">存成 .csv 表格，Excel / WPS / Numbers 都能直接打开；也能发到微信，在小程序「更多功能 → 收藏备份 → 从聊天记录选文件」导入。</p>' +
-        '<p class="bk-p muted">成本合计 / 市值合计是整条藏品的总金额（单件价 × 数量）。</p>' +
+        '<p class="bk-p muted">成本合计 / 市值合计是整条收藏的总金额（单件价 × 数量）。</p>' +
         '<div class="bk-row">' +
           '<button class="btn primary sm" type="button" id="bkDownload">下载 .csv</button>' +
           '<button class="btn ghost sm" type="button" id="bkCopy">复制表格</button>' +
@@ -3231,7 +3229,7 @@ document.getElementById('holdingsBox').addEventListener('click', function(e){
   var coinEl = e.target.closest('[data-coin]');
   if (coinEl) { goCoin(parseInt(coinEl.getAttribute('data-coin'), 10)); return; }
 
-  /* ---- 藏品增强交互 ---- */
+  /* ---- 收藏增强交互 ---- */
   var ex = e.target.closest('[data-ex-act]');
   if (ex) {
     var exAct = ex.getAttribute('data-ex-act');
@@ -3247,7 +3245,6 @@ document.getElementById('holdingsBox').addEventListener('click', function(e){
         if (Array.isArray(coll[exIdx].images)) coll[exIdx].images.splice(ii, 1);
         saveState(); renderHoldings(); return;
       }
-      if (exAct === 'share') { openShareDialog(exName); return; }
     }
   }
   var btn = e.target.closest('button[data-act]');
@@ -3351,7 +3348,7 @@ function findHoldingIdx(name){
 }
 
 /**
- * 把某个品种加入我的藏品。
+ * 把某个品种加入我的收藏。
  * unit='set' 按整套/整卷记；unit='piece' 按单枚（单张）记。
  * 按枚时成本按单枚面额起算，rolls 表示件数。
  */
@@ -3398,7 +3395,7 @@ function requestAddHolding(name, after){
   var d = findDB(name);
   if (!d || isOwned(name)) return;
   // 访客点「+ 加入」不能假成功：旧逻辑把它塞进本机 coll、弹「已加入」，
-  // 但「我的藏品」入口对访客隐藏、注册后又被空账本覆盖 —— 记了等于没记。
+  // 但「我的收藏」入口对访客隐藏、注册后又被空账本覆盖 —— 记了等于没记。
   // 改成引导去登录，并记住这一枚，注册后落到空账本时置顶让它一点即入。
   if (!isLoggedIn()) { showGuestAddGuide(name); return; }
   var size = holdingUnitSize(d);
@@ -3423,9 +3420,9 @@ function showGuestAddGuide(name){
   mask.id = 'guestAddMask';
   mask.className = 'au-mask';
   mask.innerHTML =
-    '<div class="au-sheet" role="dialog" aria-modal="true" aria-label="登录后记录藏品">' +
+    '<div class="au-sheet" role="dialog" aria-modal="true" aria-label="登录后记录收藏">' +
       '<b>记下「' + esc(name) + '」</b>' +
-      '<p>藏品要存进你自己的账本，换设备登录也在。免费注册只要用户名 + 密码。</p>' +
+      '<p>收藏要存进你自己的账本，换设备登录也在。免费注册只要用户名 + 密码。</p>' +
       '<button type="button" data-guest-go="register">免费注册并记下这枚</button>' +
       '<button type="button" data-guest-go="login">已有账号，去登录</button>' +
       '<button type="button" class="au-x" data-guest-go="cancel">再看看</button>' +
@@ -3744,9 +3741,7 @@ function fmtDateTime(v){
 /* =========================================================
    12. 页签切换
    ========================================================= */
-/* 藏品广场：先隐藏入口（tab 不渲染、旧链接回落首页）。接口与 DOM 都保留，恢复时改成 true 即可 */
-var PLAZA_ON = false;
-var TABS = ['home','plan','all','series','holdings','plaza','account','admin','myfeedback','sitemap'];
+var TABS = ['home','plan','all','series','holdings','account','admin','myfeedback','sitemap'];
 
 /* 访客记录：会话 ID 存在 sessionStorage（关掉标签页算新访客） */
 function visitSid(){
@@ -3768,7 +3763,7 @@ function reportVisit(tab){
       credentials: 'same-origin'
     }).catch(function(){});
   } catch (e) {}
-}   // 概览/收齐成本已并入「我的藏品」
+}   // 概览/收齐成本已并入「我的收藏」
 var TAB_ALIAS = { overview: 'holdings', cost: 'holdings' };  // 旧链接兼容
 // 需要登录才能查看的页签（未登录时连入口都不展示）
 // series 原本也在这里，但系列页展示的是公开数据的套系分组（全套 N 枚、整套推理价），
@@ -3824,8 +3819,7 @@ var TAB_SEO = {
   series:  ['按系列看套系进度 | 藏币录', '把 {n} 个品种归入 {s} 个系列，一眼看出每个系列还差哪几枚。'],
   overview:['收藏概览 | 藏币录', '品种数、套系完成度、面值、推理价与成本的汇总视图。'],
   cost:    ['收齐成本估算 | 藏币录', '按单枚与整套两种口径，估算把全套收齐需要多少钱。'],
-  holdings:['我的藏品 | 藏币录', '记录持仓数量、成本，自动汇总面值与推理价。'],
-  plaza:   ['藏品广场 | 藏币录', '晒出你的纪念钞靓号藏品，识别豹子号、连号等花样，和藏友交流。'],
+  holdings:['我的收藏 | 藏币录', '记录持仓数量、成本，自动汇总面值与推理价。'],
   account: ['账户 | 藏币录', '登录、注册与账户设置。'],
   myfeedback: ['我的反馈 | 藏币录', '查看自己提交的纠错与建议，以及管理员的处理结果与回复。'],
   sitemap: ['站点地图 | 藏币录', '藏币录全部页面与 136 个纪念币/纪念钞品种的索引，按系列分类。'],
@@ -4237,7 +4231,7 @@ function renderSitemap(){
     { p: '/series', n: '全部系列' },
     { p: '/plan', n: '发行计划' },
     { p: '/overview', n: '数据概览' },
-    { p: '/holdings', n: '我的藏品' },
+    { p: '/holdings', n: '我的收藏' },
     { p: '/cost', n: '收齐成本' }
   ];
 
@@ -4302,12 +4296,11 @@ function renderMyFeedback(){
 
 function goTab(name, opts){
   opts = opts || {};
-  name = TAB_ALIAS[name] || name;      // #/overview、#/cost 归到我的藏品
+  name = TAB_ALIAS[name] || name;      // #/overview、#/cost 归到我的收藏
   if (name === 'admin') { window.location.replace('/console/'); return; }
   var prev = currentTab();
   reportVisit(name);                   // 记一条访问（服务端 30 秒内同页去重）
   if (TABS.indexOf(name) < 0) name = 'home';
-  if (name === 'plaza' && !PLAZA_ON) name = 'home';   // 广场下线期间，旧链接直接回落首页
   if (GATED.indexOf(name) >= 0 && !isLoggedIn()) name = 'account';
 
   activatePane(name);
@@ -4340,7 +4333,6 @@ function goTab(name, opts){
   if (name === 'all') { loadPlansOnce(ensureCategoryTabs); ensureCategoryTabs(); syncSetFilter(); }
   if (name === 'account') renderProfile();
   if (name === 'home') renderHome();
-  if (name === 'plaza') loadPlaza();
 }
 
 /* 单个品种详情页 */
@@ -4603,7 +4595,7 @@ function showHuaweiBindSuggest(){
     mask.innerHTML =
       '<div class="au-sheet" role="dialog" aria-modal="true" aria-label="推荐绑定华为账号">' +
         '<b>绑定华为账号，下次一点就进</b>' +
-        '<p>你的账本现在用用户名密码登录。绑定华为账号后，下次在登录页直接点「华为账号快速登录」就行，不用再记密码；网页和鸿蒙端通用，藏品完全不变。</p>' +
+        '<p>你的账本现在用用户名密码登录。绑定华为账号后，下次在登录页直接点「华为账号快速登录」就行，不用再记密码；网页和鸿蒙端通用，收藏完全不变。</p>' +
         '<button type="button" data-hw-suggest="bind">去绑定华为账号</button>' +
         '<button type="button" class="au-x" data-hw-suggest="later">以后再说</button>' +
       '</div>';
@@ -4665,7 +4657,7 @@ function renderProfile(){
         '</div>' +
         '<div class="pmeta">注册于 ' + fmtDate(u.createdAt) +
           '　·　最近登录 ' + fmtDate(u.lastLogin) +
-          '　·　藏品 ' + coll.length + ' 项</div>' +
+          '　·　收藏 ' + coll.length + ' 项</div>' +
         '<div class="pmeta">登录方式：' + esc(loginWays(u)) + '</div>' +
       '</div>' +
       '<button class="btn ghost" id="logoutBtn">退出登录</button>' +
@@ -5188,291 +5180,6 @@ function initMpInline(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMpInline);
 else initMpInline();
-
-/* =========================================================
-   藏品广场（plaza）：分享 / 点赞 / 评论 / 关注
-   数据来自 /api/shares 等接口，公开可读，写操作需登录。
-   ========================================================= */
-var PLAZA = { sort: 'new', follow: false, items: [], offset: 0, loading: false };
-
-function loadPlaza(append){
-  var box = document.getElementById('plazaBox');
-  if (!box) return;
-  if (!append) { PLAZA.offset = 0; PLAZA.items = []; box.innerHTML = '<div class="muted" style="padding:30px">正在加载广场…</div>'; }
-  if (PLAZA.loading) return;
-  PLAZA.loading = true;
-  var qs = '?sort=' + encodeURIComponent(PLAZA.sort) + '&limit=20&offset=' + PLAZA.offset +
-    (PLAZA.follow ? '&follow=1' : '');
-  api('/api/shares' + qs).then(function(r){
-    PLAZA.loading = false;
-    if (!r || !r.ok) { box.innerHTML = '<div class="muted" style="padding:30px">' + ((r && r.error) || '加载失败') + '</div>'; return; }
-    var items = Array.isArray(r.items) ? r.items : [];
-    if (append) PLAZA.items = PLAZA.items.concat(items); else PLAZA.items = items;
-    PLAZA.offset += items.length;
-    renderPlaza();
-  }).catch(function(err){
-    PLAZA.loading = false;
-    box.innerHTML = '<div class="muted" style="padding:30px">加载失败：' + esc(err.message || '') + '</div>';
-  });
-}
-
-function plazaTagChips(tags){
-  if (!Array.isArray(tags) || !tags.length) return '';
-  return '<div class="pz-tags">' + tags.slice(0, 6).map(function(t){
-    var nm = typeof t === 'string' ? t : t.name;
-    var rar = typeof t === 'object' ? (t.rarity || 1) : 1;
-    return '<span class="pz-tag rar' + Math.min(5, rar) + '">' + esc(nm) + '</span>';
-  }).join('') + '</div>';
-}
-
-function renderPlaza(){
-  var box = document.getElementById('plazaBox');
-  if (!box) return;
-  if (!PLAZA.items.length) {
-    box.innerHTML = '<div class="pz-empty">广场还空着，来分享第一件藏品吧。</div>';
-    return;
-  }
-  var html = PLAZA.items.map(function(s){
-    var imgs = Array.isArray(s.images) ? s.images : [];
-    var cover = imgs.length
-      ? '<div class="pz-cover"><img src="' + esc(imgs[0]) + '" alt="藏品图片" loading="lazy">' +
-        (imgs.length > 1 ? '<span class="pz-cover-more">+' + (imgs.length - 1) + '</span>' : '') +
-        (s.form === 'single' ? '<span class="pz-form">单个</span>' : (s.form === 'set' ? '<span class="pz-form">整套</span>' : '')) + '</div>'
-      : '<div class="pz-cover ph"><span class="pz-cover-ph-name">' + esc(s.holdingName) + '</span>' +
-        (s.form === 'single' ? '<span class="pz-form">单个</span>' : (s.form === 'set' ? '<span class="pz-form">整套</span>' : '')) + '</div>';
-    var serials = Array.isArray(s.serials) ? s.serials : [];
-    var serialTxt = serials.length ? '号码 ' + serials.slice(0, 4).join(' · ') + (serials.length > 4 ? ' 等' + serials.length + '张' : '') : '';
-    var mine = isLoggedIn() && APP.user && s.uid === APP.user.id;
-    return '<article class="pz-card" data-share="' + esc(s.id) + '">' +
-      cover +
-      '<div class="pz-body">' +
-        '<div class="pz-title">' + esc(s.holdingName) + '</div>' +
-        (serialTxt ? '<div class="pz-serials">' + esc(serialTxt) + '</div>' : '') +
-        plazaTagChips(s.tags) +
-        (s.caption ? '<div class="pz-caption">' + esc(s.caption) + '</div>' : '') +
-      '</div>' +
-      '<div class="pz-author-line">' +
-        (s.avatar ? '<img class="pz-avatar" src="' + esc(s.avatar) + '" alt="">' : '<span class="pz-avatar ph">' + esc((s.author || '藏')[0]) + '</span>') +
-        '<span class="pz-author">' + esc(s.author || '藏友') + '</span>' +
-        '<span class="pz-time">' + esc(plazaTime(s.createdAt)) + '</span>' +
-      '</div>' +
-      '<div class="pz-actions">' +
-        '<button class="pz-like' + (s.liked ? ' on' : '') + '" data-pz-act="like" data-id="' + esc(s.id) + '">♥ ' + (Number(s.likes) || 0) + '</button>' +
-        '<button class="pz-comment" data-pz-act="comments" data-id="' + esc(s.id) + '">评论 ' + (Number(s.comments) || 0) + '</button>' +
-        '<button class="pz-follow" data-pz-act="follow" data-uid="' + esc(s.uid) + '" data-name="' + esc(s.author || '藏友') + '">+ 关注</button>' +
-        (mine ? '<button class="pz-del" data-pz-act="del" data-id="' + esc(s.id) + '">删除</button>' : '') +
-      '</div>' +
-      '<div class="pz-comments" id="cmts-' + esc(s.id) + '" hidden></div>' +
-    '</article>';
-  }).join('');
-  if (PLAZA.items.length >= 20) html += '<button class="pz-more" id="plazaMore">加载更多</button>';
-  box.innerHTML = html;
-}
-
-function plazaTime(iso){
-  if (!iso) return '';
-  var t = new Date(iso);
-  if (isNaN(t.getTime())) return '';
-  var diff = Date.now() - t.getTime();
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
-  if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
-  return (t.getMonth() + 1) + '月' + t.getDate() + '日';
-}
-
-/* 广场交互（事件委托） */
-(function initPlazaEvents(){
-  var tabs = document.getElementById('plazaTabs');
-  if (tabs) tabs.addEventListener('click', function(e){
-    var b = e.target.closest('button'); if (!b) return;
-    Array.prototype.forEach.call(tabs.querySelectorAll('button'), function(x){ x.className = ''; });
-    b.className = 'on';
-    if (b.getAttribute('data-follow')) {
-      if (!isLoggedIn()) { toast('登录后才能看关注动态'); return; }
-      PLAZA.follow = true; PLAZA.sort = 'new';
-    } else {
-      PLAZA.follow = false; PLAZA.sort = b.getAttribute('data-sort') || 'new';
-    }
-    loadPlaza();
-  });
-  var nb = document.getElementById('plazaNew');
-  if (nb) nb.addEventListener('click', function(){
-    if (!isLoggedIn()) { toast('请先登录再分享'); return; }
-    openShareDialog();
-  });
-
-  var box = document.getElementById('plazaBox');
-  if (!box) return;
-  box.addEventListener('click', function(e){
-    if (e.target.id === 'plazaMore') { loadPlaza(true); return; }
-    // 删除自己的评论：按钮在评论区内部，没有 data-pz-act，必须先于下面的 return 处理
-    var cd = e.target.closest('button[data-pz-cd]');
-    if (cd) {
-      var cid = cd.getAttribute('data-pz-cd');
-      var sid = cd.getAttribute('data-id');
-      if (!confirm('确定删除这条评论？')) return;
-      api('/api/shares/' + encodeURIComponent(sid) + '/comments/' + encodeURIComponent(cid), { method: 'DELETE' }).then(function(r){
-        if (!r || !r.ok) { toast((r && r.error) || '删除失败'); return; }
-        var it = PLAZA.items.filter(function(x){ return x.id === sid; })[0];
-        if (it) it.comments = Math.max(0, (Number(it.comments) || 0) - 1);
-        // 局部更新：评论区保持展开、按钮数字同步，不重建整页（重建会冲掉评论区——这是评论消失 bug 的根因）
-        var cntBtn = box.querySelector('button[data-pz-act="comments"][data-id="' + sid + '"]');
-        if (cntBtn) cntBtn.textContent = '评论 ' + (Number(it && it.comments) || 0);
-        var cmtBox = document.getElementById('cmts-' + sid);
-        if (cmtBox && !cmtBox.hidden) loadComments(sid, cmtBox);
-        toast('已删除');
-      });
-      return;
-    }
-    var b = e.target.closest('button[data-pz-act]'); if (!b) return;
-    var act = b.getAttribute('data-pz-act');
-    var id = b.getAttribute('data-id');
-    if (act === 'like') {
-      if (!isLoggedIn()) { toast('请先登录再点赞'); return; }
-      api('/api/shares/' + encodeURIComponent(id) + '/like', { method: 'POST', body: {} }).then(function(r){
-        if (!r || !r.ok) { toast((r && r.error) || '操作失败'); return; }
-        var it = PLAZA.items.filter(function(x){ return x.id === id; })[0];
-        if (it) { it.liked = r.liked; it.likes = Math.max(0, (Number(it.likes) || 0) + (r.liked ? 1 : -1)); renderPlaza(); }
-      });
-    } else if (act === 'comments') {
-      var cbox = document.getElementById('cmts-' + id);
-      if (!cbox) return;
-      if (!cbox.hidden) { cbox.hidden = true; return; }
-      cbox.hidden = false; cbox.innerHTML = '正在加载评论…';
-      loadComments(id, cbox);
-    } else if (act === 'follow') {
-      if (!isLoggedIn()) { toast('请先登录再关注'); return; }
-      var uid = b.getAttribute('data-uid');
-      api('/api/follow/' + encodeURIComponent(uid), { method: 'POST', body: {} }).then(function(r){
-        if (!r || !r.ok) { toast((r && r.error) || '操作失败'); return; }
-        b.textContent = r.following ? '已关注' : '+ 关注';
-        b.className = 'pz-follow' + (r.following ? ' on' : '');
-      });
-    } else if (act === 'del') {
-      if (!confirm('确定删除这条分享？')) return;
-      api('/api/shares/' + encodeURIComponent(id), { method: 'DELETE' }).then(function(r){
-        if (!r || !r.ok) { toast((r && r.error) || '删除失败'); return; }
-        PLAZA.items = PLAZA.items.filter(function(x){ return x.id !== id; });
-        renderPlaza();
-      });
-    }
-  });
-  box.addEventListener('submit', function(e){
-    var f = e.target;
-    if (!f.classList.contains('pz-cmt-form')) return;
-    e.preventDefault();
-    var id = f.getAttribute('data-id');
-    var inp = f.querySelector('input');
-    var text = (inp.value || '').trim();
-    if (!text) return;
-    if (!isLoggedIn()) { toast('请先登录再评论'); return; }
-    api('/api/shares/' + encodeURIComponent(id) + '/comments', { method: 'POST', body: { text: text } }).then(function(r){
-      if (!r || !r.ok) { toast((r && r.error) || '评论失败'); return; }
-      inp.value = '';
-      var it = PLAZA.items.filter(function(x){ return x.id === id; })[0];
-      if (it) it.comments = (Number(it.comments) || 0) + 1;
-      // 不调用 renderPlaza()：它会重建整页 DOM，把刚展开的评论区连同输入框一起冲掉（评论 bug 根因）
-      var cntBtn = box.querySelector('button[data-pz-act="comments"][data-id="' + id + '"]');
-      if (cntBtn) cntBtn.textContent = '评论 ' + (Number(it && it.comments) || 0);
-      var cbox = document.getElementById('cmts-' + id);
-      if (cbox) loadComments(id, cbox);
-    });
-  });
-})();
-
-function loadComments(id, cbox){
-  api('/api/shares/' + encodeURIComponent(id) + '/comments').then(function(r){
-    if (!r || !r.ok) { cbox.innerHTML = '<div class="muted">评论加载失败</div>'; return; }
-    var items = Array.isArray(r.items) ? r.items : [];
-    var me = APP.user && APP.user.id;
-    var html = items.length ? items.map(function(c){
-      var mine = c.mine === true || (me && c.uid === me);
-      return '<div class="pz-cmt"><b>' + esc(c.author || '藏友') + '</b> ' + esc(c.text) +
-        '<span class="pz-time">' + esc(plazaTime(c.createdAt)) + '</span>' +
-        (mine ? '<button type="button" class="pz-cmt-del" data-pz-cd="' + esc(c.id) + '" data-id="' + esc(id) + '">删除</button>' : '') +
-        '</div>';
-    }).join('') : '<div class="muted" style="font-size:12px">还没有评论</div>';
-    html += '<form class="pz-cmt-form" data-id="' + esc(id) + '"><input placeholder="说点什么…" maxlength="280" autocomplete="off"><button type="submit">发送</button></form>';
-    cbox.innerHTML = html;
-  });
-}
-
-/* 分享对话框：从我的藏品多选（最多 20 件），每件成为一张卡片，写文案后一次发布 */
-function openShareDialog(presetName){
-  if (!isLoggedIn()) { toast('请先登录再分享'); return; }
-  if (!coll.length) { toast('还没有藏品，先去清单里挑几枚'); return; }
-  var rows = coll.map(function(c, i){
-    var checked = presetName && c.name === presetName ? ' checked' : '';
-    var pics = Array.isArray(c.images) && c.images.length
-      ? '<img src="' + esc(c.images[0]) + '" alt="" loading="lazy">' : '';
-    var serials = Array.isArray(c.serials) ? c.serials : [];
-    var note = serials.length ? (serials.length + ' 个号码') : (c.form === 'set' ? '整套' : (c.form === 'single' ? '单个' : '藏品'));
-    return '<label class="pz-pick"><input type="checkbox" class="pz-pick-cb" data-i="' + i + '"' + checked + '>' +
-      pics + '<span class="pz-pick-name">' + esc(c.name) + '</span><span class="pz-pick-note">' + esc(note) + '</span></label>';
-  }).join('');
-  var overlay = document.createElement('div');
-  overlay.className = 'pz-modal-mask';
-  overlay.innerHTML = '<div class="pz-modal pz-modal-multi">' +
-    '<div class="pz-modal-h"><b>分享藏品到广场（可多选）</b><button type="button" class="pz-modal-x">×</button></div>' +
-    '<div class="pz-pick-bar"><button type="button" class="pz-pick-all" id="pzPickAll">全选</button>' +
-      '<span class="pz-pick-count" id="pzPickCount">已选 0 件</span></div>' +
-    '<div class="pz-pick-list">' + rows + '</div>' +
-    '<label>分享文案（可选，应用于所选藏品）<textarea id="pzCaption" rows="2" maxlength="280" placeholder="晒晒你的靓号和收藏心得…"></textarea></label>' +
-    '<div class="pz-modal-f"><button type="button" class="btn" id="pzCancel">取消</button>' +
-    '<button type="button" class="btn primary" id="pzSubmit">发布分享</button></div>' +
-    '</div>';
-  document.body.appendChild(overlay);
-  function close(){ overlay.remove(); }
-  function refreshCount(){
-    var n = overlay.querySelectorAll('.pz-pick-cb:checked').length;
-    overlay.querySelector('#pzPickCount').textContent = '已选 ' + n + ' 件';
-  }
-  overlay.querySelector('.pz-modal-x').onclick = close;
-  document.getElementById('pzCancel').onclick = close;
-  overlay.querySelector('#pzPickAll').onclick = function(){
-    var cbs = overlay.querySelectorAll('.pz-pick-cb');
-    var allChecked = Array.prototype.every.call(cbs, function(x){ return x.checked; });
-    Array.prototype.forEach.call(cbs, function(x){ x.checked = !allChecked; });
-    refreshCount();
-  };
-  Array.prototype.forEach.call(overlay.querySelectorAll('.pz-pick-cb'), function(cb){
-    cb.addEventListener('change', function(){
-      if (overlay.querySelectorAll('.pz-pick-cb:checked').length > 20) {
-        cb.checked = false; toast('一次最多分享 20 件');
-      }
-      refreshCount();
-    });
-  });
-  refreshCount();
-  document.getElementById('pzSubmit').onclick = function(){
-    var cbs = overlay.querySelectorAll('.pz-pick-cb:checked');
-    if (!cbs.length) { toast('请勾选至少一件藏品'); return; }
-    var caption = overlay.querySelector('#pzCaption').value.trim();
-    var items = Array.prototype.map.call(cbs, function(cb){
-      var c = coll[Number(cb.getAttribute('data-i'))];
-      return {
-        holdingName: c.name,
-        serials: Array.isArray(c.serials) ? c.serials : [],
-        images: Array.isArray(c.images) ? c.images : [],
-        form: c.form || ''
-      };
-    });
-    var btn = this; btn.disabled = true; btn.textContent = '发布中…';
-    api('/api/shares/batch', { method: 'POST', body: { items: items, caption: caption } }).then(function(r){
-      if (!r || !r.ok) { toast((r && r.error) || '发布失败'); btn.disabled = false; btn.textContent = '发布分享'; return; }
-      close(); toast('已分享 ' + (r.count || items.length) + ' 件到广场');
-      if (currentTab() === 'plaza') loadPlaza();
-    });
-  };
-}
-
-/* 广场入口隐藏：tab 按钮是静态 HTML，用 .tab[hidden] 的样式关掉 */
-(function hidePlazaEntry(){
-  if (PLAZA_ON) return;
-  var el = document.querySelector('[data-tab="plaza"]');
-  if (el) el.hidden = true;
-})();
 
 /* 全部系列页的品类 tab：点了只显示对应分组 */
 (function initSeriesCats(){

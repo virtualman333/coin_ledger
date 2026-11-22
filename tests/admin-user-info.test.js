@@ -33,12 +33,12 @@ test('用户列表：用户名与账号名分两行，账号名带前缀不歧�
   const wxml = readMp('pages/admin-users/admin-users.wxml');
   assert.match(wxml, /\{\{item\.displayName\}\}/, '缺用户名（昵称）');
   assert.match(wxml, /账号 \{\{item\.accountName\}\}/, '缺账号名，或没写「账号」前缀');
-  assert.match(wxml, /\{\{item\.metaText\}\}/, '缺藏品数 / 注册 / 最近登录那一行');
+  assert.match(wxml, /\{\{item\.metaText\}\}/, '缺收藏数 / 注册 / 最近登录那一行');
 
   const js = readMp('pages/admin-users/admin-users.js');
   assert.match(js, /displayName: display/, 'displayName 没取昵称优先');
   assert.match(js, /accountName: u\.name/, 'accountName 没取登录名');
-  assert.match(js, /metaText:[\s\S]{0,160}条藏品[\s\S]{0,80}注册/, 'metaText 没带藏品数与注册时间');
+  assert.match(js, /metaText:[\s\S]{0,160}条收藏[\s\S]{0,80}注册/, 'metaText 没带收藏数与注册时间');
   assert.match(js, /lastLoginText/, '没有最近登录');
 });
 

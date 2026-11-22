@@ -257,7 +257,7 @@ ${css}
   border-top:1px solid #ece9e2;font:10px/50px -apple-system,sans-serif;color:#8a8378;text-align:center;}
 .tabbar-sim span{flex:1;}
 .tabbar-sim .on{color:#9a6b1f;}
-</style></head><body>${html}${height ? `<div class="tabbar-sim"><span>首页</span><span>全套清单</span><span>我的藏品</span></div>` : ''}</body></html>`;
+</style></head><body>${html}${height ? `<div class="tabbar-sim"><span>首页</span><span>全套清单</span><span>我的收藏</span></div>` : ''}</body></html>`;
   fs.mkdirSync(OUT, { recursive: true });
   const file = path.join(OUT, name + '.html');
   fs.writeFileSync(file, doc, 'utf8');

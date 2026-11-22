@@ -26,11 +26,6 @@
       <text class="cell-v">v{{appVersion}}</text>
       <text class="cell-a">›</text>
     </view>
-    <view class="cell" wx:if="{{plazaOn}}" hover-class="row-hover" hover-stay-time="80" bindtap="goPlaza" aria-role="button" aria-label="藏品广场">
-      <view class="cell-ico"><text>✦</text></view>
-      <text class="cell-k">藏品广场</text>
-      <text class="cell-a">›</text>
-    </view>
   </view>
 
   <block wx:if="{{loggedIn}}">

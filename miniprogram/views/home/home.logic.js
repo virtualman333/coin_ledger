@@ -2,7 +2,6 @@ const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const api = require('../../utils/api');
-const feature = require('../../utils/feature');
 
 module.exports = {
   data: {
@@ -25,16 +24,13 @@ module.exports = {
     syncTip: '',
     progress: { owned: 0, total: 0, pct: 0, label: '' },
     heroImg: '',
-    // 内容板块：实时行情 + 广场动态，失败时整块隐藏
+    // 内容板块：实时行情（失败时整块隐藏）
     metal: null,
-    plazaOn: feature.plaza,   // 广场下线后连数据都不用拉
-    feed: [],
   },
 
   onShow() {
     this.render();
     this.loadMetal();
-    this.loadFeed();
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
@@ -42,7 +38,6 @@ module.exports = {
 
   onPullDownRefresh() {
     this.loadMetal();
-    this.loadFeed();
     store.refresh().then(() => {
       this.render();
       this.triggerEvent('refreshed');
@@ -56,7 +51,7 @@ module.exports = {
     const owned = store.ownedNames();
     const ownedCount = Object.keys(owned).length;
     const coins = cat.coins.slice().sort((a, b) => (b.year - a.year) || (b.id - a.id));
-    // hero 右侧展示一枚真实藏品，比纯装饰更有归属感
+    // hero 右侧展示一枚真实收藏，比纯装饰更有归属感
     const firstOwned = cat.coins.filter((c) => owned[c.name] && c.imgUrl)[0];
     const heroImg = firstOwned ? (firstOwned.thumbUrl || firstOwned.imgUrl) : '';
     const latest = coins.slice(0, 3).map((c) => ({
@@ -136,34 +131,10 @@ module.exports = {
     }).catch(() => this.setData({ metal: null }));
   },
 
-  /** 首页内容板块：广场最新晒单（前 3 条，失败即隐藏整块） */
-  loadFeed() {
-    if (!feature.plaza) { this.setData({ feed: [] }); return Promise.resolve(); }
-    return api.get('/api/shares?sort=new&limit=3').then((r) => {
-      if (!r || !r.ok || !Array.isArray(r.items)) { this.setData({ feed: [] }); return; }
-      const feed = r.items.slice(0, 3).map((s) => ({
-        id: s.id,
-        author: s.author || '藏友',
-        holdingName: s.holdingName || '',
-        serialText: s.serials && s.serials.length ? s.serials[0] : '',
-        tag: (s.tags && s.tags[0] && (s.tags[0].name || s.tags[0])) || '',
-        pic: (s.images && s.images[0])
-          ? (s.images[0].indexOf('http') === 0 ? s.images[0] : api.BASE + s.images[0])
-          : '',
-        timeText: agoText(s.createdAt),
-      }));
-      this.setData({ feed });
-    }).catch(() => this.setData({ feed: [] }));
-  },
-
   /** 行情卡：进贵金属目录 */
   goMetal() {
     wx.setStorageSync('cl_pending_series', { code: '', category: 'pm' });
     this.triggerEvent('switchtab', { index: 2 });
-  },
-
-  goPlaza() {
-    wx.navigateTo({ url: '/pages/plaza/plaza' });
   },
 
   goHoldings() {
@@ -227,17 +198,4 @@ function hhmm(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
   return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
-}
-
-/** 相对时间：刚刚 / N 分钟前 / N 小时前 / N 天前 / M月D日 */
-function agoText(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const diff = Date.now() - d.getTime();
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
-  if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
-  return (d.getMonth() + 1) + '月' + d.getDate() + '日';
 }

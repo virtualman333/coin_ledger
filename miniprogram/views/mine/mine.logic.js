@@ -2,7 +2,6 @@ const api = require('../../utils/api');
 const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
-const feature = require('../../utils/feature');
 
 /** 收藏进度切成 20 段刻度：比一根细线更像「集章册」，也更看得清进度 */
 function buildSegs(pct) {
@@ -25,7 +24,6 @@ function appVersion() {
 
 module.exports = {
   data: {
-    plazaOn: feature.plaza,        // 广场入口开关（utils/feature.js）
     loggedIn: false,
     isAdmin: false,
     userName: '',
@@ -68,7 +66,7 @@ module.exports = {
     }).catch(() => this.triggerEvent('refreshed'));
   },
 
-  /** 最近 3 枚有图的藏品，放在「我的藏品」行左侧当视觉锚点 */
+  /** 最近 3 枚有图的收藏，放在「我的收藏」行左侧当视觉锚点 */
   buildThumbs(list) {
     const api = require('../../utils/api');
     const out = [];
@@ -102,14 +100,13 @@ module.exports = {
     return out;
   },
 
-  /** 快捷入口：只放「我的藏品」之外的高频动作，避免和下面那行重复 */
+  /** 快捷入口：只放「我的收藏」之外的高频动作，避免和下面那行重复 */
   buildQuick() {
     const list = [
       { key: 'backup', name: '收藏备份', icon: '⇅' },
       { key: 'count', name: '拍照数币', icon: '◎' },
       { key: 'feedback', name: '意见反馈', icon: '✎' }
     ];
-    if (feature.plaza) list.push({ key: 'plaza', name: '藏品广场', icon: '✦' });
     return list;
   },
 
@@ -140,7 +137,7 @@ module.exports = {
 
   /* ---------------- 跳转 ---------------- */
 
-  /** 点品类格：带着分类进「我的藏品」 */
+  /** 点品类格：带着分类进「我的收藏」 */
   goCat(e) {
     const key = e.currentTarget.dataset.cat || 'all';
     wx.navigateTo({ url: '/pages/holdings/holdings?cat=' + encodeURIComponent(key) });
@@ -166,7 +163,6 @@ module.exports = {
     if (key === 'backup') { wx.navigateTo({ url: '/pages/backup/backup' }); return; }
     if (key === 'count') { wx.navigateTo({ url: '/pages/count/count' }); return; }
     if (key === 'feedback') { wx.navigateTo({ url: '/pages/feedback/feedback' }); return; }
-    if (key === 'plaza') { wx.navigateTo({ url: '/pages/plaza/plaza' }); return; }
   },
 
   render() {

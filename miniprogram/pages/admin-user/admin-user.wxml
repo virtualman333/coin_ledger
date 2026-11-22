@@ -86,7 +86,7 @@
     </view>
   </view>
 
-  <view class="empty" wx:if="{{!loading && !items.length}}">这个账号还没有藏品</view>
+  <view class="empty" wx:if="{{!loading && !items.length}}">这个账号还没有收藏</view>
 
   <view class="loading" wx:if="{{loading}}">加载中…</view>
 </view>

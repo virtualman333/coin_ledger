@@ -73,7 +73,6 @@ function loadPage() {
   });
   install('utils/api.js', { BASE: '', get: () => Promise.resolve({ ok: true, items: [] }), post: () => Promise.resolve({ ok: true }) });
   install('utils/share.js', { appMessage: () => ({}), timeline: () => ({}), COVER: '' });
-  install('utils/feature.js', { plaza: false });
 
   const f = path.join(MP, 'views/list/list.logic.js');
   delete require.cache[require.resolve(f)];

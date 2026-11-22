@@ -122,7 +122,7 @@ function validateSources(src, opts) {
     if (stats.seriesDistinct !== EXPECTED_COUNTS.series) errors.push('品种引用的系列数应为 ' + EXPECTED_COUNTS.series + '，实际 ' + stats.seriesDistinct);
     if (stats.series !== EXPECTED_COUNTS.series) errors.push('series.json items 应为 20，实际 ' + stats.series);
     if (stats.sets !== EXPECTED_COUNTS.sets) errors.push('套系应为 21，实际 ' + stats.sets);
-    if (stats.defaults !== EXPECTED_COUNTS.defaults) errors.push('初始藏品模板应为 12，实际 ' + stats.defaults);
+    if (stats.defaults !== EXPECTED_COUNTS.defaults) errors.push('初始收藏模板应为 12，实际 ' + stats.defaults);
     if (stats.galleryCoinKeys !== EXPECTED_COUNTS.coins) errors.push('gallery 覆盖品种数应为 137，实际 ' + stats.galleryCoinKeys);
     if (stats.images !== EXPECTED_COUNTS.images) errors.push('图片张数应为 250，实际 ' + stats.images);
     if (stats.real !== 135) errors.push('实拍图品种数应为 135，实际 ' + stats.real);
@@ -250,7 +250,7 @@ function buildPlan(src) {
     defaults: ((src.coins && src.coins.defaults) || []).map((x, i) => ({
       ord: i, name: String(x.name), rolls: Math.round(Number(x.rolls) || 0),
       cost: Number(x.cost) || 0, market: Number(x.market) || 0,
-      grp: x.group === undefined ? '独立藏品' : String(x.group), sep: x.sep ? 1 : 0
+      grp: x.group === undefined ? '单品收藏' : String(x.group), sep: x.sep ? 1 : 0
     })),
     series: ((src.series && src.series.items) || []).map((s) => ({
       series_key: String(s.key), name: String(s.name),

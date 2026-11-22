@@ -53,7 +53,7 @@ function shortName(name) {
 
 function groupName(coin) {
   const meta = SETS[coin.set];
-  return coin.set && coin.set !== 'single' && meta && meta.name ? meta.name : '独立藏品';
+  return coin.set && coin.set !== 'single' && meta && meta.name ? meta.name : '单品收藏';
 }
 
 /** 一「套」包含几件（展示口径）：按实物成套 —— 整卷 20 枚 / 套系声明的件数。

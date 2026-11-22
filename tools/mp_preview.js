@@ -127,7 +127,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   store.state.holdings = [
     { id: 'h1', name: '三江源国家公园', rolls: 1, cost: 200, market: 210, group: '国家公园（2023—2026）' },
     { id: 'h2', name: '大熊猫国家公园', rolls: 2, cost: 400, market: 420, group: '国家公园（2023—2026）' },
-    { id: 'h3', name: '2026年贺岁纪念钞（马钞）', rolls: 1, cost: 400, market: 700, group: '独立藏品' },
+    { id: 'h3', name: '2026年贺岁纪念钞（马钞）', rolls: 1, cost: 400, market: 700, group: '单品收藏' },
   ].filter((h) => cat.byName[h.name]);
   }
 
@@ -151,7 +151,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   detail.onShow();
   files.push(build({ name: 'detail', wxml: 'pages/detail/detail.wxml', wxss: 'pages/detail/detail.wxss', data: detail.data }));
 
-  /* 我的藏品 */
+  /* 我的收藏 */
   const mine = loadPage('pages/mine/mine');
   mine.render();
   files.push(build({ name: 'mine', wxml: 'pages/mine/mine.wxml', wxss: 'pages/mine/mine.wxss', data: mine.data, height: true }));
@@ -195,21 +195,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       title: '223.74.122.90',
       total: 12,
       rows: [
-        { at: '11-15 21:04', tab: '品种详情', src: '小程序', srcCls: 'mp', user: '藏友' },
-        { at: '11-15 21:02', tab: '全套清单', src: '小程序', srcCls: 'mp', user: '藏友' },
-        { at: '11-15 21:00', tab: '首页', src: '小程序', srcCls: 'mp', user: '藏友' },
+        { at: '11-15 21:04', tab: '品种详情', src: '小程序', srcCls: 'mp', user: '同好' },
+        { at: '11-15 21:02', tab: '全套清单', src: '小程序', srcCls: 'mp', user: '同好' },
+        { at: '11-15 21:00', tab: '首页', src: '小程序', srcCls: 'mp', user: '同好' },
       ],
     },
   });
   files.push(build({ name: 'admin-vdetail', wxml: 'pages/admin/admin.wxml', wxss: 'pages/admin/admin.wxss', data: admDetail.data }));
 
-  /* 管理端：某用户的藏品 */
+  /* 管理端：某用户的收藏 */
   const au = loadPage('pages/admin-user/admin-user');
   const ca = cat.coins.filter((c) => c.name.indexOf('蛇钞') >= 0)[0] || cat.coins[0];
   const cb = cat.coins.filter((c) => c.year >= 2025)[0] || cat.coins[1];
   au.setData({
     loading: false,
-    userName: '藏友SBX4',
+    userName: '同好SBX4',
     avatarText: '藏',
     roleText: '普通用户',
     createdText: '2026/11/09',
@@ -242,7 +242,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     userCount: 6, coinCount: 136, openCount: 2,
     users: [
       { id: 'u1', name: 'virtualman', role: 'admin', holdings: 14, createdAtText: '2026/11/8' },
-      { id: 'u2', name: '藏友G6M4', role: 'user', holdings: 0, createdAtText: '2026/11/9' },
+      { id: 'u2', name: '同好G6M4', role: 'user', holdings: 0, createdAtText: '2026/11/9' },
     ],
     tab: 'users',
   });
@@ -262,7 +262,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   planPage.onLoad();
   files.push(build({ name: 'plan', wxml: 'pages/plan/plan.wxml', wxss: 'pages/plan/plan.wxss', data: planPage.data, height: true }));
 
-  /* 我的藏品：带假数据的卡片形态 */
+  /* 我的收藏：带假数据的卡片形态 */
   const hd = loadPage('pages/holdings/holdings');
   const c1 = cat.coins.filter((c) => c.name.indexOf('蛇钞') >= 0)[0] || cat.coins[0];
   const c2 = cat.coins.filter((c) => c.name.indexOf('马') >= 0)[0] || cat.coins[1];
@@ -281,7 +281,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         ],
       },
       {
-        name: '独立藏品', open: true, progLabel: '已收 1 / 112', pct: 1, sumLabel: '620',
+        name: '单品收藏', open: true, progLabel: '已收 1 / 112', pct: 1, sumLabel: '620',
         items: [
           { id: 'h3', coinId: c3.id, name: c3.name, imgUrl: c3.smallUrl, rolls: 1, qtyLabel: '20 枚', faceText: '40', costText: '500', marketText: '620', unitCostText: '500', pnlText: '+¥120', pnlCls: 'up', pnlPct: 24 },
         ],
@@ -297,7 +297,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   files.push(build({ name: 'mine-empty', wxml: 'pages/mine/mine.wxml', wxss: 'pages/mine/mine.wxss', data: mineEmpty.data }));
   store.refresh && null;
 
-  /* 藏品列表（二级页） */
+  /* 收藏列表（二级页） */
   const hold = loadPage('pages/holdings/holdings');
   hold.onShow();
   files.push(build({ name: 'holdings', wxml: 'pages/holdings/holdings.wxml', wxss: 'pages/holdings/holdings.wxss', data: hold.data, height: true }));
