@@ -327,7 +327,7 @@ export struct HomeView {
       })
     } else {
       Column({ space: 6 }) {
-        Text('登录后开始记你的收藏')
+        Text('登录后开始记录你的钱币')
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
