@@ -124,9 +124,8 @@ export struct PrivacyPage {
             .padding(14)
             .borderRadius(12)
             .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
             .border({ width: 1, color: Theme.glassBorder })
-            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+            .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
             .alignItems(HorizontalAlign.Start)
           }, (s: Section) => s.title)
 
@@ -151,6 +150,7 @@ export struct PrivacyPage {
               .height(40)
               .borderRadius(8)
               .backgroundColor(Theme.card)
+              .border({ width: 1, color: Theme.lineSoft })
               .onClick((): void => {
                 Clip.copy('virtualman2001', '微信号已复制');
               })
@@ -164,6 +164,7 @@ export struct PrivacyPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

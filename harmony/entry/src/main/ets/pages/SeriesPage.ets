@@ -189,6 +189,7 @@ export struct SeriesPage {
     .margin({ bottom: 8 })
     .borderRadius(12)
     .backgroundColor(Theme.card)
+    .border({ width: 1, color: Theme.lineSoft })
     .onClick((): void => {
       this.go(item.code, item.cat, item.name);
     })
@@ -268,9 +269,8 @@ export struct SeriesPage {
           .padding(14)
           .borderRadius(14)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .onClick((): void => {
             this.stack.pop();
           })
@@ -334,6 +334,7 @@ export struct SeriesPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

@@ -113,9 +113,8 @@ export struct AboutPage {
           .padding({ top: 12, bottom: 12 })
           .borderRadius(14)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
           Column({ space: 0 }) {
             this.row('隐私政策与用户协议', '', (): void => {
@@ -140,9 +139,8 @@ export struct AboutPage {
           .padding({ left: 14, right: 14 })
           .borderRadius(14)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
           Column({ space: 8 }) {
             Text('数据说明')
@@ -167,9 +165,8 @@ export struct AboutPage {
           .padding(14)
           .borderRadius(14)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
 
           Text('Made for collectors · 2024—2026')
@@ -184,6 +181,7 @@ export struct AboutPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

@@ -162,7 +162,7 @@ struct Index {
       .borderRadius(Theme.radiusL)
       .backgroundColor(Theme.card)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
       .shadow({ radius: 30, color: 'rgba(0,0,0,0.25)', offsetY: 10 })
     }
     .width('100%')
@@ -218,6 +218,8 @@ struct Index {
       }
     }
     .hideTitleBar(true)
+    // 华为 UX 规范：页面转场用淡入淡出（FADE），不要左右平移
+    .systemTransition(NavigationSystemTransitionType.FADE)
     .backgroundColor(Theme.bg)
     // 不写尺寸时 NavDestination 会按内容自适应，出现「页面比屏幕窄、左侧露出下页」的残影
     .width('100%')

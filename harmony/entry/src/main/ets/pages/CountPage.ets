@@ -135,6 +135,7 @@ export struct CountPage {
             .justifyContent(FlexAlign.Center)
             .borderRadius(12)
             .backgroundColor(Theme.card)
+            .border({ width: 1, color: Theme.lineSoft })
           }
 
           if (this.busy) {
@@ -206,9 +207,8 @@ export struct CountPage {
           .padding(14)
           .borderRadius(12)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
 
           Column().height(30)
@@ -218,6 +218,7 @@ export struct CountPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

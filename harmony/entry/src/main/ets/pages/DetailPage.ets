@@ -405,6 +405,7 @@ export struct DetailPage {
         .padding({ left: 14, right: 14, top: 8, bottom: 8 })
       }
       .scrollable(ScrollDirection.Horizontal)
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .width('100%')
     }
@@ -471,9 +472,8 @@ export struct DetailPage {
     .padding(14)
     .borderRadius(14)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -508,9 +508,8 @@ export struct DetailPage {
     .padding(14)
     .borderRadius(14)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
   @Builder
@@ -534,9 +533,8 @@ export struct DetailPage {
       .padding(14)
       .borderRadius(14)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -576,9 +574,8 @@ export struct DetailPage {
       .padding(14)
       .borderRadius(14)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -649,6 +646,7 @@ export struct DetailPage {
         }
         .listDirection(Axis.Horizontal)
         .height(124)
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .width('100%')
       }
@@ -656,9 +654,8 @@ export struct DetailPage {
       .padding(14)
       .borderRadius(14)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
       .alignItems(HorizontalAlign.Start)
     }
   }
@@ -766,9 +763,8 @@ export struct DetailPage {
       .padding(18)
       .borderRadius(16)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -899,6 +895,7 @@ export struct DetailPage {
           }
           .width('100%')
           .constraintSize({ maxHeight: 320 })
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
         }
 
@@ -936,7 +933,8 @@ export struct DetailPage {
       .padding({ left: 20, right: 20, top: 16, bottom: 24 })
       .borderRadius({ topLeft: Theme.radiusL, topRight: Theme.radiusL })
       .backgroundColor(Theme.card)
-      .shadow({ radius: 30, color: 'rgba(0,0,0,0.18)', offsetY: -6 })
+      .border({ width: 1, color: Theme.lineSoft })
+      .shadow({ radius: 18, color: 'rgba(0,0,0,0.14)', offsetY: -6 })
     }
     .width('100%')
     .height('100%')
@@ -1049,6 +1047,7 @@ export struct DetailPage {
             .justifyContent(FlexAlign.Start)
             .justifyContent(FlexAlign.Start)
           }
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)
           .width('100%')

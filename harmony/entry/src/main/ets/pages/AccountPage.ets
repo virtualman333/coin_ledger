@@ -491,9 +491,8 @@ export struct AccountPage {
     .padding(16)
     .borderRadius(16)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
   @Builder
@@ -599,9 +598,8 @@ export struct AccountPage {
     .padding(16)
     .borderRadius(16)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
   @Builder
@@ -675,9 +673,8 @@ export struct AccountPage {
           .padding(16)
           .borderRadius(16)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
 
           Column().height(30)
@@ -689,6 +686,7 @@ export struct AccountPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

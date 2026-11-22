@@ -658,6 +658,7 @@ export struct HoldingsPage {
       .padding(18)
       .borderRadius({ topLeft: 18, topRight: 18 })
       .backgroundColor(Theme.card)
+      .border({ width: 1, color: Theme.lineSoft })
     }
     .width('100%')
     .height('100%')
@@ -693,9 +694,8 @@ export struct HoldingsPage {
           .padding(20)
           .borderRadius(16)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
           .margin({ top: 12 })
         } else {
@@ -728,9 +728,8 @@ export struct HoldingsPage {
                 .padding(18)
                 .borderRadius(14)
                 .backgroundColor(Theme.glass)
-                .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                 .border({ width: 1, color: Theme.glassBorder })
-                .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 .alignItems(HorizontalAlign.Start)
               } else if (this.catEmpty) {
                 Text('这个分类下还没有藏品，换个分类看看')
@@ -802,9 +801,8 @@ export struct HoldingsPage {
                 .padding({ left: 12, right: 12 })
                 .borderRadius(12)
                 .backgroundColor(Theme.glass)
-                .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                 .border({ width: 1, color: Theme.glassBorder })
-                .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
               }, (g: HoldGroup) => g.name)
 
               Column({ space: 4 }) {
@@ -824,6 +822,7 @@ export struct HoldingsPage {
             .constraintSize({ minHeight: '100%' })
             .justifyContent(FlexAlign.Start)
           }
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)
           .layoutWeight(1)

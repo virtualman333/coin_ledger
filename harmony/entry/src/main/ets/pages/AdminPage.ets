@@ -319,6 +319,7 @@ export struct AdminPage {
         .height(36)
         .fontSize(12)
         .backgroundColor(Theme.card)
+        .border({ width: 1, color: Theme.lineSoft })
         .borderRadius(18)
         .padding({ left: 12, right: 12 })
       Text('搜索')
@@ -545,9 +546,8 @@ export struct AdminPage {
       .padding(16)
       .borderRadius(16)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -579,9 +579,8 @@ export struct AdminPage {
           .padding(20)
           .borderRadius(16)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(HorizontalAlign.Start)
           .margin({ left: 16, right: 16, top: 12 })
         } else {
@@ -601,9 +600,8 @@ export struct AdminPage {
                 .padding(12)
                 .borderRadius(12)
                 .backgroundColor(Theme.glass)
-                .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                 .border({ width: 1, color: Theme.glassBorder })
-                .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 this.searchRow('搜用户名 / 昵称 / ID')
               } else if (this.tab === 'feedback') {
                 this.searchRow('反馈不在这里搜，直接翻列表')
@@ -658,9 +656,8 @@ export struct AdminPage {
               .padding({ left: 12, right: 12 })
               .borderRadius(12)
               .backgroundColor(Theme.glass)
-              .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
               .border({ width: 1, color: Theme.glassBorder })
-              .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+              .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
               Text('管理端说明：用户封禁/解封、反馈处理、品种基础字段编辑已支持；发行计划、贵金属、系列与图片管理请在网页版后台操作。')
                 .fontSize(9)
@@ -676,6 +673,7 @@ export struct AdminPage {
             .justifyContent(FlexAlign.Start)
             .padding({ left: 16, right: 16, top: 8 })
           }
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
           .layoutWeight(1)
         }

@@ -780,7 +780,6 @@ export struct ListView {
     .margin({ bottom: 10 })
     .borderRadius(Theme.radiusM)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
     .shadow({ radius: 18, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
     .onClick((): void => {
@@ -894,6 +893,7 @@ export struct ListView {
               .padding({ left: 12, right: 12 })
               .borderRadius(Theme.radiusM)
               .backgroundColor(Theme.card)
+              .border({ width: 1, color: Theme.lineSoft })
 
               Text(this.extraCount > 0 ? '筛选 ' + this.extraCount : '筛选')
                 .fontSize(12)
@@ -992,6 +992,7 @@ export struct ListView {
               .padding({ top: 8, bottom: 4 })
             }
             .scrollable(ScrollDirection.Horizontal)
+            .edgeEffect(EdgeEffect.Spring)
             .scrollBar(BarState.Off)
             .width('100%')
 
@@ -1128,9 +1129,8 @@ export struct ListView {
             .padding({ left: 14, right: 14 })
             .borderRadius(Theme.radiusM)
             .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
             .border({ width: 1, color: Theme.glassBorder })
-            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+            .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
             if (this.count === 0) {
               EmptyTip({
@@ -1164,6 +1164,7 @@ export struct ListView {
       .constraintSize({ minHeight: '100%' })
       .justifyContent(FlexAlign.Start)
     }
+    .edgeEffect(EdgeEffect.Spring)
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
     .onScrollEdge((side: Edge): void => {

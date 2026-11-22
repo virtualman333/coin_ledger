@@ -293,6 +293,7 @@ export struct PlazaPage {
             }, (c: CommentItem) => c.id)
           }
           .height(280)
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
         }
         .width('100%')
@@ -323,9 +324,8 @@ export struct PlazaPage {
       .padding(16)
       .borderRadius(16)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -429,9 +429,8 @@ export struct PlazaPage {
     .padding(14)
     .borderRadius(14)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -503,6 +502,7 @@ export struct PlazaPage {
           .justifyContent(FlexAlign.Start)
           .padding({ left: 16, right: 16, top: 8 })
         }
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .onScrollEdge((side: Edge): void => {
           if (side === Edge.Bottom) this.onReachBottom();

@@ -336,9 +336,8 @@ export struct PmDetailPage {
       .padding(18)
       .borderRadius(16)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -410,9 +409,8 @@ export struct PmDetailPage {
                   .padding(14)
                   .borderRadius(14)
                   .backgroundColor(Theme.glass)
-                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                   .border({ width: 1, color: Theme.glassBorder })
-                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                  .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
                   if ((this.item as PmDetail).metalValue !== null) {
                     this.metalCard()
@@ -464,9 +462,8 @@ export struct PmDetailPage {
                   .padding(14)
                   .borderRadius(14)
                   .backgroundColor(Theme.glass)
-                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                   .border({ width: 1, color: Theme.glassBorder })
-                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                  .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }
                 .width('100%')
               }
@@ -524,6 +521,7 @@ export struct PmDetailPage {
             .constraintSize({ minHeight: '100%' })
             .justifyContent(FlexAlign.Start)
           }
+          .edgeEffect(EdgeEffect.Spring)
           .scrollBar(BarState.Off)
           .edgeEffect(EdgeEffect.Spring)
           .width('100%')
@@ -591,7 +589,7 @@ export struct PmDetailPage {
       .borderRadius(Theme.radiusM)
       .backgroundColor(Theme.card)
       .border({ width: 1, color: Theme.lineSoft })
-      .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
+      .shadow({ radius: 12, color: 'rgba(0,0,0,0.04)', offsetY: 5 })
     }
   }
 
@@ -666,6 +664,7 @@ export struct PmDetailPage {
         }
         .listDirection(Axis.Horizontal)
         .height(158)
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .width('100%')
       }
@@ -675,7 +674,7 @@ export struct PmDetailPage {
       .borderRadius(Theme.radiusM)
       .backgroundColor(Theme.card)
       .border({ width: 1, color: Theme.lineSoft })
-      .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
+      .shadow({ radius: 12, color: 'rgba(0,0,0,0.04)', offsetY: 5 })
     }
   }
 

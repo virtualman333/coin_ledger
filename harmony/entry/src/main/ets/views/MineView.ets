@@ -348,6 +348,7 @@ export struct MineView {
         }
         .listDirection(Axis.Horizontal)
         .height(112)
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .width('100%')
       }
@@ -395,6 +396,7 @@ export struct MineView {
               .padding({ left: 12, right: 12, top: 6, bottom: 6 })
               .borderRadius(14)
               .backgroundColor(Theme.card)
+              .border({ width: 1, color: Theme.lineSoft })
               .onClick((): void => {
                 Nav.push(this.stack, Routes.PROFILE, new RouteParam());
               })
@@ -459,7 +461,7 @@ export struct MineView {
             .borderRadius(16)
             .backgroundColor(Theme.card)
             .border({ width: 1, color: Theme.lineSoft })
-            .shadow({ radius: 20, color: 'rgba(0,0,0,0.05)', offsetY: 6 })
+            .shadow({ radius: 10, color: 'rgba(0,0,0,0.04)', offsetY: 6 })
             .alignItems(HorizontalAlign.Start)
           } else {
             Column({ space: 6 }) {
@@ -482,6 +484,7 @@ export struct MineView {
             .padding(16)
             .borderRadius(16)
             .backgroundColor(Theme.card)
+            .border({ width: 1, color: Theme.lineSoft })
             .alignItems(HorizontalAlign.Start)
           }
 
@@ -501,7 +504,6 @@ export struct MineView {
                 .padding({ top: 12, bottom: 12 })
                 .borderRadius(Theme.radiusM)
                 .backgroundColor(Theme.glass)
-                .backgroundBlurStyle(BlurStyle.COMPONENT_THIN)
                 .border({ width: 1, color: Theme.glassBorder })
                 .onClick((): void => {
                   const p = new RouteParam();
@@ -523,7 +525,6 @@ export struct MineView {
           .margin({ top: 10 })
           .borderRadius(Theme.radiusM)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
           .shadow({ radius: 20, color: 'rgba(120,90,40,0.07)', offsetY: 6 })
 
@@ -569,6 +570,7 @@ export struct MineView {
           .margin({ top: 24 })
           .borderRadius(16)
           .backgroundColor(Theme.card)
+          .border({ width: 1, color: Theme.lineSoft })
           .alignItems(HorizontalAlign.Start)
 
           // 未登录也先把「能做什么」讲清楚，避免页面大面积留白
@@ -587,6 +589,7 @@ export struct MineView {
           .margin({ top: 12 })
           .borderRadius(Theme.radiusM)
           .backgroundColor(Theme.card)
+          .border({ width: 1, color: Theme.lineSoft })
 
           Column() {
             this.cellRow('更多功能', '', [], Routes.MORE_TOOLS, '')
@@ -595,6 +598,7 @@ export struct MineView {
           .margin({ top: 12 })
           .borderRadius(14)
           .backgroundColor(Theme.card)
+          .border({ width: 1, color: Theme.lineSoft })
 
           // 未登录也给工具入口：数币与反馈本来就不需要账号
           this.quickRow()
@@ -608,6 +612,7 @@ export struct MineView {
       .justifyContent(FlexAlign.Start)
       .padding({ left: 16, right: 16 })
     }
+    .edgeEffect(EdgeEffect.Spring)
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
     .width('100%')

@@ -637,6 +637,7 @@ export struct PlanView {
           .alignItems(HorizontalAlign.Start)
         }
         .constraintSize({ maxHeight: 420 })
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
 
         if (row.sourceUrl.length > 0) {
@@ -658,6 +659,7 @@ export struct PlanView {
       .padding(18)
       .borderRadius(16)
       .backgroundColor(Theme.card)
+      .border({ width: 1, color: Theme.lineSoft })
     }
     .width('100%')
     .height('100%')
@@ -810,9 +812,8 @@ export struct PlanView {
                   .padding({ left: 14, right: 14 })
                   .borderRadius(Theme.radiusM)
                   .backgroundColor(Theme.glass)
-                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                   .border({ width: 1, color: Theme.glassBorder })
-                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                  .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16 })
@@ -868,9 +869,8 @@ export struct PlanView {
                   .padding({ left: 14, right: 14 })
                   .borderRadius(Theme.radiusM)
                   .backgroundColor(Theme.glass)
-                  .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
                   .border({ width: 1, color: Theme.glassBorder })
-                  .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+                  .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16 })
@@ -895,6 +895,7 @@ export struct PlanView {
           .constraintSize({ minHeight: '100%' })
           .justifyContent(FlexAlign.Start)
         }
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .edgeEffect(EdgeEffect.Spring)
         .onScrollEdge((side: Edge): void => {

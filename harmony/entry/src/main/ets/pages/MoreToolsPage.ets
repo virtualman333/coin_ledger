@@ -189,9 +189,8 @@ export struct MoreToolsPage {
     .padding({ left: 12, right: 12 })
     .borderRadius(14)
     .backgroundColor(Theme.glass)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
     .border({ width: 1, color: Theme.glassBorder })
-    .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
   build() {
@@ -236,9 +235,8 @@ export struct MoreToolsPage {
           .padding(14)
           .borderRadius(14)
           .backgroundColor(Theme.glass)
-          .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
           .border({ width: 1, color: Theme.glassBorder })
-          .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+          .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
           .alignItems(VerticalAlign.Center)
 
           this.group(this.tools)
@@ -274,9 +272,8 @@ export struct MoreToolsPage {
             .padding({ left: 12, right: 12 })
             .borderRadius(14)
             .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
             .border({ width: 1, color: Theme.glassBorder })
-            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+            .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
             .onClick((): void => {
               Nav.push(this.stack, Routes.ADMIN, new RouteParam());
             })
@@ -312,6 +309,7 @@ export struct MoreToolsPage {
               .height(44)
               .borderRadius(12)
               .backgroundColor(Theme.card)
+              .border({ width: 1, color: Theme.lineSoft })
               .onClick((): void => {
                 this.logout();
               })
@@ -329,6 +327,7 @@ export struct MoreToolsPage {
         .justifyContent(FlexAlign.Start)
         .padding({ left: 16, right: 16, top: 8 })
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .layoutWeight(1)
     }

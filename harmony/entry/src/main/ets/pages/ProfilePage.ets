@@ -350,9 +350,8 @@ export struct ProfilePage {
       .padding(18)
       .borderRadius(16)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
     .width('100%')
     .height('100%')
@@ -412,9 +411,8 @@ export struct ProfilePage {
             .padding(18)
             .borderRadius(14)
             .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
             .border({ width: 1, color: Theme.glassBorder })
-            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+            .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
             Column({ space: 12 }) {
               Column({ space: 5 }) {
@@ -488,9 +486,8 @@ export struct ProfilePage {
             .padding(14)
             .borderRadius(14)
             .backgroundColor(Theme.glass)
-            .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
             .border({ width: 1, color: Theme.glassBorder })
-            .shadow({ radius: 24, color: 'rgba(120,90,40,0.08)', offsetY: 8 })
+            .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
 
             Text('昵称与头像会显示在广场晒单里；用户名只用于登录。')
               .fontSize(10)
@@ -505,6 +502,7 @@ export struct ProfilePage {
           .justifyContent(FlexAlign.Start)
           .padding({ left: 16, right: 16, top: 8 })
         }
+        .edgeEffect(EdgeEffect.Spring)
         .scrollBar(BarState.Off)
         .layoutWeight(1)
       }

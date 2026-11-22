@@ -276,7 +276,7 @@ export struct HomeView {
     .borderRadius(Theme.radiusL)
     .clip(true)
     .linearGradient({ angle: 165, colors: [['#FFFFFF', 0], ['#FFFDF8', 0.7], ['#FDF7EC', 1]] })
-    .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
+    .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
   @Builder
@@ -343,9 +343,8 @@ export struct HomeView {
       .padding(18)
       .borderRadius(Theme.radiusL)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
       .onClick((): void => {
         Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
       })
@@ -376,9 +375,8 @@ export struct HomeView {
       .padding(18)
       .borderRadius(Theme.radiusL)
       .backgroundColor(Theme.glass)
-      .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
       .border({ width: 1, color: Theme.glassBorder })
-      .shadow({ radius: 24, color: 'rgba(0,0,0,0.06)', offsetY: 8 })
+      .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
     }
   }
 
@@ -450,7 +448,8 @@ export struct HomeView {
         .padding(7)
         .borderRadius(Theme.radiusInner)
         .backgroundColor(Theme.card)
-        .shadow({ radius: 12, color: 'rgba(0,0,0,0.05)', offsetY: 4 })
+        .border({ width: 1, color: Theme.lineSoft })
+        .shadow({ radius: 10, color: 'rgba(0,0,0,0.04)', offsetY: 4 })
         .onClick((): void => {
           this.goDetail(item.id);
         })
@@ -518,7 +517,7 @@ export struct HomeView {
       .padding(18)
       .borderRadius(Theme.radiusL)
       .linearGradient({ angle: 160, colors: [['#FFFFFF', 0], ['#FDF8EE', 1]] })
-      .shadow({ radius: 20, color: 'rgba(0,0,0,0.05)', offsetY: 6 })
+      .shadow({ radius: 10, color: 'rgba(0,0,0,0.04)', offsetY: 6 })
       .onClick((): void => {
         const p = new RouteParam();
         p.cat = 'pm';
@@ -562,9 +561,8 @@ export struct HomeView {
         .margin({ bottom: 12 })
         .borderRadius(Theme.radiusM)
         .backgroundColor(Theme.glass)
-        .backgroundBlurStyle(BlurStyle.COMPONENT_THICK)
         .border({ width: 1, color: Theme.glassBorder })
-        .shadow({ radius: 16, color: 'rgba(0,0,0,0.05)', offsetY: 5 })
+        .shadow({ radius: 12, color: 'rgba(0,0,0,0.04)', offsetY: 5 })
         .onClick((): void => {
           this.goSeries(item.code, item.cat, item.name);
         })
@@ -645,6 +643,7 @@ export struct HomeView {
         .constraintSize({ minHeight: '100%' })
         .justifyContent(FlexAlign.Start)
       }
+      .edgeEffect(EdgeEffect.Spring)
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .width('100%')
