@@ -101,3 +101,34 @@ test('来源筛选与明细共用同一区间口径', () => {
   const dAll = visitors.detail(items, { ip: '1.1.1.1' });
   assert.equal(dAll.total, 2);
 });
+
+test('会话首末时间按真实时间取，不受写入顺序影响', () => {
+  // 乱序写入同一会话：先写晚的、再写早的，first 不能落在 last 之后
+  const shuffled = [
+    item(at(0, 10, 0), '9.9.9.9', 'sx', 'home', 'web'),
+    item(at(0, 8, 0), '9.9.9.9', 'sx', 'plan', 'web'),
+    item(at(0, 9, 0), '9.9.9.9', 'sx', 'holdings', 'web'),
+  ];
+  const s = visitors.stats(shuffled, { range: 'today' });
+  const row = s.sessions.find((x) => x.sid === 'sx');
+  assert.ok(row, '缺少会话');
+  assert.ok(Date.parse(row.first) <= Date.parse(row.last), 'first 晚于 last');
+  assert.equal(Date.parse(row.first), Date.parse(at(0, 8, 0)));
+  assert.equal(Date.parse(row.last), Date.parse(at(0, 10, 0)));
+});
+
+test('今日 PV / 今日独立 IP 跟着客户端筛选走', () => {
+  const all = visitors.stats(items, { range: 'month' });
+  const web = visitors.stats(items, { range: 'month', client: 'web' });
+  const mp = visitors.stats(items, { range: 'month', client: 'mp' });
+  assert.equal(all.todayPv, web.todayPv + mp.todayPv, '今日 PV 不等于两端之和');
+  assert.equal(mp.todayPv, 1);   // 今天只有 s2 一条小程序记录
+  assert.ok(web.todayPv >= 2);
+  assert.ok(mp.todayUv <= mp.todayPv);
+});
+
+test('会话列表带 sessionsTotal，前端能判断是否被截断', () => {
+  const s = visitors.stats(items, { range: 'all' });
+  assert.equal(s.sessionsTotal, Object.keys(s.sessions.reduce((m, x) => { m[x.sid] = 1; return m; }, {})).length);
+  assert.ok(s.sessionsTotal >= s.sessions.length);
+});

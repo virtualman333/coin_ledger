@@ -254,8 +254,14 @@ function stats(items, options) {
         uid: x.uid, name: x.userName, nickName: x.nickName || '', client: x.client || 'web',
       };
     }
-    sessions[x.sid].last = x.at;
-    sessions[x.sid].pages[x.tab] = 1;
+    {
+      const s = sessions[x.sid];
+      // 埋点写入顺序不等于时间顺序（并发/补写），first 可能晚于 last，
+      // 之前直接 last = x.at 会得到「首次访问在最后一次之后」的脏数据
+      if (Date.parse(x.at) < Date.parse(s.first)) s.first = x.at;
+      if (Date.parse(x.at) > Date.parse(s.last)) s.last = x.at;
+      s.pages[x.tab] = 1;
+    }
   });
 
   // 今日 24 小时 / 月 12 个月 / 天 14 日，超出部分前端也看不过来
@@ -272,8 +278,11 @@ function stats(items, options) {
   rows.forEach((x) => { rangeIps[ipKey(x)] = 1; });
   all.forEach((x) => { allIps[ipKey(x)] = 1; });
   const today = dateStr(new Date());
+  // 今日数字必须跟客户端筛选同口径：选了「网页」还显示含小程序的今日 PV，
+  // 页面上就会出现「访问 48 次 / 今日 PV 464」这种自相矛盾的组合
+  const todayRows = client ? all.filter((x) => (x.client || 'web') === client) : all;
   let todayPv = 0;
-  all.forEach((x) => {
+  todayRows.forEach((x) => {
     if (dayKey(x.at) !== today) return;
     todayPv += 1;
     todayIps[ipKey(x)] = 1;
@@ -322,6 +331,7 @@ function stats(items, options) {
     todayUv: Object.keys(todayIps).length,
     daily,
     sessions: latest,
+    sessionsTotal: sids.length,     // 会话列表只回传最近 40 条，前端需要知道是否被截断
     byClient: {
       web: { pv: byClient.web.pv, uv: Object.keys(byClient.web.ips).length },
       mp: { pv: byClient.mp.pv, uv: Object.keys(byClient.mp.ips).length },

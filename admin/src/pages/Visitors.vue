@@ -175,8 +175,9 @@ function fmt(v) {
 }
 function device(ua) {
   const s = String(ua || '');
-  if (/iPhone|Android|Mobile/i.test(s)) return '手机';
+  // 平板要先判：iPad 的 UA 里也带 Mobile，先判手机会把 iPad 认成手机
   if (/iPad|Tablet/i.test(s)) return '平板';
+  if (/iPhone|Android|Mobile/i.test(s)) return '手机';
   return '电脑';
 }
 function isMp(row) {

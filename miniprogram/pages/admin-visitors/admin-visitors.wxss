@@ -1,1 +1,42 @@
 @import "../admin/admin-common.wxss";
+
+/* 访客页本地补充：通用样式在 admin-common.wxss，这里只放本页新增的元素 */
+
+/* 混合来源（同一 IP 既开过网页又用过小程序）不能跟「小程序」共用绿色 */
+.vsrc.mix { background: #f3efe6; color: #8a6420; }
+
+/* IP 分组有昵称时，账号名单独一行，便于认账号 */
+.vr-acc { display: block; margin-top: 4rpx; color: #8a8378; font-size: 20rpx; }
+
+/* 会话列表被服务端截断时的说明 */
+.vs-cap {
+  display: block;
+  margin: 4rpx 0 10rpx;
+  color: #8a8378;
+  font-size: 20rpx;
+}
+
+/* 分页：只渲染前 N 条，其余点开再展开 */
+.vs-more {
+  margin: 16rpx 0 10rpx;
+  padding: 18rpx 0;
+  text-align: center;
+  border: 1rpx solid #e6dfd0;
+  border-radius: 12rpx;
+  background: #ffffff;
+  color: #6b6559;
+  font-size: 23rpx;
+}
+
+/* 明细弹层的汇总条 */
+.vdd-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8rpx 20rpx;
+  padding: 0 0 14rpx;
+  color: #6b6559;
+  font-size: 21rpx;
+}
+.vdd-sum-i b { color: #8a6420; font-size: 25rpx; }
+.vdd-sum-ip { margin-left: auto; color: #8a8378; font-family: monospace; }
