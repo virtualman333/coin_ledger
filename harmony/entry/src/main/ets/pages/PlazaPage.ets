@@ -96,7 +96,7 @@ export struct PlazaPage {
   private toView(s: ShareItem): ShareView {
     const v = new ShareView();
     v.id = String(s.id);
-    v.author = s.author || '藏友';
+    v.author = s.author || '同好';
     v.avatar = s.avatar ? Api.imgUrl(s.avatar) : '';
     v.holdingName = s.holdingName || '';
     v.serialsText = s.serials && s.serials.length > 0 ? s.serials[0] : '';
@@ -202,7 +202,7 @@ export struct PlazaPage {
         .onClick((): void => {
           Nav.pop(this.stack);
         })
-      Text('藏品广场')
+      Text('收藏广场')
         .fontSize(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.text)
@@ -441,11 +441,11 @@ export struct PlazaPage {
         Scroll() {
           Column({ space: 10 }) {
             Column({ space: 4 }) {
-              Text('藏友晒单')
+              Text('同好晒单')
                 .fontSize(22)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(Theme.text)
-              Text('真实号码、真实藏品。发布入口在「我的藏品」里勾选后分享。')
+              Text('真实号码、真实收藏。发布入口在「我的收藏」里勾选后分享。')
                 .fontSize(10)
                 .fontColor(Theme.muted)
             }

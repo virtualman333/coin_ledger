@@ -350,11 +350,11 @@ export struct HomeView {
       })
     } else {
       Column({ space: 6 }) {
-        Text('登录后开始记你的藏品')
+        Text('登录后开始记你的收藏')
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
-        Text('与网页版同一账号，藏品云端同步')
+        Text('与网页版同一账号，收藏云端同步')
           .fontSize(12)
           .fontColor(Theme.muted)
           .margin({ top: 2 })
@@ -365,7 +365,7 @@ export struct HomeView {
           .width('100%')
           .height(40)
           .borderRadius(8)
-          .backgroundColor(Theme.gold)
+          .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
           .margin({ top: 8 })
           .onClick((): void => {
             Nav.push(this.stack, Routes.ACCOUNT, new RouteParam());
@@ -425,7 +425,9 @@ export struct HomeView {
             .fontSize(11)
             .fontWeight(FontWeight.Medium)
             .fontColor(Theme.textStrong)
-            .maxLines(1)
+            .maxLines(2)
+            .lineHeight(15)
+            .height(30)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
             .margin({ top: 8 })
@@ -551,7 +553,7 @@ export struct HomeView {
               .width(item.pct + '%')
               .height(3)
               .borderRadius(2)
-              .backgroundColor(Theme.gold)
+              .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
           }
           .width('100%')
         }

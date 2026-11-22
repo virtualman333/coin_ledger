@@ -357,7 +357,7 @@ export struct AdminPage {
               .fontSize(8)
               .fontColor(Color.White)
               .padding({ left: 4, right: 4, top: 1, bottom: 1 })
-              .backgroundColor(Theme.gold)
+              .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
               .borderRadius(3)
           }
           if (u.disabled) {
@@ -369,7 +369,7 @@ export struct AdminPage {
               .borderRadius(3)
           }
         }
-        Text('@' + u.name + ' · ' + (u.holdings || 0) + ' 件藏品')
+        Text('@' + u.name + ' · ' + (u.holdings || 0) + ' 件收藏')
           .fontSize(9)
           .fontColor(Theme.faint)
       }
@@ -395,7 +395,7 @@ export struct AdminPage {
   feedbackRow(it: AdminFeedback) {
     Column({ space: 6 }) {
       Row() {
-        Text(it.userName.length > 0 ? it.userName : '藏友')
+        Text(it.userName.length > 0 ? it.userName : '同好')
           .fontSize(11)
           .fontColor(Theme.goldDeep)
         if (it.coinName) {
@@ -537,7 +537,7 @@ export struct AdminPage {
           .width('100%')
           .height(42)
           .borderRadius(8)
-          .backgroundColor(Theme.gold)
+          .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
           .onClick((): void => {
             this.saveCoin();
           })

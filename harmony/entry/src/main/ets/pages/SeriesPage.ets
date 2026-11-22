@@ -176,7 +176,7 @@ export struct SeriesPage {
               .width(item.pct + '%')
               .height(3)
               .borderRadius(2)
-              .backgroundColor(Theme.gold)
+              .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
           }
           .width('100%')
         }

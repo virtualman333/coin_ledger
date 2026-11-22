@@ -74,7 +74,7 @@ export struct MoreToolsPage {
   private deleteAccount(): void {
     AlertDialog.show({
       title: '注销账号',
-      message: '将永久删除你的账号、藏品与成本记录，且无法恢复。',
+      message: '将永久删除你的账号、收藏与成本记录，且无法恢复。',
       primaryButton: {
         value: '再想想',
         action: (): void => {
@@ -100,7 +100,7 @@ export struct MoreToolsPage {
   private logout(): void {
     AlertDialog.show({
       title: '退出登录',
-      message: '退出后需要重新登录才能查看藏品。',
+      message: '退出后需要重新登录才能查看收藏。',
       primaryButton: {
         value: '取消',
         action: (): void => {
@@ -142,32 +142,32 @@ export struct MoreToolsPage {
 
   @Builder
   row(item: ToolRow) {
-    Row({ space: 10 }) {
+    Row({ space: 12 }) {
       SymbolGlyph(item.symbol)
-        .fontSize(16)
+        .fontSize(18)
         .fontColor([Theme.goldDeep])
-        .width(32)
-        .height(32)
-        .borderRadius(10)
+        .width(36)
+        .height(36)
+        .borderRadius(12)
         .backgroundColor(Theme.goldBg)
-      Column({ space: 2 }) {
+      Column({ space: 3 }) {
         Text(item.label)
-          .fontSize(13)
+          .fontSize(15)
           .fontColor(Theme.textStrong)
         if (item.hint.length > 0) {
           Text(item.hint)
-            .fontSize(9)
-            .fontColor(Theme.faint)
+            .fontSize(12)
+            .fontColor(Theme.muted)
         }
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
       Text('›')
-        .fontSize(17)
+        .fontSize(16)
         .fontColor(Theme.faint)
     }
     .width('100%')
-    .height(52)
+    .height(64)
     .onClick((): void => {
       this.go(item.route);
     })
@@ -212,7 +212,7 @@ export struct MoreToolsPage {
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.text)
-              Text(this.loggedIn ? (this.isAdmin ? '管理员账号' : '已登录 · 藏品云端同步') : '登录后可备份与同步藏品')
+              Text(this.loggedIn ? (this.isAdmin ? '管理员账号' : '已登录 · 收藏云端同步') : '登录后可备份与同步收藏')
                 .fontSize(10)
                 .fontColor(Theme.muted)
             }
@@ -224,7 +224,7 @@ export struct MoreToolsPage {
                 .fontColor(Color.White)
                 .padding({ left: 14, right: 14, top: 6, bottom: 6 })
                 .borderRadius(14)
-                .backgroundColor(Theme.gold)
+                .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
                 .onClick((): void => {
                   Nav.push(this.stack, Routes.ACCOUNT, new RouteParam());
                 })
@@ -252,7 +252,7 @@ export struct MoreToolsPage {
                 .height(32)
                 .textAlign(TextAlign.Center)
                 .borderRadius(10)
-                .backgroundColor(Theme.gold)
+                .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
               Column({ space: 2 }) {
                 Text('管理后台')
                   .fontSize(13)

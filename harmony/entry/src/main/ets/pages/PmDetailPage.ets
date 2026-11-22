@@ -231,7 +231,7 @@ export struct PmDetailPage {
       this.busy = false;
       this.addOpen = false;
       this.checkOwned();
-      promptAction.showToast({ message: '已加入我的藏品', duration: 1500 });
+      promptAction.showToast({ message: '已加入我的收藏', duration: 1500 });
     }).catch((e: Error): void => {
       this.busy = false;
       this.addOpen = false;
@@ -271,7 +271,7 @@ export struct PmDetailPage {
           this.addOpen = false;
         })
       Column({ space: 12 }) {
-        Text('加入我的藏品')
+        Text('加入我的收藏')
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
@@ -471,7 +471,7 @@ export struct PmDetailPage {
 
               Column() {
                 if (this.owned) {
-                  Text('已在我的藏品')
+                  Text('已在我的收藏')
                     .fontSize(14)
                     .fontColor(Theme.goldDeep)
                     .textAlign(TextAlign.Center)
@@ -483,14 +483,14 @@ export struct PmDetailPage {
                       Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
                     })
                 } else {
-                  Text('加入我的藏品')
+                  Text('加入我的收藏')
                     .fontSize(14)
                     .fontColor(Color.White)
                     .textAlign(TextAlign.Center)
                     .width('100%')
                     .height(44)
                     .borderRadius(8)
-                    .backgroundColor(Theme.gold)
+                    .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
                     .onClick((): void => {
                       this.startAdd();
                     })

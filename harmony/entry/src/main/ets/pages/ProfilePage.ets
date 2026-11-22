@@ -224,7 +224,7 @@ export struct ProfilePage {
       });
   }
 
-  /** 解绑华为账号：只解除华为绑定，密码与藏品不动 */
+  /** 解绑华为账号：只解除华为绑定，密码与收藏不动 */
   private huaweiUnbind(): void {
     if (this.hwBusy) return;
     AlertDialog.show({
@@ -389,7 +389,7 @@ export struct ProfilePage {
                   .height(24)
                   .textAlign(TextAlign.Center)
                   .borderRadius(12)
-                  .backgroundColor(Theme.gold)
+                  .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
                   .onClick((): void => {
                     this.pickAvatar();
                   })

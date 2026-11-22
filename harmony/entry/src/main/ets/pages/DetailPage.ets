@@ -235,7 +235,7 @@ export struct DetailPage {
     if (!Store.isLogin()) {
       AlertDialog.show({
         title: '还没登录',
-        message: '登录后藏品会存到你的账号里，和网页版、小程序同步。',
+        message: '登录后收藏会存到你的账号里，和网页版、小程序同步。',
         confirm: {
           value: '去登录',
           action: (): void => {
@@ -263,7 +263,7 @@ export struct DetailPage {
       this.busy = false;
       this.addSheet = false;
       this.render();
-      promptAction.showToast({ message: '已加入我的藏品', duration: 1600 });
+      promptAction.showToast({ message: '已加入我的收藏', duration: 1600 });
     }).catch((e: Error): void => {
       this.busy = false;
       this.addSheet = false;
@@ -275,8 +275,8 @@ export struct DetailPage {
     if (this.holdingId === '') return;
     const name = this.coin !== null ? (this.coin as Coin).name : '';
     AlertDialog.show({
-      title: '移出藏品',
-      message: '把「' + name + '」从我的藏品里移出？',
+      title: '移出收藏',
+      message: '把「' + name + '」从我的收藏里移出？',
       primaryButton: {
         value: '取消',
         action: (): void => {
@@ -672,7 +672,7 @@ export struct DetailPage {
         })
 
       Column({ space: 12 }) {
-        Text('加入我的藏品')
+        Text('加入我的收藏')
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.text)
@@ -919,7 +919,7 @@ export struct DetailPage {
             .layoutWeight(2)
             .height(46)
             .borderRadius(Theme.radiusInner)
-            .backgroundColor(Theme.gold)
+            .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
             .onClick((): void => {
               const id = this.peek !== null ? (this.peek as SameCard).id : 0;
               this.peek = null;
@@ -984,7 +984,7 @@ export struct DetailPage {
               Column({ space: 10 }) {
                 if (this.owned) {
                   Row({ space: 10 }) {
-                    Text('已在我的藏品')
+                    Text('已在我的收藏')
                       .fontSize(14)
                       .fontColor(Theme.goldDeep)
                       .textAlign(TextAlign.Center)
@@ -1009,14 +1009,14 @@ export struct DetailPage {
                   }
                   .width('100%')
                 } else {
-                  Text('加入我的藏品')
+                  Text('加入我的收藏')
                     .fontSize(14)
                     .fontColor(Color.White)
                     .textAlign(TextAlign.Center)
                     .width('100%')
                     .height(44)
                     .borderRadius(8)
-                    .backgroundColor(Theme.gold)
+                    .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
                     .onClick((): void => {
                       this.startAdd();
                     })

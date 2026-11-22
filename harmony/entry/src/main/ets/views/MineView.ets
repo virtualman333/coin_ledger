@@ -195,7 +195,7 @@ export struct MineView {
         .width(5)
         .height(5)
         .borderRadius(3)
-        .backgroundColor(Theme.gold)
+        .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
         .margin({ top: 7 })
       Column({ space: 2 }) {
         Text(title)
@@ -465,7 +465,7 @@ export struct MineView {
             .alignItems(HorizontalAlign.Start)
           } else {
             Column({ space: 6 }) {
-              Text('还没有藏品')
+              Text('还没有收藏')
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Theme.text)
@@ -517,7 +517,7 @@ export struct MineView {
           }
 
           Column() {
-            this.cellRow('我的藏品', this.kinds + ' 个品种', this.thumbs, Routes.HOLDINGS, '')
+            this.cellRow('我的收藏', this.kinds + ' 个品种', this.thumbs, Routes.HOLDINGS, '')
             Divider().color(Theme.lineSoft).margin({ left: 14, right: 14 })
             this.cellRow('更多功能', '备份 · 关于 · 条款', [], Routes.MORE_TOOLS, '')
           }
@@ -549,7 +549,7 @@ export struct MineView {
               .fontSize(20)
               .fontWeight(FontWeight.Medium)
               .fontColor(Theme.text)
-            Text('藏品存在云端，换设备也能接着记')
+            Text('收藏存在云端，换设备也能接着记')
               .fontSize(13)
               .fontColor(Theme.muted)
             Text('登录 / 注册')
@@ -559,7 +559,7 @@ export struct MineView {
               .width('100%')
               .height(42)
               .borderRadius(8)
-              .backgroundColor(Theme.gold)
+              .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
               .margin({ top: 10 })
               .onClick((): void => {
                 Nav.push(this.stack, Routes.ACCOUNT, new RouteParam());

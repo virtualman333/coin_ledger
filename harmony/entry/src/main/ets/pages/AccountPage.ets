@@ -55,7 +55,7 @@ export struct AccountPage {
   @State loggedIn: boolean = false;
   @State displayName: string = '';
   @State userAvatar: string = '';
-  @State loginText: string = '已登录 · 藏品云端同步';
+  @State loginText: string = '已登录 · 收藏云端同步';
   @State holdingsCount: number = 0;
   @State userCount: number = 0;
   @State totalCoins: number = 0;
@@ -90,11 +90,11 @@ export struct AccountPage {
       if (u.hasPassword === true) ways.push('密码');
       if (u.wx === true) ways.push('微信');
       if (u.hw === true) ways.push('华为');
-      this.loginText = ways.length > 0 ? '已登录 · ' + ways.join(' / ') : '已登录 · 藏品云端同步';
+      this.loginText = ways.length > 0 ? '已登录 · ' + ways.join(' / ') : '已登录 · 收藏云端同步';
       this.hwBound = u.hw === true;
     } else {
       this.userAvatar = '';
-      this.loginText = '已登录 · 藏品云端同步';
+      this.loginText = '已登录 · 收藏云端同步';
       this.hwBound = false;
     }
     this.holdingsCount = state.holdings.length;
@@ -307,7 +307,7 @@ export struct AccountPage {
       });
   }
 
-  /** 解绑华为账号：只解除华为绑定，密码与藏品不动 */
+  /** 解绑华为账号：只解除华为绑定，密码与收藏不动 */
   private huaweiUnbind(): void {
     if (this.hwBusy) return;
     AlertDialog.show({
@@ -345,7 +345,7 @@ export struct AccountPage {
   private logout(): void {
     AlertDialog.show({
       title: '退出登录',
-      message: '退出后本机不再显示你的藏品，数据仍在云端，下次登录还能看到。',
+      message: '退出后本机不再显示你的收藏，数据仍在云端，下次登录还能看到。',
       primaryButton: {
         value: '取消',
         action: (): void => {
@@ -480,7 +480,7 @@ export struct AccountPage {
           this.huaweiLogin();
         })
 
-      Text('账号与网页版、小程序互通，藏品存在云端')
+      Text('账号与网页版、小程序互通，收藏存在云端')
         .fontSize(10)
         .fontColor(Theme.faint)
         .width('100%')
@@ -547,10 +547,10 @@ export struct AccountPage {
       .width('100%')
 
       Row() {
-        this.statCell(String(this.holdingsCount), '在册藏品')
+        this.statCell(String(this.holdingsCount), '在册收藏')
         this.statCell(String(this.totalCoins), '品种总数')
         this.statCell(String(this.seriesCount), '系列')
-        this.statCell(String(this.userCount), '藏友')
+        this.statCell(String(this.userCount), '同好')
       }
       .width('100%')
       .padding({ top: 10, bottom: 10 })
@@ -562,7 +562,7 @@ export struct AccountPage {
           Nav.push(this.stack, Routes.PROFILE, new RouteParam());
         })
         Divider().color(Theme.lineSoft)
-        this.row('我的藏品', (): void => {
+        this.row('我的收藏', (): void => {
           Nav.push(this.stack, Routes.HOLDINGS, new RouteParam());
         })
         Divider().color(Theme.lineSoft)
@@ -650,7 +650,7 @@ export struct AccountPage {
               .fontSize(12)
               .fontWeight(FontWeight.Medium)
               .fontColor(Theme.text)
-            Text('藏品、数量、成本与号码都存在你的账号里，换手机、用网页版或小程序都能接着记。我们不读取通讯录、位置与相册，除非你主动选择图片上传。')
+            Text('收藏、数量、成本与号码都存在你的账号里，换手机、用网页版或小程序都能接着记。我们不读取通讯录、位置与相册，除非你主动选择图片上传。')
               .fontSize(11)
               .fontColor(Theme.muted)
               .lineHeight(19)

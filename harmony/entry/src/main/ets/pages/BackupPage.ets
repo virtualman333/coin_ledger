@@ -262,7 +262,7 @@ export struct BackupPage {
           .width('100%')
           .height(42)
           .borderRadius(8)
-          .backgroundColor(Theme.gold)
+          .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
           .onClick((): void => {
             const text = this.pasteText;
             this.pasteOpen = false;

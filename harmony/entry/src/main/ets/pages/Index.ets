@@ -32,7 +32,7 @@ struct Index {
   @State currentTab: number = 0;
   @State agreed: boolean = false;
   @State privacySheet: boolean = false;
-  /** 其他页面请求切 tab（例如「去挑藏品」） */
+  /** 其他页面请求切 tab（例如「去挑品种」） */
   @StorageProp('cl_activeTab') @Watch('onTabSignal') tabSignal: number = 0;
   private stack: NavPathStack = new NavPathStack();
 
@@ -146,7 +146,7 @@ struct Index {
             .layoutWeight(1)
             .height(42)
             .borderRadius(8)
-            .backgroundColor(Theme.gold)
+            .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
             .onClick((): void => {
               Privacy.agree();
               this.agreed = true;
@@ -289,15 +289,17 @@ struct Index {
             this.currentTab = index;
           })
 
-          Column() {
+          Row() {
+            Blank().width(16)
             AppTabBar({
               current: this.currentTab,
               onSelect: (index: number): void => this.switchTab(index)
             })
-              .width('100%')
+              .layoutWeight(1)
+            Blank().width(16)
           }
           .width('100%')
-          .padding({ left: 20, right: 20, bottom: 10 })
+          .padding({ bottom: 10 })
           .zIndex(2)
           }
           .width('100%')

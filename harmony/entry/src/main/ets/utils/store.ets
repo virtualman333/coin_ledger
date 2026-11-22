@@ -1,5 +1,5 @@
 /**
- * 应用状态：账号 / 藏品 / 行情。
+ * 应用状态：账号 / 收藏 / 行情。
  * 权威数据在服务器（与网站、小程序共用一套库），本机只做一份缓存用于秒开。
  *
  * UI 通过 AppStorage 的 cl_dataRev 感知数据变化，业务数据仍从 Store.getState() 读取，
@@ -250,7 +250,7 @@ export class Store {
 
   static requireLogin(): void {
     if (!Store.state.user) {
-      throw new ApiError('登录后才能记录藏品', 401);
+      throw new ApiError('登录后才能记录收藏', 401);
     }
   }
 
@@ -310,7 +310,7 @@ export class Store {
   static addCoin(coin: Coin, unit: string, qty: number): Promise<PutResponse> {
     Store.requireLogin();
     if (Store.findHolding(coin.name)) {
-      const err = new ApiError('这一枚已经在你的藏品里了', 400);
+      const err = new ApiError('这一枚已经在你的收藏里了', 400);
       return Promise.reject(err);
     }
     const size = Math.max(1, Number(coin.setSizeCalc) || 1);
@@ -344,7 +344,7 @@ export class Store {
     Store.requireLogin();
     const hit = Store.state.holdings.filter((h: Holding) => h.category === 'pm' && h.id === code);
     if (hit.length > 0) {
-      return Promise.reject(new ApiError('这枚已经在你的藏品里了', 400));
+      return Promise.reject(new ApiError('这枚已经在你的收藏里了', 400));
     }
     const qty = Math.max(1, Number(rolls) || 1);
     const item: Holding = {

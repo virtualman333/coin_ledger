@@ -123,7 +123,7 @@ export struct HoldingsPage {
     for (let i = 0; i < filtered.length; i++) {
       const h = filtered[i];
       const coin: Coin | undefined = Catalog.byName[h.name];
-      const rawGroup = coin !== undefined ? coin.seriesName : (h.group || '独立藏品');
+      const rawGroup = coin !== undefined ? coin.seriesName : (h.group || '单品收藏');
       const groupName = rawGroup === '贵金属' ? '贵金属纪念币' : rawGroup;
       let gi = index[groupName];
       if (gi === undefined) {
@@ -192,8 +192,8 @@ export struct HoldingsPage {
       g.pct = total > 0 ? Math.min(100, Math.round((g.items.length / total) * 100)) : 0;
       g.progLabel = g.items.length + ' / ' + total;
     }
-    const rest = groups.filter((g: HoldGroup): boolean => g.name !== '独立藏品');
-    const solo = groups.filter((g: HoldGroup): boolean => g.name === '独立藏品');
+    const rest = groups.filter((g: HoldGroup): boolean => g.name !== '单品收藏');
+    const solo = groups.filter((g: HoldGroup): boolean => g.name === '单品收藏');
     this.groups = rest.concat(solo);
     this.aiText = money(round2(aiAll));
   }
@@ -254,8 +254,8 @@ export struct HoldingsPage {
   private removeItem(): void {
     const name = this.editName;
     AlertDialog.show({
-      title: '移出藏品',
-      message: '把「' + name + '」从我的藏品里移出？',
+      title: '移出收藏',
+      message: '把「' + name + '」从我的收藏里移出？',
       primaryButton: {
         value: '取消',
         action: (): void => {
@@ -290,7 +290,7 @@ export struct HoldingsPage {
         .onClick((): void => {
           Nav.pop(this.stack);
         })
-      Text('我的藏品')
+      Text('我的收藏')
         .fontSize(15)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.text)
@@ -671,11 +671,11 @@ export struct HoldingsPage {
         this.header()
         if (!this.loggedIn) {
           Column({ space: 10 }) {
-            Text('登录后查看你的藏品')
+            Text('登录后查看你的收藏')
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
               .fontColor(Theme.text)
-            Text('藏品存在云端，网页版、小程序、鸿蒙端同源')
+            Text('收藏存在云端，网页版、小程序、鸿蒙端同源')
               .fontSize(11)
               .fontColor(Theme.muted)
             Text('登录 / 注册')
@@ -685,7 +685,7 @@ export struct HoldingsPage {
               .width('100%')
               .height(42)
               .borderRadius(8)
-              .backgroundColor(Theme.gold)
+              .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
               .onClick((): void => {
                 Nav.push(this.stack, Routes.ACCOUNT, new RouteParam());
               })
@@ -715,7 +715,7 @@ export struct HoldingsPage {
                   Text('去清单挑第一枚，加进来就会自动算面值与推理价')
                     .fontSize(11)
                     .fontColor(Theme.muted)
-                  Text('去挑藏品 ›')
+                  Text('去挑品种 ›')
                     .fontSize(13)
                     .fontColor(Theme.gold)
                     .onClick((): void => {
@@ -732,7 +732,7 @@ export struct HoldingsPage {
                 .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
                 .alignItems(HorizontalAlign.Start)
               } else if (this.catEmpty) {
-                Text('这个分类下还没有藏品，换个分类看看')
+                Text('这个分类下还没有收藏，换个分类看看')
                   .fontSize(12)
                   .fontColor(Theme.muted)
                   .width('100%')
@@ -782,7 +782,7 @@ export struct HoldingsPage {
                         .width(g.pct + '%')
                         .height(3)
                         .borderRadius(2)
-                        .backgroundColor(Theme.gold)
+                        .linearGradient({ angle: 135, colors: [['#C79A4B', 0], ['#9A6B1F', 1]] })
                     }
                     .width('100%')
                     .margin({ bottom: 4 })

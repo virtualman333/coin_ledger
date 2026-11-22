@@ -90,7 +90,7 @@ export class Catalog {
 
   static groupName(c: RawCoin): string {
     const meta: SetMeta | undefined = c.set ? Catalog.sets[c.set] : undefined;
-    return c.set && c.set !== 'single' && meta && meta.name ? meta.name : '独立藏品';
+    return c.set && c.set !== 'single' && meta && meta.name ? meta.name : '单品收藏';
   }
 
   static keysOf(c: Coin): string[] {

@@ -1,4 +1,4 @@
-/** 品种 / 藏品 / 账号等数据模型（与后端、Web、小程序字段保持一致） */
+/** 品种 / 收藏 / 账号等数据模型（与后端、Web、小程序字段保持一致） */
 
 export interface CoinImage {
   url: string;
@@ -215,7 +215,7 @@ export interface User {
   isTest?: boolean;
 }
 
-/** 藏品（账本条目），字段与小程序 store.persist 一致 */
+/** 收藏（账本条目），字段与小程序 store.persist 一致 */
 export interface Holding {
   id: string;
   name: string;
