@@ -120,7 +120,7 @@ export struct CountPage {
               .height(280)
               .objectFit(ImageFit.Contain)
               .borderRadius(12)
-              .backgroundColor('#F7F4EC')
+              .backgroundColor('#F4F4F5')
           } else {
             Column({ space: 8 }) {
               Text('◎')

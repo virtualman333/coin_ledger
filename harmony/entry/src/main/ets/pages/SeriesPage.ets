@@ -124,7 +124,7 @@ export struct SeriesPage {
           .height(64)
           .borderRadius(8)
           .objectFit(ImageFit.Contain)
-          .backgroundColor('#F7F4EC')
+          .backgroundColor('#F4F4F5')
       } else {
         Text(item.name.slice(0, 4))
           .width(64)

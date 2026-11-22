@@ -19,8 +19,8 @@ export class Theme {
   // 品牌金
   static readonly gold: string = '#9A6B1F';
   static readonly goldDeep: string = '#7A541A';
-  static readonly goldBg: string = '#FBF3E2';
-  static readonly goldBgSoft: string = '#FDF9F0';
+  static readonly goldBg: string = '#F7F1E6';
+  static readonly goldBgSoft: string = '#FBFAF7';
   static readonly goldLine: string = '#EADFC8';
 
   // 涨跌（国内习惯：涨红跌绿）

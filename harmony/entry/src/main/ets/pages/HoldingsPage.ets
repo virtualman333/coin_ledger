@@ -391,7 +391,7 @@ export struct HoldingsPage {
           .height(58)
           .borderRadius(7)
           .objectFit(ImageFit.Contain)
-          .backgroundColor('#F7F4EC')
+          .backgroundColor('#F4F4F5')
           .onClick((): void => {
             if (item.isPm) {
               const p = new RouteParam();
@@ -496,7 +496,7 @@ export struct HoldingsPage {
               .height(48)
               .borderRadius(6)
               .objectFit(ImageFit.Contain)
-              .backgroundColor('#F7F4EC')
+              .backgroundColor('#F4F4F5')
           }
           Column({ space: 3 }) {
             Text(this.editName)

@@ -796,7 +796,7 @@ export struct ListView {
           .height(92)
           .borderRadius(Theme.radiusThumb)
           .objectFit(ImageFit.Contain)
-          .backgroundColor('#FBF9F4')
+          .backgroundColor('#F5F5F6')
       } else {
         Text(row.metalChar)
           .width('100%')
@@ -806,7 +806,7 @@ export struct ListView {
           .fontSize(20)
           .fontColor(row.metalClass === 'gold' ? '#B08A3E'
             : (row.metalClass === 'silver' ? '#8A9099' : '#9A8F7A'))
-          .backgroundColor('#FBF9F4')
+          .backgroundColor('#F5F5F6')
       }
 
       Text(row.name)

@@ -1,7 +1,5 @@
 import { Api } from '../utils/api';
 import { Catalog } from '../utils/catalog';
-import { Clip } from '../utils/clip';
-import { Config } from '../utils/config';
 import { agoText, fmtPrice, hhmm, money, signed } from '../utils/format';
 import { Nav, RouteParam, Routes } from '../utils/router';
 import { Store } from '../utils/store';
@@ -222,17 +220,6 @@ export struct HomeView {
           .fontSize(12)
           .fontColor(Theme.faint)
           .margin({ top: 2 })
-        Text('复制分享链接')
-          .fontSize(12)
-          .fontColor(Theme.goldDeep)
-          .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-          .borderRadius(Theme.radiusS)
-          .backgroundColor(Theme.card)
-          .border({ width: 1, color: Theme.goldLine })
-          .margin({ top: 10 })
-          .onClick((): void => {
-            Clip.copy(Config.WEB_URL, '链接已复制，可粘贴分享');
-          })
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
@@ -248,24 +235,14 @@ export struct HomeView {
           .shadow({ radius: 10, color: 'rgba(120,90,40,0.16)', offsetY: 3 })
           .margin({ left: 8 })
       } else {
-        // 装饰方孔钱（同小程序 .hero-coin）：不依赖位图，颜色跟主题走
-        Stack({ alignContent: Alignment.Center }) {
-          Column()
-            .width(72)
-            .height(72)
-            .borderRadius(36)
-            .backgroundColor('#E9DCC0')
-            .border({ width: 2, color: '#D8C49B' })
-          Column()
-            .width(22)
-            .height(22)
-            .backgroundColor(Theme.bg)
-            .border({ width: 3, color: '#C9A96A' })
-        }
-        .width(72)
-        .height(72)
-        .margin({ left: 8 })
-        .opacity(0.92)
+        // 未登录没有藏品图，用品牌图标占位（原来是一枚米色方孔钱装饰，显旧）
+        Image($r('app.media.logo_seal'))
+          .width(76)
+          .height(76)
+          .borderRadius(20)
+          .border({ width: 3, color: '#FFFFFFE6' })
+          .shadow({ radius: 16, color: 'rgba(120,90,40,0.16)', offsetY: 6 })
+          .margin({ left: 8 })
       }
     }
     .width('100%')
@@ -275,7 +252,7 @@ export struct HomeView {
     .justifyContent(FlexAlign.SpaceBetween)
     .borderRadius(Theme.radiusL)
     .clip(true)
-    .linearGradient({ angle: 165, colors: [['#FFFFFF', 0], ['#FFFDF8', 0.7], ['#FDF7EC', 1]] })
+    .linearGradient({ angle: 165, colors: [['#FFFFFF', 0], ['#FFFFFF', 0.7], ['#FAFAFB', 1]] })
     .shadow({ radius: 14, color: 'rgba(0,0,0,0.05)', offsetY: 8 })
   }
 
@@ -408,7 +385,7 @@ export struct HomeView {
               .width('100%')
               .height(98)
               .borderRadius(6)
-              .backgroundColor('#FBF9F4')
+              .backgroundColor('#F5F5F6')
               .objectFit(ImageFit.Contain)
             Text(String(item.year))
               .fontSize(10)
@@ -518,7 +495,7 @@ export struct HomeView {
       .width('100%')
       .padding(18)
       .borderRadius(Theme.radiusL)
-      .linearGradient({ angle: 160, colors: [['#FFFFFF', 0], ['#FDF8EE', 1]] })
+      .linearGradient({ angle: 160, colors: [['#FFFFFF', 0], ['#FAFAFB', 1]] })
       .shadow({ radius: 10, color: 'rgba(0,0,0,0.04)', offsetY: 6 })
       .onClick((): void => {
         const p = new RouteParam();

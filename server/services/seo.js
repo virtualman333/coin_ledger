@@ -399,6 +399,7 @@ function setPmCoins(list) {
 function isRoutePath(pathname) {
   const p = String(pathname || '/').replace(/\/{2,}/g, '/').replace(/\/+$/, '');
   if (p === '' || p === '/') return true;
+  if (p === '/plaza') return true;   // 广场已下线，留给 routes/seo.js 做 301 回首页
   if (/^\/coin\/\d{1,3}$/.test(p)) return true;
   if (/^\/pm\/[A-Za-z0-9_-]{1,32}$/.test(p)) return true;   // 贵金属单枚独立页
   const name = p.replace(/^\//, '');

@@ -609,7 +609,7 @@ export struct DetailPage {
                     .height(76)
                     .borderRadius(Theme.radiusThumb)
                     .objectFit(ImageFit.Contain)
-                    .backgroundColor('#F7F4EC')
+                    .backgroundColor('#F4F4F5')
                 } else {
                   Text(c.name.slice(0, 2))
                     .width(76)
@@ -850,7 +850,7 @@ export struct DetailPage {
                   .width(140)
                   .height(140)
                   .borderRadius(Theme.radiusInner)
-                  .backgroundColor('#FBF9F4')
+                  .backgroundColor('#F5F5F6')
                   .objectFit(ImageFit.Contain)
                   .alignSelf(ItemAlign.Start)
               }

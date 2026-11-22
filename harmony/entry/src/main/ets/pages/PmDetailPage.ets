@@ -626,7 +626,7 @@ export struct PmDetailPage {
                     .width(84)
                     .height(84)
                     .borderRadius(Theme.radiusThumb)
-                    .backgroundColor('#FBF9F4')
+                    .backgroundColor('#F5F5F6')
                     .objectFit(ImageFit.Contain)
                 } else {
                   Text('暂无图')
@@ -636,7 +636,7 @@ export struct PmDetailPage {
                     .textAlign(TextAlign.Center)
                     .fontSize(11)
                     .fontColor(Theme.faint)
-                    .backgroundColor('#FBF9F4')
+                    .backgroundColor('#F5F5F6')
                 }
                 Text(it.name)
                   .fontSize(11)

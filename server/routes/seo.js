@@ -31,6 +31,15 @@ module.exports = async function seoRoutes(app) {
     sendPage(reply, { tab: 'home', i: null });
   });
 
+  /**
+   * GET /plaza —— 收藏广场已于 2026-11-22 整块下线。
+   * 这个 tab 曾在导航里公开过，旧书签/外链不该吃 404，直接 301 回首页。
+   */
+  app.get('/plaza', async function legacyPlazaHandler(request, reply) {
+    reply.hijack();
+    reply.raw.writeHead(301, { Location: '/' }).end();
+  });
+
   TABS.forEach(function (tab) {
     if (tab === 'home') return;   // '/' 已注册
     app.get('/' + tab, async function tabHandler(request, reply) {
