@@ -102,11 +102,12 @@ test('点「⋯」打开编辑面板，并带上这一条的完整数据', () =>
   assert.equal(p.data.sheet.focus, '', '从「⋯」进来不自动聚焦输入框，避免弹键盘挡住面板');
 });
 
-test('多选态不显示「⋯」（那时点卡片是勾选，不该再改账）', () => {
+test('卡片只保留一个显式编辑入口（多选分享已随广场下线）', () => {
   const wxml = readMp('pages/holdings/holdings.wxml');
-  const m = wxml.match(/class="hc-more"([\s\S]{0,120})/);
-  assert.ok(m, '找不到 .hc-more');
-  assert.match(m[1], /wx:if="\{\{!selectMode\}\}"/, '多选态应该隐藏编辑入口');
+  assert.match(wxml, /class="hc-more"/, '找不到 .hc-more');
+  assert.doesNotMatch(wxml, /selectMode|toggleSelectMode|batchShareToPlaza/, '多选相关 UI 应该已经删干净');
+  const js = readMp('pages/holdings/holdings.js');
+  assert.doesNotMatch(js, /toggleSelectMode|batchShareToPlaza/, '多选相关方法应该已经删干净');
 });
 
 test('编辑面板的入口文案与卡片信息保持一致', () => {
