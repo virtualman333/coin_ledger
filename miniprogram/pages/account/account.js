@@ -28,7 +28,6 @@ Page({
     showPolicy: false,
     policy,
     holdingsCount: 0,
-    userCount: 0,
     totalCoins: 0,
     seriesCount: 0,
   },
@@ -69,7 +68,6 @@ Page({
       avatarUrl: state.user && state.user.avatar ? api.BASE + state.user.avatar : '',
       isAdmin: !!state.isAdmin,
       holdingsCount: state.holdings.length,
-      userCount: state.userCount,
       totalCoins: cat.total,
       seriesCount: cat.seriesList.length,
     });

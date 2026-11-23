@@ -14,10 +14,6 @@
           <text class="me-k">全站品种</text>
           <text class="me-v">{{totalCoins}}</text>
         </view>
-        <view class="me-cell">
-          <text class="me-k">注册用户</text>
-          <text class="me-v">{{userCount}}</text>
-        </view>
       </view>
     </view>
     <view class="wx-row" wx:if="{{!user.wx}}">
