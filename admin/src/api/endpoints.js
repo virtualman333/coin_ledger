@@ -18,6 +18,11 @@ export const usersApi = {
   batch: (body) => http.post('/admin/users/batch', body)
 };
 
+export const appConfigApi = {
+  get: () => http.get('/app-config'),
+  setMaintenance: (maintenance) => http.put('/admin/app-config', { maintenance })
+};
+
 export const auditApi = {
   list: (params, signal) => http.get('/admin/audit', params, signal)
 };

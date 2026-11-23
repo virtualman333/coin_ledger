@@ -82,7 +82,7 @@
   </view>
 
   <view class="actions">
-    <button class="btn-primary" wx:if="{{!owned}}" bindtap="addCoin" loading="{{busy}}">
+    <button class="btn-primary" wx:if="{{!maintenance && !owned}}" bindtap="addCoin" loading="{{busy}}">
       {{loggedIn ? '加入我的收藏' : '登录后加入'}}
     </button>
 
@@ -91,7 +91,7 @@
       <button class="act-btn" hover-class="tap-hover" bindtap="goFeedback">纠错反馈</button>
     </view>
 
-    <view class="act-remove" wx:if="{{owned}}" hover-class="tap-hover" bindtap="removeCoin">从我的收藏移出</view>
+    <view class="act-remove" wx:if="{{!maintenance && owned}}" hover-class="tap-hover" bindtap="removeCoin">从我的收藏移出</view>
   </view>
 
   <block wx:if="{{coin.desc}}">

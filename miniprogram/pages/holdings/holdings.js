@@ -3,6 +3,7 @@ const api = require('../../utils/api');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const privacy = require('../../utils/privacy');
+const appconfig = require('../../utils/appconfig');
 
 Page({
   data: {
@@ -40,6 +41,14 @@ Page({
   },
 
   onLoad(q) {
+    // 维护状态：账本相关页面一律不进入，旧链接直接回首页
+    if (appconfig.isMaintenance()) {
+      wx.showToast({ title: '账本功能调整中', icon: 'none' });
+      setTimeout(() => {
+        wx.navigateBack({ fail: () => { try { getApp().goTab(0); } catch (e) { /* 忽略 */ } } });
+      }, 600);
+      return;
+    }
     // 朋友圈分享打开的是当前页，带 code 时转到只读快照页，别让人看到自己的空账本
     const code = String((q && q.code) || '').slice(0, 32);
     if (code) {

@@ -1,5 +1,6 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
+const appconfig = require('../../utils/appconfig');
 
 /** 版本号来自 app.globalData；测试环境没有 getApp 时退回空串 */
 function appVersion() {
@@ -15,11 +16,13 @@ Page({
   data: {
     isAdmin: false,
     loggedIn: false,
+    maintenance: false,
     appVersion: '',
   },
 
   onLoad() {
     const state = store.getState ? store.getState() : {};
+    appconfig.refresh().then((c) => this.setData({ maintenance: !!c.maintenance })).catch(() => {});
     this.setData({
       isAdmin: !!state.isAdmin,
       loggedIn: !!(state && state.user),
@@ -66,6 +69,7 @@ Page({
   /* ---------------- 收藏备份：在独立页面里做，那里有完整说明 ---------------- */
 
   onBackup() {
+    if (appconfig.isMaintenance()) { wx.showToast({ title: '账本功能调整中', icon: 'none' }); return; }
     if (!store.isLogin()) {
       wx.showToast({ title: '登录后才能备份收藏', icon: 'none' });
       return;

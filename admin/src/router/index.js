@@ -24,6 +24,7 @@ export const MENU = [
   {
     group: '系统',
     items: [
+      { path: '/settings', title: '维护状态', icon: 'Setting' },
       { path: '/audit', title: '操作审计', icon: 'Document' },
       { path: '/guard', title: '封禁管理', icon: 'Lock' }
     ]
@@ -44,6 +45,7 @@ const routes = [
       { path: 'series', name: 'series', component: () => import('../pages/Series.vue'), meta: { title: '系列管理' } },
       { path: 'plan', name: 'plan', component: () => import('../pages/Plan.vue'), meta: { title: '发行管理' } },
       { path: 'precious-metal', name: 'precious-metal', component: () => import('../pages/PreciousMetal.vue'), meta: { title: '贵金属' } },
+      { path: 'settings', name: 'settings', component: () => import('../pages/Settings.vue'), meta: { title: '维护状态' } },
       { path: 'audit', name: 'audit', component: () => import('../pages/Audit.vue'), meta: { title: '操作审计' } },
       { path: 'guard', name: 'guard', component: () => import('../pages/Guard.vue'), meta: { title: '封禁管理' } }
     ]

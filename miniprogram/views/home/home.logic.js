@@ -2,6 +2,7 @@ const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
 const api = require('../../utils/api');
+const appconfig = require('../../utils/appconfig');
 
 module.exports = {
   data: {
@@ -20,6 +21,7 @@ module.exports = {
       kinds: 0,
     },
     latest: [],
+    maintenance: false,      // 维护状态：隐藏账本相关入口
     seriesTop: [],
     syncTip: '',
     progress: { owned: 0, total: 0, pct: 0, label: '' },
@@ -31,6 +33,8 @@ module.exports = {
   onShow() {
     this.render();
     this.loadMetal();
+    // 管理端刚切过开关时，回到首页也能立刻生效
+    appconfig.refresh().then(() => this.render()).catch(() => {});
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
@@ -85,6 +89,7 @@ module.exports = {
     this.setData({
       totalCoins: cat.total,
       descCount: cat.descCount,
+      maintenance: appconfig.ready() ? appconfig.isMaintenance() : true,
       loggedIn: !!state.user,
       userName: state.user ? state.user.name : '',
       stats: {

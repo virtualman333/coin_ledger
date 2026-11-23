@@ -6,14 +6,20 @@
         <view class="me-ava me-ava-ph" wx:else>{{displayName ? displayName[0] : '藏'}}</view>
         <view class="me-txt">
           <text class="me-name">{{displayName}}</text>
-          <text class="me-sub">{{stats.kinds ? (stats.kinds + ' 个品种 · ' + stats.rolls + ' 套') : '还没有记录'}}</text>
+          <text class="me-sub">{{maintenance ? '账本功能调整中' : (stats.kinds ? (stats.kinds + ' 个品种 · ' + stats.rolls + ' 套') : '还没有记录')}}</text>
         </view>
       </view>
       <view class="me-edit" hover-class="tap-hover" bindtap="goProfile">编辑</view>
     </view>
 
+    <!-- 维护状态下账本整套收起，只留说明 -->
+    <view class="mt-note" wx:if="{{maintenance}}">
+      <text class="mt-note-t">账本功能调整中</text>
+      <text class="mt-note-d">图鉴、发行计划与拍照数币照常使用</text>
+    </view>
+
     <!-- 唯一的主视觉块：市值、投入、面值、进度收在一起 -->
-    <view class="hero" wx:if="{{stats.kinds}}">
+    <view class="hero" wx:if="{{!maintenance && stats.kinds}}">
       <text class="hero-k">参考市值</text>
       <view class="hero-line">
         <text class="hero-cur">¥</text>
@@ -29,13 +35,13 @@
       </view>
     </view>
 
-    <view class="hero hero-empty" wx:else>
+    <view class="hero hero-empty" wx:elif="{{!maintenance}}">
       <text class="he-t">还没有收藏</text>
       <view class="he-btn" hover-class="tap-hover" bindtap="goList">去挑第一枚</view>
     </view>
 
     <!-- 收藏构成：一眼看出普通纪念币/钞/贵金属各收了多少，点了直接跳对应分类 -->
-    <view class="mkinds" wx:if="{{stats.kinds}}">
+    <view class="mkinds" wx:if="{{!maintenance && stats.kinds}}">
       <view
         class="mk {{item.n ? '' : 'is-zero'}}"
         wx:for="{{dist}}"
@@ -53,7 +59,7 @@
     </view>
 
     <view class="rows">
-      <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的收藏">
+      <view class="cell" wx:if="{{!maintenance}}" hover-class="row-hover" hover-stay-time="80" bindtap="goHoldings" aria-role="button" aria-label="我的收藏">
         <text class="cell-k">我的收藏</text>
         <view class="row-thumbs" wx:if="{{thumbs.length}}">
           <image wx:for="{{thumbs}}" wx:key="*this" class="rt-img" src="{{item}}" mode="aspectFill"></image>
@@ -87,7 +93,7 @@
     </view>
 
     <!-- 最近添加：数组尾部就是最后加入的，点直接进详情 -->
-    <view class="recent" wx:if="{{recent.length}}">
+    <view class="recent" wx:if="{{!maintenance && recent.length}}">
       <view class="sec-h">
         <text class="sec-t">最近添加</text>
         <text class="sec-more" hover-class="tap-hover" bindtap="goHoldings">全部 ›</text>
@@ -114,7 +120,11 @@
   </block>
 
   <block wx:else>
-    <view class="hero hero-empty guest">
+    <view class="mt-note" wx:if="{{maintenance}}">
+      <text class="mt-note-t">账本功能调整中</text>
+      <text class="mt-note-d">图鉴、发行计划与拍照数币照常使用</text>
+    </view>
+    <view class="hero hero-empty guest" wx:if="{{!maintenance}}">
       <text class="he-t">登录后才有账本</text>
       <text class="he-s">收藏存在云端，换设备也能接着记</text>
       <button class="he-primary" bindtap="goAccount">登录 / 注册</button>

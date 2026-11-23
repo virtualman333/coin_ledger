@@ -1,5 +1,6 @@
 const store = require('./utils/store');
 const visit = require('./utils/visit');
+const appconfig = require('./utils/appconfig');
 
 // 全局页面曝光埋点：包装 Page，onShow 时按页面路由上报。
 // 新页面自动生效，不用逐个加；任何异常都吞掉，绝不影响页面注册与渲染。
@@ -20,12 +21,14 @@ try {
 App({
   globalData: {
     appName: '藏币录',
-    version: '2.9.63',
+    version: '2.9.64',
   },
 
   onLaunch() {
     store.hydrate();
     store.refresh().catch(() => {});
+    // 维护状态要在首屏渲染前拿到，否则会出现「先显示账本、再消失」的跳动
+    appconfig.refresh({ force: true }).catch(() => {});
 
     // 允许右上角菜单里的「转发给朋友」和「分享到朋友圈」
     if (wx.showShareMenu) {

@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const appconfig = require('../../utils/appconfig');
 const share = require('../../utils/share');
 
 /** 金额：千分位 + 最多两位小数。不引 catalog，落地页是给外人看的，越轻越好 */
@@ -35,6 +36,11 @@ Page({
   },
 
   onLoad(q) {
+    // 维护状态下，收藏快照也属于账本展示，直接告知并回首页
+    if (appconfig.isMaintenance()) {
+      this.setData({ loading: false, err: '账本功能调整中，暂时无法查看收藏快照' });
+      return;
+    }
     const code = String((q && q.code) || '').slice(0, 32);
     this.setData({ code });
     if (!code) {

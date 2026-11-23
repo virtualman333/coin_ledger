@@ -2,6 +2,7 @@ const api = require('../../utils/api');
 const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const appconfig = require('../../utils/appconfig');
 
 /** 收藏进度切成 20 段刻度：比一根细线更像「集章册」，也更看得清进度 */
 function buildSegs(pct) {
@@ -24,6 +25,7 @@ function appVersion() {
 
 module.exports = {
   data: {
+    maintenance: false,
     loggedIn: false,
     isAdmin: false,
     userName: '',
@@ -54,6 +56,7 @@ module.exports = {
 
   onShow() {
     this.render();
+    appconfig.refresh().then(() => this.render()).catch(() => {});
     store.refresh().then(() => this.render()).catch((err) => {
       this.setData({ syncTip: err.message || '同步失败' });
     });
@@ -102,11 +105,13 @@ module.exports = {
 
   /** 快捷入口：只放「我的收藏」之外的高频动作，避免和下面那行重复 */
   buildQuick() {
-    const list = [
-      { key: 'backup', name: '收藏备份', icon: '⇅' },
+    const list = [];
+    // 维护状态下不暴露备份入口：备份本身属于账本功能
+    if (!appconfig.isMaintenance()) list.push({ key: 'backup', name: '收藏备份', icon: '⇅' });
+    list.push(
       { key: 'count', name: '拍照数币', icon: '◎' },
       { key: 'feedback', name: '意见反馈', icon: '✎' }
-    ];
+    );
     return list;
   },
 
@@ -170,6 +175,7 @@ module.exports = {
     const st = store.stats();
 
     this.setData({
+      maintenance: appconfig.ready() ? appconfig.isMaintenance() : true,
       loggedIn: !!state.user,
       isAdmin: !!(state.isAdmin || (state.user && state.user.role === 'admin')),
       userName: state.user ? state.user.name : '',
@@ -198,6 +204,7 @@ module.exports = {
   },
 
   goHoldings() {
+    if (appconfig.isMaintenance()) { wx.showToast({ title: '账本功能调整中', icon: 'none' }); return; }
     wx.navigateTo({ url: '/pages/holdings/holdings' });
   },
 

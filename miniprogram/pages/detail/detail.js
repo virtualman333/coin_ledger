@@ -1,5 +1,6 @@
 const cat = require('../../utils/catalog');
 const store = require('../../utils/store');
+const appconfig = require('../../utils/appconfig');
 const share = require('../../utils/share');
 
 /* 发行信息：把「空行分段 + **粗体**」的轻量标记转成 rich-text 的 nodes 数组。
@@ -47,6 +48,7 @@ Page({
     owned: false,
     holding: null,
     loggedIn: false,
+    maintenance: false,
     setInfo: null,
     gal: [],
     mainUrl: '',
@@ -70,6 +72,7 @@ Page({
 
   onShow() {
     this.render();
+    appconfig.refresh().then(() => this.render()).catch(() => {});
   },
 
   render() {
@@ -113,6 +116,7 @@ Page({
     this.setData({
       id: coin.id,
       coin,
+      maintenance: appconfig.isMaintenance(),
       gal,
       mainUrl: gal.length ? gal[0].url : '',
       mainLabel: gal.length ? gal[0].label : '',
@@ -153,6 +157,7 @@ Page({
 
   addCoin() {
     if (this.data.busy) return;
+    if (appconfig.isMaintenance()) { wx.showToast({ title: '账本功能调整中', icon: 'none' }); return; }
     const coin = cat.byId[this.coinId];
     if (!coin) return;
     if (!store.isLogin()) {
@@ -223,6 +228,7 @@ Page({
   },
 
   removeCoin() {
+    if (appconfig.isMaintenance()) { wx.showToast({ title: '账本功能调整中', icon: 'none' }); return; }
     const holding = this.data.holding;
     if (!holding) return;
     wx.showModal({

@@ -1,10 +1,12 @@
 const api = require('../../utils/api');
 const store = require('../../utils/store');
 const share = require('../../utils/share');
+const appconfig = require('../../utils/appconfig');
 
 Page({
   data: {
     code: '', item: null, loading: true, err: '', owned: false, busy: false, retryable: false,
+    maintenance: false,
     siblings: [],       // 同系列的其他币（不含当前这枚）
     siblingTotal: 0,    // 同系列总枚数（含当前）
   },
@@ -98,6 +100,12 @@ Page({
 
   /** 从「我的收藏」移出后再返回本页，按钮状态要跟着更新 */
   onShow() {
+    this.setData({ maintenance: appconfig.isMaintenance() });
+    appconfig.refresh().then(() => {
+      if (this.data.maintenance !== appconfig.isMaintenance()) {
+        this.setData({ maintenance: appconfig.isMaintenance() });
+      }
+    }).catch(() => {});
     if (this.data.code) this.setData({ owned: this.isOwned(this.data.code) });
   },
 
@@ -116,6 +124,7 @@ Page({
 
   /** 已收藏时点按钮 = 取消收藏（二次确认），否则加入；与普通币详情页 removeCoin 同口径 */
   toggleFav() {
+    if (appconfig.isMaintenance()) { wx.showToast({ title: '账本功能调整中', icon: 'none' }); return; }
     if (this.data.owned) this.removeFav();
     else this.addFav();
   },

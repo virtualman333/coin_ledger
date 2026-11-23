@@ -1,4 +1,5 @@
 const store = require('../../utils/store');
+const appconfig = require('../../utils/appconfig');
 
 /**
  * 收藏备份：独立的说明 + 操作页。
@@ -16,6 +17,13 @@ Page({
   },
 
   onShow() {
+    if (appconfig.isMaintenance()) {
+      wx.showToast({ title: '账本功能调整中', icon: 'none' });
+      setTimeout(() => {
+        wx.navigateBack({ fail: () => { try { getApp().goTab(0); } catch (e) { /* 忽略 */ } } });
+      }, 600);
+      return;
+    }
     const st = (store.getState && store.getState()) || {};
     const hs = st.holdings || [];
     let last = '';

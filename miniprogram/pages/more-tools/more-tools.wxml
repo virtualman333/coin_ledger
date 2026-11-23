@@ -1,7 +1,7 @@
 <view class="page">
   <text class="grp">工具</text>
   <view class="group">
-    <view class="cell" hover-class="row-hover" hover-stay-time="80" bindtap="onBackup" aria-role="button" aria-label="收藏备份">
+    <view class="cell" wx:if="{{!maintenance}}" hover-class="row-hover" hover-stay-time="80" bindtap="onBackup" aria-role="button" aria-label="收藏备份">
       <view class="cell-ico"><text>⇅</text></view>
       <text class="cell-k">收藏备份</text>
       <text class="cell-a">›</text>

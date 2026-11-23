@@ -15,6 +15,12 @@
     <view class="hero-coin" wx:else><view class="coin-hole"></view></view>
   </view>
 
+  <!-- 维护状态：账本整块收起，只留一句说明，避免首页顶部长草 -->
+  <view class="mt-note" wx:if="{{maintenance}}">
+    <text class="mt-note-t">账本功能调整中</text>
+    <text class="mt-note-d">图鉴、发行计划与拍照数币照常使用</text>
+  </view>
+  <block wx:else>
   <!-- 账本（浮在 hero 下沿） -->
   <view class="ledger" wx:if="{{loggedIn}}" hover-class="tap-hover" bindtap="goHoldings">
     <view class="ledger-head">
@@ -48,6 +54,7 @@
     <text class="guest-sub">与网页版同一账号</text>
     <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
   </view>
+  </block>
 
   <!-- 最新发行：横滑 -->
   <view class="sec">
