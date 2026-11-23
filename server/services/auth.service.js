@@ -89,6 +89,27 @@ function wxName(doc) {
 }
 
 /**
+ * 同 IP 多账号标记（只标记、不限制）。
+ *
+ * 口径：同一注册 IP 下已存在账号时，本次新建的账号打 regIpDup = true；
+ * 首个账号保持干净。判定在 store.commit 的 draft 上做，串行队列天然防并发撞车。
+ * 历史账号没有 regIp（老数据无从判断），不参与统计、也不追溯。
+ *
+ * @param {object} draft commit 里的工作副本
+ * @param {string} ip 本次注册来源 IP
+ * @returns {{regIp: string, regIpDup: boolean}} 要写进新用户的两个字段
+ */
+function regIpFields(draft, ip) {
+  const clean = String(ip || '').trim().slice(0, 64);
+  // 本地回环 / 占位 / 空值不参与判定，避免无 IP 环境互相误标
+  if (!clean || clean === '-' || clean === '::1' || clean === '127.0.0.1') {
+    return { regIp: clean, regIpDup: false };
+  }
+  const dup = (draft.users || []).some((u) => u && u.regIp && u.regIp === clean);
+  return { regIp: clean, regIpDup: dup };
+}
+
+/**
  * 取当前登录用户。
  *
  * @param {import('http').IncomingMessage} rawReq 原始请求
@@ -114,9 +135,10 @@ function me(rawReq) {
  *
  * @param {{name?: string, password?: string}} body 请求体
  * @param {boolean} secure 是否 HTTPS（决定 Cookie 的 Secure 标记）
+ * @param {string} ip 注册来源 IP（仅用于同 IP 多账号标记，不做限制）
  * @returns {Promise<{body: object, cookie: string}>} 响应体与会话 Cookie
  */
-async function register(body, secure) {
+async function register(body, secure, ip) {
   const d = store.load();
   if (d.users.length >= auth.MAX_USERS) throw httpError(429, '注册人数已达上限');
 
@@ -132,9 +154,11 @@ async function register(body, secure) {
       role: 'user',
       salt, hash,
       createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString()
+      lastLogin: new Date().toISOString(),
+      ...regIpFields(draft, ip)
     };
     draft.users.push(u);
+    if (u.regIpDup) console.log('[reg] 同 IP 重复注册，已标记 ' + u.name + '（' + u.id + '）' + ' IP=' + u.regIp);
     draft.holdings[u.id] = [];       // 新用户从空账本开始
     return u;
   });
@@ -182,9 +206,10 @@ async function login(body, ip, secure) {
  *
  * @param {{code?: string}} body 请求体
  * @param {boolean} secure 是否 HTTPS
+ * @param {string} ip 注册来源 IP（仅用于同 IP 多账号标记，不做限制）
  * @returns {Promise<{body: object, cookie: string}>} 响应体与会话 Cookie
  */
-async function wxLogin(body, secure) {
+async function wxLogin(body, secure, ip) {
   const code = String(body.code || '').trim();
   if (!code) throw httpError(400, '缺少微信登录凭证');
 
@@ -212,10 +237,12 @@ async function wxLogin(body, secure) {
         wxOpenid: sess.openid,
         wxUnionid: sess.unionid || '',
         createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        ...regIpFields(draft, ip)
       };
       draft.users.push(created);
       draft.holdings[created.id] = [];      // 微信新用户从空账本开始
+      if (created.regIpDup) console.log('[wx] 同 IP 重复注册，已标记 ' + created.name + '（' + created.id + '）' + ' IP=' + created.regIp);
       return created;
     });
     console.log('[wx] 新建微信用户 ' + u.name + '（' + u.id + '）');
@@ -287,9 +314,10 @@ async function wxUnbind(uid) {
  * 华为身份 → 本站账号（有号就登，没号就建）。
  *
  * @param {{openId: string, unionId?: string, nickname?: string, avatar?: string}} profile 华为身份
+ * @param {string} ip 注册来源 IP（仅用于同 IP 多账号标记，不做限制）
  * @returns {Promise<{user: object, isNew: boolean}>} 账号与是否新建
  */
-async function huaweiUpsert(profile) {
+async function huaweiUpsert(profile, ip) {
   const p = profile || {};
   const openId = String(p.openId || '').trim();
   if (!openId) throw httpError(400, '缺少华为账号标识');
@@ -316,10 +344,12 @@ async function huaweiUpsert(profile) {
         hwAvatar: avatar,
         nickname: nickname,
         createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        ...regIpFields(draft, ip)
       };
       draft.users.push(u);
       draft.holdings[u.id] = [];      // 华为新用户从空账本开始
+      if (u.regIpDup) console.log('[huawei] 同 IP 重复注册，已标记 ' + u.name + '（' + u.id + '）' + ' IP=' + u.regIp);
       return u;
     });
     console.log('[huawei] 新建华为用户 ' + created.name + '（' + created.id + '）');
@@ -376,10 +406,11 @@ async function huaweiAttach(uid, profile) {
  *
  * @param {object} profile 华为身份
  * @param {boolean} secure 是否 HTTPS
+ * @param {string} ip 注册来源 IP（仅用于同 IP 多账号标记，不做限制）
  * @returns {Promise<{body: object, cookie: string}>} 响应体与会话 Cookie
  */
-async function huaweiSession(profile, secure) {
-  const r = await huaweiUpsert(profile);
+async function huaweiSession(profile, secure, ip) {
+  const r = await huaweiUpsert(profile, ip);
   const token = auth.issueToken(r.user);
   return {
     body: {
@@ -398,9 +429,10 @@ async function huaweiSession(profile, secure) {
  *
  * @param {{code?: string}} body 请求体
  * @param {boolean} secure 是否 HTTPS
+ * @param {string} ip 注册来源 IP（仅用于同 IP 多账号标记，不做限制）
  * @returns {Promise<{body: object, cookie: string}>} 响应体与会话 Cookie
  */
-async function huaweiLogin(body, secure) {
+async function huaweiLogin(body, secure, ip) {
   const code = String(body.code || '').trim();
   if (!code) throw httpError(400, '缺少华为账号授权码');
   let profile;
@@ -410,7 +442,7 @@ async function huaweiLogin(body, secure) {
   } catch (e) {
     throw httpError(e.status || 502, e.message, { hwCode: e.code || 0 });
   }
-  return huaweiSession(profile, secure);
+  return huaweiSession(profile, secure, ip);
 }
 
 /** 绑定华为账号 */
@@ -596,6 +628,7 @@ async function updateProfile(me, body) {
 }
 
 module.exports = {
+  regIpFields: regIpFields,
   code2Session: code2Session,
   currentUser: currentUser,
   me: me,

@@ -56,6 +56,7 @@
           <text class="badge admin" wx:if="{{item.role === 'admin'}}">管理员</text>
           <text class="badge test" wx:if="{{item.isTest}}">测试</text>
           <text class="badge off" wx:if="{{item.disabled}}">已禁用</text>
+          <text class="badge ipdup" wx:if="{{item.regIpDup}}">同IP</text>
         </view>
         <text class="r-sub">账号 {{item.accountName}}</text>
         <text class="r-sub r-sub2">{{item.metaText}}</text>

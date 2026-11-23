@@ -28,13 +28,17 @@ function list(query) {
   const size = Math.min(200, Math.max(1, Number(query.size) || 20));
 
   let items = d.users.map((u) => Object.assign(auth.publicUser(u), {
-    holdings: Array.isArray(d.holdings[u.id]) ? d.holdings[u.id].length : 0
+    holdings: Array.isArray(d.holdings[u.id]) ? d.holdings[u.id].length : 0,
+    // 同 IP 多账号标记：仅管理端可见，只展示不限制
+    regIp: u.regIp || '',
+    regIpDup: !!u.regIpDup
   }));
   const stats = {
     total: items.length,
     admins: items.filter((u) => u.role === 'admin').length,
     tests: items.filter((u) => u.isTest).length,
-    disabled: items.filter((u) => u.disabled).length
+    disabled: items.filter((u) => u.disabled).length,
+    ipDup: items.filter((u) => u.regIpDup).length
   };
   if (kw) items = items.filter((u) =>
     [u.id, u.name, u.nickname].some((v) => String(v || '').toLowerCase().includes(kw)));
@@ -74,7 +78,9 @@ function one(id) {
   return {
     ok: true,
     user: Object.assign(auth.publicUser(target), {
-      holdings: Array.isArray(d.holdings[target.id]) ? d.holdings[target.id].length : 0
+      holdings: Array.isArray(d.holdings[target.id]) ? d.holdings[target.id].length : 0,
+      regIp: target.regIp || '',
+      regIpDup: !!target.regIpDup
     })
   };
 }

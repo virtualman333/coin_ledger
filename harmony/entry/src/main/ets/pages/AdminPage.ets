@@ -17,6 +17,8 @@ class AdminUser {
   hw: boolean = false;
   createdAt: string = '';
   holdings: number = 0;
+  regIp: string = '';
+  regIpDup: boolean = false;
 }
 
 class AdminStats {
@@ -409,8 +411,17 @@ export struct AdminPage {
               .backgroundColor('#FBEEEC')
               .borderRadius(3)
           }
+          if (u.regIpDup) {
+            Text('同IP')
+              .fontSize(8)
+              .fontColor('#8A6420')
+              .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+              .backgroundColor('#FBF2DF')
+              .borderRadius(3)
+          }
         }
-        Text('@' + u.name + ' · ' + (u.holdings || 0) + ' 件收藏')
+        Text('@' + u.name + ' · ' + (u.holdings || 0) + ' 件收藏'
+          + (u.regIpDup ? ' · 同IP ' + (u.regIp || '') : ''))
           .fontSize(9)
           .fontColor(Theme.faint)
       }

@@ -14,6 +14,7 @@
       <div class="cl-stat"><b>{{ stats.admins ?? 0 }}</b><span>管理员</span></div>
       <div class="cl-stat"><b>{{ stats.tests ?? 0 }}</b><span>测试账号</span></div>
       <div class="cl-stat"><b>{{ stats.disabled ?? 0 }}</b><span>已禁用</span></div>
+      <div class="cl-stat"><b>{{ stats.ipDup ?? 0 }}</b><span>同IP多账号</span></div>
     </div>
 
     <AsyncState :loading="loading && !rows.length" :error="error" @retry="reload">
@@ -83,7 +84,10 @@
                 <el-tag v-if="row.hasPassword" size="small" effect="plain" type="info">密钥</el-tag>
                 <el-tag v-if="row.wx" size="small" effect="plain" type="success">微信小程序</el-tag>
                 <el-tag v-if="row.hw" size="small" effect="plain" type="danger">华为账号</el-tag>
-                <span v-if="!row.hasPassword && !row.wx && !row.hw" class="u-dash">—</span>
+                <el-tooltip v-if="row.regIpDup" :content="`同 IP 已注册多个账号（${row.regIp || '未知 IP'}）· 仅标记不限制`" placement="top">
+                  <el-tag size="small" effect="dark" type="warning">同IP</el-tag>
+                </el-tooltip>
+                <span v-if="!row.hasPassword && !row.wx && !row.hw && !row.regIpDup" class="u-dash">—</span>
               </div>
             </template>
           </el-table-column>
@@ -177,6 +181,10 @@
           <el-descriptions-item label="最近登录">{{ fmt(detail.lastLogin) }}</el-descriptions-item>
           <el-descriptions-item label="藏品条数">{{ detail.holdings ?? holdings.length }}</el-descriptions-item>
           <el-descriptions-item label="测试账号">{{ detail.isTest ? '是' : '否' }}</el-descriptions-item>
+          <el-descriptions-item label="注册 IP">
+            <span class="cl-mono">{{ detail.regIp || '—' }}</span>
+            <el-tag v-if="detail.regIpDup" size="small" type="warning" effect="dark" style="margin-left:6px">同IP多账号</el-tag>
+          </el-descriptions-item>
         </el-descriptions>
 
         <el-divider content-position="left">

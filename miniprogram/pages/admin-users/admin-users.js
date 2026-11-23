@@ -78,7 +78,8 @@ Page({
           createdText: dayText(u.createdAt),
           lastLoginText: dayText(u.lastLogin),
           metaText: (Number(u.holdings) || 0) + ' 条收藏 · 注册 ' + dayText(u.createdAt)
-            + (u.lastLogin ? ' · 最近登录 ' + dayText(u.lastLogin) : ''),
+            + (u.lastLogin ? ' · 最近登录 ' + dayText(u.lastLogin) : '')
+            + (u.regIpDup ? ' · 同IP ' + (u.regIp || '') : ''),
         });
       });
       const users = reset ? rows : this.data.users.concat(rows);

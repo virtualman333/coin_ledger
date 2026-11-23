@@ -74,7 +74,7 @@ module.exports = async function authRoutes(app) {
 
   app.post('/api/auth/register', async function register(request, reply) {
     const body = await readBody(request.raw, 4096);
-    const r = await authService.register(body, isSecure(request.raw));
+    const r = await authService.register(body, isSecure(request.raw), clientIP(request.raw));
     reply.header('Set-Cookie', r.cookie).send(r.body);
   });
 
@@ -86,7 +86,7 @@ module.exports = async function authRoutes(app) {
 
   app.post('/api/auth/wx/login', async function wxLogin(request, reply) {
     const body = await readBody(request.raw, 4096);
-    const r = await authService.wxLogin(body, isSecure(request.raw));
+    const r = await authService.wxLogin(body, isSecure(request.raw), clientIP(request.raw));
     reply.header('Set-Cookie', r.cookie).send(r.body);
   });
 
@@ -171,7 +171,7 @@ module.exports = async function authRoutes(app) {
 
     let session;
     try {
-      session = await authService.huaweiSession(profile, secure);
+      session = await authService.huaweiSession(profile, secure, clientIP(request.raw));
     } catch (e) {
       console.warn('[huawei] 建号失败：' + e.message);
       const errCode = e.status === 429 ? 'full' : 'server';
@@ -191,7 +191,7 @@ module.exports = async function authRoutes(app) {
       return reply.code(503).send({ ok: false, error: '华为账号登录还没配置好，请使用用户名密码登录' });
     }
     const body = await readBody(request.raw, 4096);
-    const r = await authService.huaweiLogin(body, isSecure(request.raw));
+    const r = await authService.huaweiLogin(body, isSecure(request.raw), clientIP(request.raw));
     reply.header('Set-Cookie', r.cookie).send(r.body);
   });
 

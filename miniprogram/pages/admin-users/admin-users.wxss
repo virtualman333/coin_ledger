@@ -151,3 +151,9 @@
   background: #fbeeec;
   color: #a3281c;
 }
+
+/* 同 IP 多账号标记：只用暖色提醒，不做任何限制 */
+.badge.ipdup {
+  background: #fbf2df;
+  color: #8a6420;
+}

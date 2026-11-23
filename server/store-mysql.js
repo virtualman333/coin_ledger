@@ -61,10 +61,13 @@ const DDL = [
      nickname VARCHAR(32) NULL COMMENT '显示昵称（可重复，与登录名无关）',
      avatar VARCHAR(64) NULL COMMENT '头像文件名，存 public/avatar/',
      name_changed_at DATETIME(3) NULL COMMENT '用户名修改时间；非空即已用过改名机会',
+     reg_ip VARCHAR(64) NULL COMMENT '注册来源 IP（仅标记用，不做限制）',
+     reg_ip_dup TINYINT(1) NOT NULL DEFAULT 0 COMMENT '同 IP 第 2 个及以后注册的账号标记；仅展示不限制',
      PRIMARY KEY (id),
      UNIQUE KEY uk_name (name),
      KEY idx_wx (wx_openid),
-     KEY idx_hw (hw_openid)
+     KEY idx_hw (hw_openid),
+     KEY idx_reg_ip (reg_ip)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号'`,
 
   `CREATE TABLE IF NOT EXISTS cl_holdings (
@@ -141,6 +144,9 @@ async function ensureSchema() {
   await ensureColumn('cl_users', 'avatar', 'VARCHAR(64) NULL');
   // 用户名只允许改一次：记录首次改名时间，非空即锁死
   await ensureColumn('cl_users', 'name_changed_at', 'DATETIME(3) NULL');
+  // 同 IP 多账号标记：只记录与展示，不做任何限制；老库缺列自动补
+  await ensureColumn('cl_users', 'reg_ip', 'VARCHAR(64) NULL');
+  await ensureColumn('cl_users', 'reg_ip_dup', 'TINYINT(1) NOT NULL DEFAULT 0');
   // 收藏分享快照的汇总：不公开清单时 items 是空的，面值/推理价只能靠这两列带出去
   await ensureColumn('cl_colshare', 'face_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
   await ensureColumn('cl_colshare', 'ai_total', 'DECIMAL(14,2) NOT NULL DEFAULT 0');
@@ -160,6 +166,13 @@ async function ensureSchema() {
   );
   if (!hwi[0].n) {
     try { await pool.query('ALTER TABLE cl_users ADD KEY idx_hw (hw_openid)'); } catch (e) { /* 已有索引 */ }
+  }
+  // 注册 IP 查询索引：建号时要数同 IP 已有账号，老库补建
+  const [rgi] = await pool.query(
+    "SELECT COUNT(*) AS n FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cl_users' AND index_name = 'idx_reg_ip'"
+  );
+  if (!rgi[0].n) {
+    try { await pool.query('ALTER TABLE cl_users ADD KEY idx_reg_ip (reg_ip)'); } catch (e) { /* 已有索引 */ }
   }
 }
 
@@ -182,7 +195,7 @@ async function loadDoc() {
   metaRows.forEach((r) => { meta[r.k] = r.v; });
 
   const [userRows] = await pool.query(
-    'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar FROM cl_users ORDER BY created_at, id'
+    'SELECT id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar, reg_ip, reg_ip_dup FROM cl_users ORDER BY created_at, id'
   );
   const [holdRows] = await pool.query(
     'SELECT uid, ord, id, name, rolls, cost, market, grp, sep, category, thumb, unit, serials, form, images FROM cl_holdings ORDER BY uid, ord'
@@ -238,7 +251,9 @@ async function loadDoc() {
       isTest: !!r.is_test,
       nickname: r.nickname || '',
       avatar: r.avatar || '',
-      nameChangedAt: iso(r.name_changed_at) || null
+      nameChangedAt: iso(r.name_changed_at) || null,
+      regIp: r.reg_ip || '',
+      regIpDup: !!r.reg_ip_dup
     })),
     holdings,
     prices,
@@ -276,19 +291,21 @@ async function syncUsers(conn, doc) {
   }
   for (const u of users) {
     await conn.query(
-      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar, name_changed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO cl_users (id, name, role, salt, hash, created_at, last_login, wx_openid, wx_unionid, hw_openid, hw_unionid, hw_avatar, is_test, nickname, avatar, name_changed_at, reg_ip, reg_ip_dup)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE name = VALUES(name), role = VALUES(role), salt = VALUES(salt),
          hash = VALUES(hash), created_at = VALUES(created_at), last_login = VALUES(last_login),
          wx_openid = VALUES(wx_openid), wx_unionid = VALUES(wx_unionid),
          hw_openid = VALUES(hw_openid), hw_unionid = VALUES(hw_unionid), hw_avatar = VALUES(hw_avatar),
          is_test = VALUES(is_test),
-         nickname = VALUES(nickname), avatar = VALUES(avatar), name_changed_at = VALUES(name_changed_at)`,
+         nickname = VALUES(nickname), avatar = VALUES(avatar), name_changed_at = VALUES(name_changed_at),
+         reg_ip = VALUES(reg_ip), reg_ip_dup = VALUES(reg_ip_dup)`,
       [u.id, u.name, u.role || 'user', u.salt, u.hash, toDate(u.createdAt) || new Date(), toDate(u.lastLogin),
         u.wxOpenid || null, u.wxUnionid || null,
         u.hwOpenid || null, u.hwUnionid || null, u.hwAvatar || null,
         u.isTest ? 1 : 0, u.nickname || null, u.avatar || null,
-        u.nameChangedAt ? toDate(u.nameChangedAt) : null]
+        u.nameChangedAt ? toDate(u.nameChangedAt) : null,
+        u.regIp || null, u.regIpDup ? 1 : 0]
     );
   }
 }
