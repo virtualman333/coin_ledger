@@ -92,9 +92,9 @@
         <text class="vdd-x" catchtap="closeVsDetail">✕</text>
       </view>
       <view class="vdd-sum">
-        <text class="vdd-sum-i"><b>{{vsDetail.total}}</b> 次访问</text>
-        <text class="vdd-sum-i"><b>{{vsDetail.sessions}}</b> 会话</text>
-        <text class="vdd-sum-i"><b>{{vsDetail.pages}}</b> 个页面</text>
+        <text class="vdd-sum-i"><text class="vdd-num">{{vsDetail.total}}</text> 次访问</text>
+        <text class="vdd-sum-i"><text class="vdd-num">{{vsDetail.sessions}}</text> 会话</text>
+        <text class="vdd-sum-i"><text class="vdd-num">{{vsDetail.pages}}</text> 个页面</text>
         <text class="vdd-sum-ip" wx:if="{{vsDetail.ip}}">{{vsDetail.ip}}</text>
       </view>
       <scroll-view scroll-y class="vdd-list">

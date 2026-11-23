@@ -38,7 +38,8 @@
   color: #6b6559;
   font-size: 21rpx;
 }
-.vdd-sum-i b { color: #8a6420; font-size: 25rpx; }
+/* 汇总数字用 <text> 而非 <b>：WXML 不渲染 b 标签，数字会整块消失 */
+.vdd-num { color: #8a6420; font-size: 25rpx; font-weight: 600; }
 .vdd-sum-ip { margin-left: auto; color: #8a8378; font-family: monospace; }
 
 /* 访客头像：有图显示图，没有就用首字圆形占位，和后台其它列表一致 */

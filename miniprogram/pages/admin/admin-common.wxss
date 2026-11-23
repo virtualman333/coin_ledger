@@ -601,8 +601,7 @@
   flex-direction: column;
   width: 100%;
   max-height: 82vh;
-  /* 只有 max-height 时，flex:1 的子项仍会被内容撑高、整体溢出而不滚。
-     overflow:hidden 把容器封住，子项才按「剩余高度」分配，内部才能滚 */
+  /* 封住圆角与溢出；高度由内容决定，明细区的滚动交给 .vdd-list 自身的 max-height */
   overflow: hidden;
   padding: 0 28rpx calc(24rpx + env(safe-area-inset-bottom));
   border-radius: 26rpx 26rpx 0 0;
@@ -632,9 +631,11 @@
   margin: -44rpx 0 0 -44rpx;
 }
 .vdd-sub { display: block; flex: 0 0 auto; padding-bottom: 14rpx; color: #6b6559; font-size: 20rpx; }
-/* scroll-view 只给 max-height 是滚不动的（内容会被裁掉、底部按钮也按不到），
-   必须在 flex 列里拿到确定高度：flex:1 + min-height:0 */
-.vdd-list { flex: 1 1 0; min-height: 0; }
+/* 明细列表：内容少时按内容高度铺开，多时封顶 60vh 内部滚动。
+   不能用 flex:1 1 0 —— 父级 .vdd-sheet 只有 max-height 没有确定 height，
+   basis:0 的子项分不到高度会整块塌陷成 0（明细连同空状态一起看不见）。
+   给 scroll-view 自身 max-height，既不塌陷、超出也能滚。 */
+.vdd-list { max-height: 60vh; min-height: 0; }
 .vdd-row {
   display: flex;
   padding: 16rpx 0;
