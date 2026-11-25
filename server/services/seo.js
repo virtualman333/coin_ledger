@@ -23,6 +23,7 @@ const PUBLIC_DIR = config.PUBLIC_DIR;
 /* 注入前先给一份空壳，保证函数被误调用时也不抛 */
 let SEED = { coins: [], series: {}, sets: {}, defaults: [] };
 let DESC = {};
+let PLAN = { years: [] };
 
 /**
  * 注入目录数据。只在 loadSeed() 之后调用一次；
@@ -32,6 +33,7 @@ function setData(next) {
   if (!next) return;
   if (next.seed) SEED = next.seed;
   if (next.desc) DESC = next.desc;
+  if (next.plan) PLAN = next.plan;
 }
 
 /* ---------------------------------------------------------
@@ -61,6 +63,20 @@ const TAB_SEO = {
   account: ['账户 | 藏币录', '登录、注册与账户设置。'],
   admin: ['用户管理 | 藏币录', '管理员后台。']
 };
+/* 页面级 keywords：原来全站写死首页那一串，tab 页换成各自主题，利于长尾词命中 */
+const TAB_KEYWORDS = {
+  myfeedback: '藏币录,用户反馈,数据纠错,纪念币勘误',
+  sitemap: '藏币录,站点地图,纪念币索引,纪念钞目录',
+  plan: '纪念币发行计划,央行发行计划,纪念币预约,纪念钞发行,预约兑换',
+  home: '纪念币,纪念钞,普通纪念币,发行清单,纪念币收藏,币面图案,国家公园纪念币,生肖纪念币,纪念币价格',
+  all: '普通纪念币清单,纪念钞清单,1984至2026纪念币,纪念币发行量,纪念币面额,纪念币材质',
+  series: '纪念币系列,套系收藏,生肖纪念币系列,国家公园纪念币,纪念币套系进度',
+  overview: '收藏概览,纪念币统计,套系完成度',
+  cost: '纪念币收藏成本,收齐全套多少钱,纪念币预算,整卷成本',
+  holdings: '我的收藏,纪念币账本,收藏记账,浮动盈亏',
+  account: '藏币录账号,纪念币账本登录,多端同步',
+  admin: '藏币录管理后台'
+};
 
 let INDEX_TPL = '';
 let INDEX_MTIME = 0;
@@ -80,6 +96,37 @@ function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/**
+ * 统一注入页面级 head meta。
+ * 原来 renderIndex / renderPmIndex / renderPmItemIndex 各写一遍替换串，
+ * 结果 twitter:* / keywords / og:image 漏替换（全站停留在首页模板的写死值）。
+ * 收敛到这里：三处都传 {title, desc, url}，可选 keywords / image / type / noindex。
+ * 正则只匹配模板里已存在的标签，缺失的标签不会凭空插入——保持与旧行为的兼容。
+ */
+function applyHead(tpl, o) {
+  const t = escHtml(o.title);
+  const d = escHtml(o.desc);
+  const u = escHtml(o.url);
+  const kw = escHtml(o.keywords != null ? o.keywords : TAB_KEYWORDS.home);
+  const img = escHtml(o.image || (SITE + '/icons/og-cover.png'));
+  let out = tpl
+    .replace(/<title>[\s\S]*?<\/title>/, '<title>' + t + '</title>')
+    .replace(/(<meta name="description" content=")[^"]*(">)/, '$1' + d + '$2')
+    .replace(/(<meta name="keywords" content=")[^"]*(">)/, '$1' + kw + '$2')
+    .replace(/(<meta property="og:title" content=")[^"]*(">)/, '$1' + t + '$2')
+    .replace(/(<meta property="og:description" content=")[^"]*(">)/, '$1' + d + '$2')
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1' + u + '$2')
+    .replace(/(<meta property="og:image" content=")[^"]*(")/, '$1' + img + '$2')
+    .replace(/(<meta name="twitter:title" content=")[^"]*(">)/, '$1' + t + '$2')
+    .replace(/(<meta name="twitter:description" content=")[^"]*(">)/, '$1' + d + '$2')
+    .replace(/(<meta name="twitter:image" content=")[^"]*(")/, '$1' + img + '$2')
+    .replace(/(<link rel="canonical" href=")[^"]*(")/, '$1' + u + '$2');
+  if (o.noindex) {
+    out = out.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1noindex,nofollow$2');
+  }
+  return out;
 }
 function fmMint(w) {
   const n = Number(w) || 0;
@@ -267,6 +314,94 @@ function sitemapStaticBlock() {
   return html + '</nav>';
 }
 
+/* 面包屑里 tab 页的显示名（TAB_SEO 的 title 带后缀，不适合直接当面包屑末级） */
+const TAB_LABEL = {
+  home: '首页', plan: '发行计划', all: '全套发行清单', series: '全部系列',
+  overview: '收藏概览', cost: '收齐成本', holdings: '我的收藏', sitemap: '站点地图',
+  account: '账户', myfeedback: '我的反馈', admin: '管理后台'
+};
+
+/* ---------------------------------------------------------
+   tab 页静态正文（给不跑 JS 的抓取端）
+   /all /series /plan 原来只换 meta、正文全靠 JS 渲染，抓取端看到空壳。
+   这三页是站内主力入口，用同一份 SEED/PLAN 拼可读正文 + 内链。
+   前端 finishBoot() → dropSsr() 会整块移除（id=ssrCoin），用户看到的仍是原页面。
+   --------------------------------------------------------- */
+
+/** /all：按系列分组列出全部品种内链 */
+function ssrAllBlock() {
+  const bySeries = {};
+  SEED.coins.forEach((c) => { (bySeries[c.series] = bySeries[c.series] || []).push(c); });
+  let html = '<article class="sx" id="ssrCoin">'
+    + '<nav class="sx-crumb"><a href="/">藏币录</a> › <span>全套发行清单</span></nav>'
+    + '<h1>1984—2026 全套发行清单</h1>'
+    + '<p>本站收录 ' + SEED.coins.length + ' 个中国普通纪念币与纪念钞品种，按系列归类、按年份排列。'
+    + '点开任一品种可查看面额、发行量、材质、直径／票幅、币面图案与央行发行公告原文。</p>';
+  Object.keys(bySeries).forEach((k) => {
+    const name = (SEED.series && SEED.series[k]) || '其他';
+    const list = bySeries[k].slice().sort((a, b) => Number(b.year) - Number(a.year));
+    html += '<h2>' + escHtml(name) + '（' + list.length + ' 个品种）</h2><ul class="sx-links">'
+      + list.map((x) => '<li><a href="/coin/' + (Number(x.i) + 1) + '">' + escHtml(x.name)
+        + '（' + x.year + ' 年）</a></li>').join('')
+      + '</ul>';
+  });
+  html += '<p class="sx-cta">回到<a href="/">首页</a>，或<a href="/series">按系列看套系进度</a>、'
+    + '<a href="/plan">看央行年度发行计划</a>。</p>'
+    + '<p class="sx-note">数据来源：中国人民银行发行公告及公开收藏资料；发行量与规格以官方公告为准。推理价仅供参考，不作为交易依据。</p>'
+    + '</article>';
+  return html;
+}
+
+/** /series：列出全部系列及各自的品种内链 */
+function ssrSeriesBlock() {
+  const bySeries = {};
+  SEED.coins.forEach((c) => { (bySeries[c.series] = bySeries[c.series] || []).push(c); });
+  const keys = Object.keys(bySeries);
+  let html = '<article class="sx" id="ssrCoin">'
+    + '<nav class="sx-crumb"><a href="/">藏币录</a> › <span>全部系列</span></nav>'
+    + '<h1>中国纪念币全部系列</h1>'
+    + '<p>按官方发行口径，本站把 ' + SEED.coins.length + ' 个品种归入 ' + keys.length
+    + ' 个系列。每个系列列出已收录的品种，登录后还能看到自己的集齐进度。</p>';
+  keys.forEach((k) => {
+    const name = (SEED.series && SEED.series[k]) || '其他';
+    const list = bySeries[k];
+    html += '<h2>' + escHtml(name) + '（' + list.length + ' 个品种）</h2><p>'
+      + list.slice(0, 12).map((x) => '<a href="/coin/' + (Number(x.i) + 1) + '">' + escHtml(x.name) + '</a>').join('、')
+      + (list.length > 12 ? ' 等' : '') + '。</p>';
+  });
+  html += '<p class="sx-cta">查看<a href="/all">全套发行清单</a>，或<a href="/plan">央行年度发行计划</a>。</p>'
+    + '</article>';
+  return html;
+}
+
+/** /plan：按年度列出央行发行计划项目（含状态与发行日） */
+function ssrPlanBlock() {
+  const years = (PLAN && PLAN.years) || [];
+  if (!years.length) return '';
+  const label = { issued: '已发行', scheduled: '待发行', planned: '计划中', extra: '计划外增发' };
+  let html = '<article class="sx" id="ssrCoin">'
+    + '<nav class="sx-crumb"><a href="/">藏币录</a> › <span>发行计划</span></nav>'
+    + '<h1>普通纪念币（钞）年度发行计划</h1>'
+    + '<p>中国人民银行公布的年度发行计划与单项公告汇总：哪些已发行、哪些待发行，含面额、发行量与预约兑换日期。</p>';
+  years.slice().reverse().forEach((y) => {
+    const items = y.items || [];
+    html += '<h2>' + escHtml(String(y.year)) + ' 年（' + items.length + ' 项）</h2>';
+    if (y.sourceText) html += '<p>' + escHtml(y.sourceText) + '</p>';
+    html += '<ul class="sx-links">' + items.map((it) => {
+      const bits = [it.name, it.status && ('（' + (label[it.status] || it.status) + '）'),
+        it.date && ('发行日 ' + it.date), it.face != null && ('面额 ' + it.face + ' 元')].filter(Boolean);
+      const text = escHtml(bits.join(' · '));
+      return it.coinNo
+        ? '<li><a href="/coin/' + Number(it.coinNo) + '">' + text + '</a></li>'
+        : '<li>' + text + '</li>';
+    }).join('') + '</ul>';
+  });
+  html += '<p class="sx-note">年度清单以中国人民银行每年 12 月公布的次年计划为准；单项发行日、预约期取自各品种发行公告。</p>'
+    + '<p class="sx-cta">查看<a href="/all">全套发行清单</a>与<a href="/series">全部系列</a>。</p>'
+    + '</article>';
+  return html;
+}
+
 function renderIndex(route) {
   if (route && route.pm) return renderPmIndex(route);
   if (route && route.tab === 'pm') return renderPmItemIndex(route);
@@ -277,22 +412,28 @@ function renderIndex(route) {
   const seriesN = Object.keys(SEED.sets || {}).length;
   const fill = (s) => String(s).replace(/\{n\}/g, total).replace(/\{s\}/g, seriesN);
   const c = route.tab === 'coin' ? SEED.coins[route.i] : null;
-  let title, desc, path;
+  let title, desc, path, keywords, image;
   if (c) {
     const isNote = c.kind === 'note';
     const unit = isNote ? '张' : '枚';
     const n = setSize(c);
     const est = Number(c.est) || 0;
+    const no = String(route.i + 1).padStart(3, '0');
     path = '/coin/' + (route.i + 1);
     title = `${c.name}（${c.year} ${isNote ? '纪念钞' : '纪念币'}）面额 ${c.face} 元 · 发行量 ${fmMint(c.mintage)}${unit} | 藏币录`;
     desc = `${c.year} 年发行的${isNote ? '纪念钞' : '普通纪念币'}「${c.name}」，面额 ${c.face} 元／${unit}，`
          + `${c.material}，${isNote ? '票幅' : '直径'} ${isNote ? (c.size ? String(c.size).replace('×', ' × ') + ' 毫米' : '—') : (c.dia === '—' ? '—' : c.dia + ' 毫米')}，发行量 ${fmMint(c.mintage)}${unit}。`
          + `单${unit}参考市价约 ${est} 元，一套（${n} ${unit}）约 ${est * n} 元。`;
+    keywords = [c.name, c.year + (isNote ? '纪念钞' : '普通纪念币'), c.material,
+      '纪念币收藏', '发行量' + fmMint(c.mintage) + unit].join(',');
+    // 有实物图的品种页用实物图做社交分享封面，没有则沿用站点通用封面
+    image = /\d{3}/.test(no) ? `${SITE}/img/${no}.jpg` : undefined;
   } else {
     const pair = TAB_SEO[route.tab] || TAB_SEO.home;
     path = route.tab === 'home' ? '/' : '/' + route.tab;
     title = fill(pair[0]);
     desc = fill(pair[1]);
+    keywords = fill(TAB_KEYWORDS[route.tab] || TAB_KEYWORDS.home);
   }
   const url = SITE + path;
 
@@ -331,16 +472,40 @@ function renderIndex(route) {
     };
     ld = `<script type="application/ld+json">${JSON.stringify(product)}</script>\n`
        + `<script type="application/ld+json">${JSON.stringify(crumb)}</script>\n`;
+  } else {
+    /* tab 页结构化数据：
+       - 面包屑：首页 › 当前栏目（首页本身不加，避免出现「首页›首页」）
+       - /all 清单页给 ItemList，让搜索引擎理解这是一份有序品种目录 */
+    if (route.tab !== 'home') {
+      const crumb = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '首页', item: SITE + '/' },
+          { '@type': 'ListItem', position: 2, name: TAB_LABEL[route.tab] || (TAB_SEO[route.tab] ? TAB_SEO[route.tab][0] : '栏目'), item: url }
+        ]
+      };
+      ld += `<script type="application/ld+json">${JSON.stringify(crumb)}</script>\n`;
+    }
+    if (route.tab === 'all') {
+      const itemList = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: '1984—2026 中国普通纪念币与纪念钞全套发行清单',
+        numberOfItems: total,
+        itemListElement: SEED.coins.map((x, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: x.name,
+          url: SITE + '/coin/' + (Number(x.i === undefined ? idx : x.i) + 1)
+        }))
+      };
+      ld += `<script type="application/ld+json">${JSON.stringify(itemList)}</script>\n`;
+    }
   }
 
   let head = ld;
-  let out = tpl
-    .replace(/<title>[\s\S]*?<\/title>/, `<title>${escHtml(title)}</title>`)
-    .replace(/(<meta name="description" content=")[\s\S]*?(">)/, `$1${escHtml(desc)}$2`)
-    .replace(/(<meta property="og:title" content=")[\s\S]*?(">)/, `$1${escHtml(title)}$2`)
-    .replace(/(<meta property="og:description" content=")[\s\S]*?(">)/, `$1${escHtml(desc)}$2`)
-    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`)
-    .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
+  let out = applyHead(tpl, { title: title, desc: desc, url: url, keywords: keywords, image: image });
 
   /* 首页里的品种数/系列数是写死在 HTML 里的（数据涨到 136 条后还停在 135）。
      按元素 id 定位替换而不是替换固定数字，数据再涨也不用回来改这里。
@@ -361,6 +526,16 @@ function renderIndex(route) {
   }
   if (route.tab === 'sitemap') {
     out = out.replace('<div id="sitemapBody"></div>', '<div id="sitemapBody">' + sitemapStaticBlock() + '</div>');
+  }
+  /* /all /series /plan 补 SSR 正文（抓取端可读，前端装配后移除）。
+     首页 /tab 的 feature grid 本身就是静态文字，不重复铺正文。 */
+  const tabBlock = route.tab === 'all' ? ssrAllBlock()
+    : route.tab === 'series' ? ssrSeriesBlock()
+    : route.tab === 'plan' ? ssrPlanBlock() : '';
+  if (tabBlock) {
+    out = out.replace('<main class="wrap" id="main" tabindex="-1">',
+      '<main class="wrap" id="main" tabindex="-1">' + tabBlock);
+    head += SX_CSS;
   }
   return out.replace('</head>', head + '</head>');
 }
@@ -503,13 +678,11 @@ function renderPmIndex(route) {
   const ld = '<script type="application/ld+json">' + JSON.stringify(product) + '</script>\n'
     + '<script type="application/ld+json">' + JSON.stringify(crumb) + '</script>\n';
 
-  let out = tpl
-    .replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>')
-    .replace(/(<meta name="description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
-    .replace(/(<meta property="og:title" content=")[\s\S]*?(">)/, '$1' + escHtml(title) + '$2')
-    .replace(/(<meta property="og:description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
-    .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1' + url + '$2')
-    .replace(/(<link rel="canonical" href=")[^"]*(")/, '$1' + url + '$2');
+  let out = applyHead(tpl, {
+    title: title, desc: desc, url: url,
+    keywords: [c.name, c.year + '贵金属纪念币', c.material, '贵金属纪念币收藏', '套内规格'].join(','),
+    image: SITE + '/img/' + String(c.no).padStart(3, '0') + '.jpg'
+  });
 
   out = out
     .replace(/(id="coinTotalA">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
@@ -638,15 +811,12 @@ function renderPmItemIndex(route) {
   const ld = (product ? '<script type="application/ld+json">' + JSON.stringify(product) + '</script>\n' : '')
     + '<script type="application/ld+json">' + JSON.stringify(crumb) + '</script>\n';
 
-  let out = tpl
-    .replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>')
-    .replace(/(<meta name="description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
-    .replace(/(<meta property="og:title" content=")[\s\S]*?(">)/, '$1' + escHtml(title) + '$2')
-    .replace(/(<meta property="og:description" content=")[\s\S]*?(">)/, '$1' + escHtml(desc) + '$2')
-    .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1' + url + '$2')
-    .replace(/(<link rel="canonical" href=")[^"]*(")/, '$1' + url + '$2');
-  // 查不到的编号不应被收录：直接改模板里已有的 robots，而不是追加第二个
-  if (!name) out = out.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1noindex,nofollow$2');
+  let out = applyHead(tpl, {
+    title: title, desc: desc, url: url, noindex: !name,
+    keywords: [name || ('贵金属纪念币 ' + code), (d && d.material ? d.material + '贵金属纪念币' : '贵金属纪念币'),
+      '发行档案', '编号' + code].join(',')
+    // 单枚页没有独立实物图（code 是字母编号，不是图片序号），沿用通用封面
+  });
   out = out
     .replace(/(id="coinTotalA">)\d+(<)/g, '$1' + SEED.coins.length + '$2')
     .replace(/(id="coinTotalB">)\d+(<)/g, '$1' + SEED.coins.length + '$2')

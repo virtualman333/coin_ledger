@@ -101,8 +101,8 @@ function loadSeed() {
   const galCount = Object.keys(GALLERY).reduce((a, k) => a + (GALLERY[k] || []).length, 0);
   console.log(`[boot] 发行清单 ${SEED.coins.length} 个品种，图片 ${IMG_SET.length} 张（实拍 ${IMG_REAL.length}），多图 ${galCount} 张，官方介绍 ${Object.keys(DESC).length} 条`);
 
-  // SEO 渲染与这里共用同一份 SEED/DESC 对象（渲染代码逐字保留，不做改写）
-  require('../services/seo').setData({ seed: SEED, desc: DESC });
+  // SEO 渲染与这里共用同一份 SEED/DESC/PLAN 对象（渲染代码逐字保留，不做改写）
+  require('../services/seo').setData({ seed: SEED, desc: DESC, plan: PLAN });
 }
 
 /**
@@ -130,6 +130,8 @@ function state() {
  */
 function setPlan(next) {
   PLAN = next;
+  // SEO 的 /plan SSR 正文与这里共用同一份 PLAN（管理端保存后立即生效）
+  require('../services/seo').setData({ plan: PLAN });
 }
 
 /**
