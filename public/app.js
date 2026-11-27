@@ -2252,6 +2252,7 @@ function renderPmDetail(code){
         + '<div class="pm-modal-facts" id="pmFacts">'
         + fact('编号', code) + fact('材质', d.material) + fact('克重', d.weight ? d.weight + ' 克' : '')
         + fact('面额', d.face != null ? d.face + ' 元' : '') + fact('成色', d.fineness ? d.fineness + '%' : '')
+        + fact('发售价', d.issuePrice != null ? '¥' + money(d.issuePrice) : '')
         + fact('最大发行量', d.circulation ? d.circulation + ' 枚' : '') + fact('质量', d.quality)
         + (mvHtml ? '<div class="pm-mv-wrap">' + mvHtml + '</div>' : '')
         + '</div>'

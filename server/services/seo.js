@@ -739,6 +739,8 @@ function pmItemSsrBlock(code, d) {
     fact('材质', d && d.material),
     fact('克重', d && d.weight ? d.weight + ' 克' : ''),
     fact('面额', d && d.face != null ? d.face + ' 元' : ''),
+    // 发售价是中国金币公布的官方初始发行价，属于公告事实，不是市场估值
+    fact('发售价', d && d.issuePrice != null ? '¥' + Number(d.issuePrice).toLocaleString('zh-CN') : ''),
     fact('成色', d && d.fineness ? d.fineness + '%' : ''),
     fact('最大发行量', d && d.circulation ? d.circulation + ' 枚' : ''),
     fact('质量', d && d.quality),

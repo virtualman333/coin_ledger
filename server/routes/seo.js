@@ -79,6 +79,7 @@ module.exports = async function seoRoutes(app) {
           circulation: raw.circulation || r.max_mintage || '',
           quality: raw.quality || r.quality || '',
           castingUnit: raw.castingUnit || '',
+          issuePrice: raw.initialPrice == null || raw.initialPrice === '' ? null : Number(raw.initialPrice),
           announce: raw.projectAnnounceName || raw.description || ''
         };
       }

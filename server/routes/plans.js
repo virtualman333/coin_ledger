@@ -75,6 +75,8 @@ module.exports = async function planRoutes(app) {
         quality: raw.quality, craft: raw.craft, castingUnit: raw.castingUnit,
         designer: raw.designedPersonName, sculptor: raw.sculptor,
         categories: raw.projectCategoryName, theme: raw.projectTheme, series: raw.projectSeries,
+        // 发售价 = 中国金币官方初始发行价（raw.initialPrice）；未开售的品种源站没有这个值
+        issuePrice: raw.initialPrice == null || raw.initialPrice === '' ? null : Number(raw.initialPrice),
         metalValue: metalValue
       }
     });

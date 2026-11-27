@@ -23,6 +23,8 @@ class PmDetail {
   weight: string = '';
   spec: string = '';
   face: number = 0;
+  /** 官方初始发售价；源站未开售的品种为 null */
+  issuePrice: number | null = null;
   fineness: string = '';
   circulation: string = '';
   quality: string = '';
@@ -148,6 +150,9 @@ export struct PmDetailPage {
       if (it.fineness) facts.push(this.fact('成色', it.fineness + '%'));
       if (weightText !== '') facts.push(this.fact('重量', weightText + (weightText.indexOf('克') >= 0 ? '' : ' 克')));
       if (it.face) facts.push(this.fact('面额', it.face + ' 元'));
+      if (it.issuePrice !== null && it.issuePrice !== undefined) {
+        facts.push(this.fact('发售价', '¥' + it.issuePrice.toLocaleString('zh-CN')));
+      }
       if (it.spec) facts.push(this.fact('规格', it.spec));
       if (it.quality) facts.push(this.fact('品质', it.quality));
       if (craftText !== '') facts.push(this.fact('工艺', craftText));

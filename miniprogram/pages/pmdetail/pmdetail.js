@@ -32,6 +32,8 @@ Page({
         ['编号', d.code], ['项目', d.projectName], ['年份', d.year],
         ['材质', join(d.material)], ['克重', join(d.weight)], ['规格', d.spec],
         ['面额', d.face != null ? d.face + ' 元' : ''], ['成色', d.fineness ? d.fineness + '%' : ''],
+        // 官方初始发售价（源站暂未开售的品种没有这个值）
+        ['发售价', d.issuePrice != null ? '¥' + Number(d.issuePrice).toLocaleString('zh-CN') : ''],
         ['最大发行量', d.circulation ? d.circulation + ' 枚' : ''], ['质量', d.quality],
         ['工艺', join(d.craft)], ['铸造单位', d.castingUnit],
         ['设计', d.designer], ['雕刻', d.sculptor],
