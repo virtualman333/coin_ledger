@@ -54,6 +54,8 @@ Page({
     page: 1,
     pages: 1,
     desc: true,        // 年份降序
+    mats: [],          // 贵金属项目内的材质（金/银/铂），用于筛选
+    mat: '',           // 当前选中的材质，空 = 全部
     onlyOwn: false,
     showOnlyOwn: false,
     loadError: '',
@@ -142,7 +144,8 @@ Page({
   loadPm(page, append) {
     const path = '/api/series/detail?category=pm&code=' + encodeURIComponent(this.data.code)
       + '&page=' + page + '&size=30'
-      + '&sort=' + (this.data.desc ? 'year_desc' : 'year_asc');
+      + '&sort=' + (this.data.desc ? 'year_desc' : 'year_asc')
+      + (this.data.mat ? '&material=' + encodeURIComponent(this.data.mat) : '');
     return api.get(path).then((res) => {
       if (!res || !res.ok) throw new Error('series detail failed');
       const s = res.series || {};
@@ -155,6 +158,10 @@ Page({
         imgUrl: absoluteImg(it.thumbBack || it.thumb || it.frontPicture),
         metaText: [it.material, it.weightG ? it.weightG + ' 克' : '', it.quality].filter(Boolean).join(' · '),
         faceText: it.face != null ? it.face + ' 元' : '',
+        // 克重价 = 实时金银价 x 成色净重（材料价值）；发售价 = 官方初始发行价
+        priceText: it.metalValue && it.metalValue.value != null
+          ? '材料 ≈ ¥' + cat.money(it.metalValue.value) : '',
+        issueText: it.issuePrice != null ? '发售价 ¥' + cat.money(it.issuePrice) : '',
       }));
       const yf = String(s.yearFrom || ''), yt = String(s.yearTo || '');
       const mats = Array.isArray(s.materials) ? s.materials : [];
@@ -170,6 +177,7 @@ Page({
           yearText: yf && yt ? (yf === yt ? (yf + ' 年') : (yf + '—' + yt)) : '',
           matText: mats.slice(0, 4).join(' · '),
         },
+        mats: mats,
         // 服务端已经排好序，这里不再二次排序（二次排只会打乱「同年份按 code」的稳定序）
         rows: allRows,
         total: Number(res.total) || 0,
@@ -199,6 +207,15 @@ Page({
       const diff = (yearNum(a.year) - yearNum(b.year))
         || String(a.name || '').localeCompare(String(b.name || ''));
       return desc ? -diff : diff;
+    });
+  },
+
+  /** 材质筛选：金/银/铂，切换后回第一页由服务端重筛 */
+  setMat(e) {
+    const mat = String(e.currentTarget.dataset.mat || '');
+    if (mat === this.data.mat) return;
+    this.setData({ mat, rows: [], page: 0, pages: 0, loading: true }, () => {
+      this.loadPm(1, false);
     });
   },
 

@@ -96,7 +96,8 @@ module.exports = async function planRoutes(app) {
     const offset = (page - 1) * pageSize;
     const cols = 'code, project_code AS projectCode, project_name AS projectName, year, name, ' +
       'material, weight_g AS weightG, face, fineness, max_mintage AS maxMintage, quality, ' +
-      'front_picture AS frontPicture, back_picture AS backPicture, thumb, thumb_back AS thumbBack';
+      'front_picture AS frontPicture, back_picture AS backPicture, thumb, thumb_back AS thumbBack, ' +
+      'JSON_UNQUOTE(JSON_EXTRACT(raw, \'$.initialPrice\')) AS issuePrice';
 
     // 年份是 VARCHAR，直接排序会把空串和 NULL 混进来；统一转数字再排，缺年份永远沉底
     const ynum = "CAST(NULLIF(year, '') AS UNSIGNED)";
@@ -130,6 +131,17 @@ module.exports = async function planRoutes(app) {
         params.concat([pageSize, offset])
       );
       items = rows[0];
+    }
+
+    // 列表也带发售价与克重价：前端卡片要显示，一次取价后逐枚算（30 条，开销可忽略）
+    let quoted = false;
+    for (const it of items) {
+      const ip = it.issuePrice;
+      it.issuePrice = ip == null || ip === 'null' || ip === '' ? null : Number(ip);
+      try {
+        if (!quoted) { await app.metalPrice.getQuotes(); quoted = true; }
+        it.metalValue = app.metalPrice.valueOf(it.material, it.weightG, it.fineness);
+      } catch (e) { it.metalValue = null; }
     }
 
     // ?facets=1：给前端拼筛选项用（年份 / 面额 / 材质），只有首屏才需要算

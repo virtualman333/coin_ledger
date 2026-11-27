@@ -1039,6 +1039,7 @@ function shortNames(names, seriesName){
 /* 全部系列页的品类筛选：all/coin/note/pm。
    之前三组（纪念币 / 纪念钞 / 贵金属）一直堆在同一页，想只看纪念钞得往下滚。 */
 var SERIES_CAT = 'all';
+var SERIES_Q = '';        // 全部系列页的模糊搜索关键字（本地过滤，544 个贵金属项目也不用请求接口）
 function renderSeries(){
   var box = document.getElementById('seriesBox');
   if (!box) return;
@@ -1084,13 +1085,20 @@ function renderSeries(){
       '<span>' + (Number(count) || 0) + ' 项</span></div><div class="sc-group-grid">' + cards + '</div></div>';
   }
 
-  var coinList = list.filter(function(x){ return x.cat !== 'note'; });
-  var noteList = list.filter(function(x){ return x.cat === 'note'; });
+  var sq = String(SERIES_Q || '').trim().toLowerCase();
+  var hitQ = function(x){
+    if (!sq) return true;
+    return String(x.name || '').toLowerCase().indexOf(sq) >= 0
+      || String(x.code || x.key || '').toLowerCase().indexOf(sq) >= 0;
+  };
+  var coinList = list.filter(function(x){ return x.cat !== 'note'; }).filter(hitQ);
+  var noteList = list.filter(function(x){ return x.cat === 'note'; }).filter(hitQ);
   var coinCards = coinList.map(cardHtml).join('');
   var noteCards = noteList.map(cardHtml).join('');
 
   // 贵金属系列：来自 /api/series?category=pm（项目=一套），未加载时先提示并在回调里补渲染
-  var pmCards = PM_SERIES.map(function(s){
+  var pmShown = PM_SERIES.filter(hitQ);
+  var pmCards = pmShown.map(function(s){
     return '<button class="scard pm-card" data-pm-project="' + esc(s.code) + '">' +
       '<div class="sc-top"><span class="sc-name">' + esc(s.name) + '</span>' +
       '<span class="sc-prog">' + Number(s.count || 0) + ' 枚</span></div>' +
@@ -1109,7 +1117,7 @@ function renderSeries(){
     } else if (SERIES_CAT === 'note') {
       hint.textContent = noteList.length + ' 个纪念钞系列';
     } else if (SERIES_CAT === 'pm') {
-      hint.textContent = (PM_SERIES_LOADED ? PM_SERIES.length : '…') + ' 个贵金属项目';
+      hint.textContent = (PM_SERIES_LOADED ? pmShown.length : '…') + ' 个贵金属项目';
     } else {
       var sets = list.filter(function(x){ return !x.isSingle; });
       hint.textContent = sets.length + ' 个系列' +
@@ -1123,8 +1131,8 @@ function renderSeries(){
     (showCoin ? section('纪念币', 'g-coin', coinCards, coinList.length) : '') +
     (showNote ? section('纪念钞', 'g-note', noteCards, noteList.length) : '') +
     (showPm ? section('贵金属纪念币', 'g-pm', PM_SERIES_LOADED
-      ? (pmCards || '<div class="sc-group-empty">暂无贵金属项目</div>')
-      : '<div class="sc-group-empty">正在加载贵金属项目…</div>', PM_SERIES.length) : '');
+      ? (pmCards || '<div class="sc-group-empty">' + (sq ? '没有匹配的贵金属项目' : '暂无贵金属项目') + '</div>')
+      : '<div class="sc-group-empty">正在加载贵金属项目…</div>', pmShown.length) : '');
 
   if (showPm && !PM_SERIES_LOADED) {
     loadPmSeries(function(){ if (document.getElementById('seriesBox') === box) renderSeries(); });
@@ -2117,6 +2125,12 @@ function renderPmFull(){
       + '<div class="pm-card-m">' + esc(meta) + '</div>'
       + '<div class="pm-card-f">面额 ' + (it.face != null ? it.face + ' 元' : '—')
       + ' · 成色 ' + (it.fineness ? esc(it.fineness) + '%' : '—') + '</div>'
+      + (function(){
+          var line = [];
+          if (it.metalValue && it.metalValue.value != null) line.push('材料 ≈ ¥' + money(it.metalValue.value));
+          if (it.issuePrice != null) line.push('发售价 ¥' + money(it.issuePrice));
+          return line.length ? '<div class="pm-card-p">' + esc(line.join(' · ')) + '</div>' : '';
+        })()
       + '<div class="pm-card-c">' + esc(it.code) + '</div>'
       + '<button type="button" class="pm-add' + (owned ? ' is-owned' : '') + '" data-addpm="' + esc(it.code) + '">' +
         (owned ? '✓ 已收藏 · 取消' : '＋ 收藏') + '</button></div></div>';
@@ -5181,6 +5195,16 @@ function initMpInline(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMpInline);
 else initMpInline();
+
+/* 全部系列页的模糊搜索：本地过滤三类系列，输入即筛 */
+(function initSeriesSearch(){
+  var box = document.getElementById('seriesQ');
+  if (!box) return;
+  box.addEventListener('input', function(){
+    SERIES_Q = box.value || '';
+    renderSeries();
+  });
+})();
 
 /* 全部系列页的品类 tab：点了只显示对应分组 */
 (function initSeriesCats(){

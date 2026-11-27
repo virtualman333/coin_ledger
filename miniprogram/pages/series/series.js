@@ -14,6 +14,11 @@ Page({
     noteGroup: [],
     pmGroup: [],
     pmLoaded: false,
+    // 模糊搜索：三类系列一起筛（名称 / 编号），全量在本地，边输边筛不请求接口
+    kw: '',
+    coinAll: [],
+    noteAll: [],
+    pmAll: [],
   },
 
   onShow() {
@@ -43,10 +48,32 @@ Page({
 
     this.setData({
       items: all,
-      coinGroup: all.filter((s) => s.cat === 'coin'),
-      noteGroup: all.filter((s) => s.cat === 'note'),
+      coinAll: all.filter((s) => s.cat === 'coin'),
+      noteAll: all.filter((s) => s.cat === 'note'),
       total: cat.total,
       count: all.length,
+    }, () => this.applyFilter());
+  },
+
+  /** 搜索：按名称 / 编号模糊匹配，三类系列一起筛 */
+  onKw(e) {
+    this.setData({ kw: String((e.detail && e.detail.value) || '') }, () => this.applyFilter());
+  },
+
+  clearKw() {
+    this.setData({ kw: '' }, () => this.applyFilter());
+  },
+
+  /** 把 kw 应用到三类系列上；空关键字原样返回，避免每次都新建数组 */
+  applyFilter() {
+    const q = String(this.data.kw || '').trim().toLowerCase();
+    const hit = (x) => !q
+      || String(x.name || '').toLowerCase().indexOf(q) >= 0
+      || String(x.code || '').toLowerCase().indexOf(q) >= 0;
+    this.setData({
+      coinGroup: this.data.coinAll.filter(hit),
+      noteGroup: this.data.noteAll.filter(hit),
+      pmGroup: this.data.pmAll.filter(hit),
     });
   },
 
@@ -54,7 +81,7 @@ Page({
   loadPmSeries() {
     api.get('/api/series?category=pm').then((res) => {
       if (!res || !res.ok || !Array.isArray(res.items)) {
-        this.setData({ pmLoaded: true, pmGroup: [] });
+        this.setData({ pmLoaded: true, pmAll: [], pmGroup: [] });
         return;
       }
       const pm = res.items.map((it) => {
@@ -69,8 +96,8 @@ Page({
           thumb: it.thumb ? (String(it.thumb).indexOf('http') === 0 ? it.thumb : api.BASE + it.thumb) : '',
         };
       });
-      this.setData({ pmLoaded: true, pmGroup: pm });
-    }).catch(() => this.setData({ pmLoaded: true, pmGroup: [] }));
+      this.setData({ pmLoaded: true, pmAll: pm }, () => this.applyFilter());
+    }).catch(() => this.setData({ pmLoaded: true, pmAll: [], pmGroup: [] }));
   },
 
   switchCat(e) {
@@ -85,8 +112,8 @@ Page({
     const category = ds.cat || 'coin';
     // 打开独立系列详情页：只展示这一系列的品种，保留返回栈（不再 switchTab 跳回清单）
     let name = '';
-    const pool = category === 'pm' ? this.data.pmGroup
-      : (category === 'note' ? this.data.noteGroup : this.data.coinGroup);
+    const pool = category === 'pm' ? (this.data.pmAll.length ? this.data.pmAll : this.data.pmGroup)
+      : (category === 'note' ? this.data.noteAll : this.data.coinAll);
     if (Array.isArray(pool)) {
       const hit = pool.filter((s) => s.code === code)[0];
       if (hit) name = hit.name || '';

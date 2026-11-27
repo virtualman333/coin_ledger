@@ -4,6 +4,18 @@
     <text class="h-sub">{{total}} 个品种，分成 {{count}} 个系列</text>
   </view>
 
+  <view class="search">
+    <input
+      class="search-input"
+      value="{{kw}}"
+      placeholder="搜索系列名 / 编号"
+      placeholder-class="search-ph"
+      confirm-type="search"
+      bindinput="onKw"
+    />
+    <view class="search-x" wx:if="{{kw}}" hover-class="tap-hover" bindtap="clearKw">✕</view>
+  </view>
+
   <view class="all-card" hover-class="tap-hover" bindtap="goAll">
     <view class="all-main">
       <text class="all-title">全部品种</text>

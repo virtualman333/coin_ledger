@@ -2980,3 +2980,12 @@ html[data-theme="light"] .pz-modal-mask{background:rgba(0,0,0,.35)}
 .pm-sib-item:hover b {
   color: #9a6b1f;
 }
+
+
+/* 全部系列：模糊搜索框 + 贵金属卡片的价格行 */
+.series-q{
+  width:200px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);color:var(--ink);font-size:13px
+}
+.series-q:focus{outline:none;border-color:var(--gold)}
+.pm-card-p{margin-top:4px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}

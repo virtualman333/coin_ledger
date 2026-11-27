@@ -32,6 +32,19 @@
     <button class="tool share-tool" open-type="share" hover-class="tap-hover">分享系列</button>
   </view>
 
+  <!-- 材质筛选：项目里可能同时有金/银/铂，切换后由服务端重筛 -->
+  <view class="mats" wx:if="{{category === 'pm' && mats.length > 1}}">
+    <view class="mat {{mat === '' ? 'on' : ''}}" data-mat="" hover-class="tap-hover" bindtap="setMat">全部</view>
+    <view
+      class="mat {{mat === item ? 'on' : ''}}"
+      wx:for="{{mats}}"
+      wx:key="*this"
+      data-mat="{{item}}"
+      hover-class="tap-hover"
+      bindtap="setMat"
+    >{{item}}</view>
+  </view>
+
   <!-- 品种列表 -->
   <view class="list" wx:if="{{loaded && rows.length}}">
     <view
@@ -53,6 +66,7 @@
         <text class="row-name">{{item.name}}</text>
         <text class="row-meta" wx:if="{{item.faceText}}">面值 {{item.faceText}}</text>
         <text class="row-meta" wx:elif="{{item.metaText}}">{{item.metaText}}</text>
+        <text class="row-meta" wx:if="{{item.issueText}}">{{item.issueText}}</text>
         <text class="row-sub" wx:if="{{item.setLabel}}">{{item.setLabel}}</text>
       </view>
       <view class="row-right">

@@ -30,12 +30,17 @@ module.exports = async function catalogRoutes(app) {
     if (cat === 'pm') {
       // 贵金属的「系列」是发行项目（一套），与普通币的 series 完全不是一回事。
       // 附带年份跨度、材质与代表图，供小程序/网页的项目卡片展示。
+      // q：模糊搜索（项目名 / 项目编号），544 个项目不传关键字时全量返回
+      const kw = String(one(q.q) || '').trim().slice(0, 40);
+      const where = kw ? ' WHERE (project_name LIKE ? OR project_code LIKE ?)' : '';
+      const params = kw ? ['%' + kw + '%', '%' + kw + '%'] : [];
       const r = await app.db.query(
         'SELECT project_code AS code, MAX(project_name) AS name, COUNT(*) AS count, ' +
         'MIN(year) AS yearFrom, MAX(year) AS yearTo, ' +
         'GROUP_CONCAT(DISTINCT material) AS materials, ' +
         'COALESCE(MAX(thumb), \'\') AS thumb ' +
-        'FROM cl_ecgci_pm GROUP BY project_code ORDER BY CAST(MAX(year) AS UNSIGNED) DESC, project_code DESC'
+        'FROM cl_ecgci_pm' + where + ' GROUP BY project_code ORDER BY CAST(MAX(year) AS UNSIGNED) DESC, project_code DESC',
+        params
       );
       const rows = r[0];
       return reply.send({
@@ -93,7 +98,12 @@ module.exports = async function catalogRoutes(app) {
         reply.code(404).send({ ok: false, error: '贵金属项目不存在' });
         return;
       }
-      const total = Number(m.count) || 0;
+      // 材质筛选：项目内可能同时有金/银/铂，前端只筛当前页等于没筛，必须落到 SQL
+      const mat = String(one(q.material) || '').trim().slice(0, 8);
+      const where = ' WHERE project_code = ?' + (mat ? ' AND material LIKE ?' : '');
+      const args = mat ? [code, '%' + mat + '%'] : [code];
+      const cntRows = await app.db.query('SELECT COUNT(*) AS c FROM cl_ecgci_pm' + where, args);
+      const total = Number(cntRows[0] && cntRows[0][0] && cntRows[0][0].c) || 0;
       const offset = (page - 1) * size;
       // 排序在服务端做：项目内成员可能跨年份，前端只排已加载的那一页会漏
       const ynum = "CAST(NULLIF(year, '') AS UNSIGNED)";
@@ -106,24 +116,39 @@ module.exports = async function catalogRoutes(app) {
       const listSql =
         'SELECT code, project_code AS projectCode, project_name AS projectName, year, name, ' +
         'material, weight_g AS weightG, face, fineness, max_mintage AS maxMintage, quality, ' +
-        'thumb, thumb_back AS thumbBack, front_picture AS frontPicture, back_picture AS backPicture ' +
-        'FROM cl_ecgci_pm WHERE project_code = ?' + orderBy + ' LIMIT ? OFFSET ?';
-      const rows = await app.db.query(listSql, [code, size, offset]);
+        'thumb, thumb_back AS thumbBack, front_picture AS frontPicture, back_picture AS backPicture, ' +
+        'JSON_UNQUOTE(JSON_EXTRACT(raw, \'$.initialPrice\')) AS issuePrice ' +
+        'FROM cl_ecgci_pm' + where + orderBy + ' LIMIT ? OFFSET ?';
+      const rows = await app.db.query(listSql, args.concat([size, offset]));
+      const items = (rows[0] || []).map((it) => {
+        const ip = it.issuePrice;
+        it.issuePrice = ip == null || ip === 'null' || ip === '' ? null : Number(ip);
+        return it;
+      });
+      // 克重价：列表也要显示材料价值，一次取价后逐枚算，失败不影响列表
+      let quoted = false;
+      for (const it of items) {
+        try {
+          if (!quoted) { await app.metalPrice.getQuotes(); quoted = true; }
+          it.metalValue = app.metalPrice.valueOf(it.material, it.weightG, it.fineness);
+        } catch (e) { it.metalValue = null; }
+      }
       reply.send({
         ok: true,
         category: 'pm',
         series: {
           code: m.code,
           name: m.name || code,
-          count: total,
+          count: Number(m.count),
           yearFrom: String(m.yearFrom || ''),
           yearTo: String(m.yearTo || ''),
           materials: String(m.materials || '').split(',').filter(Boolean),
           thumb: m.thumb || '',
         },
+        material: mat || '',
         total: total, page: page, size: size,
         pages: Math.ceil(total / size),
-        items: rows[0],
+        items: items,
       });
       return;
     }

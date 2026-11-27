@@ -156,3 +156,16 @@
   background:#9a6b1f;color:#fff;font-size:26rpx
 }
 .state-btn.ghost{background:#fff;color:#9a6b1f;border:1rpx solid #d8c9a8}
+
+
+/* 材质筛选：金 / 银 / 铂 */
+.mats { display: flex; flex-wrap: wrap; gap: 12rpx; padding: 0 24rpx 8rpx; }
+.mat {
+  padding: 10rpx 26rpx;
+  border: 1rpx solid #ece7dc;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #6b6559;
+  font-size: 23rpx;
+}
+.mat.on { border-color: #d9bd82; background: #f6efe0; color: #8a6420; font-weight: 600; }

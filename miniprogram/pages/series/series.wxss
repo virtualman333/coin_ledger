@@ -231,3 +231,19 @@
 .scard-pm .scard-body {
   padding: 18rpx 20rpx 20rpx;
 }
+
+
+/* 系列模糊搜索 */
+.search {
+  display: flex;
+  align-items: center;
+  margin: 0 0 20rpx;
+  padding: 0 24rpx;
+  height: 84rpx;
+  border: 1rpx solid #ece7dc;
+  border-radius: 18rpx;
+  background: #ffffff;
+}
+.search-input { flex: 1; height: 84rpx; font-size: 26rpx; color: #2b2926; }
+.search-ph { color: #8a8378; }
+.search-x { padding: 0 6rpx; color: #8a8378; font-size: 26rpx; }
