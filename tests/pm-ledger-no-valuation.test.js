@@ -22,9 +22,10 @@ const readMp = (p) => fs.readFileSync(path.join(ROOT, 'miniprogram', p), 'utf8')
 
 /* ---------------- Web：真的跑一遍 calc() ---------------- */
 function loadCalc() {
-  const src = readWeb();
+  // Windows 工作区是 CRLF（core.autocrlf=true），这里统一成 LF 再做字符串切分
+  const src = readWeb().split(String.fromCharCode(13, 10)).join(String.fromCharCode(10));
   const start = src.indexOf('function calc(){');
-  const end = src.indexOf('/* =========================================================\n   7. 渲染：藏品卡片');
+  const end = src.indexOf('/* =========================================================\n   7. 渲染：收藏卡片');
   assert.ok(start > 0 && end > start, '找不到 calc() 函数体');
   const body = src.slice(start, end);
 
