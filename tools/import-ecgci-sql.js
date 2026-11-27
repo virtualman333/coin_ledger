@@ -6,13 +6,19 @@
  * 那两张表直接驱动网站前台，2823 条一次性灌进去会改变站点形态。
  * 原始数据入库后，可以按项目需要再挑品种上架。
  *
- * 用法：node tools/import-ecgci-sql.js [--out <sql>]
+ * 用法：
+ *   node tools/import-ecgci-sql.js [--out <sql>]            全量重建（TRUNCATE + INSERT，thumb 列会被清空）
+ *   node tools/import-ecgci-sql.js --upsert [--out <sql>]   增量更新（不删表、不动 thumb / created_at）
+ *
+ * 日常同步目录请用 --upsert：thumb / thumb_back 是另跑 tools/fetch_pm_thumbs.js 灌进去的，
+ * 全量重建会把它们清空，几千张图要重新抓一遍。
  */
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'data', 'seeds', 'pm-ecgci-all.json');
+const UPSERT = process.argv.indexOf('--upsert') >= 0;
 const argIdx = process.argv.indexOf('--out');
 const OUT = argIdx >= 0
   ? path.resolve(process.argv[argIdx + 1])
@@ -28,9 +34,10 @@ const q = (v) => {
 };
 
 const lines = [];
-lines.push('-- 金币云集贵金属目录全量导入（自动生成，勿手改）');
+lines.push('-- 金币云集贵金属目录' + (UPSERT ? '增量更新' : '全量导入') + '（自动生成，勿手改）');
 lines.push('-- 来源：' + doc.source + '  抓取时间：' + doc.crawledAt + '  条数：' + items.length);
 lines.push('SET NAMES utf8mb4;');
+if (!UPSERT) {
 lines.push(`CREATE TABLE IF NOT EXISTS cl_ecgci_pm (` +
   '  code VARCHAR(32) NOT NULL PRIMARY KEY,' +
   '  project_code VARCHAR(32) NULL,' +
@@ -50,6 +57,7 @@ lines.push(`CREATE TABLE IF NOT EXISTS cl_ecgci_pm (` +
   '  KEY idx_project (project_code), KEY idx_year (year), KEY idx_name (name(64))' +
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
 lines.push('TRUNCATE TABLE cl_ecgci_pm;');
+}
 
 const COLS = '(`code`,`project_code`,`project_name`,`year`,`name`,`material`,`weight_g`,`face`,`fineness`,`max_mintage`,`quality`,`front_picture`,`back_picture`,`raw`)';
 
@@ -68,9 +76,17 @@ for (let i = 0; i < items.length; i += 50) {
       q(it.quality), q(it.frontPicture), q(it.backPicture), q(raw)
     ].join(',') + ')';
   }).join(',\n');
-  lines.push('INSERT INTO cl_ecgci_pm ' + COLS + ' VALUES\n' + vals + ';');
+  const tail = UPSERT
+    ? '\nON DUPLICATE KEY UPDATE '
+      + ['project_code', 'project_name', 'year', 'name', 'material', 'weight_g', 'face',
+        'fineness', 'max_mintage', 'quality', 'front_picture', 'back_picture', 'raw']
+        .map((c) => c + '=VALUES(' + c + ')').join(', ')
+    : '';
+  lines.push('INSERT INTO cl_ecgci_pm ' + COLS + ' VALUES\n' + vals + tail + ';');
 }
-lines.push('SELECT COUNT(*) AS imported FROM cl_ecgci_pm;');
+lines.push(UPSERT
+  ? 'SELECT COUNT(*) AS total, SUM(thumb IS NOT NULL) AS with_thumb FROM cl_ecgci_pm;'
+  : 'SELECT COUNT(*) AS imported FROM cl_ecgci_pm;');
 lines.push('');
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
