@@ -35,7 +35,7 @@ module.exports = async function catalogRoutes(app) {
         'MIN(year) AS yearFrom, MAX(year) AS yearTo, ' +
         'GROUP_CONCAT(DISTINCT material) AS materials, ' +
         'COALESCE(MAX(thumb), \'\') AS thumb ' +
-        'FROM cl_ecgci_pm GROUP BY project_code ORDER BY name'
+        'FROM cl_ecgci_pm GROUP BY project_code ORDER BY CAST(MAX(year) AS UNSIGNED) DESC, project_code DESC'
       );
       const rows = r[0];
       return reply.send({
