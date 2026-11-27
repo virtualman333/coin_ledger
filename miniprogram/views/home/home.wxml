@@ -48,12 +48,6 @@
       </view>
     </view>
   </view>
-
-  <view class="ledger guest" wx:else>
-    <text class="guest-title">登录后开始记录你的钱币</text>
-    <text class="guest-sub">与网页版同一账号</text>
-    <button class="btn-primary guest-btn" bindtap="goAccount">登录 / 注册</button>
-  </view>
   </block>
 
   <!-- 最新发行：横滑 -->

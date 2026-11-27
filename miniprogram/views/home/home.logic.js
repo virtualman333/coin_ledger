@@ -161,10 +161,6 @@ module.exports = {
   },
 
 
-  goAccount() {
-    wx.navigateTo({ url: '/pages/account/account' });
-  },
-
   goDetail(e) {
     wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id });
   },
